@@ -1,0 +1,37 @@
+{
+  "name": "RemiSoft - Laravel + PostgreSQL",
+
+  "image": "mcr.microsoft.com/devcontainers/php:8.2",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/postgresql:1": {
+      "version": "15"
+    }
+  },
+
+  "forwardPorts": [8000, 5432, 5173],
+
+  "portsAttributes": {
+    "8000": { "label": "Laravel (php artisan serve)" },
+    "5173": { "label": "Vite (npm run dev)" },
+    "5432": { "label": "PostgreSQL" }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "onecentlin.laravel-blade",
+        "bradlc.vscode-tailwindcss",
+        "eamodio.gitlens",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg"
+      ]
+    }
+  }
+}
