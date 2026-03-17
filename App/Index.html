@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemiSoft — Sistema de Gestión para Restaurantes</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Barra superior -->
+<nav>
+    <a href="#" class="nav-logo">Remi<span>Soft</span></a>
+    <div class="nav-actions">
+    <button class="btn btn-ghost" onclick="openModal('login')">Iniciar sesión</button>
+    <button class="btn btn-primary" onclick="openModal('registro')">Registrarse</button>
+    </div>
+</nav>
+
+<!-- Seccion HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Sistema de gestión inteligente
+        </div>
+        <h1>Gestiona tu<br><em>restaurante</em><br>sin <span class="accent">complicaciones</span></h1>
+        <p>RemiSoft centraliza pedidos, inventario, facturación y domicilios en una sola plataforma. Diseñado para el restaurante Familia Remi.</p>
+        <div class="hero-actions">
+        <button class="btn btn-primary" onclick="openModal('registro')">Comenzar ahora</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('funciones').scrollIntoView({behavior:'smooth'})">Ver funciones</button>
+        </div>
+        <div class="hero-stats">
+        <div>
+            <div class="stat-num">7</div>
+            <div class="stat-label">Módulos principales</div>
+        </div>
+        <div>
+            <div class="stat-num">4</div>
+            <div class="stat-label">Roles de usuario</div>
+        </div>
+        <div>
+            <div class="stat-num">IA</div>
+            <div class="stat-label">Análisis predictivo</div>
+        </div>
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="mockup-frame">
+        <div class="mockup-bar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <div class="mockup-url">remisoft.app/dashboard</div>
+        </div>
+        <div class="mockup-body">
+            <div style="font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:700;margin-bottom:10px;color:#6c757d;">Panel de hoy</div>
+            <div class="dash-grid">
+            <div class="dash-card">
+                <div class="dash-card-label">Ventas</div>
+                <div class="dash-card-val rojo">$284k</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-card-label">Pedidos</div>
+                <div class="dash-card-val verde">38</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-card-label">Domicilios</div>
+                <div class="dash-card-val amarillo">12</div>
+            </div>
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;margin-bottom:8px;color:#6c757d;">Pedidos activos</div>
+            <div class="dash-orders">
+            <div class="order-row">
+                <span>Mesa 3 · Combo corriente ×2</span>
+                <span class="order-badge badge-pending">Preparando</span>
+            </div>
+            <div class="order-row">
+                <span>Mesa 7 · Hamburguesa BBQ</span>
+                <span class="order-badge badge-done">Listo</span>
+            </div>
+            <div class="order-row">
+                <span>Domicilio #041 · Cra 5 #22</span>
+                <span class="order-badge badge-delivery">En camino</span>
+            </div>
+            <div class="order-row">
+                <span>Mesa 1 · Desayuno ejecutivo ×3</span>
+                <span class="order-badge badge-pending">Preparando</span>
+            </div>
+            </div>
+            <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:10px;border:1px solid #dee2e6;">
+            <div style="font-size:0.65rem;color:#a30000;font-weight:500;margin-bottom:3px;">⚠ Alerta de inventario — IA</div>
+            <div style="font-size:0.68rem;color:#6c757d;">Papas fritas por debajo del mínimo. Se recomienda compra hoy.</div>
+            </div>
+        </div>
+        </div>
+    </div>
+</section>
+
+<!-- Funcionalidades -->
+<section class="section" id="funciones">
+    <div class="section-tag">Funcionalidades</div>
+    <h2>Todo lo que necesita<br>un restaurante moderno</h2>
+    <p class="section-sub">Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft cubre el ciclo completo de operación.</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+        <div class="feature-icon icon-rojo">🧾</div>
+        <h3>Gestión de pedidos</h3>
+        <p>Registro de pedidos por mesa o domicilio. Descuento automático de inventario según recetas configuradas.</p>
+        </div>
+        <div class="feature-card">
+        <div class="feature-icon icon-verde">📦</div>
+        <h3>Control de inventario</h3>
+        <p>Seguimiento en tiempo real de insumos. Alertas cuando el stock llega al mínimo definido por el administrador.</p>
+        </div>
+        <div class="feature-card">
+        <div class="feature-icon icon-amarillo">📄</div>
+        <h3>Facturación DIAN</h3>
+        <p>Generación automática de facturas electrónicas con CUFE, cumpliendo la resolución 000042 de 2020.</p>
+        </div>
+        <div class="feature-card">
+        <div class="feature-icon icon-rojo">🛵</div>
+        <h3>Módulo de domicilios</h3>
+        <p>Seguimiento en tiempo real de entregas. Estados actualizables por el repartidor desde su dispositivo.</p>
+        </div>
+        <div class="feature-card">
+        <div class="feature-icon icon-verde">🤖</div>
+        <h3>Análisis con IA</h3>
+        <p>Predicción de demanda por producto e ingrediente. Reportes automáticos de rentabilidad y tendencias de consumo.</p>
+        </div>
+        <div class="feature-card">
+        <div class="feature-icon icon-amarillo">💰</div>
+        <h3>Caja y facturación</h3>
+        <p>Apertura y cierre de turno, flujo de caja, múltiples métodos de pago y exportación de reportes contables.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Roles -->
+<section class="roles-section">
+    <div class="roles-inner">
+        <div class="section-tag">Usuarios del sistema</div>
+        <h2 style="color:#fff;font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:700;letter-spacing:-1px;margin-bottom:12px;">Un sistema, cuatro roles</h2>
+        <p class="section-sub">Cada perfil accede únicamente a las funciones que le corresponden.</p>
+        <div class="roles-grid">
+        <div class="role-card">
+            <div class="role-avatar">👑</div>
+            <h3>Administrador</h3>
+            <p>Gestión total: usuarios, menú, reportes, inventario y configuración del sistema.</p>
+        </div>
+        <div class="role-card">
+            <div class="role-avatar">🍽</div>
+            <h3>Mesero</h3>
+            <p>Toma de pedidos por mesa, envío a cocina y seguimiento del estado del servicio.</p>
+        </div>
+        <div class="role-card">
+            <div class="role-avatar">🛵</div>
+            <h3>Repartidor</h3>
+            <p>Visualización de domicilios asignados, actualización de estado en tiempo real.</p>
+        </div>
+        <div class="role-card">
+            <div class="role-avatar">👤</div>
+            <h3>Cliente</h3>
+            <p>Exploración del menú, pedidos a domicilio, historial de compras y calificación del servicio.</p>
+        </div>
+        </div>
+    </div>
+</section>
+
+<!-- FORMULARIOS -->
+<section class="auth-section" id="acceso">
+    <div class="auth-inner">
+
+        <!-- LOGIN -->
+        <div class="auth-card">
+        <h3>Iniciar sesión</h3>
+        <p class="auth-sub">Accede a tu cuenta de RemiSoft</p>
+        <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" class="form-input" id="login-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-input" id="login-pass" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Rol</label>
+            <select class="form-select" id="login-rol">
+            <option value="">Selecciona tu rol</option>
+            <option>Administrador</option>
+            <option>Mesero</option>
+            <option>Repartidor</option>
+            <option>Cliente</option>
+            </select>
+        </div>
+        <button class="btn-form btn-form-primary" onclick="handleLogin()">Ingresar al sistema</button>
+        <div class="auth-divider">o</div>
+        <button class="btn-form btn-form-outline" onclick="document.getElementById('reg-nombre').scrollIntoView({behavior:'smooth'})">Crear una cuenta</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div class="auth-card">
+        <h3>Crear cuenta</h3>
+        <p class="auth-sub">Regístrate en RemiSoft como cliente</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-input" id="reg-nombre" placeholder="Juan">
+            </div>
+            <div class="form-group">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-input" id="reg-apellido" placeholder="Pérez">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" class="form-input" id="reg-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-input" id="reg-tel" placeholder="300 000 0000">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-input" id="reg-pass" placeholder="Mínimo 8 caracteres">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--texto-muted);cursor:pointer;">
+            <input type="checkbox" id="reg-terms" style="margin-top:2px;accent-color:var(--rojo);">
+            Acepto la política de tratamiento de datos personales (Ley 1581 de 2012)
+            </label>
+        </div>
+        <button class="btn-form btn-form-primary" onclick="handleRegistro()">Crear mi cuenta</button>
+    </div>
+
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-logo">Remi<span>Soft</span></div>
+    <p style="margin-bottom:6px;">Sistema Web Inteligente para la Gestión Integral del Restaurante Familia Remi</p>
+    <p style="margin-bottom:6px;">📍 Cl. 67c Bis Sur, Localidad Ciudad Bolívar, Barrio Juan Pablo II, Bogotá</p>
+    <p>Desarrollado por el equipo RemiSoft · 2025</p>
+</footer>
+
+<!-- MODAL LOGIN -->
+<div class="modal-overlay" id="modal-login">
+    <div class="modal">
+        <div class="modal-header">
+        <h3>Iniciar sesión</h3>
+        <button class="modal-close" onclick="closeModal('login')">✕</button>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-input" id="m-login-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="m-login-pass" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select class="form-select" id="m-login-rol">
+            <option value="">Selecciona tu rol</option>
+            <option>Administrador</option>
+            <option>Mesero</option>
+            <option>Repartidor</option>
+            <option>Cliente</option>
+        </select>
+        </div>
+        <button class="btn-form btn-form-primary" onclick="handleLoginModal()">Ingresar</button>
+    </div>
+</div>
+
+<!-- MODAL REGISTRO -->
+<div class="modal-overlay" id="modal-registro">
+    <div class="modal">
+        <div class="modal-header">
+        <h3>Crear cuenta</h3>
+        <button class="modal-close" onclick="closeModal('registro')">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-input" id="m-reg-nombre" placeholder="Juan">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-input" id="m-reg-apellido" placeholder="Pérez">
+        </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Correo</label>
+        <input type="email" class="form-input" id="m-reg-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="m-reg-pass" placeholder="Mínimo 8 caracteres">
+        </div>
+        <div style="margin-bottom:14px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--texto-muted);cursor:pointer;">
+            <input type="checkbox" id="m-reg-terms" style="margin-top:2px;accent-color:var(--rojo);">
+            Acepto la política de tratamiento de datos (Ley 1581 de 2012)
+        </label>
+        </div>
+        <button class="btn-form btn-form-primary" onclick="handleRegistroModal()">Crear mi cuenta</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="main.js"></script>
+</body>
+</html>
