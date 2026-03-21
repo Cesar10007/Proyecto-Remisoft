@@ -1,31 +1,26 @@
 #!/bin/bash
 echo "Configurando entorno RemiSoft..."
 
-# Instalar PostgreSQL
-apt-get update -y 2>/dev/null || true
-apt-get install -y postgresql postgresql-client || true
+git config --global --add safe.directory /workspaces/Proyecto-Remisoft
 
-# Iniciar PostgreSQL
-service postgresql start || true
+# Instalar MariaDB
+apt-get update -y 2>/dev/null || true
+apt-get install -y mariadb-server || true
+
+# Instalar driver pdo_mysql para PHP
+docker-php-ext-install pdo_mysql || true
+
+# Iniciar MariaDB
+service mariadb start || true
 sleep 3
 
 # Crear usuario y base de datos
-su -s /bin/bash postgres -c "psql -c \"DO \\\$\\\$ BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'remisoft') THEN
-    CREATE USER remisoft WITH PASSWORD 'remisoft123';
-  END IF;
-END \\\$\\\$;\""
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS remisoft;" || true
+mysql -u root -e "CREATE USER IF NOT EXISTS 'remisoft'@'localhost' IDENTIFIED BY 'remisoft123';" || true
+mysql -u root -e "GRANT ALL PRIVILEGES ON remisoft.* TO 'remisoft'@'localhost';" || true
+mysql -u root -e "FLUSH PRIVILEGES;" || true
 
-su -s /bin/bash postgres -c "psql -c \"SELECT 'CREATE DATABASE remisoft OWNER remisoft' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'remisoft')\gexec\""
-
-su -s /bin/bash postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE remisoft TO remisoft;\""
-
-su -s /bin/bash postgres -c "psql -d remisoft -f /workspaces/Proyecto-Remisoft/DBFAMILIAREMI.sql"
-
-# Instalar driver pgsql para PHP desde pecl
-apt-get install -y libpq-dev php-dev || true
-pecl install pdo_pgsql || true
-echo "extension=pdo_pgsql.so" >> /usr/local/etc/php/conf.d/pdo_pgsql.ini
+# Cargar estructura de BD
+mysql -u root remisoft < /workspaces/Proyecto-Remisoft/DBFAMILIAREMI.sql || true
 
 echo "Base de datos lista."
-git config --global --add safe.directory /workspaces/Proyecto-Remisoft
