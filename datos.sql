@@ -1,33 +1,35 @@
 -- ============================================================
 -- DATOS DE PRUEBA - RemiSoft
--- Compatible con PostgreSQL
+-- Compatible con MySQL / MariaDB
 -- ============================================================
 
--- LIMPIEZA DE TABLAS (CASCADE maneja las FKs en PostgreSQL)
-TRUNCATE TABLE IA_PRODUCTO        CASCADE;
-TRUNCATE TABLE IA_INGREDIENTE     CASCADE;
-TRUNCATE TABLE IA                 CASCADE;
-TRUNCATE TABLE inventario_mov     CASCADE;
-TRUNCATE TABLE Factura_item       CASCADE;
-TRUNCATE TABLE domicilio          CASCADE;
-TRUNCATE TABLE flujo_caja         CASCADE;
-TRUNCATE TABLE pago               CASCADE;
-TRUNCATE TABLE Factura            CASCADE;
-TRUNCATE TABLE Detalle_pedido     CASCADE;
-TRUNCATE TABLE pedido             CASCADE;
-TRUNCATE TABLE detalle_orden_compra CASCADE;
-TRUNCATE TABLE orden_compra       CASCADE;
-TRUNCATE TABLE proveedor_ingrediente CASCADE;
-TRUNCATE TABLE Receta             CASCADE;
-TRUNCATE TABLE lote_ingrediente   CASCADE;
-TRUNCATE TABLE Ingrediente        CASCADE;
-TRUNCATE TABLE Producto           CASCADE;
-TRUNCATE TABLE proveedor          CASCADE;
-TRUNCATE TABLE turno_caja         CASCADE;
-TRUNCATE TABLE caja               CASCADE;
-TRUNCATE TABLE Cliente            CASCADE;
-TRUNCATE TABLE usuario            CASCADE;
-TRUNCATE TABLE rol                CASCADE;
+SET FOREIGN_KEY_CHECKS = 0;
+
+TRUNCATE TABLE IA_PRODUCTO;
+TRUNCATE TABLE IA_INGREDIENTE;
+TRUNCATE TABLE IA;
+TRUNCATE TABLE inventario_mov;
+TRUNCATE TABLE Factura_item;
+TRUNCATE TABLE domicilio;
+TRUNCATE TABLE flujo_caja;
+TRUNCATE TABLE pago;
+TRUNCATE TABLE Factura;
+TRUNCATE TABLE Detalle_pedido;
+TRUNCATE TABLE pedido;
+TRUNCATE TABLE detalle_orden_compra;
+TRUNCATE TABLE orden_compra;
+TRUNCATE TABLE proveedor_ingrediente;
+TRUNCATE TABLE Receta;
+TRUNCATE TABLE lote_ingrediente;
+TRUNCATE TABLE inventario_mov;
+TRUNCATE TABLE Ingrediente;
+TRUNCATE TABLE Producto;
+TRUNCATE TABLE proveedor;
+TRUNCATE TABLE turno_caja;
+TRUNCATE TABLE caja;
+TRUNCATE TABLE Cliente;
+TRUNCATE TABLE usuario;
+TRUNCATE TABLE rol;
 
 -- 1. ROL
 INSERT INTO rol (nombre, descripcion) VALUES
@@ -43,18 +45,17 @@ INSERT INTO rol (nombre, descripcion) VALUES
 ('AUDITOR',     'Revisión de caja y reportes');
 
 -- 2. USUARIO
--- NOTA: activo usa true/false en PostgreSQL, no 1/0
 INSERT INTO usuario (id_rol, identificacion, nombre, apellido, email, telefono, contrasena_hash, activo) VALUES
-(1, '1001', 'Carlos',     'Ramírez',  'carlos.ramirez@resto.com',   '3001234567', '$2b$12$abc123hash1',  true),
-(2, '1002', 'Laura',      'Gómez',    'laura.gomez@resto.com',       '3009876543', '$2b$12$abc123hash2',  true),
-(3, '1003', 'Andrés',     'Torres',   'andres.torres@resto.com',     '3101112223', '$2b$12$abc123hash3',  true),
-(4, '1004', 'Sofía',      'Martínez', 'sofia.martinez@resto.com',    '3154445556', '$2b$12$abc123hash4',  true),
-(5, '1005', 'Juan',       'López',    'juan.lopez@resto.com',        '3207778889', '$2b$12$abc123hash5',  true),
-(4, '1006', 'Valentina',  'Herrera',  'valentina.herrera@resto.com', '3001239876', '$2b$12$abc123hash6',  true),
-(3, '1007', 'Miguel',     'Castro',   'miguel.castro@resto.com',     '3109998887', '$2b$12$abc123hash7',  true),
-(5, '1008', 'Isabella',   'Vargas',   'isabella.vargas@resto.com',   '3156667778', '$2b$12$abc123hash8',  true),
-(2, '1009', 'Sebastián',  'Díaz',     'sebastian.diaz@resto.com',    '3203334445', '$2b$12$abc123hash9',  true),
-(6, '1010', 'Camila',     'Moreno',   'camila.moreno@resto.com',     '3001115556', '$2b$12$abc123hash10', true);
+(1, '1001', 'Carlos',     'Ramírez',  'carlos.ramirez@resto.com',   '3001234567', '$2b$12$abc123hash1',  1),
+(2, '1002', 'Laura',      'Gómez',    'laura.gomez@resto.com',       '3009876543', '$2b$12$abc123hash2',  1),
+(3, '1003', 'Andrés',     'Torres',   'andres.torres@resto.com',     '3101112223', '$2b$12$abc123hash3',  1),
+(4, '1004', 'Sofía',      'Martínez', 'sofia.martinez@resto.com',    '3154445556', '$2b$12$abc123hash4',  1),
+(5, '1005', 'Juan',       'López',    'juan.lopez@resto.com',        '3207778889', '$2b$12$abc123hash5',  1),
+(4, '1006', 'Valentina',  'Herrera',  'valentina.herrera@resto.com', '3001239876', '$2b$12$abc123hash6',  1),
+(3, '1007', 'Miguel',     'Castro',   'miguel.castro@resto.com',     '3109998887', '$2b$12$abc123hash7',  1),
+(5, '1008', 'Isabella',   'Vargas',   'isabella.vargas@resto.com',   '3156667778', '$2b$12$abc123hash8',  1),
+(2, '1009', 'Sebastián',  'Díaz',     'sebastian.diaz@resto.com',    '3203334445', '$2b$12$abc123hash9',  1),
+(6, '1010', 'Camila',     'Moreno',   'camila.moreno@resto.com',     '3001115556', '$2b$12$abc123hash10', 1);
 
 -- 3. CLIENTE
 INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps, tipo_documento, Num_documento) VALUES
@@ -161,7 +162,6 @@ INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VAL
 (7, 8, 2.000, 'UNIDAD');
 
 -- 11. PEDIDO
--- NOTA: solo pedidos DOMICILIO tienen registro en tabla domicilio
 INSERT INTO pedido (id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
 (1, 4, 'CERRADO',        'MESA',      3,    'Sin cebolla por favor'),
 (2, 6, 'CERRADO',        'MESA',      7,    NULL),
@@ -240,7 +240,6 @@ INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VAL
 (8, 9, 1);
 
 -- 17. DOMICILIO
--- NOTA: solo se insertan pedidos cuyo Tipo_pedido = 'DOMICILIO' (ids 3, 6, 9)
 INSERT INTO domicilio (id_pedido, direccion, coordenadas_gps, estado, fecha_entrega, id_repartidor) VALUES
 (3, 'Av. 68 # 22-10',    '4.6300,-74.0900', 'ENTREGADO', '2025-01-15 13:45:00', 5),
 (6, 'Calle 72 # 9-40',   '4.6550,-74.0650', 'ENTREGADO', '2025-01-15 20:30:00', 8),
@@ -273,18 +272,17 @@ INSERT INTO detalle_orden_compra (id_orden_compra, id_ingrediente, cantidad_soli
 (9, 10, 20.00, 20.00,  1800.00);
 
 -- 20. PROVEEDOR_INGREDIENTE
--- NOTA: es_proveedor_principal usa true/false en PostgreSQL
 INSERT INTO proveedor_ingrediente (id_proveedor, id_ingrediente, precio_acordado, tiempo_entrega_dias, calidad_rating, es_proveedor_principal, fecha_ultima_compra) VALUES
-(1,  1, 18000.00, 1, 4.8, true,  '2025-01-14 09:00:00'),
-(2,  3, 22000.00, 2, 4.5, true,  '2025-01-12 10:00:00'),
-(3,  4,  4000.00, 1, 4.7, true,  '2025-01-13 08:00:00'),
-(3,  5,  3000.00, 1, 4.6, true,  '2025-01-13 08:00:00'),
-(5,  2,  2500.00, 2, 4.3, true,  '2025-01-10 11:00:00'),
-(4,  7,  5500.00, 3, 4.2, true,  '2025-01-08 09:00:00'),
-(6,  8,   450.00, 1, 4.9, true,  '2025-01-10 08:00:00'),
-(9,  6, 14000.00, 1, 4.7, true,  '2025-01-12 09:00:00'),
-(10, 9,  3500.00, 1, 4.5, true,  '2025-01-11 10:00:00'),
-(10,10,  1800.00, 1, 4.4, true,  '2025-01-10 10:00:00');
+(1,  1, 18000.00, 1, 4.8, 1, '2025-01-14 09:00:00'),
+(2,  3, 22000.00, 2, 4.5, 1, '2025-01-12 10:00:00'),
+(3,  4,  4000.00, 1, 4.7, 1, '2025-01-13 08:00:00'),
+(3,  5,  3000.00, 1, 4.6, 1, '2025-01-13 08:00:00'),
+(5,  2,  2500.00, 2, 4.3, 1, '2025-01-10 11:00:00'),
+(4,  7,  5500.00, 3, 4.2, 1, '2025-01-08 09:00:00'),
+(6,  8,   450.00, 1, 4.9, 1, '2025-01-10 08:00:00'),
+(9,  6, 14000.00, 1, 4.7, 1, '2025-01-12 09:00:00'),
+(10, 9,  3500.00, 1, 4.5, 1, '2025-01-11 10:00:00'),
+(10,10,  1800.00, 1, 4.4, 1, '2025-01-10 10:00:00');
 
 -- 21. INVENTARIO_MOV
 INSERT INTO inventario_mov (id_ingrediente, id_usuario, tipo_movimiento, cantidad, costo_unitario, observaciones, origen_tipo, origen_id, id_lote) VALUES
@@ -313,29 +311,29 @@ INSERT INTO IA (Tipo_prediccion, Resultado_generado, Recomendaciones_generales, 
 ('DESPERDICIO',         'Merma elevada en lechuga y tomate',                   'Ajustar porciones o renegociar cantidad con proveedor', 0.810, '2025-01-01', '2025-01-15');
 
 -- 23. IA_INGREDIENTE
--- NOTA: Ingrediente_critico usa true/false en PostgreSQL
 INSERT INTO IA_INGREDIENTE (id_IA, id_ingrediente, Demanda_predicha_ingrediente, Nivel_confianza, Ingrediente_critico) VALUES
-( 1,  1,  45.50, 0.870, false),
-( 1,  3,  22.00, 0.860, false),
-( 3,  6,  12.00, 0.910, true),
-( 3,  4,   8.50, 0.900, true),
-( 7,  8, 150.00, 0.905, true),
-( 2,  9,  10.00, 0.820, false),
-( 6,  4,   6.00, 0.840, false),
-(10,  5,   9.00, 0.805, true),
-(10,  4,   7.50, 0.812, true),
-( 8,  1,  38.00, 0.850, false);
+( 1,  1,  45.50, 0.870, 0),
+( 1,  3,  22.00, 0.860, 0),
+( 3,  6,  12.00, 0.910, 1),
+( 3,  4,   8.50, 0.900, 1),
+( 7,  8, 150.00, 0.905, 1),
+( 2,  9,  10.00, 0.820, 0),
+( 6,  4,   6.00, 0.840, 0),
+(10,  5,   9.00, 0.805, 1),
+(10,  4,   7.50, 0.812, 1),
+( 8,  1,  38.00, 0.850, 0);
 
 -- 24. IA_PRODUCTO
--- NOTA: Producto_critico usa true/false en PostgreSQL
 INSERT INTO IA_PRODUCTO (id_IA, id_producto, demanda_predicho_producto, nivel_confianza_producto, Producto_critico, Recomendacion_producto) VALUES
-(1, 1, 120.00, 0.875, false, 'Mantener stock suficiente de ingredientes para hamburguesa'),
-(1, 2,  85.00, 0.860, false, 'Verificar harina y mozzarella disponibles'),
-(5, 3,  60.00, 0.790, false, 'Promover en redes sociales'),
-(6, 9,  15.00, 0.843, true,  'Reducir cantidad preparada lunes y martes'),
-(4, 4, 200.00, 0.770, false, 'Incluir en combos para incrementar venta'),
-(4,10, 180.00, 0.765, false, 'Buena rotación, mantener stock de frutas'),
-(8, 1, 145.00, 0.858, false, 'Reforzar equipo cocina sábado mediodía'),
-(2, 4, 250.00, 0.830, false, 'Alta rotación, revisar stock limones'),
-(9, 6,  90.00, 0.720, false, 'Ofrecer en menú del día para clientes frecuentes'),
-(3, 6,  40.00, 0.910, true,  'Solicitar pedido urgente al proveedor 9');
+(1, 1, 120.00, 0.875, 0, 'Mantener stock suficiente de ingredientes para hamburguesa'),
+(1, 2,  85.00, 0.860, 0, 'Verificar harina y mozzarella disponibles'),
+(5, 3,  60.00, 0.790, 0, 'Promover en redes sociales'),
+(6, 9,  15.00, 0.843, 1, 'Reducir cantidad preparada lunes y martes'),
+(4, 4, 200.00, 0.770, 0, 'Incluir en combos para incrementar venta'),
+(4,10, 180.00, 0.765, 0, 'Buena rotación, mantener stock de frutas'),
+(8, 1, 145.00, 0.858, 0, 'Reforzar equipo cocina sábado mediodía'),
+(2, 4, 250.00, 0.830, 0, 'Alta rotación, revisar stock limones'),
+(9, 6,  90.00, 0.720, 0, 'Ofrecer en menú del día para clientes frecuentes'),
+(3, 6,  40.00, 0.910, 1, 'Solicitar pedido urgente al proveedor 9');
+
+SET FOREIGN_KEY_CHECKS = 1;
