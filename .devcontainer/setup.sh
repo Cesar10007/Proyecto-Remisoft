@@ -23,4 +23,26 @@ mysql -u root -e "FLUSH PRIVILEGES;" || true
 # Cargar estructura de BD
 mysql -u root remisoft < /workspaces/Proyecto-Remisoft/DBFAMILIAREMI.sql || true
 
-echo "Base de datos lista."
+# Cargar datos de prueba
+mysql -u root remisoft < /workspaces/Proyecto-Remisoft/datos.sql || true
+
+# Configurar .env de Laravel si no existe
+if [ ! -f /workspaces/Proyecto-Remisoft/backend/.env ]; then
+  cp /workspaces/Proyecto-Remisoft/backend/.env.example /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=mysql/' /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/# DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/# DB_PORT=3306/DB_PORT=3306/' /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/# DB_DATABASE=laravel/DB_DATABASE=remisoft/' /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/# DB_USERNAME=root/DB_USERNAME=remisoft/' /workspaces/Proyecto-Remisoft/backend/.env
+  sed -i 's/# DB_PASSWORD=/DB_PASSWORD=remisoft123/' /workspaces/Proyecto-Remisoft/backend/.env
+fi
+
+# Instalar dependencias de Laravel
+cd /workspaces/Proyecto-Remisoft/backend
+composer install --no-interaction 2>/dev/null || true
+php artisan key:generate --no-interaction 2>/dev/null || true
+
+echo "========================================="
+echo "Entorno RemiSoft listo."
+echo "Ejecuta: cd backend && php artisan serve"
+echo "========================================="
