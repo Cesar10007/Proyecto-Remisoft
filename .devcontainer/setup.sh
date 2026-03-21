@@ -28,3 +28,4 @@ pecl install pdo_pgsql || true
 echo "extension=pdo_pgsql.so" >> /usr/local/etc/php/conf.d/pdo_pgsql.ini
 
 echo "Base de datos lista."
+git config --global --add safe.directory /workspaces/Proyecto-Remisoft
