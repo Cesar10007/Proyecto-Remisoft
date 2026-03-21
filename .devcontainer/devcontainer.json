@@ -12,7 +12,8 @@
     "5173": { "label": "Vite (npm run dev)" },
     "5432": { "label": "PostgreSQL" }
   },
-  "postCreateCommand": "bash .devcontainer/setup.sh",
+"remoteUser": "root",
+"postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
