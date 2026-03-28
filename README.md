@@ -84,28 +84,45 @@ Proyecto-Remisoft/
 El proyecto usa la siguiente estructura de ramas:
 
 ```
-main          ← código estable y aprobado. Nadie pushea directo aquí.
-develop       ← rama de integración. Aquí se unen todos los cambios.
-  ├── feat/frontend-landing
-  ├── feat/backend-auth
-  ├── feat/backend-inventario
-  └── feat/ia-modulo
+main                            ← código estable y aprobado. Nadie pushea directo aquí.
+develop                         ← rama de integración. Aquí se unen todos los cambios.
+  ├── feat/frontend-landing     ← César Rueda
+  ├── feat/frontend-components  ← Juan Felipe Bello
+  ├── feat/ia-modulo            ← Odalys Layton
+  └── feat/testing              ← Kevin Bueno
 ```
+
+### Rama asignada por integrante
+
+| Integrante | Rama |
+|------------|------|
+| César David Rueda Daza | `feat/frontend-landing` |
+| Juan Felipe Bello Perez | `feat/frontend-components` |
+| Odalys Lizeth Layton Martinez | `feat/ia-modulo` |
+| Kevin Duvan Bueno Melo | `feat/testing` |
 
 ### Flujo de trabajo
 
-1. Cada integrante trabaja en su rama `feat/`
-2. Cuando termina algo que funciona, hace commit y push a su rama
-3. Abre un **Pull Request** hacia `develop`
-4. Otro integrante revisa y aprueba
-5. Solo cuando `develop` está estable se fusiona a `main`
+```
+Tu rama feat/  →  Push  →  Pull Request hacia develop  →  Revisión  →  Aprobado  →  develop
+                                                                                         ↓
+                                                                         (cuando esté estable)
+                                                                                        main
+```
 
-### Cómo crear tu rama de trabajo
+1. Trabajas en tu rama `feat/` asignada
+2. Cuando terminas algo que funciona hacés commit y push
+3. Abrís un Pull Request en GitHub hacia `develop`
+4. César como líder revisa y aprueba
+5. Solo cuando `develop` está probado y estable se fusiona a `main`
+
+### Cómo posicionarte en tu rama
+
+Cada vez que abras el Codespace asegúrate de estar en tu rama antes de tocar cualquier archivo:
 
 ```bash
-git checkout develop
-git pull origin develop
-git checkout -b feat/nombre-de-tu-tarea
+git checkout feat/tu-rama-asignada
+git pull origin feat/tu-rama-asignada
 ```
 
 ### Cómo subir tus cambios
@@ -113,17 +130,25 @@ git checkout -b feat/nombre-de-tu-tarea
 ```bash
 git add .
 git commit -m "feat: descripción de lo que hiciste"
-git push origin feat/nombre-de-tu-tarea
+git push origin feat/tu-rama-asignada
 ```
 
-Luego abre un Pull Request en GitHub hacia `develop`.
+### Cómo abrir un Pull Request
+
+1. Ve a github.com/Cesar10007/Proyecto-Remisoft
+2. Clic en **Pull requests** → **New pull request**
+3. Base: `develop` ← Compare: `feat/tu-rama`
+4. Escribe un título claro describiendo qué hiciste
+5. Asigna a César como revisor
+6. Clic en **Create pull request**
 
 ### Reglas del equipo
 
 - **Nunca pushear directo a `main` o `develop`**
-- Cada Pull Request debe ser revisado por al menos un compañero antes de aprobar
+- Cada Pull Request debe ser revisado por César antes de aprobar
 - Los commits deben seguir la convención definida abajo
 - Una rama por tarea, no acumular cambios de varias tareas en una sola rama
+- Antes de empezar a trabajar siempre hacer `git pull` para tener el código actualizado
 
 ## Convenciones de commits
 
