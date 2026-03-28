@@ -14,33 +14,56 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 ## Stack tecnológico
 
 - **Backend:** PHP 8.2 + Laravel
-- **Frontend:** React + HTML5 + CSS3
+- **Frontend:** React + Vite
 - **Base de datos:** MariaDB
 - **Entorno:** GitHub Codespaces
 
 ## Cómo iniciar el entorno
 
-Cada vez que abras el Codespace ejecuta en la terminal:
+El entorno se configura automáticamente al abrir el Codespace. Cada vez que lo abras solo necesitas ejecutar en **dos terminales separadas**:
+
+**Terminal 1 — Laravel:**
 ```bash
-service mariadb start
 cd backend && php artisan serve
 ```
+
+**Terminal 2 — React:**
+```bash
+cd frontend && npm run dev
+```
+
+- Laravel corre en `http://localhost:8000`
+- React corre en `http://localhost:5173`
 
 Para ver la base de datos visualmente usar SQLTools en el panel izquierdo de VS Code. La conexión **remisoft** ya está configurada.
 
 ## Estructura del proyecto
+
 ```
 Proyecto-Remisoft/
-├── .devcontainer/        # Configuración del entorno Codespaces
-├── App/                  # Demo visual inicial
-├── backend/              # Proyecto Laravel
-│   ├── app/
-│   │   ├── Http/Controllers/
-│   │   ├── Models/
-│   │   ├── Services/
-│   │   └── Repositories/
-├── DBFAMILIAREMI.sql     # Estructura de la base de datos
-└── datos.sql             # Datos de prueba
+├── .devcontainer/            # Configuración del entorno Codespaces
+├── frontend/                 # Proyecto React + Vite
+│   └── src/
+│       ├── pages/            # Vistas por rol
+│       │   ├── auth/         # Login, registro, landing
+│       │   ├── admin/        # Panel administrador
+│       │   ├── mesero/       # Toma de pedidos
+│       │   ├── repartidor/   # Gestión de domicilios
+│       │   └── cliente/      # Menú y pedidos
+│       ├── components/       # Componentes reutilizables
+│       │   ├── common/       # Botones, inputs, modales
+│       │   └── layout/       # Navbar, footer
+│       ├── services/         # Llamadas HTTP al backend
+│       ├── hooks/            # Hooks personalizados
+│       └── context/          # Estado global (usuario, rol)
+├── backend/                  # Proyecto Laravel
+│   └── app/
+│       ├── Http/Controllers/ # Reciben peticiones HTTP
+│       ├── Services/         # Lógica de negocio
+│       ├── Repositories/     # Acceso a base de datos
+│       └── Models/           # Entidades Eloquent
+├── DBFAMILIAREMI.sql         # Estructura de la base de datos
+└── datos.sql                 # Datos de prueba
 ```
 
 ## Base de datos
@@ -56,6 +79,51 @@ Proyecto-Remisoft/
 
 > Estas credenciales son solo para el entorno de desarrollo en Codespaces.
 
+## Estrategia de ramas
+
+El proyecto usa la siguiente estructura de ramas:
+
+```
+main          ← código estable y aprobado. Nadie pushea directo aquí.
+develop       ← rama de integración. Aquí se unen todos los cambios.
+  ├── feat/frontend-landing
+  ├── feat/backend-auth
+  ├── feat/backend-inventario
+  └── feat/ia-modulo
+```
+
+### Flujo de trabajo
+
+1. Cada integrante trabaja en su rama `feat/`
+2. Cuando termina algo que funciona, hace commit y push a su rama
+3. Abre un **Pull Request** hacia `develop`
+4. Otro integrante revisa y aprueba
+5. Solo cuando `develop` está estable se fusiona a `main`
+
+### Cómo crear tu rama de trabajo
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feat/nombre-de-tu-tarea
+```
+
+### Cómo subir tus cambios
+
+```bash
+git add .
+git commit -m "feat: descripción de lo que hiciste"
+git push origin feat/nombre-de-tu-tarea
+```
+
+Luego abre un Pull Request en GitHub hacia `develop`.
+
+### Reglas del equipo
+
+- **Nunca pushear directo a `main` o `develop`**
+- Cada Pull Request debe ser revisado por al menos un compañero antes de aprobar
+- Los commits deben seguir la convención definida abajo
+- Una rama por tarea, no acumular cambios de varias tareas en una sola rama
 
 ## Convenciones de commits
 
@@ -72,6 +140,7 @@ El equipo usa la convención **Conventional Commits** para mantener un historial
 | `style:` | Cambios de formato sin afectar lógica |
 
 ### Ejemplos
+
 ```bash
 git commit -m "feat: agregar módulo de autenticación por roles"
 git commit -m "fix: corregir descuento de inventario al registrar pedido"

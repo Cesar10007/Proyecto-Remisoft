@@ -1,29 +1,31 @@
 {
-  "name": "RemiSoft - Laravel + PostgreSQL",
+  "name": "RemiSoft - Laravel + React",
   "image": "mcr.microsoft.com/devcontainers/php:1-8.2-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     }
   },
-  "forwardPorts": [8000, 5432, 5173],
+  "forwardPorts": [8000, 3306, 5173],
   "portsAttributes": {
     "8000": { "label": "Laravel (php artisan serve)" },
-    "5173": { "label": "Vite (npm run dev)" },
-    "5432": { "label": "PostgreSQL" }
+    "5173": { "label": "React/Vite (npm run dev)" },
+    "3306": { "label": "MariaDB" }
   },
-"remoteUser": "root",
-"postCreateCommand": "bash .devcontainer/setup.sh",
-"postStartCommand": "service mariadb start",
+  "remoteUser": "root",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start.sh",
   "customizations": {
     "vscode": {
       "extensions": [
         "bmewburn.vscode-intelephense-client",
-        "onecentlin.laravel-blade",
+        "dsznajder.es7-react-js-snippets",
+        "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "eamodio.gitlens",
         "mtxr.sqltools",
-        "mtxr.sqltools-driver-mysql"
+        "mtxr.sqltools-driver-mysql",
+        "PKief.material-icon-theme"
       ]
     }
   }
