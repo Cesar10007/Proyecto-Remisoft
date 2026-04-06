@@ -18,9 +18,38 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 - **Base de datos:** MariaDB
 - **Entorno:** GitHub Codespaces
 
+## Dependencias principales
+
+### Frontend
+
+| Librería | Versión | Uso en el proyecto |
+|----------|---------|--------------------|
+| React | 19.x | Framework principal de UI |
+| Vite | 6.x | Servidor de desarrollo y compilador |
+| react-router-dom | 7.14.0 | Manejo de rutas y navegación por rol |
+
+### Backend
+
+| Librería | Versión | Uso en el proyecto |
+|----------|---------|--------------------|
+| Laravel | 11.x | Framework backend y API REST |
+| PHP | 8.2 | Lenguaje del backend |
+
+> Cada vez que se instale una nueva librería con `npm install` o `composer require`, agregarla a esta tabla con su versión exacta y para qué se usa en el proyecto.
+
+## Archivos de configuración del entorno
+
+El entorno de desarrollo está controlado por tres archivos dentro de `.devcontainer/`:
+
+**`devcontainer.json`** — le dice a GitHub Codespaces cómo construir el entorno. Define la imagen base del sistema operativo (PHP 8.2), instala Node.js automáticamente, expone los puertos 8000 (Laravel), 5173 (React) y 3306 (MariaDB), e instala las extensiones de VS Code que el equipo necesita. Este archivo se ejecuta una sola vez cuando se crea el Codespace por primera vez.
+
+**`setup.sh`** — script que se ejecuta automáticamente después de que el entorno se construye. Instala MariaDB, crea la base de datos `remisoft`, carga la estructura del SQL y los datos de prueba, configura el `.env` de Laravel y corre `composer install` y `npm install`. Si alguien del equipo abre el Codespace por primera vez, este script deja todo listo sin que tenga que instalar nada manualmente.
+
+**`start.sh`** — script que se ejecuta cada vez que se abre el Codespace. Arranca los tres servicios automáticamente en segundo plano: MariaDB, Laravel en el puerto 8000 y React en el puerto 5173. Los logs quedan disponibles en `/tmp/laravel.log` y `/tmp/react.log`.
+
 ## Cómo iniciar el entorno
 
-El entorno se configura automáticamente al abrir el Codespace. Cada vez que lo abras solo necesitas ejecutar en **dos terminales separadas**:
+El entorno se configura automáticamente al abrir el Codespace. Los servicios arrancan solos gracias al `start.sh`. Si por algún motivo necesitas arrancarlos manualmente, abre dos terminales:
 
 **Terminal 1 — Laravel:**
 ```bash
@@ -42,29 +71,45 @@ Para ver la base de datos visualmente usar SQLTools en el panel izquierdo de VS 
 ```
 Proyecto-Remisoft/
 ├── .devcontainer/            # Configuración del entorno Codespaces
+│   ├── devcontainer.json     # Define imagen, puertos y extensiones
+│   ├── setup.sh              # Instalación inicial (corre una vez)
+│   └── start.sh              # Arranque automático de servicios
 ├── frontend/                 # Proyecto React + Vite
 │   └── src/
-│       ├── pages/            # Vistas por rol
-│       │   ├── auth/         # Login, registro, landing
+│       ├── pages/            # Vistas por rol — una carpeta por tipo de usuario
+│       │   ├── auth/         # Landing, Login, Register — acceso público
 │       │   ├── admin/        # Panel administrador
 │       │   ├── mesero/       # Toma de pedidos
 │       │   ├── repartidor/   # Gestión de domicilios
 │       │   └── cliente/      # Menú y pedidos
 │       ├── components/       # Componentes reutilizables
-│       │   ├── common/       # Botones, inputs, modales
-│       │   └── layout/       # Navbar, footer
-│       ├── services/         # Llamadas HTTP al backend
-│       ├── hooks/            # Hooks personalizados
-│       └── context/          # Estado global (usuario, rol)
+│       │   ├── common/       # Modal, botones, inputs
+│       │   └── layout/       # Navbar, Footer
+│       ├── services/         # Llamadas HTTP al backend (Axios)
+│       ├── hooks/            # Hooks personalizados de React
+│       └── context/          # Estado global: usuario autenticado y rol
 ├── backend/                  # Proyecto Laravel
 │   └── app/
-│       ├── Http/Controllers/ # Reciben peticiones HTTP
+│       ├── Http/Controllers/ # Reciben peticiones HTTP de React
 │       ├── Services/         # Lógica de negocio
 │       ├── Repositories/     # Acceso a base de datos
 │       └── Models/           # Entidades Eloquent
 ├── DBFAMILIAREMI.sql         # Estructura de la base de datos
 └── datos.sql                 # Datos de prueba
 ```
+
+## Navegación por roles — react-router-dom
+
+El proyecto usa `react-router-dom` para manejar la navegación. Cada rol tiene su propia URL y solo puede acceder a las rutas que le corresponden. Cuando un usuario inicia sesión, el sistema lo redirige automáticamente según su rol:
+
+| Rol | URL base |
+|-----|----------|
+| Administrador | `/admin/dashboard` |
+| Mesero | `/mesero/pedidos` |
+| Repartidor | `/repartidor` |
+| Cliente | `/cliente/menu` |
+
+Las rutas públicas (sin autenticación) son `/` para el landing, `/login` y `/registro`. Cualquier URL no reconocida redirige al inicio automáticamente.
 
 ## Base de datos
 
@@ -141,6 +186,18 @@ git push origin feat/tu-rama-asignada
 4. Escribe un título claro describiendo qué hiciste
 5. Asigna a César como revisor
 6. Clic en **Create pull request**
+
+### Sincronizar después de aprobar un PR
+
+Cada vez que se apruebe un PR en GitHub, antes de seguir trabajando sincroniza tu copia local:
+
+```bash
+git checkout main
+git pull origin main
+git checkout develop
+git pull origin develop
+git checkout feat/tu-rama-asignada
+```
 
 ### Reglas del equipo
 
