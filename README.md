@@ -7,8 +7,8 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 | Nombre | Rol |
 |--------|-----|
 | Cesar David Rueda Daza | Líder / Full Stack |
-| Juan Felipe Bello Perez | Frontend |
-| Odalys Lizeth Layton Martinez | IA / Data Scientist |
+| Odalys Lizeth Layton Martinez | Frontend |
+| Juan Felipe Bello Perez | IA / Data Scientist |
 | Kevin Duvan Bueno Melo | Tester / QA |
 
 ## Stack tecnológico
@@ -179,8 +179,8 @@ develop                         ← rama de integración. Aquí se unen todos lo
 | Integrante | Rama |
 |------------|------|
 | César David Rueda Daza | `feat/frontend-landing` |
-| Juan Felipe Bello Perez | `feat/frontend-components` |
-| Odalys Lizeth Layton Martinez | `feat/ia-modulo` |
+| Odalys Lizeth Layton Martinez | `feat/frontend-components` |
+| Juan Felipe Bello Perez | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | `feat/testing` |
 
 ### Flujo de trabajo
