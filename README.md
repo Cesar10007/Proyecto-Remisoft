@@ -266,3 +266,38 @@ git commit -m "fix: corregir descuento de inventario al registrar pedido"
 git commit -m "chore: configurar MariaDB en setup.sh"
 git commit -m "docs: actualizar README con instrucciones de inicio"
 ```
+---
+## SECCIONES POR ROL
+
+- **Superadmin:**
+
+  - Ver usuarios
+  - Peticiones de usuarios
+  - Configuración del sistema
+
+- **Gerente:**
+
+  - Control de menú
+  - Control de inventario
+  - Control de ingresos y egresos
+  - Registro y control de pedidos
+  - Control de meseros y mesas
+  - Informes de IA
+  - Información de proveedores
+  - Historial de movimientos
+  - Flujo de caja
+  - Historial de pedidos
+  - Historial de turnos de empleados
+
+- Mesero:
+
+  - Registrar venta
+  - Generar factura
+  - Ver pedidos por mesa
+
+- Repartidor:
+
+  - Ver pedidos asignados
+  - Ver dirección de domicilio
+  - Registrar método de pago
+  - Confirmar entrega
