@@ -7,27 +7,45 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import Modal from './components/common/Modal'
 
+// dashboards (los creamos después)
+import SuperAdmin from './pages/superadmin/SuperAdmin'
+import Gerente from './pages/gerente/Gerente'
+import Mesero from './pages/mesero/Mesero'
+import Repartidor from './pages/repartidor/Repartidor'
+
 function App() {
   const [modal, setModal] = useState(null)
 
   return (
     <BrowserRouter>
-      <Navbar onLogin={() => setModal('login')} onRegister={() => setModal('registro')} />
-      <main>
-        <Routes>
-          <Route path="/" element={<Landing onRegister={() => setModal('registro')} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </main>
-      <Footer />
+      <Routes>
 
-      <Modal isOpen={modal === 'login'} onClose={() => setModal(null)}>
-        <Login onClose={() => setModal(null)} />
-      </Modal>
+        {/* rutas públicas con navbar y footer */}
+        <Route path="/" element={
+          <>
+            <Navbar onLogin={() => setModal('login')} onRegister={() => setModal('registro')} />
+            <main>
+              <Landing onRegister={() => setModal('registro')} />
+            </main>
+            <Footer />
+            <Modal isOpen={modal === 'login'} onClose={() => setModal(null)}>
+              <Login onClose={() => setModal(null)} />
+            </Modal>
+            <Modal isOpen={modal === 'registro'} onClose={() => setModal(null)}>
+              <Register onClose={() => setModal(null)} />
+            </Modal>
+          </>
+        } />
 
-      <Modal isOpen={modal === 'registro'} onClose={() => setModal(null)}>
-        <Register onClose={() => setModal(null)} />
-      </Modal>
+        {/* rutas de dashboards sin navbar ni footer */}
+        <Route path="/superadmin" element={<SuperAdmin />} />
+        <Route path="/gerente" element={<Gerente />} />
+        <Route path="/mesero" element={<Mesero />} />
+        <Route path="/repartidor" element={<Repartidor />} />
+
+        <Route path="*" element={<Navigate to="/" />} />
+
+      </Routes>
     </BrowserRouter>
   )
 }
