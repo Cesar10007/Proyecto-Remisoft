@@ -1,23 +1,28 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { usuarios } from '../../data/usuarios'
 
 function Login({ onClose }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [rol, setRol] = useState('')
+    const [error, setError] = useState('')
+    const navigate = useNavigate()
 
-function validateEmail(e) {
-    return /\S+@\S+\.\S+/.test(e)
-}
+    function handleLogin() {
+        const usuario = usuarios.find(
+            u => u.email === email && u.password === password
+        )
 
-function handleLogin() {
-    if (!email || !validateEmail(email)) return alert('Ingresa un correo válido')
-    if (password.length < 6) return alert('Contraseña muy corta')
-    if (!rol) return alert('Selecciona tu rol')
-    alert('✓ Bienvenido — conectando al sistema como ' + rol)
-    onClose()
-}
+        if (!usuario) {
+            setError('Correo o contraseña incorrectos')
+            return
+        }
 
-return (
+        onClose()
+        navigate('/' + usuario.rol)
+    }
+
+    return (
         <div className="auth-card">
             <h3>Iniciar sesión</h3>
             <p className="auth-sub">Accede a tu cuenta de RemiSoft</p>
@@ -25,39 +30,26 @@ return (
             <div className="form-group">
                 <label className="form-label">Correo electrónico</label>
                 <input
-                type="email"
-                className="form-input"
-                placeholder="correo@ejemplo.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                    type="email"
+                    className="form-input"
+                    placeholder="correo@ejemplo.com"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); setError('') }}
                 />
             </div>
 
             <div className="form-group">
                 <label className="form-label">Contraseña</label>
                 <input
-                type="password"
-                className="form-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
+                    type="password"
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setError('') }}
                 />
             </div>
 
-            <div className="form-group">
-                <label className="form-label">Rol</label>
-                <select
-                className="form-select"
-                value={rol}
-                onChange={e => setRol(e.target.value)}
-                >
-                    <option value="">Selecciona tu rol</option>
-                    <option>Administrador</option>
-                    <option>Mesero</option>
-                    <option>Repartidor</option>
-                    <option>Cliente</option>
-                </select>
-            </div>
+            {error && <p style={{ color: 'var(--rojo)', fontSize: '0.82rem', marginBottom: '10px' }}>{error}</p>}
 
             <button className="btn-form btn-form-primary" onClick={handleLogin}>
                 Ingresar al sistema
