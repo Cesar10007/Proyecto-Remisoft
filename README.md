@@ -301,3 +301,12 @@ git commit -m "docs: actualizar README con instrucciones de inicio"
   - Ver dirección de domicilio
   - Registrar método de pago
   - Confirmar entrega
+
+## PALETA DE COLORES
+- `#D85A30` rojo principal
+- `#EF9F27` amarillo
+- `#1D9E75` verde
+- `#1a1a1a` texto
+- `#FDFAF7` fondo
+
+# ES IMPORTANTE ACLARAR, LAS UI VISUALES DE LOS USUARIOS SON DATOS HARDCODEADOS NO SON DATOS REALES SIRVEN PARA REFERENCIAR COMO SERIA EL FUNCIONAMINENTO DE LA APLICACIÓN
