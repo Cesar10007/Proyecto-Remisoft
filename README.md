@@ -64,10 +64,11 @@ El entorno de desarrollo está controlado por tres archivos dentro de `.devconta
 **Paso 1 — Verificar que los servicios están corriendo**
 
 El `start.sh` los arranca automáticamente. Confirma en la terminal que ves:
-```
+```bash
 React  →  http://localhost:5173
 Laravel →  http://localhost:8000
 ```
+
 Si no aparece, córrelos manualmente en dos terminales separadas:
 ```bash
 # Terminal 1
@@ -91,6 +92,7 @@ git pull origin feat/tu-rama-asignada
 ```bash
 git branch -vv
 ```
+
 La rama activa aparece con `*`. Si no estás en tu rama asignada, cámbiate antes de tocar cualquier archivo.
 
 **Paso 4 — Trabajar normalmente**
@@ -105,7 +107,7 @@ Para ver la base de datos visualmente usar SQLTools en el panel izquierdo de VS 
 
 ## Estructura del proyecto
 
-```
+```bash
 Proyecto-Remisoft/
 ├── .devcontainer/            # Configuración del entorno Codespaces
 │   ├── devcontainer.json     # Define imagen, puertos y extensiones
@@ -165,13 +167,13 @@ Las rutas públicas (sin autenticación) son `/` para el landing, `/login` y `/r
 
 El proyecto usa la siguiente estructura de ramas:
 
-```
-main                            ← código estable y aprobado. Nadie pushea directo aquí.
-develop                         ← rama de integración. Aquí se unen todos los cambios.
-  ├── feat/frontend-landing     ← César Rueda
-  ├── feat/frontend-components  ← Juan Felipe Bello
-  ├── feat/ia-modulo            ← Odalys Layton
-  └── feat/testing              ← Kevin Bueno
+```bash
+main                           ← código estable y aprobado. Nadie pushea directo aquí.
+develop                        ← rama de integración. Aquí se unen todos los cambios.
+ ├── feat/frontend-landing     ← César Rueda
+ ├── feat/frontend-components  ← Juan Felipe Bello
+ ├── feat/ia-modulo            ← Odalys Layton
+ └── feat/testing              ← Kevin Bueno
 ```
 
 ### Rama asignada por integrante
@@ -185,18 +187,19 @@ develop                         ← rama de integración. Aquí se unen todos lo
 
 ### Flujo de trabajo
 
-```
+```bash
 Tu rama feat/  →  Push  →  Pull Request hacia develop  →  Revisión  →  Aprobado  →  develop
-                                                                                         ↓
-                                                                         (cuando esté estable)
-                                                                                        main
+                                                                              ↓
+                                                                      (cuando esté estable)
+                                                                              ↓
+                                                                            main
 ```
 
-1. Trabajas en tu rama `feat/` asignada
-2. Cuando terminas algo que funciona hacés commit y push
-3. Abrís un Pull Request en GitHub hacia `develop`
-4. César como líder revisa y aprueba
-5. Solo cuando `develop` está probado y estable se fusiona a `main`
+1. Trabajas en tu rama `feat/` asignada.
+2. Cuando terminas algo que funciona haces commit y push.
+3. Abres un Pull Request en GitHub hacia `develop`.
+4. César como líder revisa y aprueba.
+5. Solo cuando `develop` está probado y estable se fusiona a `main`.
 
 ### Cómo posicionarte en tu rama
 
@@ -266,17 +269,15 @@ git commit -m "fix: corregir descuento de inventario al registrar pedido"
 git commit -m "chore: configurar MariaDB en setup.sh"
 git commit -m "docs: actualizar README con instrucciones de inicio"
 ```
----
-## SECCIONES POR ROL
+
+## Secciones por rol
 
 - **Superadmin:**
-
   - Ver usuarios
   - Peticiones de usuarios
   - Configuración del sistema
 
 - **Gerente:**
-
   - Control de menú
   - Control de inventario
   - Control de ingresos y egresos
@@ -289,24 +290,43 @@ git commit -m "docs: actualizar README con instrucciones de inicio"
   - Historial de pedidos
   - Historial de turnos de empleados
 
-- Mesero:
-
+- **Mesero:**
   - Registrar venta
   - Generar factura
   - Ver pedidos por mesa
 
-- Repartidor:
-
+- **Repartidor:**
   - Ver pedidos asignados
   - Ver dirección de domicilio
   - Registrar método de pago
   - Confirmar entrega
 
-## PALETA DE COLORES
+## Sistema de UI por rol
+
+Las interfaces de usuario por rol son **mockups visuales hardcodeados**. No representan datos reales ni lógica conectada al backend; su propósito es servir como referencia visual del comportamiento esperado de la aplicación.
+
+### Criterio de consistencia visual
+
+Todas las UI de roles deben mantener un lenguaje visual coherente entre sí. En especial:
+
+- mismo estilo de sidebar y navegación lateral,
+- misma lógica de topbar y títulos,
+- misma paleta base y jerarquía tipográfica,
+- mismos estilos generales de cards, botones y estados activos,
+- cambios solo en el contenido y acciones específicas de cada rol.
+
+Esto evita que cada pantalla parezca una app distinta.
+
+## Paleta de colores
+
 - `#D85A30` rojo principal
 - `#EF9F27` amarillo
 - `#1D9E75` verde
 - `#1a1a1a` texto
 - `#FDFAF7` fondo
 
-# ES IMPORTANTE ACLARAR, LAS UI VISUALES DE LOS USUARIOS SON DATOS HARDCODEADOS NO SON DATOS REALES SIRVEN PARA REFERENCIAR COMO SERIA EL FUNCIONAMINENTO DE LA APLICACIÓN
+> La paleta visual se usa para mantener una identidad consistente en todas las interfaces.
+
+## Nota importante
+
+Las UI visuales de los usuarios son datos **hardcodeados**. No son datos reales. Sirven únicamente para referenciar cómo sería el funcionamiento de la aplicación una vez implementada la lógica completa.

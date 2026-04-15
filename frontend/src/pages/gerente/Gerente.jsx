@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const menuItems = [
   { icon: 'restaurant_menu', label: 'Menú' },
@@ -59,6 +60,7 @@ const barras = [
 
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
+  const navigate = useNavigate() 
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: "'DM Sans', sans-serif" }}>
@@ -74,11 +76,11 @@ function Gerente() {
             Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
-            Gerencia General
+            Gerente
           </div>
         </div>
 
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {menuItems.map(item => (
             <button
               key={item.label}
@@ -98,7 +100,7 @@ function Gerente() {
               {item.label}
             </button>
           ))}
-        </nav>
+        </div>
 
         <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <button style={{
@@ -108,7 +110,7 @@ function Gerente() {
           }}>
             Cerrar Caja
           </button>
-          <button style={{
+          <button  onClick={() => navigate('/')} style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             background: 'transparent', border: 'none', cursor: 'pointer',
             color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',

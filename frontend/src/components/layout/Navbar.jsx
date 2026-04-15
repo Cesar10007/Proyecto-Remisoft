@@ -1,6 +1,6 @@
 function Navbar({ onLogin, onRegister }) {
   return (
-    <nav>
+    <nav className="nav-publica">
       <a href="#" className="nav-logo">Remi<span>Soft</span></a>
       <div className="nav-actions">
         <button className="btn btn-ghost" onClick={onLogin}>Iniciar sesión</button>
