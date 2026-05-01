@@ -37,25 +37,20 @@ INSERT INTO rol (nombre, descripcion) VALUES
 ('ADMIN',       'Administrador del restaurante'),
 ('CAJERO',      'Gestión de caja y pagos'),
 ('MESERO',      'Toma y gestión de pedidos en mesa'),
-('REPARTIDOR',  'Entrega de pedidos a domicilio'),
-('COCINERO',    'Preparación de pedidos en cocina'),
-('INVENTARIO',  'Gestión de inventario y proveedores'),
-('SUPERVISOR',  'Supervisión de operaciones'),
-('SOPORTE',     'Soporte técnico del sistema'),
-('AUDITOR',     'Revisión de caja y reportes');
+('REPARTIDOR',  'Entrega de pedidos a domicilio');
 
 -- 2. USUARIO
 INSERT INTO usuario (id_rol, identificacion, nombre, apellido, email, telefono, contrasena_hash, activo) VALUES
-(1, '1001', 'Carlos',     'Ramírez',  'carlos.ramirez@resto.com',   '3001234567', '$2b$12$abc123hash1',  1),
-(2, '1002', 'Laura',      'Gómez',    'laura.gomez@resto.com',       '3009876543', '$2b$12$abc123hash2',  1),
-(3, '1003', 'Andrés',     'Torres',   'andres.torres@resto.com',     '3101112223', '$2b$12$abc123hash3',  1),
-(4, '1004', 'Sofía',      'Martínez', 'sofia.martinez@resto.com',    '3154445556', '$2b$12$abc123hash4',  1),
-(5, '1005', 'Juan',       'López',    'juan.lopez@resto.com',        '3207778889', '$2b$12$abc123hash5',  1),
-(4, '1006', 'Valentina',  'Herrera',  'valentina.herrera@resto.com', '3001239876', '$2b$12$abc123hash6',  1),
-(3, '1007', 'Miguel',     'Castro',   'miguel.castro@resto.com',     '3109998887', '$2b$12$abc123hash7',  1),
-(5, '1008', 'Isabella',   'Vargas',   'isabella.vargas@resto.com',   '3156667778', '$2b$12$abc123hash8',  1),
-(2, '1009', 'Sebastián',  'Díaz',     'sebastian.diaz@resto.com',    '3203334445', '$2b$12$abc123hash9',  1),
-(6, '1010', 'Camila',     'Moreno',   'camila.moreno@resto.com',     '3001115556', '$2b$12$abc123hash10', 1);
+(1, '1001', 'Carlos',     'Ramírez',  'carlos.ramirez@resto.com',   '3001234567', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(2, '1002', 'Laura',      'Gómez',    'laura.gomez@resto.com',       '3009876543', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(3, '1003', 'Andrés',     'Torres',   'andres.torres@resto.com',     '3101112223', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(4, '1004', 'Sofía',      'Martínez', 'sofia.martinez@resto.com',    '3154445556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(5, '1005', 'Juan',       'López',    'juan.lopez@resto.com',        '3207778889', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(4, '1006', 'Valentina',  'Herrera',  'valentina.herrera@resto.com', '3001239876', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(3, '1007', 'Miguel',     'Castro',   'miguel.castro@resto.com',     '3109998887', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(5, '1008', 'Isabella',   'Vargas',   'isabella.vargas@resto.com',   '3156667778', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(2, '1009', 'Sebastián',  'Díaz',     'sebastian.diaz@resto.com',    '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
+(4, '1010', 'Camila',     'Moreno',   'camila.moreno@resto.com',     '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
 
 -- 3. CLIENTE
 INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps, tipo_documento, Num_documento) VALUES
