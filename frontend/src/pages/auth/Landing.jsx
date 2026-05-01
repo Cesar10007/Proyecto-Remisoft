@@ -1,3 +1,4 @@
+import './Auth.css'
 function Landing() {
 return (
     <>

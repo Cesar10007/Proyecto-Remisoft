@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../../styles/pages/repartidor.css'
+import './Repartidor.css'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen' },

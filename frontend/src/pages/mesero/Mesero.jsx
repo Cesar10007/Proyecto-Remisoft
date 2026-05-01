@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../../styles/pages/mesero.css'
+import './Mesero.css'
 
 const navItems = [
   { icon: 'table_restaurant', label: 'Mesas' },
