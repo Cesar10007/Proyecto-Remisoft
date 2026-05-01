@@ -1,26 +1,44 @@
 import './Auth.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usuarios } from '../../data/usuarios'
 
 function Login({ onClose }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
-    function handleLogin() {
-        const usuario = usuarios.find(
-            u => u.email === email && u.password === password
-        )
+    async function handleLogin() {
+        setLoading(true)
+        setError('')
 
-        if (!usuario) {
-            setError('Correo o contraseña incorrectos')
-            return
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, contrasena: password })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                setError(data.message || 'Correo o contraseña incorrectos')
+                return
+            }
+
+            localStorage.setItem('token', data.token)
+            localStorage.setItem('rol', data.rol)
+            localStorage.setItem('usuario', JSON.stringify(data.user))
+
+            onClose()
+            navigate('/' + data.rol.toLowerCase())
+
+        } catch (e) {
+            setError('No se pudo conectar con el servidor')
+        } finally {
+            setLoading(false)
         }
-
-        onClose()
-        navigate('/' + usuario.rol)
     }
 
     return (
@@ -52,8 +70,8 @@ function Login({ onClose }) {
 
             {error && <p style={{ color: 'var(--rojo)', fontSize: '0.82rem', marginBottom: '10px' }}>{error}</p>}
 
-            <button className="btn-form btn-form-primary" onClick={handleLogin}>
-                Ingresar al sistema
+            <button className="btn-form btn-form-primary" onClick={handleLogin} disabled={loading}>
+                {loading ? 'Ingresando...' : 'Ingresar al sistema'}
             </button>
         </div>
     )
