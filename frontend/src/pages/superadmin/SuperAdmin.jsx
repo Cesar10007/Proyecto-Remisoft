@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import '../../styles/pages/superadmin.css'
+import './SuperAdmin.css'
 import Footer from '../../components/layout/Footer'
 
 const menuItems = [
