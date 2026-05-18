@@ -1,109 +1,79 @@
-# RemiSoft - Sistema Web Inteligente para Restaurantes
+# RemiSoft — Sistema Web Inteligente para Restaurantes
 
 Sistema web con IA para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
+> **Estado actual:** El login está conectado al backend real (Laravel Sanctum). Las demás secciones usan datos hardcodeados como referencia visual mientras se implementa la lógica completa.
+
+***
+
+## Tabla de contenido
+
+1. [Equipo](#equipo-de-desarrollo)
+2. [Stack y arquitectura](#stack-y-arquitectura)
+3. [Estructura del proyecto](#estructura-del-proyecto)
+4. [Levantar el entorno](#levantar-el-entorno)
+5. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+6. [Funcionalidades implementadas](#funcionalidades-implementadas)
+7. [Diseño y UI por rol](#diseño-y-ui-por-rol)
+
+***
+
 ## Equipo de desarrollo
 
-| Nombre | Rol |
-|--------|-----|
-| Cesar David Rueda Daza | Líder / Full Stack |
-| Odalys Lizeth Layton Martinez | Frontend |
-| Juan Felipe Bello Perez | IA / Data Scientist |
-| Kevin Duvan Bueno Melo | Tester / QA |
+| Nombre | Rol | Rama asignada |
+|--------|-----|---------------|
+| César David Rueda Daza | Líder / Full Stack | `feat/frontend-landing` |
+| Odalys Lizeth Layton Martinez | Frontend | `feat/frontend-components` |
+| Juan Felipe Bello Perez | IA / Data Scientist | `feat/ia-modulo` |
+| Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
-## Stack tecnológico
+***
 
-- **Backend:** PHP 8.2 + Laravel
-- **Frontend:** React + Vite
-- **Base de datos:** MariaDB
-- **Entorno:** GitHub Codespaces
+## Stack y arquitectura
 
-## Servicios y puertos
+| Capa | Tecnología | Puerto |
+|------|------------|--------|
+| Frontend | React 19 + Vite 6 | 5173 |
+| Backend | PHP 8.2 + Laravel 11 | 8000 |
+| Base de datos | MariaDB | 3306 |
+| Entorno | GitHub Codespaces | — |
 
-Cada servicio del proyecto corre en un puerto específico. Los tres deben estar activos para que el sistema funcione correctamente.
+React **nunca** se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en `localhost:8000/api/`.
 
-| Servicio | Puerto | Descripción |
-|----------|--------|-------------|
-| React / Vite | 5173 | Frontend — lo que ve el usuario en el navegador |
-| Laravel | 8000 | Backend — API REST que procesa la lógica y la BD |
-| MariaDB | 3306 | Base de datos — almacena toda la información del sistema |
+### Dependencias principales
 
-React nunca se comunica directamente con MariaDB. Siempre pasa por Laravel a través de la API en `localhost:8000/api/`.
+**Frontend**
 
-## Dependencias principales
-
-### Frontend
-
-| Librería | Versión | Uso en el proyecto |
-|----------|---------|--------------------|
+| Librería | Versión | Uso |
+|----------|---------|-----|
 | React | 19.x | Framework principal de UI |
 | Vite | 6.x | Servidor de desarrollo y compilador |
-| react-router-dom | 7.14.0 | Manejo de rutas y navegación por rol |
+| react-router-dom | 7.14.0 | Rutas y navegación por rol |
 
-### Backend
+**Backend**
 
-| Librería | Versión | Uso en el proyecto |
-|----------|---------|--------------------|
+| Librería | Versión | Uso |
+|----------|---------|-----|
 | Laravel | 11.x | Framework backend y API REST |
 | PHP | 8.2 | Lenguaje del backend |
+| Laravel Sanctum | 4.3.x | Autenticación por tokens |
 
-> Cada vez que se instale una nueva librería con `npm install` o `composer require`, agregarla a esta tabla con su versión exacta y para qué se usa en el proyecto.
+> Cada vez que se instale una librería nueva con `npm install` o `composer require`, agregarla aquí con versión exacta y propósito.
 
-## Archivos de configuración del entorno
+### Base de datos
 
-El entorno de desarrollo está controlado por tres archivos dentro de `.devcontainer/`:
+| Campo | Valor |
+|-------|-------|
+| Motor | MariaDB |
+| Base de datos | remisoft |
+| Usuario | remisoft |
+| Contraseña | remisoft123 |
+| Puerto | 3306 |
+| Tablas | 24 |
 
-**`devcontainer.json`** — le dice a GitHub Codespaces cómo construir el entorno. Define la imagen base del sistema operativo (PHP 8.2), instala Node.js automáticamente, expone los puertos 8000, 5173 y 3306, e instala las extensiones de VS Code que el equipo necesita. Se ejecuta una sola vez cuando se crea el Codespace por primera vez.
+> Estas credenciales son solo para el entorno de desarrollo en Codespaces.
 
-**`setup.sh`** — script que corre automáticamente después de que el entorno se construye por primera vez. Instala MariaDB, crea la base de datos `remisoft`, carga la estructura del SQL y los datos de prueba, configura el `.env` de Laravel y corre `composer install` y `npm install`. Deja todo listo sin que nadie tenga que instalar nada manualmente.
-
-**`start.sh`** — script que corre cada vez que se abre el Codespace. Arranca los tres servicios automáticamente en segundo plano: MariaDB, Laravel en el puerto 8000 y React en el puerto 5173. Los logs quedan disponibles en `/tmp/laravel.log` y `/tmp/react.log`.
-
-## Qué hacer cada vez que abres el Codespace
-
-**Paso 1 — Verificar que los servicios están corriendo**
-
-El `start.sh` los arranca automáticamente. Confirma en la terminal que ves:
-```bash
-React  →  http://localhost:5173
-Laravel →  http://localhost:8000
-```
-
-Si no aparece, córrelos manualmente en dos terminales separadas:
-```bash
-# Terminal 1
-cd backend && php artisan serve
-
-# Terminal 2
-cd frontend && npm run dev
-```
-
-**Paso 2 — Sincronizar tu código antes de tocar cualquier archivo**
-```bash
-git checkout main
-git pull origin main
-git checkout develop
-git pull origin develop
-git checkout feat/tu-rama-asignada
-git pull origin feat/tu-rama-asignada
-```
-
-**Paso 3 — Verificar en qué rama estás**
-```bash
-git branch -vv
-```
-
-La rama activa aparece con `*`. Si no estás en tu rama asignada, cámbiate antes de tocar cualquier archivo.
-
-**Paso 4 — Trabajar normalmente**
-
-Ya puedes abrir archivos y hacer cambios.
-
-> Si aprobaste un PR en GitHub, siempre corre el Paso 2 antes de seguir trabajando. No hacerlo causa que las ramas diverjan.
-
-## Cómo iniciar el entorno
-
-Para ver la base de datos visualmente usar SQLTools en el panel izquierdo de VS Code. La conexión **remisoft** ya está configurada.
+***
 
 ## Estructura del proyecto
 
@@ -115,7 +85,7 @@ Proyecto-Remisoft/
 │   └── start.sh              # Arranque automático de servicios
 ├── frontend/                 # Proyecto React + Vite
 │   └── src/
-│       ├── pages/            # Vistas por rol — una carpeta por tipo de usuario
+│       ├── pages/            # Vistas por rol
 │       │   ├── auth/         # Landing, Login, Register — acceso público
 │       │   ├── admin/        # Panel administrador
 │       │   ├── mesero/       # Toma de pedidos
@@ -137,80 +107,81 @@ Proyecto-Remisoft/
 └── datos.sql                 # Datos de prueba
 ```
 
-## Navegación por roles — react-router-dom
+***
 
-El proyecto usa `react-router-dom` para manejar la navegación. Cada rol tiene su propia URL y solo puede acceder a las rutas que le corresponden. Cuando un usuario inicia sesión, el sistema lo redirige automáticamente según su rol:
+## Levantar el entorno
 
-| Rol | URL base |
-|-----|----------|
-| Administrador | `/admin/dashboard` |
-| Mesero | `/mesero/pedidos` |
-| Repartidor | `/repartidor` |
-| Cliente | `/cliente/menu` |
+### Primera vez (automático)
 
-Las rutas públicas (sin autenticación) son `/` para el landing, `/login` y `/registro`. Cualquier URL no reconocida redirige al inicio automáticamente.
+Al crear el Codespace, `setup.sh` corre solo y deja todo listo:
+- Instala MariaDB y crea la base de datos `remisoft`
+- Carga `DBFAMILIAREMI.sql` y `datos.sql`
+- Configura el `.env` de Laravel
+- Corre `composer install` y `npm install`
 
-## Base de datos
+### Cada vez que abres el Codespace
 
-| Campo | Valor |
-|-------|-------|
-| Motor | MariaDB |
-| Base de datos | remisoft |
-| Usuario | remisoft |
-| Contraseña | remisoft123 |
-| Puerto | 3306 |
-| Tablas | 24 |
-
-> Estas credenciales son solo para el entorno de desarrollo en Codespaces.
-
-## Estrategia de ramas
-
-El proyecto usa la siguiente estructura de ramas:
+`start.sh` arranca los tres servicios automáticamente. Verifica en terminal que ves:
 
 ```bash
-main                           ← código estable y aprobado. Nadie pushea directo aquí.
-develop                        ← rama de integración. Aquí se unen todos los cambios.
+React  →  http://localhost:5173
+Laravel →  http://localhost:8000
+```
+
+Si no aparecen, córrelos manualmente en dos terminales separadas:
+
+```bash
+# Terminal 1
+cd backend && php artisan serve
+
+# Terminal 2
+cd frontend && npm run dev
+```
+
+Para ver la base de datos visualmente, usar **SQLTools** en el panel izquierdo de VS Code. La conexión `remisoft` ya está configurada.
+
+### Archivos de configuración del entorno
+
+| Archivo | Cuándo corre | Qué hace |
+|---------|-------------|----------|
+| `devcontainer.json` | Al crear el Codespace | Define imagen, puertos y extensiones de VS Code |
+| `setup.sh` | Una sola vez | Instala todo y deja el entorno listo |
+| `start.sh` | Cada vez que abres | Arranca MariaDB, Laravel y React |
+
+***
+
+## Flujo de trabajo Git
+
+### Estructura de ramas
+
+```
+main        ← código estable y aprobado. Nadie pushea directo aquí.
+develop     ← rama de integración. Aquí se unen todos los cambios.
  ├── feat/frontend-landing     ← César Rueda
  ├── feat/frontend-components  ← Juan Felipe Bello
  ├── feat/ia-modulo            ← Odalys Layton
  └── feat/testing              ← Kevin Bueno
 ```
 
-### Rama asignada por integrante
-
-| Integrante | Rama |
-|------------|------|
-| César David Rueda Daza | `feat/frontend-landing` |
-| Odalys Lizeth Layton Martinez | `feat/frontend-components` |
-| Juan Felipe Bello Perez | `feat/ia-modulo` |
-| Kevin Duvan Bueno Melo | `feat/testing` |
-
-### Flujo de trabajo
-
-```bash
-Tu rama feat/  →  Push  →  Pull Request hacia develop  →  Revisión  →  Aprobado  →  develop
-                                                                              ↓
-                                                                      (cuando esté estable)
-                                                                              ↓
-                                                                            main
+```
+feat/tu-rama → Push → Pull Request a develop → Revisión → Aprobado → develop
+                                                                          ↓
+                                                               (cuando esté estable)
+                                                                          ↓
+                                                                        main
 ```
 
-1. Trabajas en tu rama `feat/` asignada.
-2. Cuando terminas algo que funciona haces commit y push.
-3. Abres un Pull Request en GitHub hacia `develop`.
-4. César como líder revisa y aprueba.
-5. Solo cuando `develop` está probado y estable se fusiona a `main`.
+### Rutina diaria
 
-### Cómo posicionarte en tu rama
-
-Cada vez que abras el Codespace asegúrate de estar en tu rama antes de tocar cualquier archivo:
+**Al abrir el Codespace — sincronizar antes de tocar cualquier archivo:**
 
 ```bash
-git checkout feat/tu-rama-asignada
-git pull origin feat/tu-rama-asignada
+git checkout main && git pull origin main
+git checkout develop && git pull origin develop
+git checkout feat/tu-rama-asignada && git pull origin feat/tu-rama-asignada
 ```
 
-### Cómo subir tus cambios
+**Subir tus cambios:**
 
 ```bash
 git add .
@@ -218,115 +189,109 @@ git commit -m "feat: descripción de lo que hiciste"
 git push origin feat/tu-rama-asignada
 ```
 
-### Cómo abrir un Pull Request
+**Abrir un Pull Request:**
 
-1. Ve a github.com/Cesar10007/Proyecto-Remisoft
+1. Ve a [github.com/Cesar10007/Proyecto-Remisoft](https://github.com/Cesar10007/Proyecto-Remisoft)
 2. Clic en **Pull requests** → **New pull request**
 3. Base: `develop` ← Compare: `feat/tu-rama`
-4. Escribe un título claro describiendo qué hiciste
-5. Asigna a César como revisor
-6. Clic en **Create pull request**
-
-### Sincronizar después de aprobar un PR
-
-Cada vez que se apruebe un PR en GitHub, antes de seguir trabajando sincroniza tu copia local:
-
-```bash
-git checkout main
-git pull origin main
-git checkout develop
-git pull origin develop
-git checkout feat/tu-rama-asignada
-```
+4. Escribe un título claro y asigna a César como revisor
+5. Clic en **Create pull request**
 
 ### Reglas del equipo
 
-- **Nunca pushear directo a `main` o `develop`**
-- Cada Pull Request debe ser revisado por César antes de aprobar
-- Los commits deben seguir la convención definida abajo
+- **Nunca** pushear directo a `main` o `develop`
+- Cada PR debe ser revisado por César antes de aprobarse
 - Una rama por tarea, no acumular cambios de varias tareas en una sola rama
-- Antes de empezar a trabajar siempre hacer `git pull` para tener el código actualizado
+- Siempre hacer `git pull` antes de empezar a trabajar
 
-## Convenciones de commits
+### Convención de commits
 
-El equipo usa la convención **Conventional Commits** para mantener un historial claro y legible.
-
-| Prefijo | Uso |
-|---------|-----|
-| `feat:` | Nueva funcionalidad del sistema |
-| `fix:` | Corrección de un error o bug |
-| `chore:` | Configuración, mantenimiento o tareas que no afectan el código funcional |
+| Prefijo | Cuándo usarlo |
+|---------|--------------|
+| `feat:` | Nueva funcionalidad |
+| `fix:` | Corrección de bug |
+| `refactor:` | Reorganización sin cambiar comportamiento |
+| `chore:` | Configuración o mantenimiento |
 | `docs:` | Cambios en documentación |
-| `refactor:` | Reorganización de código sin cambiar su comportamiento |
 | `test:` | Agregar o modificar pruebas |
 | `style:` | Cambios de formato sin afectar lógica |
 
-### Ejemplos
-
 ```bash
+# Ejemplos
 git commit -m "feat: agregar módulo de autenticación por roles"
 git commit -m "fix: corregir descuento de inventario al registrar pedido"
-git commit -m "chore: configurar MariaDB en setup.sh"
 git commit -m "docs: actualizar README con instrucciones de inicio"
 ```
 
-## Secciones por rol
+***
 
-- **Superadmin:**
-  - Ver usuarios
-  - Peticiones de usuarios
-  - Configuración del sistema
+## Funcionalidades implementadas
 
-- **Gerente:**
-  - Control de menú
-  - Control de inventario
-  - Control de ingresos y egresos
-  - Registro y control de pedidos
-  - Control de meseros y mesas
-  - Informes de IA
-  - Información de proveedores
-  - Historial de movimientos
-  - Flujo de caja
-  - Historial de pedidos
-  - Historial de turnos de empleados
+Qué está **conectado al backend real** vs qué es todavía un **prototipo visual**. Actualizar con cada PR aprobado a `develop`.
 
-- **Mesero:**
-  - Registrar venta
-  - Generar factura
-  - Ver pedidos por mesa
+| Módulo | Estado | Descripción |
+|--------|--------|-------------|
+| 🟢 Autenticación (login) | **Implementado** | Login real con Sanctum. Laravel valida credenciales, genera token y lo retorna al frontend. |
+| 🟢 Hash de contraseñas | **Implementado** | Contraseñas en `datos.sql` con hash bcrypt válido. Login usa `Hash::check()`. |
+| 🟢 Redirección por rol | **Implementado** | React redirige al usuario según el rol recibido del backend. |
+| 🟡 Guards de rutas (backend) | **Parcial** | Rutas en `routes/api.php`. Falta verificar que todas las rutas privadas exijan `auth:sanctum`. |
+| 🟡 Logout | **Sin confirmar** | No hay commit de endpoint `POST /api/logout` ni revocación de token en frontend. |
+| 🔴 Gestión de pedidos (salón) | **Prototipo visual** | UI del mesero hardcodeada. Sin conexión a backend. |
+| 🔴 Facturación automática | **Prototipo visual** | Vista existe. No genera ni guarda facturas reales. |
+| 🔴 Control de inventario | **Prototipo visual** | Pantallas diseñadas. Sin descuento automático al vender. |
+| 🔴 Gestión de domicilios | **Prototipo visual** | Vista del repartidor diseñada. Sin estado de entrega real. |
+| 🔴 Módulo de IA | **No iniciado** | Definido en el SRS. Sin código en `feat/ia-modulo`. |
+| 🔴 Reportes y estadísticas | **No iniciado** | Mencionado en el panel del Gerente. Sin implementación. |
 
-- **Repartidor:**
-  - Ver pedidos asignados
-  - Ver dirección de domicilio
-  - Registrar método de pago
-  - Confirmar entrega
+> 🟢 Implementado — funciona con datos reales del backend  
+> 🟡 Parcial — código existe pero incompleto o sin verificar  
+> 🔴 Prototipo / No iniciado — solo UI visual o no existe aún
 
-## Sistema de UI por rol
+### Historial de avances recientes
 
-Las interfaces de usuario por rol son **mockups visuales hardcodeados**. No representan datos reales ni lógica conectada al backend; su propósito es servir como referencia visual del comportamiento esperado de la aplicación.
+| Fecha | Commit | Qué se hizo |
+|-------|--------|-------------|
+| 2026-05-01 | `feat: implementar login funcional con laravel` | Login conectado al backend real con Sanctum |
+| 2026-05-01 | `refactor: mover CSS junto a sus componentes react` | Reorganización de estilos CSS por componente |
+| 2026-05-01 | `fix: reemplazar hashes falsos por hash bcrypt válido` | Credenciales de prueba funcionan en el login real |
+| 2026-04-30 | Limpieza de carpetas de ejercicio | Eliminación de archivos que no pertenecían al proyecto |
+
+***
+
+## Diseño y UI por rol
+
+### Paleta de colores
+
+| Token | Valor | Uso |
+|-------|-------|-----|
+| Rojo principal | `#D85A30` | Acciones primarias, botones CTA |
+| Amarillo | `#EF9F27` | Alertas, estados de advertencia |
+| Verde | `#1D9E75` | Confirmaciones, estados exitosos |
+| Texto | `#1a1a1a` | Tipografía principal |
+| Fondo | `#FDFAF7` | Fondo base de la aplicación |
+
+### Navegación por rol
+
+| Rol | URL base | Rutas públicas |
+|-----|----------|----------------|
+| Administrador | `/admin/dashboard` | — |
+| Mesero | `/mesero/pedidos` | — |
+| Repartidor | `/repartidor` | — |
+| Cliente | `/cliente/menu` | — |
+| — | `/` | Landing, `/login`, `/registro` |
+
+Cualquier URL no reconocida redirige al inicio automáticamente.
+
+### Secciones por rol
+
+**Superadmin:** Ver usuarios · Peticiones de usuarios · Configuración del sistema
+
+**Gerente:** Control de menú · Control de inventario · Control de ingresos y egresos · Registro y control de pedidos · Control de meseros y mesas · Informes de IA · Información de proveedores · Historial de movimientos · Flujo de caja · Historial de pedidos · Historial de turnos
+
+**Mesero:** Registrar venta · Generar factura · Ver pedidos por mesa
+
+**Repartidor:** Ver pedidos asignados · Ver dirección de domicilio · Registrar método de pago · Confirmar entrega
 
 ### Criterio de consistencia visual
 
-Todas las UI de roles deben mantener un lenguaje visual coherente entre sí. En especial:
-
-- mismo estilo de sidebar y navegación lateral,
-- misma lógica de topbar y títulos,
-- misma paleta base y jerarquía tipográfica,
-- mismos estilos generales de cards, botones y estados activos,
-- cambios solo en el contenido y acciones específicas de cada rol.
-
-Esto evita que cada pantalla parezca una app distinta.
-
-## Paleta de colores
-
-- `#D85A30` rojo principal
-- `#EF9F27` amarillo
-- `#1D9E75` verde
-- `#1a1a1a` texto
-- `#FDFAF7` fondo
-
-> La paleta visual se usa para mantener una identidad consistente en todas las interfaces.
-
-## Nota importante
-
-Las UI visuales de los usuarios son datos **hardcodeados**. No son datos reales. Sirven únicamente para referenciar cómo sería el funcionamiento de la aplicación una vez implementada la lógica completa.
+Todas las interfaces deben mantener: mismo sidebar y navegación lateral, misma lógica de topbar, misma paleta y jerarquía tipográfica, mismos estilos de cards y botones. Solo cambia el contenido específico de cada rol.
