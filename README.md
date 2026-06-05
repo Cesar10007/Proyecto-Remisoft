@@ -22,8 +22,7 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 
 | Nombre | Rol | Rama asignada |
 |--------|-----|---------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/frontend-landing` |
-| Odalys Lizeth Layton Martinez | Frontend | `feat/frontend-components` |
+| César David Rueda Daza | Líder / Full Stack | `feat/frontend-landing-components` |
 | Juan Felipe Bello Perez | IA / Data Scientist | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
@@ -158,8 +157,8 @@ Para ver la base de datos visualmente, usar **SQLTools** en el panel izquierdo d
 main        ← código estable y aprobado. Nadie pushea directo aquí.
 develop     ← rama de integración. Aquí se unen todos los cambios.
  ├── feat/frontend-landing     ← César Rueda
- ├── feat/frontend-components  ← Juan Felipe Bello
- ├── feat/ia-modulo            ← Odalys Layton
+ ├── feat/frontend-components  ← César Rueda
+ ├── feat/ia-modulo            ← Juan Felipe Bello
  └── feat/testing              ← Kevin Bueno
 ```
 
