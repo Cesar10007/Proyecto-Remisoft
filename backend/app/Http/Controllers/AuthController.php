@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use App\Models\Usuario;
 
 class AuthController extends Controller
 {
@@ -15,7 +15,7 @@ class AuthController extends Controller
             'contrasena' => 'required',
         ]);
 
-        $usuario = User::where('email', $request->email)->first();
+        $usuario = Usuario::where('email', $request->email)->first();
 
         if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena_hash)) {
             return response()->json([
@@ -27,8 +27,8 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'rol'   => $usuario->id_rol,
-            'user'  => $usuario,
+            'rol' => $usuario->id_rol,
+            'user' => $usuario,
         ]);
     }
 

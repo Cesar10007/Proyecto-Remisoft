@@ -1,80 +1,79 @@
-import './Auth.css'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
+import "./Auth.css";
 
-function Login({ onClose }) {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
-    const navigate = useNavigate()
+function Login() {
+  const [email, setEmail] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    async function handleLogin() {
-        setLoading(true)
-        setError('')
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, contrasena: password })
-            })
+    try {
+      const response = await api.post('/login', { email, contrasena });
 
-            const data = await response.json()
+      const { token, user, rol } = response.data;
+      const rolNormalizado = String(rol).toUpperCase();
 
-            if (!response.ok) {
-                setError(data.message || 'Correo o contraseña incorrectos')
-                return
-            }
+      localStorage.setItem('token', token);
+      localStorage.setItem('rol', rolNormalizado);
+      localStorage.setItem('user', JSON.stringify(user));
 
-            localStorage.setItem('token', data.token)
-            localStorage.setItem('rol', data.rol)
-            localStorage.setItem('usuario', JSON.stringify(data.user))
-
-            onClose()
-            navigate('/' + data.rol.toLowerCase())
-
-        } catch (e) {
-            setError('No se pudo conectar con el servidor')
-        } finally {
-            setLoading(false)
-        }
+      if (rolNormalizado === 'SUPERADMIN') {
+        navigate('/superadmin');
+      } else if (rolNormalizado === 'GERENTE') {
+        navigate('/gerente');
+      } else if (rolNormalizado === 'MESERO') {
+        navigate('/mesero');
+      } else if (rolNormalizado === 'REPARTIDOR') {
+        navigate('/repartidor');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError('Credenciales incorrectas');
+      } else if (err.response?.status === 422) {
+        setError('Revisa los datos ingresados');
+      } else {
+        setError('Error al conectar con el servidor');
+      }
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className="auth-card">
-            <h3>Iniciar sesión</h3>
-            <p className="auth-sub">Accede a tu cuenta de RemiSoft</p>
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        placeholder="Correo"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
 
-            <div className="form-group">
-                <label className="form-label">Correo electrónico</label>
-                <input
-                    type="email"
-                    className="form-input"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={e => { setEmail(e.target.value); setError('') }}
-                />
-            </div>
+      <input
+        type="password"
+        placeholder="Contraseña"
+        value={contrasena}
+        onChange={(e) => setContrasena(e.target.value)}
+        required
+      />
 
-            <div className="form-group">
-                <label className="form-label">Contraseña</label>
-                <input
-                    type="password"
-                    className="form-input"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => { setPassword(e.target.value); setError('') }}
-                />
-            </div>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-            {error && <p style={{ color: 'var(--rojo)', fontSize: '0.82rem', marginBottom: '10px' }}>{error}</p>}
-
-            <button className="btn-form btn-form-primary" onClick={handleLogin} disabled={loading}>
-                {loading ? 'Ingresando...' : 'Ingresar al sistema'}
-            </button>
-        </div>
-    )
+      <button type="submit" disabled={loading}>
+        {loading ? 'Ingresando...' : 'Ingresar'}
+      </button>
+    </form>
+  );
 }
 
-export default Login
+export default Login;
