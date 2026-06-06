@@ -17,7 +17,6 @@ function Login() {
 
     try {
       const response = await api.post('/login', { email, contrasena });
-
       const { token, user, rol } = response.data;
       const rolNormalizado = String(rol).toUpperCase();
 
@@ -25,54 +24,64 @@ function Login() {
       localStorage.setItem('rol', rolNormalizado);
       localStorage.setItem('user', JSON.stringify(user));
 
-      if (rolNormalizado === 'SUPERADMIN') {
-        navigate('/superadmin');
-      } else if (rolNormalizado === 'GERENTE') {
-        navigate('/gerente');
-      } else if (rolNormalizado === 'MESERO') {
-        navigate('/mesero');
-      } else if (rolNormalizado === 'REPARTIDOR') {
-        navigate('/repartidor');
-      } else {
-        navigate('/');
-      }
+      if (rolNormalizado === 'SUPERADMIN')     navigate('/superadmin');
+      else if (rolNormalizado === 'GERENTE')   navigate('/gerente');
+      else if (rolNormalizado === 'MESERO')    navigate('/mesero');
+      else if (rolNormalizado === 'REPARTIDOR') navigate('/repartidor');
+      else navigate('/');
+
     } catch (err) {
-      if (err.response?.status === 401) {
-        setError('Credenciales incorrectas');
-      } else if (err.response?.status === 422) {
-        setError('Revisa los datos ingresados');
-      } else {
-        setError('Error al conectar con el servidor');
-      }
+      if (err.response?.status === 401)       setError('Credenciales incorrectas');
+      else if (err.response?.status === 422)  setError('Revisa los datos ingresados');
+      else                                    setError('Error al conectar con el servidor');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        placeholder="Correo"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
+    <div className="auth-form">
+      <div className="auth-header">
+        <h2 className="auth-title">Bienvenido</h2>
+        <p className="auth-subtitle">Ingresa tus credenciales para continuar</p>
+      </div>
 
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={contrasena}
-        onChange={(e) => setContrasena(e.target.value)}
-        required
-      />
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label className="form-label">Correo electrónico</label>
+          <input
+            className="form-input"
+            type="email"
+            placeholder="correo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+        <div className="form-group">
+          <label className="form-label">Contraseña</label>
+          <input
+            className="form-input"
+            type="password"
+            placeholder="••••••••"
+            value={contrasena}
+            onChange={(e) => setContrasena(e.target.value)}
+            required
+          />
+        </div>
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Ingresando...' : 'Ingresar'}
-      </button>
-    </form>
+        {error && <p className="auth-error">{error}</p>}
+
+        <button
+          type="submit"
+          className="btn btn-primary auth-btn"
+          disabled={loading}
+        >
+          {loading ? 'Ingresando...' : 'Ingresar'}
+        </button>
+      </form>
+    </div>
   );
 }
 
