@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
-
+use App\Notifications\ResetPasswordNotification;
 
 class Usuario extends Authenticatable
-
 {
     use HasApiTokens, Notifiable;
 
@@ -18,9 +17,14 @@ class Usuario extends Authenticatable
     public $timestamps = false;
 
     protected $fillable = [
-        'id_rol', 'identificacion', 'nombre',
-        'apellido', 'email', 'telefono',
-        'contrasena_hash', 'activo'
+        'id_rol',
+        'identificacion',
+        'nombre',
+        'apellido',
+        'email',
+        'telefono',
+        'contrasena_hash',
+        'activo'
     ];
 
     protected $hidden = [
@@ -32,9 +36,18 @@ class Usuario extends Authenticatable
         return $this->belongsTo(Rol::class, 'id_rol');
     }
 
-    public function getAuthPassword()
+    public function getAuthPassword(): string
     {
         return $this->contrasena_hash;
-        
+    }
+
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->email;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
