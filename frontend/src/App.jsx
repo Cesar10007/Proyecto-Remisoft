@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer'
 import Landing from './pages/auth/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import ResetPassword from './pages/auth/ResetPassword'
 import Modal from './components/common/Modal'
 import PrivateRoute from './components/common/PrivateRoute'
 
@@ -36,6 +37,9 @@ function App() {
             </Modal>
           </>
         } />
+
+        {/* Página de reset de contraseña — pública, viene del enlace del correo */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Rutas protegidas — redirigen a "/" si no hay token */}
         <Route path="/superadmin" element={
