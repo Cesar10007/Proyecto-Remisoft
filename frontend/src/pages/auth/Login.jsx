@@ -65,23 +65,25 @@ function Login({ onClose }) {
 
         <div className="form-group password-toggle-wrapper">
           <label className="form-label">Contraseña</label>
-          <input
-            className="form-input password-toggle-input"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={contrasena}
-            onChange={(e) => setContrasena(e.target.value)}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="password-toggle-btn"
-          >
-            <span className="material-symbols-outlined password-toggle-icon">
-              {showPassword ? 'visibility_off' : 'visibility'}
-            </span>
-          </button>
+          <div className="password-input-wrapper">           {/* ← agregar este div */}
+            <input
+              className="form-input password-toggle-input"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={contrasena}
+              onChange={(e) => setContrasena(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="password-toggle-btn"
+            >
+              <span className="material-symbols-outlined password-toggle-icon">
+                {showPassword ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
+          </div>                                              {/* ← cerrar aquí */}
         </div>
 
         {error && <p className="auth-error">{error}</p>}
