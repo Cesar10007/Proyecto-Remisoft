@@ -6,8 +6,8 @@ import Landing from './pages/auth/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import Modal from './components/common/Modal'
+import PrivateRoute from './components/common/PrivateRoute'
 
-// dashboards (los creamos después)
 import SuperAdmin from './pages/superadmin/SuperAdmin'
 import Gerente from './pages/gerente/Gerente'
 import Mesero from './pages/mesero/Mesero'
@@ -20,7 +20,7 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* rutas públicas con navbar y footer */}
+        {/* Rutas públicas */}
         <Route path="/" element={
           <>
             <Navbar onLogin={() => setModal('login')} onRegister={() => setModal('registro')} />
@@ -37,11 +37,19 @@ function App() {
           </>
         } />
 
-        {/* rutas de dashboards sin navbar ni footer */}
-        <Route path="/superadmin" element={<SuperAdmin />} />
-        <Route path="/gerente" element={<Gerente />} />
-        <Route path="/mesero" element={<Mesero />} />
-        <Route path="/repartidor" element={<Repartidor />} />
+        {/* Rutas protegidas — redirigen a "/" si no hay token */}
+        <Route path="/superadmin" element={
+          <PrivateRoute><SuperAdmin /></PrivateRoute>
+        } />
+        <Route path="/gerente" element={
+          <PrivateRoute><Gerente /></PrivateRoute>
+        } />
+        <Route path="/mesero" element={
+          <PrivateRoute><Mesero /></PrivateRoute>
+        } />
+        <Route path="/repartidor" element={
+          <PrivateRoute><Repartidor /></PrivateRoute>
+        } />
 
         <Route path="*" element={<Navigate to="/" />} />
 

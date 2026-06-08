@@ -1,8 +1,8 @@
 # RemiSoft — Sistema Web Inteligente para Restaurantes
 
-Sistema web con IA para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
+Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** El login está conectado al backend real (Laravel Sanctum). Las demás secciones usan datos hardcodeados como referencia visual mientras se implementa la lógica completa.
+> **Estado actual:** La autenticación ya está conectada al backend real con Laravel Sanctum. El login y el registro funcionan en la API; varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.[1][2][3][4]
 
 ***
 
@@ -12,16 +12,18 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 2. [Stack y arquitectura](#stack-y-arquitectura)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Levantar el entorno](#levantar-el-entorno)
-5. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-6. [Funcionalidades implementadas](#funcionalidades-implementadas)
-7. [Diseño y UI por rol](#diseño-y-ui-por-rol)
+5. [Autenticación y roles](#autenticación-y-roles)
+6. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+7. [Funcionalidades implementadas](#funcionalidades-implementadas)
+8. [Diseño y UI por rol](#diseño-y-ui-por-rol)
+9. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ***
 
 ## Equipo de desarrollo
 
-| Nombre | Rol | Rama asignada |
-|--------|-----|---------------|
+| Nombre | Rol en el equipo | Rama principal |
+|--------|------------------|----------------|
 | César David Rueda Daza | Líder / Full Stack | `feat/frontend-landing-components` |
 | Juan Felipe Bello Perez | IA / Data Scientist | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
@@ -37,40 +39,40 @@ Sistema web con IA para automatizar pedidos, inventario, facturación y domicili
 | Base de datos | MariaDB | 3306 |
 | Entorno | GitHub Codespaces | — |
 
-React **nunca** se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en `localhost:8000/api/`.
+React no se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en `http://localhost:8000/api/`.[1]
 
 ### Dependencias principales
 
-**Frontend**
+#### Frontend
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
 | React | 19.x | Framework principal de UI |
-| Vite | 6.x | Servidor de desarrollo y compilador |
+| Vite | 6.x | Servidor de desarrollo y build |
 | react-router-dom | 7.14.0 | Rutas y navegación por rol |
+| Axios | Confirmar en `package.json` | Cliente HTTP para consumir la API |
 
-**Backend**
+#### Backend
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
 | Laravel | 11.x | Framework backend y API REST |
 | PHP | 8.2 | Lenguaje del backend |
-| Laravel Sanctum | 4.3.x | Autenticación por tokens |
+| Laravel Sanctum | 4.3.x | Autenticación por token |
 
-> Cada vez que se instale una librería nueva con `npm install` o `composer require`, agregarla aquí con versión exacta y propósito.
+> Cada vez que se instale una librería nueva con `npm install` o `composer require`, actualizar esta sección con versión y propósito.[5][6]
 
 ### Base de datos
 
 | Campo | Valor |
 |-------|-------|
 | Motor | MariaDB |
-| Base de datos | remisoft |
-| Usuario | remisoft |
-| Contraseña | remisoft123 |
+| Base de datos | `remisoft` |
+| Usuario | `remisoft` |
+| Contraseña | `remisoft123` |
 | Puerto | 3306 |
-| Tablas | 24 |
 
-> Estas credenciales son solo para el entorno de desarrollo en Codespaces.
+> Estas credenciales son solo para desarrollo local o Codespaces. No deben reutilizarse en producción.[7]
 
 ***
 
@@ -79,55 +81,57 @@ React **nunca** se comunica directamente con MariaDB. Todo pasa por la API REST 
 ```bash
 Proyecto-Remisoft/
 ├── .devcontainer/            # Configuración del entorno Codespaces
-│   ├── devcontainer.json     # Define imagen, puertos y extensiones
-│   ├── setup.sh              # Instalación inicial (corre una vez)
+│   ├── devcontainer.json     # Imagen, puertos y extensiones
+│   ├── setup.sh              # Instalación inicial
 │   └── start.sh              # Arranque automático de servicios
 ├── frontend/                 # Proyecto React + Vite
 │   └── src/
-│       ├── pages/            # Vistas por rol
-│       │   ├── auth/         # Landing, Login, Register — acceso público
-│       │   ├── admin/        # Panel administrador
+│       ├── pages/            # Vistas principales
+│       │   ├── auth/         # Landing, login, registro
+│       │   ├── admin/        # Panel administrativo
 │       │   ├── mesero/       # Toma de pedidos
 │       │   ├── repartidor/   # Gestión de domicilios
 │       │   └── cliente/      # Menú y pedidos
 │       ├── components/       # Componentes reutilizables
-│       │   ├── common/       # Modal, botones, inputs
-│       │   └── layout/       # Navbar, Footer
-│       ├── services/         # Llamadas HTTP al backend (Axios)
-│       ├── hooks/            # Hooks personalizados de React
-│       └── context/          # Estado global: usuario autenticado y rol
+│       ├── api/              # Configuración Axios / cliente HTTP
+│       ├── hooks/            # Hooks personalizados
+│       └── context/          # Estado global de autenticación y usuario
 ├── backend/                  # Proyecto Laravel
 │   └── app/
-│       ├── Http/Controllers/ # Reciben peticiones HTTP de React
-│       ├── Services/         # Lógica de negocio
-│       ├── Repositories/     # Acceso a base de datos
-│       └── Models/           # Entidades Eloquent
-├── DBFAMILIAREMI.sql         # Estructura de la base de datos
-└── datos.sql                 # Datos de prueba
+│       ├── Http/Controllers/ # Controladores HTTP
+│       ├── Http/Requests/    # Validaciones tipo FormRequest
+│       ├── Models/           # Modelos Eloquent
+│       └── Services/         # Lógica de negocio si aplica
+├── DBFAMILIAREMI.sql         # Estructura base de datos heredada
+└── datos.sql                 # Datos semilla / prueba
 ```
+
+> La estructura real del repositorio debe prevalecer sobre este esquema. Si una carpeta cambia, esta sección también debe actualizarse.[8]
 
 ***
 
 ## Levantar el entorno
 
-### Primera vez (automático)
+### Primera vez
 
-Al crear el Codespace, `setup.sh` corre solo y deja todo listo:
-- Instala MariaDB y crea la base de datos `remisoft`
-- Carga `DBFAMILIAREMI.sql` y `datos.sql`
-- Configura el `.env` de Laravel
-- Corre `composer install` y `npm install`
+Al crear el Codespace, `setup.sh` deja listo el entorno:
+
+- instala MariaDB,
+- crea la base de datos `remisoft`,
+- carga `DBFAMILIAREMI.sql` y `datos.sql`,
+- configura el `.env` de Laravel,
+- corre `composer install` y `npm install`.
 
 ### Cada vez que abres el Codespace
 
-`start.sh` arranca los tres servicios automáticamente. Verifica en terminal que ves:
+`start.sh` arranca los servicios automáticamente. Verifica:
 
 ```bash
-React  →  http://localhost:5173
-Laravel →  http://localhost:8000
+React   → http://localhost:5173
+Laravel → http://localhost:8000
 ```
 
-Si no aparecen, córrelos manualmente en dos terminales separadas:
+Si no se levantan solos, correr manualmente:
 
 ```bash
 # Terminal 1
@@ -137,15 +141,70 @@ cd backend && php artisan serve
 cd frontend && npm run dev
 ```
 
-Para ver la base de datos visualmente, usar **SQLTools** en el panel izquierdo de VS Code. La conexión `remisoft` ya está configurada.
-
-### Archivos de configuración del entorno
+### Configuración del entorno
 
 | Archivo | Cuándo corre | Qué hace |
 |---------|-------------|----------|
-| `devcontainer.json` | Al crear el Codespace | Define imagen, puertos y extensiones de VS Code |
-| `setup.sh` | Una sola vez | Instala todo y deja el entorno listo |
+| `devcontainer.json` | Al crear el Codespace | Define imagen, puertos y extensiones |
+| `setup.sh` | Una sola vez | Instala dependencias y configura el proyecto |
 | `start.sh` | Cada vez que abres | Arranca MariaDB, Laravel y React |
+
+***
+
+## Autenticación y roles
+
+### Endpoints principales
+
+| Método | Endpoint | Estado | Descripción |
+|--------|----------|--------|-------------|
+| `POST` | `/api/login` | Implementado | Valida credenciales, genera token y retorna usuario autenticado.[4] |
+| `POST` | `/api/register` | Implementado | Registra un nuevo usuario con validación de datos y unicidad.[2][3] |
+| `POST` | `/api/logout` | Revisar implementación | Debe invalidar el token actual si ya está conectado a Sanctum.[1] |
+
+### Requests de referencia
+
+#### Login
+
+```json
+{
+  "email": "prueba.usuario@resto.com",
+  "contrasena": "12345678"
+}
+```
+
+#### Register
+
+```json
+{
+  "id_rol": 4,
+  "identificacion": "2001",
+  "nombre": "Prueba",
+  "apellido": "Usuario",
+  "email": "prueba.usuario@resto.com",
+  "telefono": "3005554444",
+  "contrasena": "12345678",
+  "contrasena_confirmation": "12345678"
+}
+```
+
+### Respuesta confirmada de login
+
+El login ya fue probado con Postman y devuelve `token`, `rol` y `user` cuando las credenciales son correctas.[4]
+
+### Regla crítica sobre roles
+
+El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve el backend, no el nombre que alguien suponga mentalmente.[4][9] Este punto ya generó un bug real: el backend devolvía `ADMIN`, pero el frontend esperaba otros nombres de rol y por eso parecía que el login “no hacía nada”.[4][9]
+
+### Catálogo actual de roles
+
+> **Importante:** esta tabla debe validarse contra la base de datos y mantenerse sincronizada con frontend y backend. Si cambia en BD, debe cambiar aquí y en las rutas del frontend.[10][11]
+
+| Valor esperado en frontend | Observación |
+|----------------------------|-------------|
+| `ADMIN` | Confirmado en respuesta real de login.[4] |
+| `MESERO` | Debe mapear a rutas del módulo de salón. |
+| `REPARTIDOR` | Debe mapear a rutas de domicilios. |
+| `GERENTE` / `SUPERADMIN` | Solo usar si realmente existen y el backend los devuelve. No asumir nombres por costumbre.[4] |
 
 ***
 
@@ -153,26 +212,27 @@ Para ver la base de datos visualmente, usar **SQLTools** en el panel izquierdo d
 
 ### Estructura de ramas
 
-```
-main        ← código estable y aprobado. Nadie pushea directo aquí.
-develop     ← rama de integración. Aquí se unen todos los cambios.
- ├── feat/frontend-landing     ← César Rueda
- ├── feat/frontend-components  ← César Rueda
- ├── feat/ia-modulo            ← Juan Felipe Bello
- └── feat/testing              ← Kevin Bueno
-```
-
-```
-feat/tu-rama → Push → Pull Request a develop → Revisión → Aprobado → develop
-                                                                          ↓
-                                                               (cuando esté estable)
-                                                                          ↓
-                                                                        main
+```text
+main        ← código estable y aprobado
+develop     ← rama de integración
+├── feat/frontend-landing-components
+├── feat/ia-modulo
+└── feat/testing
 ```
 
-### Rutina diaria
+### Flujo correcto
 
-**Al abrir el Codespace — sincronizar antes de tocar cualquier archivo:**
+```text
+feat/tu-rama → commit → push → Pull Request a develop → revisión → merge a develop
+                                                           ↓
+                                                   cuando esté estable
+                                                           ↓
+                                                          main
+```
+
+### Rutina diaria recomendada
+
+Antes de empezar a trabajar:
 
 ```bash
 git checkout main && git pull origin main
@@ -180,7 +240,7 @@ git checkout develop && git pull origin develop
 git checkout feat/tu-rama-asignada && git pull origin feat/tu-rama-asignada
 ```
 
-**Subir tus cambios:**
+Subir cambios:
 
 ```bash
 git add .
@@ -188,72 +248,42 @@ git commit -m "feat: descripción de lo que hiciste"
 git push origin feat/tu-rama-asignada
 ```
 
-**Abrir un Pull Request:**
-
-1. Ve a [github.com/Cesar10007/Proyecto-Remisoft](https://github.com/Cesar10007/Proyecto-Remisoft)
-2. Clic en **Pull requests** → **New pull request**
-3. Base: `develop` ← Compare: `feat/tu-rama`
-4. Escribe un título claro y asigna a César como revisor
-5. Clic en **Create pull request**
-
 ### Reglas del equipo
 
-- **Nunca** pushear directo a `main` o `develop`
-- Cada PR debe ser revisado por César antes de aprobarse
-- Una rama por tarea, no acumular cambios de varias tareas en una sola rama
-- Siempre hacer `git pull` antes de empezar a trabajar
+- Nunca hacer push directo a `main` o `develop`.
+- Cada tarea debe salir desde una rama `feat/*` creada a partir de `develop`.[12][13]
+- Probar en la rama de trabajo antes de integrar a `develop`.[14][15]
+- Hacer `pull` antes de tocar archivos para evitar conflictos innecesarios.[16][17]
 
 ### Convención de commits
 
-| Prefijo | Cuándo usarlo |
-|---------|--------------|
+| Prefijo | Uso |
+|---------|-----|
 | `feat:` | Nueva funcionalidad |
 | `fix:` | Corrección de bug |
 | `refactor:` | Reorganización sin cambiar comportamiento |
 | `chore:` | Configuración o mantenimiento |
-| `docs:` | Cambios en documentación |
-| `test:` | Agregar o modificar pruebas |
-| `style:` | Cambios de formato sin afectar lógica |
-
-```bash
-# Ejemplos
-git commit -m "feat: agregar módulo de autenticación por roles"
-git commit -m "fix: corregir descuento de inventario al registrar pedido"
-git commit -m "docs: actualizar README con instrucciones de inicio"
-```
+| `docs:` | Documentación |
+| `test:` | Pruebas |
+| `style:` | Formato / estilos sin cambiar lógica |
 
 ***
 
 ## Funcionalidades implementadas
 
-Qué está **conectado al backend real** vs qué es todavía un **prototipo visual**. Actualizar con cada PR aprobado a `develop`.
-
 | Módulo | Estado | Descripción |
 |--------|--------|-------------|
-| 🟢 Autenticación (login) | **Implementado** | Login real con Sanctum. Laravel valida credenciales, genera token y lo retorna al frontend. |
-| 🟢 Hash de contraseñas | **Implementado** | Contraseñas en `datos.sql` con hash bcrypt válido. Login usa `Hash::check()`. |
-| 🟢 Redirección por rol | **Implementado** | React redirige al usuario según el rol recibido del backend. |
-| 🟡 Guards de rutas (backend) | **Parcial** | Rutas en `routes/api.php`. Falta verificar que todas las rutas privadas exijan `auth:sanctum`. |
-| 🟡 Logout | **Sin confirmar** | No hay commit de endpoint `POST /api/logout` ni revocación de token en frontend. |
-| 🔴 Gestión de pedidos (salón) | **Prototipo visual** | UI del mesero hardcodeada. Sin conexión a backend. |
-| 🔴 Facturación automática | **Prototipo visual** | Vista existe. No genera ni guarda facturas reales. |
-| 🔴 Control de inventario | **Prototipo visual** | Pantallas diseñadas. Sin descuento automático al vender. |
-| 🔴 Gestión de domicilios | **Prototipo visual** | Vista del repartidor diseñada. Sin estado de entrega real. |
-| 🔴 Módulo de IA | **No iniciado** | Definido en el SRS. Sin código en `feat/ia-modulo`. |
-| 🔴 Reportes y estadísticas | **No iniciado** | Mencionado en el panel del Gerente. Sin implementación. |
-
-> 🟢 Implementado — funciona con datos reales del backend  
-> 🟡 Parcial — código existe pero incompleto o sin verificar  
-> 🔴 Prototipo / No iniciado — solo UI visual o no existe aún
-
-### Historial de avances recientes
-
-| Fecha | Commit | Qué se hizo |
-|-------|--------|-------------|
-| 2026-05-01 | `feat: implementar login funcional con laravel` | Login conectado al backend real con Sanctum |
-| 2026-05-01 | `refactor: mover CSS junto a sus componentes react` | Reorganización de estilos CSS por componente |
-| 2026-05-01 | `fix: reemplazar hashes falsos por hash bcrypt válido` | Credenciales de prueba funcionan en el login real |
-| 2026-04-30 | Limpieza de carpetas de ejercicio | Eliminación de archivos que no pertenecían al proyecto |
+| Autenticación (login) | Implementado | Login real con Sanctum. Laravel valida credenciales, genera token y retorna usuario autenticado.[4] |
+| Registro de usuarios | Implementado | Endpoint funcional con validación y persistencia en base de datos.[2] |
+| Validación de duplicados | Implementado | Register responde `422` cuando identificación o correo ya existen.[3] |
+| Hash de contraseñas | Implementado | El login compara contraseña ingresada contra hash almacenado con `Hash::check()`.[1][4] |
+| Redirección por rol | Parcial | Funciona, pero depende de que frontend y backend compartan exactamente los mismos nombres de rol.[4][9] |
+| Logout | Sin confirmar | Falta verificar revocación de token desde frontend y backend.[1] |
+| Gestión de pedidos | Prototipo visual | Sin integración real al backend. |
+| Facturación | Prototipo visual | Sin persistencia real. |
+| Inventario | Prototipo visual | Sin lógica de descuento automático. |
+| Domicilios | Prototipo visual | Sin flujo real de estados. |
+| Módulo IA | No iniciado | Definido funcionalmente, sin implementación visible. |
 
 ***
 
@@ -263,34 +293,36 @@ Qué está **conectado al backend real** vs qué es todavía un **prototipo visu
 
 | Token | Valor | Uso |
 |-------|-------|-----|
-| Rojo principal | `#D85A30` | Acciones primarias, botones CTA |
-| Amarillo | `#EF9F27` | Alertas, estados de advertencia |
-| Verde | `#1D9E75` | Confirmaciones, estados exitosos |
-| Texto | `#1a1a1a` | Tipografía principal |
-| Fondo | `#FDFAF7` | Fondo base de la aplicación |
+| Rojo principal | `#D85A30` | Botones y acciones primarias |
+| Amarillo | `#EF9F27` | Advertencias |
+| Verde | `#1D9E75` | Confirmaciones |
+| Texto | `#1A1A1A` | Tipografía principal |
+| Fondo | `#FDFAF7` | Fondo base |
 
 ### Navegación por rol
 
-| Rol | URL base | Rutas públicas |
-|-----|----------|----------------|
-| Administrador | `/admin/dashboard` | — |
-| Mesero | `/mesero/pedidos` | — |
-| Repartidor | `/repartidor` | — |
-| Cliente | `/cliente/menu` | — |
-| — | `/` | Landing, `/login`, `/registro` |
+| Rol | Ruta base esperada |
+|-----|--------------------|
+| `ADMIN` | `/admin/dashboard` |
+| `MESERO` | `/mesero/pedidos` |
+| `REPARTIDOR` | `/repartidor` |
+| Cliente | `/cliente/menu` |
+| Público | `/`, `/login`, `/registro` |
 
-Cualquier URL no reconocida redirige al inicio automáticamente.
+> Esta tabla debe coincidir con el valor real de `rol` que devuelve el backend. Si backend responde `ADMIN`, el frontend no debe esperar `GERENTE` salvo que exista un mapeo explícito.[4][9]
 
 ### Secciones por rol
 
-- **Superadmin:** Ver usuarios · Peticiones de usuarios · Configuración del sistema
+- **Administrador:** usuarios, configuración, panel principal.
+- **Mesero:** registrar venta, generar factura, ver pedidos por mesa.
+- **Repartidor:** ver pedidos asignados, dirección, método de pago y confirmar entrega.
+- **Cliente:** menú, pedidos y seguimiento básico.
 
-- **Gerente:** Control de menú · Control de inventario · Control de ingresos y egresos · Registro y control de pedidos · Control de meseros y mesas · Informes de IA · Información de proveedores · Historial de movimientos · Flujo de caja · Historial de pedidos · Historial de turnos
+***
 
-- **Mesero:** Registrar venta · Generar factura · Ver pedidos por mesa
+## Notas técnicas importantes
 
-- **Repartidor:** Ver pedidos asignados · Ver dirección de domicilio · Registrar método de pago · Confirmar entrega
-
-### Criterio de consistencia visual
-
-Todas las interfaces deben mantener: mismo sidebar y navegación lateral, misma lógica de topbar, misma paleta y jerarquía tipográfica, mismos estilos de cards y botones. Solo cambia el contenido específico de cada rol.
+- El proyecto usa una base heredada con tabla `usuario`, no la convención estándar `users` de Laravel.[1][18]
+- El modelo `Usuario` requiere configuración explícita de tabla primaria y timestamps. Si la tabla no tiene `created_at` y `updated_at`, el modelo debe usar `public $timestamps = false;` para evitar errores SQL como el ya detectado.[18][19][20]
+- No asumir nombres de roles “por costumbre”. El contrato correcto es el que devuelve la API en tiempo real.[4][9]
+- Cada cambio de contrato entre frontend y backend debe reflejarse en este README el mismo día que se mergea a `develop`.[5][7]
