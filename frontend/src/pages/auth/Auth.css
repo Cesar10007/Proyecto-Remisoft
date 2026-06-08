@@ -50,3 +50,33 @@
     cursor: not-allowed;
     transform: none;
 }
+
+.password-toggle-wrapper {
+    position: relative;
+}
+
+.password-toggle-input {
+    padding-right: 46px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    top: 0;
+    right: 12px;
+    bottom: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--texto-muted);
+    cursor: pointer;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.password-toggle-icon {
+    font-size: 20px;
+    display: block;
+}

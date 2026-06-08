@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './SuperAdmin.css'
 import Footer from '../../components/layout/Footer'
 
@@ -34,6 +35,7 @@ const serverStats = [
 
 function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('Gestión de Usuarios')
+  const navigate = useNavigate()
 
   return (
     <div className="sa-wrapper">
@@ -90,6 +92,15 @@ function SuperAdmin() {
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>history_edu</span>
             Registros
+          </button>
+          <button onClick={() => navigate('/')} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
+            fontFamily: "'DM Sans', sans-serif"
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+            Cerrar sesión
           </button>
           <button style={{
             background: 'var(--rojo)', color: '#fff', border: 'none',
