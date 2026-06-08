@@ -1,0 +1,52 @@
+/* Contenedor del formulario */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 4px;
+    min-width: 300px;
+}
+
+/* Encabezado */
+.auth-header {
+    margin-bottom: 8px;
+}
+
+.auth-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--texto);
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+}
+
+.auth-subtitle {
+    font-size: 0.85rem;
+    color: var(--texto-muted);
+}
+
+/* Mensaje de error */
+.auth-error {
+    font-size: 0.82rem;
+    color: var(--rojo);
+    background: var(--rojo-light);
+    border: 1px solid var(--rojo-mid);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+}
+
+/* Botón ocupa todo el ancho */
+.auth-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 10px 20px;
+}
+
+.auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
