@@ -51,7 +51,15 @@
     transform: none;
 }
 
-.password-toggle-wrapper {
+/* Grid de dos columnas para nombre/apellido */
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Wrapper solo del input, para que el botón se posicione relativo a él */
+.password-input-wrapper {
     position: relative;
 }
 
@@ -79,4 +87,20 @@
 .password-toggle-icon {
     font-size: 20px;
     display: block;
+}
+
+/* Checkbox de términos */
+.form-check-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--texto-muted);
+    cursor: pointer;
+}
+
+.form-check-input {
+    margin-top: 2px;
+    accent-color: var(--rojo);
+    flex-shrink: 0;
 }
