@@ -9,9 +9,10 @@ class Usuario extends Authenticatable
 {
     use HasApiTokens;
 
-    protected $table = 'usuario';        // nombre exacto de tu tabla en BD
+    protected $table = 'usuario';
+    protected $primaryKey = 'id_usuario';
 
-    protected $primaryKey = 'id_usuario'; // tu PK no es 'id' sino 'id_usuario'
+    public $timestamps = false;
 
     protected $fillable = [
         'id_rol', 'identificacion', 'nombre',
@@ -20,10 +21,9 @@ class Usuario extends Authenticatable
     ];
 
     protected $hidden = [
-        'contrasena_hash'   // nunca se envía en las respuestas JSON
+        'contrasena_hash'
     ];
 
-    // Relación con la tabla rol
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'id_rol');
