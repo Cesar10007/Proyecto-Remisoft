@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: 'https://ominous-space-system-pj7w9xq4q6g5hr677-8000.app.github.dev/api',
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

@@ -104,3 +104,14 @@
     accent-color: var(--rojo);
     flex-shrink: 0;
 }
+
+
+/* Página de reset de contraseña */
+.reset-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 20px;
+}
