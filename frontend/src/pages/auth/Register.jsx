@@ -7,6 +7,7 @@ function Register({ onClose }) {
     const [email, setEmail] = useState('')
     const [telefono, setTelefono] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [terms, setTerms] = useState(false)
 
 function validateEmail(e) {
@@ -72,15 +73,24 @@ return (
             />
         </div>
 
-        <div className="form-group">
+        <div className="form-group password-toggle-wrapper">
             <label className="form-label">Contraseña</label>
             <input
-            type="password"
-            className="form-input"
+            type={showPassword ? 'text' : 'password'}
+            className="form-input password-toggle-input"
             placeholder="Mínimo 8 caracteres"
             value={password}
             onChange={e => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              className="password-toggle-btn"
+            >
+              <span className="material-symbols-outlined password-toggle-icon">
+                {showPassword ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
         </div>
 
         <div style={{ marginBottom: '14px' }}>

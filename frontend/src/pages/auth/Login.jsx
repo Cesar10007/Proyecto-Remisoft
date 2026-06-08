@@ -6,6 +6,7 @@ import "./Auth.css";
 function Login({ onClose }) {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -62,16 +63,25 @@ function Login({ onClose }) {
           />
         </div>
 
-        <div className="form-group">
+        <div className="form-group password-toggle-wrapper">
           <label className="form-label">Contraseña</label>
           <input
-            className="form-input"
-            type="password"
+            className="form-input password-toggle-input"
+            type={showPassword ? 'text' : 'password'}
             placeholder="••••••••"
             value={contrasena}
             onChange={(e) => setContrasena(e.target.value)}
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="password-toggle-btn"
+          >
+            <span className="material-symbols-outlined password-toggle-icon">
+              {showPassword ? 'visibility_off' : 'visibility'}
+            </span>
+          </button>
         </div>
 
         {error && <p className="auth-error">{error}</p>}
