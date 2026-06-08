@@ -193,7 +193,24 @@ El login ya fue probado con Postman y devuelve `token`, `rol` y `user` cuando la
 
 ### Regla crítica sobre roles
 
-El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve el backend, no el nombre que alguien suponga mentalmente.[4][9] Este punto ya generó un bug real: el backend devolvía `ADMIN`, pero el frontend esperaba otros nombres de rol y por eso parecía que el login “no hacía nada”.[4][9]
+El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve el backend, no el nombre que alguien suponga mentalmente.[4][9] Este punto ya generó un bug real: el backend devolvía `ADMIN`, pero el frontend esperaba otros nombres de rol y por eso parecía que el login "no hacía nada".[4][9]
+
+### Modelo de permisos por rol
+
+> Esta jerarquía define qué puede crear, ver y gestionar cada rol. Debe mantenerse sincronizada con las políticas de autorización del backend (Gates / Policies en Laravel) y con las rutas protegidas del frontend.
+
+| Rol | Puede crear / gestionar | Visibilidad |
+|-----|------------------------|-------------|
+| `SUPERADMIN` | Crea y gestiona Gerentes; configura el sistema | No ve Meseros ni Repartidores |
+| `GERENTE` | Crea y gestiona Meseros, Repartidores y Cajeros de su restaurante | Ve la operación completa de su restaurante |
+| `MESERO` | Toma pedidos, gestiona mesas | Vista de salón |
+| `REPARTIDOR` | Ve y gestiona sus propias entregas | Vista de domicilios asignados |
+| `CAJERO` | Gestiona caja y pagos | Vista de caja |
+
+**Reglas de jerarquía:**
+- Un `SUPERADMIN` **no** puede crear ni ver Meseros o Repartidores directamente; esa responsabilidad recae en el `GERENTE`.
+- Un `GERENTE` solo administra los usuarios de **su propio restaurante**, no los de otros.
+- `MESERO`, `REPARTIDOR` y `CAJERO` no tienen permisos de gestión de usuarios.
 
 ### Catálogo actual de roles
 
@@ -302,7 +319,7 @@ git push origin feat/tu-rama-asignada
 ### Navegación por rol
 
 | Rol | Ruta base esperada |
-|-----|--------------------|
+|-----|-------------------|
 | `ADMIN` | `/admin/dashboard` |
 | `MESERO` | `/mesero/pedidos` |
 | `REPARTIDOR` | `/repartidor` |
@@ -324,5 +341,5 @@ git push origin feat/tu-rama-asignada
 
 - El proyecto usa una base heredada con tabla `usuario`, no la convención estándar `users` de Laravel.[1][18]
 - El modelo `Usuario` requiere configuración explícita de tabla primaria y timestamps. Si la tabla no tiene `created_at` y `updated_at`, el modelo debe usar `public $timestamps = false;` para evitar errores SQL como el ya detectado.[18][19][20]
-- No asumir nombres de roles “por costumbre”. El contrato correcto es el que devuelve la API en tiempo real.[4][9]
+- No asumir nombres de roles "por costumbre". El contrato correcto es el que devuelve la API en tiempo real.[4][9]
 - Cada cambio de contrato entre frontend y backend debe reflejarse en este README el mismo día que se mergea a `develop`.[5][7]
