@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import "./Auth.css";
 
-function Login() {
+function Login({ onClose }) {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
@@ -24,9 +24,12 @@ function Login() {
       localStorage.setItem('rol', rolNormalizado);
       localStorage.setItem('user', JSON.stringify(user));
 
-      if (rolNormalizado === 'SUPERADMIN')     navigate('/superadmin');
-      else if (rolNormalizado === 'GERENTE')   navigate('/gerente');
-      else if (rolNormalizado === 'MESERO')    navigate('/mesero');
+      // Cerrar el modal antes de navegar
+      onClose?.();
+
+      if (rolNormalizado === 'SUPERADMIN')      navigate('/superadmin');
+      else if (rolNormalizado === 'GERENTE')    navigate('/gerente');
+      else if (rolNormalizado === 'MESERO')     navigate('/mesero');
       else if (rolNormalizado === 'REPARTIDOR') navigate('/repartidor');
       else navigate('/');
 
