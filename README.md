@@ -8,14 +8,35 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 ## Tabla de contenido
 
-1. [Equipo](#equipo-de-desarrollo)
+1. [Equipo de desarrollo](#equipo-de-desarrollo)
 2. [Stack y arquitectura](#stack-y-arquitectura)
+   - [Dependencias principales](#dependencias-principales)
+   - [Base de datos](#base-de-datos)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Levantar el entorno](#levantar-el-entorno)
+   - [Primera vez](#primera-vez)
+   - [Cada vez que abres el Codespace](#cada-vez-que-abres-el-codespace)
+   - [Configuración del entorno](#configuración-del-entorno)
 5. [Autenticación y roles](#autenticación-y-roles)
+   - [Endpoints principales](#endpoints-principales)
+   - [Requests de referencia](#requests-de-referencia)
+   - [Respuesta confirmada de login](#respuesta-confirmada-de-login)
+   - [Regla crítica sobre roles](#regla-crítica-sobre-roles)
+   - [Modelo de permisos por rol](#modelo-de-permisos-por-rol)
+   - [Catálogo actual de roles](#catálogo-actual-de-roles)
 6. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+   - [Estructura de ramas](#estructura-de-ramas)
+   - [Flujo correcto](#flujo-correcto)
+   - [Rutina diaria recomendada](#rutina-diaria-recomendada)
+   - [Cómo descargar actualizaciones en tu rama](#cómo-descargar-actualizaciones-en-tu-rama)
+   - [Actualizar todas las ramas activas con main](#actualizar-todas-las-ramas-activas-con-main)
+   - [Reglas del equipo](#reglas-del-equipo)
+   - [Convención de commits](#convención-de-commits)
 7. [Funcionalidades implementadas](#funcionalidades-implementadas)
 8. [Diseño y UI por rol](#diseño-y-ui-por-rol)
+   - [Paleta de colores](#paleta-de-colores)
+   - [Navegación por rol](#navegación-por-rol)
+   - [Secciones por rol](#secciones-por-rol)
 9. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ***
@@ -24,7 +45,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Nombre | Rol en el equipo | Rama principal |
 |--------|------------------|----------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/frontend-landing-components` |
+| César David Rueda Daza | Líder / Full Stack | `feat/frontend-components` / `feat/frontend-landing` |
 | Juan Felipe Bello Perez | IA / Data Scientist | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
@@ -232,9 +253,11 @@ El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve e
 ```text
 main        ← código estable y aprobado
 develop     ← rama de integración
-├── feat/frontend-landing-components
+├── feat/frontend-components
+├── feat/frontend-landing
 ├── feat/ia-modulo
 └── feat/testing
+```
 ```
 
 ### Flujo correcto
@@ -264,6 +287,71 @@ git add .
 git commit -m "feat: descripción de lo que hiciste"
 git push origin feat/tu-rama-asignada
 ```
+
+### Cómo descargar actualizaciones en tu rama
+
+> [!IMPORTANT]
+> Si un cambio ya fue agregado a `main`, **no va a aparecer automáticamente en tu rama**.
+> Cada integrante debe traer los cambios de `main` a su propia rama antes de seguir trabajando.
+
+#### Paso a paso para traer cambios de `main` a tu rama
+
+```bash
+# 1) Actualizar main local con lo último del remoto
+git checkout main
+git fetch origin --prune
+git merge origin/main
+
+# 2) Volver a tu rama de trabajo
+git checkout feat/tu-rama
+
+# 3) Mezclar main dentro de tu rama
+git merge main
+
+# 4) Subir la rama actualizada
+git push origin feat/tu-rama
+```
+
+#### Ejemplo real
+
+```bash
+git checkout main
+git fetch origin --prune
+git merge origin/main
+
+git checkout feat/testing
+git merge main
+git push origin feat/testing
+```
+
+> [!NOTE]
+> `git fetch` solo actualiza referencias remotas.
+> Para ver de verdad los cambios en tu rama, necesitas hacer `git merge main` estando parado en tu rama.
+
+### Actualizar todas las ramas activas con main
+
+Si se necesita que todas las ramas activas tengan también lo que ya fue agregado a `main`, se puede usar este flujo:
+
+```bash
+git checkout main
+git fetch origin --prune
+git merge origin/main
+git push origin main
+
+for branch in develop feat/frontend-components feat/frontend-landing feat/ia-modulo feat/testing
+do
+  git checkout "$branch" || continue
+  git fetch origin --prune
+  git merge main
+  git push origin "$branch"
+done
+
+git checkout main
+```
+
+> [!IMPORTANTE]
+> Este proceso puede generar conflictos si una rama tiene cambios incompatibles con `main`.
+> No usarlo a ciegas sobre ramas viejas, abandonadas o con trabajo sin revisar.
 
 ### Reglas del equipo
 
