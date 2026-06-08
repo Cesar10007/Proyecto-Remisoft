@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
+
 class Usuario extends Authenticatable
+
 {
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     protected $table = 'usuario';
     protected $primaryKey = 'id_usuario';
@@ -27,5 +30,11 @@ class Usuario extends Authenticatable
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'id_rol');
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->contrasena_hash;
+        
     }
 }
