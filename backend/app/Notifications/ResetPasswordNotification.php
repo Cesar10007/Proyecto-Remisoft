@@ -21,10 +21,9 @@ class ResetPasswordNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = url(route('password.reset', [
-            'token' => $this->token,
-            'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $url = $frontendUrl . '/reset-password?token=' . $this->token 
+             . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
 
         return (new MailMessage)
             ->subject('Recuperar contraseña - RemiSoft')
