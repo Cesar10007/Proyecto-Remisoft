@@ -95,6 +95,13 @@ function Login({ onClose }) {
         >
           {loading ? 'Ingresando...' : 'Ingresar'}
         </button>
+        <button
+          type="button"
+          className="auth-link"
+          onClick={() => { onClose?.(); navigate('/forgot-password'); }}
+          >
+          ¿Olvidaste tu contraseña?
+        </button>
       </form>
     </div>
   );
