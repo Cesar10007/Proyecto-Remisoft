@@ -8,9 +8,21 @@
   },
   "forwardPorts": [8000, 3306, 5173],
   "portsAttributes": {
-    "8000": { "label": "Laravel (php artisan serve)" },
-    "5173": { "label": "React/Vite (npm run dev)" },
-    "3306": { "label": "MariaDB" }
+    "8000": { 
+      "label": "Laravel (php artisan serve)",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "5173": { 
+      "label": "React/Vite (npm run dev)",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "3306": { 
+      "label": "MariaDB",
+      "onAutoForward": "ignore",
+      "visibility": "private"
+    }
   },
   "remoteUser": "root",
   "postCreateCommand": "bash .devcontainer/setup.sh",
