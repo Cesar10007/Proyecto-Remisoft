@@ -11,13 +11,22 @@ docker-php-ext-install pdo_mysql || true
 service mariadb start || true
 sleep 3
 
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS remisoft;" || true
+mysql -u root -e "DROP DATABASE IF EXISTS remisoft;" || true
+mysql -u root -e "CREATE DATABASE remisoft CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" || true
 mysql -u root -e "CREATE USER IF NOT EXISTS 'remisoft'@'localhost' IDENTIFIED BY 'remisoft123';" || true
 mysql -u root -e "GRANT ALL PRIVILEGES ON remisoft.* TO 'remisoft'@'localhost';" || true
 mysql -u root -e "FLUSH PRIVILEGES;" || true
 
-mysql -u root remisoft < /workspaces/Proyecto-Remisoft/DBFAMILIAREMI.sql || true
-mysql -u root remisoft < /workspaces/Proyecto-Remisoft/datos.sql || true
+mysql --default-character-set=utf8mb4 -u root remisoft < /workspaces/Proyecto-Remisoft/database/DBFAMILIAREMI.sql
+mysql --default-character-set=utf8mb4 -u root remisoft < /workspaces/Proyecto-Remisoft/database/datos.sql
+
+for f in /workspaces/Proyecto-Remisoft/database/vistas/*.sql; do
+  [ -f "$f" ] && mysql --default-character-set=utf8mb4 -u root remisoft < "$f"
+done
+
+for f in /workspaces/Proyecto-Remisoft/database/procedimientos/*.sql; do
+  [ -f "$f" ] && mysql --default-character-set=utf8mb4 -u root remisoft < "$f"
+done
 
 # ── LARAVEL ──
 if [ ! -f /workspaces/Proyecto-Remisoft/backend/.env ]; then
