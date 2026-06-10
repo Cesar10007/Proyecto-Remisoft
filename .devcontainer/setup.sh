@@ -37,11 +37,18 @@ if [ ! -f /workspaces/Proyecto-Remisoft/backend/.env ]; then
   sed -i 's/# DB_DATABASE=laravel/DB_DATABASE=remisoft/' /workspaces/Proyecto-Remisoft/backend/.env
   sed -i 's/# DB_USERNAME=root/DB_USERNAME=remisoft/' /workspaces/Proyecto-Remisoft/backend/.env
   sed -i 's/# DB_PASSWORD=/DB_PASSWORD=remisoft123/' /workspaces/Proyecto-Remisoft/backend/.env
+
+  if [ -n "$CODESPACE_NAME" ]; then
+    echo "FRONTEND_URL=https://${CODESPACE_NAME}-5173.app.github.dev" >> /workspaces/Proyecto-Remisoft/backend/.env
+  else
+    echo "FRONTEND_URL=http://localhost:5173" >> /workspaces/Proyecto-Remisoft/backend/.env
+  fi
 fi
 
 cd /workspaces/Proyecto-Remisoft/backend
 composer install --no-interaction 2>/dev/null || true
 php artisan key:generate --no-interaction 2>/dev/null || true
+php artisan migrate --force --no-interaction 2>/dev/null || true
 
 # ── REACT ──
 if [ -f /workspaces/Proyecto-Remisoft/frontend/package.json ]; then
@@ -51,6 +58,13 @@ if [ -f /workspaces/Proyecto-Remisoft/frontend/package.json ]; then
 else
   echo "AVISO: No se encontró frontend/package.json — React no fue instalado."
   echo "Corre manualmente: npm create vite@latest frontend -- --template react"
+fi
+
+# ── FRONTEND .env ──
+if [ -n "$CODESPACE_NAME" ]; then
+  echo "VITE_API_URL=https://${CODESPACE_NAME}-8000.app.github.dev/api" > /workspaces/Proyecto-Remisoft/frontend/.env
+else
+  echo "VITE_API_URL=http://localhost:8000/api" > /workspaces/Proyecto-Remisoft/frontend/.env
 fi
 
 echo "========================================="
