@@ -14,7 +14,6 @@ function ForgotPassword() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       await api.post('/forgot-password', { email });
       setEnviado(true);
@@ -32,6 +31,7 @@ function ForgotPassword() {
   return (
     <div className="reset-page">
       <div className="auth-form">
+        <p className="reset-page-logo">Remi<span>Soft</span></p>
 
         {!enviado ? (
           <>
@@ -42,20 +42,26 @@ function ForgotPassword() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="forgot-form">
               <div className="form-group">
                 <label className="form-label">Correo electrónico</label>
-                <input
-                  className="form-input"
-                  type="email"
-                  placeholder="correo@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <div className={`forgot-input-wrapper ${error ? 'input-error' : ''}`}>
+                  <input
+                    className="form-input"
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                    required
+                  />
+                  {error && (
+                    <span className="material-symbols-outlined forgot-input-icon">
+                      warning
+                    </span>
+                  )}
+                </div>
+                {error && <p className="forgot-field-error">{error}</p>}
               </div>
-
-              {error && <p className="auth-error">{error}</p>}
 
               <button
                 type="submit"
@@ -66,29 +72,26 @@ function ForgotPassword() {
               </button>
             </form>
 
-            <button
-              className="auth-link"
-              onClick={() => navigate('/')}
-            >
+            <button className="auth-link" onClick={() => navigate('/')}>
               ← Volver al inicio
             </button>
           </>
         ) : (
-          <>
-            <div className="auth-header">
-              <h2 className="auth-title">Revisa tu correo</h2>
-              <p className="auth-subtitle">
-                Si <strong>{email}</strong> está registrado, recibirás un enlace para restablecer tu contraseña en los próximos minutos.
-              </p>
+          <div className="forgot-success">
+            <div className="forgot-success-icon">
+              <span className="material-symbols-outlined">check_circle</span>
             </div>
-
+            <h2 className="forgot-success-title">¡Enlace enviado!</h2>
+            <p className="forgot-success-msg">
+              Te hemos enviado las instrucciones a tu correo.
+            </p>
             <button
               className="btn btn-primary auth-btn"
               onClick={() => navigate('/')}
             >
               Volver al inicio
             </button>
-          </>
+          </div>
         )}
 
       </div>
