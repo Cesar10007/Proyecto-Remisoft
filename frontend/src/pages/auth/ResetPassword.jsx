@@ -64,6 +64,7 @@ function ResetPassword() {
     return (
         <div className="reset-page">
             <div className="auth-form">
+                <p className="reset-page-logo">Remi<span>Soft</span></p>
                 <div className="auth-header">
                     <h3 className="auth-title">Nueva contraseña</h3>
                     <p className="auth-subtitle">Ingresa tu nueva contraseña para <strong>{email}</strong></p>

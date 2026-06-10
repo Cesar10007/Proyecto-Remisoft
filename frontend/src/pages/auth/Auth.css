@@ -130,6 +130,80 @@
   text-underline-offset: 3px;
 }
 
-.auth-link:hover {
-  opacity: 0.75;
+/* ── FORGOT PASSWORD ── */
+.forgot-input-wrapper {
+  position: relative;
+}
+
+.forgot-input-wrapper.input-error .form-input {
+  border-color: var(--amarillo);
+  box-shadow: 0 0 0 3px rgba(239, 159, 39, 0.15);
+}
+
+.forgot-input-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--amarillo);
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.forgot-field-error {
+  font-size: 0.8rem;
+  color: var(--amarillo);
+  margin-top: 5px;
+}
+
+/* Estado de éxito */
+.forgot-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.forgot-success-icon .material-symbols-outlined {
+  font-size: 56px;
+  color: var(--verde);
+}
+
+.forgot-success-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--verde);
+}
+
+.forgot-success-msg {
+  font-size: 0.88rem;
+  color: var(--texto-muted);
+  line-height: 1.6;
+}
+/* Tarjeta contenedora en páginas de reset/forgot */
+.reset-page .auth-form {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 36px;
+  max-width: 420px;
+  width: 100%;
+  border: 1px solid var(--borde);
+  box-shadow: 26px 26px 26px rgba(0, 0, 0, 0.1);
+}
+/* Logo centrado en páginas de auth independientes */
+.reset-page-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: var(--rojo-dark);
+  letter-spacing: -0.5px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.reset-page-logo span {
+  color: var(--amarillo);
 }
