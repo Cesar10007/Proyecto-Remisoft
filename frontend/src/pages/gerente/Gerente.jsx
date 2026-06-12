@@ -61,223 +61,155 @@ const barras = [
 
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
-  const navigate = useNavigate() 
+  const navigate = useNavigate()
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: "'DM Sans', sans-serif" }}>
-
-      {/* SIDEBAR */}
-      <aside style={{
-        width: '240px', minHeight: '100vh', background: 'var(--bg-card)',
-        borderRight: '1px solid var(--borde)', display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed', top: 0, left: 0, zIndex: 100
-      }}>
-        <div style={{ marginBottom: '32px', padding: '0 8px' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: 'var(--rojo-dark)' }}>
-            Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
+    <div className="ge-wrapper">
+      <aside className="ge-sidebar">
+        <div className="ge-sidebar-brand">
+          <div className="ge-logo">
+            Remi<span className="ge-logo-accent">Soft</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
-            Gerente
-          </div>
+          <div className="ge-role">Gerente</div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div className="ge-sidebar-menu">
           {menuItems.map(item => (
             <button
               key={item.label}
               onClick={() => setSeccionActiva(item.label)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 12px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                background: seccionActiva === item.label ? 'var(--rojo-light)' : 'transparent',
-                color: seccionActiva === item.label ? 'var(--rojo-dark)' : 'var(--texto-muted)',
-                borderRight: seccionActiva === item.label ? '3px solid var(--rojo)' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              }}
+              className={`ge-menu-btn ${seccionActiva === item.label ? 'is-active' : ''}`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined ge-menu-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
 
-        <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', marginBottom: '8px'
-          }}>
+        <div className="ge-sidebar-footer">
+          <button className="ge-primary-btn">
             Cerrar Caja
           </button>
-          <button  onClick={() => navigate('/')} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+
+          <button onClick={() => navigate('/')} className="ge-logout-btn">
+            <span className="material-symbols-outlined ge-logout-icon">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <main style={{ marginLeft: '240px', flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-        {/* TOPBAR */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <main className="ge-main">
+        <header className="ge-topbar">
           <div>
-            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.6rem', fontWeight: 800, color: 'var(--texto)', letterSpacing: '-0.5px' }}>
-              {seccionActiva}
-            </h1>
-            <p style={{ color: 'var(--texto-muted)', fontSize: '0.85rem', marginTop: '2px' }}>
-              Bienvenido de nuevo, Gerente
-            </p>
+            <h1 className="ge-page-title">{seccionActiva}</h1>
+            <p className="ge-page-subtitle">Bienvenido de nuevo, Gerente</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button style={{
-              background: 'var(--bg-card)', border: '1px solid var(--borde)',
-              borderRadius: '50%', width: '38px', height: '38px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--texto-muted)', position: 'relative'
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>notifications</span>
-              <span style={{
-                position: 'absolute', top: '8px', right: '8px',
-                width: '8px', height: '8px', background: 'var(--rojo)',
-                borderRadius: '50%', border: '2px solid var(--bg-card)'
-              }}></span>
+
+          <div className="ge-topbar-actions">
+            <button className="ge-notification-btn">
+              <span className="material-symbols-outlined ge-notification-icon">notifications</span>
+              <span className="ge-notification-dot"></span>
             </button>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              background: 'var(--bg-card)', border: '1px solid var(--borde)',
-              borderRadius: '100px', padding: '6px 14px 6px 6px'
-            }}>
-              <div style={{
-                width: '30px', height: '30px', borderRadius: '50%',
-                background: 'var(--rojo-light)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                color: 'var(--rojo-dark)', fontWeight: 700, fontSize: '0.85rem'
-              }}>G</div>
-              <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--texto)' }}>Gerente</span>
+
+            <div className="ge-user-pill">
+              <div className="ge-user-avatar">G</div>
+              <span className="ge-user-name">Gerente</span>
             </div>
           </div>
         </header>
 
-        {/* MÉTRICAS */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+        <section className="ge-metrics-grid">
           {metricas.map(m => (
-            <div key={m.label} style={{
-              background: 'var(--bg-card)', border: '1px solid var(--borde)',
-              borderRadius: '16px', padding: '24px', display: 'flex',
-              flexDirection: 'column', justifyContent: 'space-between', minHeight: '140px',
-              boxShadow: 'var(--sombra)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span className="material-symbols-outlined" style={{
-                  fontSize: '22px', padding: '8px', borderRadius: '10px',
-                  background: m.badgeColor === 'verde' ? 'var(--verde-light)' : m.badgeColor === 'rojo' ? 'var(--rojo-light)' : '#f0ebe5',
-                  color: m.badgeColor === 'verde' ? 'var(--verde)' : m.badgeColor === 'rojo' ? 'var(--rojo)' : 'var(--amarillo)'
-                }}>{m.icon}</span>
-                <span style={{
-                  fontSize: '0.72rem', fontWeight: 600, padding: '3px 10px',
-                  borderRadius: '100px',
-                  background: m.badgeColor === 'verde' ? 'var(--verde-light)' : m.badgeColor === 'rojo' ? 'var(--rojo-light)' : '#f0ebe5',
-                  color: m.badgeColor === 'verde' ? 'var(--verde)' : m.badgeColor === 'rojo' ? 'var(--rojo-dark)' : 'var(--texto-muted)'
-                }}>{m.badge}</span>
+            <div key={m.label} className="ge-card ge-metric-card">
+              <div className="ge-metric-header">
+                <span className={`material-symbols-outlined ge-metric-icon ge-tone-${m.badgeColor}`}>
+                  {m.icon}
+                </span>
+
+                <span className={`ge-badge ge-tone-${m.badgeColor}`}>
+                  {m.badge}
+                </span>
               </div>
+
               <div>
-                <p style={{ fontSize: '0.78rem', color: 'var(--texto-muted)', marginBottom: '4px' }}>{m.label}</p>
-                <p style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.6rem', fontWeight: 700, color: 'var(--texto)' }}>{m.valor}</p>
+                <p className="ge-metric-label">{m.label}</p>
+                <p className="ge-metric-value">{m.valor}</p>
               </div>
             </div>
           ))}
         </section>
 
-        {/* GRÁFICA + ACCIONES + INVENTARIO */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '16px' }}>
-
-          {/* GRÁFICA DE BARRAS */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--borde)', borderRadius: '16px', padding: '28px', boxShadow: 'var(--sombra)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
+        <section className="ge-main-grid">
+          <div className="ge-card ge-chart-card">
+            <div className="ge-chart-header">
               <div>
-                <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: 'var(--texto)' }}>Tendencia semanal</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--texto-muted)', marginTop: '2px' }}>Predicción de demanda basada en historial</p>
+                <h3 className="ge-section-title">Tendencia semanal</h3>
+                <p className="ge-section-subtitle">Predicción de demanda basada en historial</p>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 600, color: 'var(--rojo)' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--rojo)', display: 'inline-block' }}></span>Proyectado
+
+              <div className="ge-legend">
+                <span className="ge-legend-item ge-legend-item--red">
+                  <span className="ge-legend-dot"></span>
+                  Proyectado
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 600, color: 'var(--amarillo)' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--amarillo)', display: 'inline-block' }}></span>Real
+                <span className="ge-legend-item ge-legend-item--yellow">
+                  <span className="ge-legend-dot"></span>
+                  Real
                 </span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '160px', gap: '8px' }}>
+
+            <div className="ge-bars-chart">
               {barras.map(b => (
-                <div key={b.dia} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
-                  <div style={{
-                    width: '100%', borderRadius: '6px 6px 0 0',
-                    background: 'var(--rojo)', opacity: 0.85,
-                    height: `${b.alto}%`, transition: 'height 0.3s ease'
-                  }}></div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--texto-muted)', fontWeight: 600 }}>{b.dia}</span>
+                <div key={b.dia} className="ge-bar-column">
+                  <div
+                    className="ge-bar-fill"
+                    style={{ '--bar-height': `${b.alto}%` }}
+                  ></div>
+                  <span className="ge-bar-label">{b.dia}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* COLUMNA DERECHA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="ge-side-column">
+            <div className="ge-card ge-quick-card">
+              <h4 className="ge-small-title">Acciones rápidas</h4>
 
-            {/* ACCIONES RÁPIDAS */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--borde)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--sombra)' }}>
-              <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.95rem', marginBottom: '12px', color: 'var(--texto)' }}>Acciones rápidas</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button style={{
-                  background: 'var(--rojo)', color: '#fff', border: 'none',
-                  borderRadius: '10px', padding: '12px 16px', fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
+              <div className="ge-quick-actions">
+                <button className="ge-primary-btn ge-primary-btn--split">
                   Nuevo Pedido
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+                  <span className="material-symbols-outlined ge-action-icon">arrow_forward</span>
                 </button>
-                <button style={{
-                  background: '#f9f5f0', color: 'var(--texto-muted)', border: '1px solid var(--borde)',
-                  borderRadius: '10px', padding: '12px 16px', fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
+
+                <button className="ge-secondary-btn ge-secondary-btn--split">
                   Control de Menú
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
+                  <span className="material-symbols-outlined ge-action-icon">edit_note</span>
                 </button>
               </div>
             </div>
 
-            {/* INVENTARIO */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--borde)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--sombra)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.95rem', color: 'var(--texto)' }}>Estado inventario</h4>
-                <span style={{ fontSize: '0.65rem', color: 'var(--texto-muted)', background: '#f0ebe5', padding: '2px 8px', borderRadius: '100px' }}>En vivo</span>
+            <div className="ge-card ge-inventory-card">
+              <div className="ge-inventory-header">
+                <h4 className="ge-small-title">Estado inventario</h4>
+                <span className="ge-live-badge">En vivo</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+              <div className="ge-inventory-list">
                 {inventario.map(i => (
-                  <div key={i.nombre}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--texto-muted)', fontWeight: 500 }}>{i.nombre}</span>
-                      <span style={{
-                        fontSize: '0.75rem', fontWeight: 700,
-                        color: i.color === 'verde' ? 'var(--verde)' : i.color === 'rojo' ? 'var(--rojo)' : '#BA7517'
-                      }}>{i.porcentaje}%</span>
+                  <div key={i.nombre} className="ge-inventory-item">
+                    <div className="ge-inventory-row">
+                      <span className="ge-inventory-name">{i.nombre}</span>
+                      <span className={`ge-inventory-value ge-text-${i.color}`}>
+                        {i.porcentaje}%
+                      </span>
                     </div>
-                    <div style={{ width: '100%', background: '#f0ebe5', borderRadius: '100px', height: '6px' }}>
-                      <div style={{
-                        width: `${i.porcentaje}%`, height: '100%', borderRadius: '100px',
-                        background: i.color === 'verde' ? 'var(--verde)' : i.color === 'rojo' ? 'var(--rojo)' : 'var(--amarillo)'
-                      }}></div>
+
+                    <div className="ge-progress-track">
+                      <div
+                        className={`ge-progress-fill ge-fill-${i.color}`}
+                        style={{ '--progress': `${i.porcentaje}%` }}
+                      ></div>
                     </div>
                   </div>
                 ))}
@@ -286,70 +218,62 @@ function Gerente() {
           </div>
         </section>
 
-        {/* MESAS + MOVIMIENTOS */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '16px' }}>
+        <section className="ge-bottom-grid">
+          <div className="ge-card ge-tables-card">
+            <div className="ge-card-header">
+              <h3 className="ge-section-title ge-section-title--sm">Estado de mesas</h3>
 
-          {/* MESAS */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--borde)', borderRadius: '16px', padding: '28px', boxShadow: 'var(--sombra)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1rem', fontWeight: 700, color: 'var(--texto)' }}>Estado de mesas</h3>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--texto-muted)' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--verde)', display: 'inline-block' }}></span>Disponible
+              <div className="ge-legend">
+                <span className="ge-legend-item ge-legend-item--green">
+                  <span className="ge-legend-dot"></span>
+                  Disponible
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--texto-muted)' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--amarillo)', display: 'inline-block' }}></span>Ocupada
+                <span className="ge-legend-item ge-legend-item--yellow">
+                  <span className="ge-legend-dot"></span>
+                  Ocupada
                 </span>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+
+            <div className="ge-tables-grid">
               {mesas.map(m => (
-                <div key={m.id} style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  justifyContent: 'center', padding: '12px 8px', borderRadius: '12px',
-                  border: `2px solid ${m.ocupada ? 'rgba(239,159,39,0.3)' : 'rgba(29,158,117,0.3)'}`,
-                  background: m.ocupada ? 'var(--amarillo-light)' : 'var(--verde-light)',
-                  gap: '4px'
-                }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--texto-muted)' }}>{m.id}</span>
-                  <span className="material-symbols-outlined" style={{
-                    fontSize: '16px',
-                    color: m.ocupada ? 'var(--amarillo)' : 'var(--verde)'
-                  }}>{m.ocupada ? 'person' : 'check_circle'}</span>
+                <div key={m.id} className={`ge-table-box ${m.ocupada ? 'is-occupied' : 'is-free'}`}>
+                  <span className="ge-table-id">{m.id}</span>
+                  <span className={`material-symbols-outlined ge-table-icon ${m.ocupada ? 'is-occupied' : 'is-free'}`}>
+                    {m.ocupada ? 'person' : 'check_circle'}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* MOVIMIENTOS */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--borde)', borderRadius: '16px', padding: '28px', boxShadow: 'var(--sombra)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1rem', fontWeight: 700, color: 'var(--texto)' }}>Movimientos recientes</h3>
-              <button style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--rojo)', background: 'none', border: 'none', cursor: 'pointer' }}>Ver todo</button>
+          <div className="ge-card ge-movements-card">
+            <div className="ge-card-header">
+              <h3 className="ge-section-title ge-section-title--sm">Movimientos recientes</h3>
+              <button className="ge-link-btn">Ver todo</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            <div className="ge-movements-list">
               {movimientos.map((mov, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0,
-                      background: mov.positivo ? 'var(--verde-light)' : 'var(--rojo-light)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: mov.positivo ? 'var(--verde)' : 'var(--rojo)'
-                    }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{mov.icon}</span>
+                <div key={i} className="ge-movement-item">
+                  <div className="ge-movement-main">
+                    <div className={`ge-movement-icon-wrap ${mov.positivo ? 'is-positive' : 'is-negative'}`}>
+                      <span className="material-symbols-outlined ge-movement-icon">{mov.icon}</span>
                     </div>
+
                     <div>
-                      <p style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--texto)' }}>{mov.titulo}</p>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--texto-muted)' }}>{mov.sub}</p>
+                      <p className="ge-movement-title">{mov.titulo}</p>
+                      <p className="ge-movement-sub">{mov.sub}</p>
                     </div>
                   </div>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: mov.positivo ? 'var(--verde)' : 'var(--rojo)', whiteSpace: 'nowrap' }}>{mov.monto}</span>
+
+                  <span className={`ge-movement-amount ${mov.positivo ? 'is-positive' : 'is-negative'}`}>
+                    {mov.monto}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-
         </section>
       </main>
     </div>
