@@ -37,84 +37,62 @@ const serverStats = [
 function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('Gestión de Usuarios')
   const navigate = useNavigate()
-  const {logout} = useAuth();
+  const { logout } = useAuth()
 
   return (
     <div className="sa-wrapper">
-      <aside style={{
-        width: '240px', minHeight: '100vh', background: 'var(--bg-card)',
-        borderRight: '1px solid var(--borde)', display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed', top: 0, left: 0, zIndex: 100
-      }}>
-        <div style={{ marginBottom: '32px', padding: '0 8px' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: 'var(--rojo-dark)' }}>
-            Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
+      <aside className="sa-sidebar">
+        <div className="sa-sidebar-brand">
+          <div className="sa-sidebar-logo">
+            Remi<span className="sa-sidebar-logo-accent">Soft</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
+          <div className="sa-sidebar-role">
             Superadministrador
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div className="sa-sidebar-nav">
           {menuItems.map((item) => (
             <button
               key={item.label}
               onClick={() => setActiveTab(item.label)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 12px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                background: activeTab === item.label ? 'var(--rojo-light)' : 'transparent',
-                color: activeTab === item.label ? 'var(--rojo-dark)' : 'var(--texto-muted)',
-                borderRight: activeTab === item.label ? '3px solid var(--rojo)' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              }}
+              className={`sa-sidebar-nav-btn${activeTab === item.label ? ' sa-sidebar-nav-btn--active' : ''}`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined sa-sidebar-nav-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
 
-        <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', marginBottom: '8px'
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '8px' }}>contact_support</span>
+        <div className="sa-sidebar-footer">
+          <button className="sa-sidebar-primary-btn">
+            <span className="material-symbols-outlined sa-sidebar-primary-btn__icon">contact_support</span>
             Soporte
           </button>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>history_edu</span>
+
+          <button className="sa-sidebar-secondary-btn">
+            <span className="material-symbols-outlined sa-sidebar-footer-icon">history_edu</span>
             Registros
           </button>
-          <button onClick={() => { logout(); navigate('/') }} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+
+          <button
+            onClick={() => {
+              logout()
+              navigate('/')
+            }}
+            className="sa-sidebar-secondary-btn"
+          >
+            <span className="material-symbols-outlined sa-sidebar-footer-icon">logout</span>
             Cerrar sesión
           </button>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer'
-          }}>
+
+          <button className="sa-sidebar-danger-btn">
             Parada de Emergencia Global
           </button>
         </div>
       </aside>
 
-      <main className="sa-main" style={{ marginLeft: '240px', flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <main className="sa-main">
         <header className="sa-topbar">
           <div className="sa-topbar__left">
             <h1 className="sa-topbar__title">Centro de Comando Administrativo</h1>
@@ -129,8 +107,12 @@ function SuperAdmin() {
               <span className="material-symbols-outlined sa-search__icon">search</span>
               <input type="text" placeholder="Buscar parámetros..." />
             </div>
-            <button className="sa-icon-btn"><span className="material-symbols-outlined">notifications</span></button>
-            <button className="sa-icon-btn"><span className="material-symbols-outlined">admin_panel_settings</span></button>
+            <button className="sa-icon-btn">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <button className="sa-icon-btn">
+              <span className="material-symbols-outlined">admin_panel_settings</span>
+            </button>
             <div className="sa-avatar-wrap">
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGYA_w4xq4FO56_E-LP5rS02cr_rwV1IeCSlk7c1APa2msilQVu0hJvDbm939jn2jZbD33jMM-XIBgUwFsxs6lqySTcBDp0eQiMBfXNtWSf9O4v348emGmL7OP4Ex311pCicMuBvV_8Z9TvW0OG1hc5q_LFI6Ld4jghagujeuxm3eoBmZqA-G8j5XPEp6_CTYO4m6GKNav0mkcszK-4bRp7N5H8PmdWYEyzVYjW_GpV64tkU022Sk0kMegnZew8FHDlcZamPyAD3g"
@@ -146,7 +128,10 @@ function SuperAdmin() {
             {metrics.map((metric) => (
               <div key={metric.label} className="sa-metric-card">
                 <p className="sa-metric-card__label">{metric.label}</p>
-                <h3 className={`sa-metric-card__value${metric.color ? ` sa-metric-card__value--${metric.color}` : ''}`}>{metric.value}</h3>
+                <h3 className={`sa-metric-card__value${metric.color ? ` sa-metric-card__value--${metric.color}` : ''}`}>
+                  {metric.value}
+                </h3>
+
                 {metric.icon ? (
                   <div className={`sa-metric-card__detail sa-metric-card__detail--${metric.color}`}>
                     <span className="material-symbols-outlined">{metric.icon}</span>
@@ -203,13 +188,19 @@ function SuperAdmin() {
                           <td>
                             <div className="sa-status-wrap">
                               <span className={`sa-status-dot${user.active ? ' sa-status-dot--active' : ''}`} />
-                              <span className={`sa-status-text${user.active ? ' sa-status-text--active' : ''}`}>{user.status}</span>
+                              <span className={`sa-status-text${user.active ? ' sa-status-text--active' : ''}`}>
+                                {user.status}
+                              </span>
                             </div>
                           </td>
                           <td>
                             <div className="sa-actions-cell">
-                              <button className="sa-action-btn"><span className="material-symbols-outlined">edit</span></button>
-                              <button className="sa-action-btn sa-action-btn--danger"><span className="material-symbols-outlined">block</span></button>
+                              <button className="sa-action-btn">
+                                <span className="material-symbols-outlined">edit</span>
+                              </button>
+                              <button className="sa-action-btn sa-action-btn--danger">
+                                <span className="material-symbols-outlined">block</span>
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -221,10 +212,14 @@ function SuperAdmin() {
                 <div className="sa-table-footer">
                   <span>Mostrando 1 a 3 de 1,248 usuarios</span>
                   <div className="sa-pagination">
-                    <button className="sa-page-btn"><span className="material-symbols-outlined">chevron_left</span></button>
+                    <button className="sa-page-btn">
+                      <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
                     <button className="sa-page-btn sa-page-btn--active">1</button>
                     <button className="sa-page-btn">2</button>
-                    <button className="sa-page-btn"><span className="material-symbols-outlined">chevron_right</span></button>
+                    <button className="sa-page-btn">
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -260,7 +255,12 @@ function SuperAdmin() {
                   <div className="sa-api-block">
                     <label className="sa-api-label">Clave API Global</label>
                     <div className="sa-api-input-wrap">
-                      <input type="password" value="sk_live_51M3fG9L9Zz8f4j3H" readOnly className="sa-api-input" />
+                      <input
+                        type="password"
+                        value="sk_live_51M3fG9L9Zz8f4j3H"
+                        readOnly
+                        className="sa-api-input"
+                      />
                       <button className="sa-api-visibility-btn">
                         <span className="material-symbols-outlined">visibility</span>
                       </button>

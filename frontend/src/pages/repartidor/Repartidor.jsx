@@ -37,73 +37,46 @@ function Repartidor() {
 
   return (
     <div className="rd-wrapper">
-      <aside style={{
-        width: '240px', minHeight: '100vh', background: 'var(--bg-card)',
-        borderRight: '1px solid var(--borde)', display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed', top: 0, left: 0, zIndex: 100
-      }}>
-        <div style={{ marginBottom: '32px', padding: '0 8px' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: 'var(--rojo-dark)' }}>
-            Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
+      <aside className="rd-sidebar">
+        <div className="rd-sidebar-brand">
+          <div className="rd-sidebar-logo">
+            Remi<span className="rd-sidebar-logo-accent">Soft</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
-            Operación de Reparto
-          </div>
+          <div className="rd-sidebar-role">Operación de Reparto</div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div className="rd-sidebar-nav">
           {menuItems.map((item) => (
             <button
               key={item.label}
               onClick={() => setActiveItem(item.label)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 12px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                background: activeItem === item.label ? 'var(--rojo-light)' : 'transparent',
-                color: activeItem === item.label ? 'var(--rojo-dark)' : 'var(--texto-muted)',
-                borderRight: activeItem === item.label ? '3px solid var(--rojo)' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              }}
+              className={`rd-sidebar-nav-btn${activeItem === item.label ? ' rd-sidebar-nav-btn--active' : ''}`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined rd-sidebar-nav-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
 
-        <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', marginBottom: '8px'
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '8px' }}>schedule</span>
+        <div className="rd-sidebar-footer">
+          <button className="rd-sidebar-primary-btn">
+            <span className="material-symbols-outlined rd-sidebar-primary-btn__icon">schedule</span>
             Finalizar turno
           </button>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
+
+          <button className="rd-sidebar-secondary-btn">
+            <span className="material-symbols-outlined rd-sidebar-footer-icon">settings</span>
             Configuraciones
           </button>
-          <button onClick={() => navigate('/')} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+
+          <button onClick={() => navigate('/')} className="rd-sidebar-secondary-btn">
+            <span className="material-symbols-outlined rd-sidebar-footer-icon">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="rd-main" style={{ marginLeft: '240px', flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <main className="rd-main">
         <header className="rd-topbar">
           <div className="rd-topbar__left">
             <h1 className="rd-topbar__title">Panel de Repartidor</h1>
@@ -119,7 +92,9 @@ function Repartidor() {
               <span className="rd-status-pill__dot" />
               <span>En línea</span>
             </div>
-            <button className="rd-icon-btn"><span className="material-symbols-outlined">notifications</span></button>
+            <button className="rd-icon-btn">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
             <div className="rd-avatar-wrap">
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5UJulGuq3heQhQ9rTk-dtg5k1IjkezBfDQp_HOJa1fArdRqsFURGoXJHLjk1Ljb4O6lLe4nr7svhUVYFUWBm_b5DTk8alriMqO1ekRf0bq8HZ2jXOHsjnkYlOyOaS8TvRJJ8pCr1W0N9rr_Zr4OnWa4ks_hToxOnumDdp9s-_FKz2O3gimjTs6nex-hWn45Uo-YChUCNkUJ_neaFx9bfi5oTt5bz2kejByzpfnFmNq7TCCdplh9BaWPpDhN1Cumzv7S5BxZPJPp4"
@@ -135,8 +110,12 @@ function Repartidor() {
             {stats.map((stat) => (
               <div key={stat.label} className={`rd-stat-card${stat.highlighted ? ' rd-stat-card--highlighted' : ''}`}>
                 <p className="rd-stat-card__label">{stat.label}</p>
-                <h3 className={`rd-stat-card__value${stat.tone === 'success' ? ' rd-stat-card__value--success' : ''}`}>{stat.value}</h3>
-                <p className={`rd-stat-card__detail${stat.tone === 'success' ? ' rd-stat-card__detail--success' : ''}`}>{stat.detail}</p>
+                <h3 className={`rd-stat-card__value${stat.tone === 'success' ? ' rd-stat-card__value--success' : ''}`}>
+                  {stat.value}
+                </h3>
+                <p className={`rd-stat-card__detail${stat.tone === 'success' ? ' rd-stat-card__detail--success' : ''}`}>
+                  {stat.detail}
+                </p>
               </div>
             ))}
           </section>

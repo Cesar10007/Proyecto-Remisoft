@@ -207,3 +207,47 @@
 .reset-page-logo span {
   color: var(--amarillo);
 }
+.mockup-section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #6c757d;
+}
+
+.mockup-section-subtitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #6c757d;
+}
+
+.inventory-alert {
+  margin-top: 12px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-alert-title {
+  font-size: 0.65rem;
+  color: #a30000;
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.inventory-alert-text {
+  font-size: 0.68rem;
+  color: #6c757d;
+}
+
+.roles-title {
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+}

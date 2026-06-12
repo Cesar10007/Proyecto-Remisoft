@@ -40,74 +40,46 @@ function Mesero() {
 
   return (
     <div className="wa-wrapper">
-      <aside style={{
-        width: '240px', minHeight: '100vh', background: 'var(--bg-card)',
-        borderRight: '1px solid var(--borde)', display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed', top: 0, left: 0, zIndex: 100
-      }}>
-        <div style={{ marginBottom: '32px', padding: '0 8px' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: 'var(--rojo-dark)' }}>
-            Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
+      <aside className="wa-sidebar">
+        <div className="wa-sidebar-brand">
+          <div className="wa-sidebar-logo">
+            Remi<span className="wa-sidebar-logo-accent">Soft</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
-            Mesero
-          </div>
+          <div className="wa-sidebar-role">Mesero</div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div className="wa-sidebar-nav">
           {navItems.map((item) => (
             <button
               key={item.label}
               onClick={() => setActiveItem(item.label)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 12px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                background: activeItem === item.label ? 'var(--rojo-light)' : 'transparent',
-                color: activeItem === item.label ? 'var(--rojo-dark)' : 'var(--texto-muted)',
-                borderRight: activeItem === item.label ? '3px solid var(--rojo)' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              }}
+              className={`wa-sidebar-nav-btn${activeItem === item.label ? ' wa-sidebar-nav-btn--active' : ''}`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined wa-sidebar-nav-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
 
-        <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', marginBottom: '8px'
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+        <div className="wa-sidebar-footer">
+          <button className="wa-sidebar-primary-btn">
+            <span className="material-symbols-outlined wa-sidebar-footer-icon">add</span>
             Acción Rápida
           </button>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
+
+          <button className="wa-sidebar-secondary-btn">
+            <span className="material-symbols-outlined wa-sidebar-footer-icon">settings</span>
             Configuraciones
           </button>
-          <button onClick={() => navigate('/')} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+
+          <button onClick={() => navigate('/')} className="wa-sidebar-secondary-btn">
+            <span className="material-symbols-outlined wa-sidebar-footer-icon">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="wa-main" style={{ marginLeft: '240px', flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <main className="wa-main">
         <header className="wa-topbar">
           <div className="wa-topbar__left">
             <span className="wa-topbar__brand">POS Culinario</span>
@@ -142,9 +114,15 @@ function Mesero() {
                 <p className="wa-stat-card__label">{stat.label}</p>
                 <div className="wa-stat-card__value-wrap">
                   {stat.prefix && <span className="wa-stat-card__prefix">{stat.prefix}</span>}
-                  <span className={`wa-stat-card__value${stat.color === 'amber' ? ' wa-stat-card__value--amber' : ''}`}>{stat.value}</span>
-                  {stat.detail && stat.label === 'Mesas activas' && <span className="wa-stat-card__detail wa-stat-card__detail--green">{stat.detail}</span>}
-                  {stat.detail && stat.label === 'Mesas en espera' && <span className="wa-stat-card__detail">{stat.detail}</span>}
+                  <span className={`wa-stat-card__value${stat.color === 'amber' ? ' wa-stat-card__value--amber' : ''}`}>
+                    {stat.value}
+                  </span>
+                  {stat.detail && stat.label === 'Mesas activas' && (
+                    <span className="wa-stat-card__detail wa-stat-card__detail--green">{stat.detail}</span>
+                  )}
+                  {stat.detail && stat.label === 'Mesas en espera' && (
+                    <span className="wa-stat-card__detail">{stat.detail}</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -191,8 +169,12 @@ function Mesero() {
                       className={`wa-table-card wa-table-card--${table.state}`}
                     >
                       <div className="wa-table-card__top">
-                        <div className={`wa-table-card__number${table.state === 'waiting' ? ' wa-table-card__number--warning' : ''}`}>{table.number}</div>
-                        <span className={`wa-table-card__badge${table.state === 'waiting' ? ' wa-table-card__badge--waiting' : ''}${table.state === 'done' ? ' wa-table-card__badge--done' : ''}`}>{table.badge}</span>
+                        <div className={`wa-table-card__number${table.state === 'waiting' ? ' wa-table-card__number--warning' : ''}`}>
+                          {table.number}
+                        </div>
+                        <span className={`wa-table-card__badge${table.state === 'waiting' ? ' wa-table-card__badge--waiting' : ''}${table.state === 'done' ? ' wa-table-card__badge--done' : ''}`}>
+                          {table.badge}
+                        </span>
                       </div>
 
                       <div className="wa-table-card__body">
