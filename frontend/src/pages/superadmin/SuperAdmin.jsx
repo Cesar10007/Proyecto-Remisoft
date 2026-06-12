@@ -37,84 +37,48 @@ const serverStats = [
 function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('Gestión de Usuarios')
   const navigate = useNavigate()
-  const {logout} = useAuth();
+  const { logout } = useAuth()
 
   return (
     <div className="sa-wrapper">
-      <aside style={{
-        width: '240px', minHeight: '100vh', background: 'var(--bg-card)',
-        borderRight: '1px solid var(--borde)', display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed', top: 0, left: 0, zIndex: 100
-      }}>
-        <div style={{ marginBottom: '32px', padding: '0 8px' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: 'var(--rojo-dark)' }}>
-            Remi<span style={{ color: 'var(--amarillo)' }}>Soft</span>
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--texto-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '4px' }}>
-            Superadministrador
-          </div>
+
+      <aside className="sa-sidebar">
+        <div className="sa-sidebar__brand">
+          <span className="sa-sidebar__title">RemiSoft</span>
+          <span className="sa-sidebar__subtitle">Superadministrador</span>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <nav className="sa-sidebar__nav">
           {menuItems.map((item) => (
             <button
               key={item.label}
               onClick={() => setActiveTab(item.label)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 12px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                background: activeTab === item.label ? 'var(--rojo-light)' : 'transparent',
-                color: activeTab === item.label ? 'var(--rojo-dark)' : 'var(--texto-muted)',
-                borderRight: activeTab === item.label ? '3px solid var(--rojo)' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              }}
+              className={`sa-nav-item ${activeTab === item.label ? 'sa-nav-item--active' : ''}`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined sa-nav-item__icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
-        </div>
+        </nav>
 
-        <div style={{ borderTop: '1px solid var(--borde)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', marginBottom: '8px'
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '8px' }}>contact_support</span>
+        <div className="sa-sidebar__footer">
+          <button className="sa-footer-link">
+            <span className="material-symbols-outlined">contact_support</span>
             Soporte
           </button>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>history_edu</span>
+          <button className="sa-footer-link">
+            <span className="material-symbols-outlined">history_edu</span>
             Registros
           </button>
-          <button onClick={() => { logout(); navigate('/') }} style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
-            fontFamily: "'DM Sans', sans-serif"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+          <button onClick={() => { logout(); navigate('/') }} className="sa-footer-link">
+            <span className="material-symbols-outlined">logout</span>
             Cerrar sesión
           </button>
-          <button style={{
-            background: 'var(--rojo)', color: '#fff', border: 'none',
-            borderRadius: '10px', padding: '10px', fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer'
-          }}>
-            Parada de Emergencia Global
-          </button>
+          <button className="sa-emergency-btn">Parada de Emergencia Global</button>
         </div>
       </aside>
 
-      <main className="sa-main" style={{ marginLeft: '240px', flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <main className="sa-main">
         <header className="sa-topbar">
           <div className="sa-topbar__left">
             <h1 className="sa-topbar__title">Centro de Comando Administrativo</h1>
@@ -123,7 +87,6 @@ function SuperAdmin() {
               <button className="sa-topbar__tab">Rutas de Auditoría</button>
             </div>
           </div>
-
           <div className="sa-topbar__right">
             <div className="sa-search">
               <span className="material-symbols-outlined sa-search__icon">search</span>
@@ -171,7 +134,6 @@ function SuperAdmin() {
                   <span>Agregar Miembro</span>
                 </button>
               </div>
-
               <div className="sa-table-card">
                 <div className="sa-table-scroll">
                   <table className="sa-table">
@@ -197,9 +159,7 @@ function SuperAdmin() {
                               </div>
                             </div>
                           </td>
-                          <td>
-                            <span className="sa-role-pill">{user.role}</span>
-                          </td>
+                          <td><span className="sa-role-pill">{user.role}</span></td>
                           <td>
                             <div className="sa-status-wrap">
                               <span className={`sa-status-dot${user.active ? ' sa-status-dot--active' : ''}`} />
@@ -217,7 +177,6 @@ function SuperAdmin() {
                     </tbody>
                   </table>
                 </div>
-
                 <div className="sa-table-footer">
                   <span>Mostrando 1 a 3 de 1,248 usuarios</span>
                   <div className="sa-pagination">
@@ -233,7 +192,6 @@ function SuperAdmin() {
             <aside className="sa-side-panels">
               <div className="sa-config-card">
                 <h2 className="sa-panel-title sa-panel-title--mb">Configuración del Sistema</h2>
-
                 <div className="sa-config-list">
                   <div className="sa-config-row">
                     <div>
@@ -245,7 +203,6 @@ function SuperAdmin() {
                       <span className="sa-switch__slider" />
                     </label>
                   </div>
-
                   <div className="sa-config-row">
                     <div>
                       <p className="sa-config-row__title">Estado de Registro</p>
@@ -256,7 +213,6 @@ function SuperAdmin() {
                       <span className="sa-switch__slider sa-switch__slider--green" />
                     </label>
                   </div>
-
                   <div className="sa-api-block">
                     <label className="sa-api-label">Clave API Global</label>
                     <div className="sa-api-input-wrap">
@@ -266,7 +222,6 @@ function SuperAdmin() {
                       </button>
                     </div>
                   </div>
-
                   <button className="sa-btn-update-env">Actualizar Entorno Global</button>
                 </div>
               </div>
@@ -276,7 +231,6 @@ function SuperAdmin() {
                   <h2 className="sa-panel-title">Solicitudes Pendientes</h2>
                   <span className="sa-urgent-badge">Urgente</span>
                 </div>
-
                 <div className="sa-requests-list">
                   {requests.map((req) => (
                     <div key={req.title} className="sa-request-item">
@@ -322,7 +276,6 @@ function SuperAdmin() {
                 <span className="material-symbols-outlined">hub</span>
               </div>
             </div>
-
             <div className="sa-audit-card">
               <div className="sa-audit-card__content">
                 <span className="material-symbols-outlined sa-audit-card__icon">auto_awesome</span>
