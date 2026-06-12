@@ -2,9 +2,9 @@
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** La autenticación ya está conectada al backend real con Laravel Sanctum. El login y el registro funcionan en la API; varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.[1][2][3][4]
+> **Estado actual:** La autenticación está conectada al backend real con Laravel Sanctum. Login, registro y recuperación de contraseña funcionan sobre la API. Varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.
 
-***
+---
 
 ## Tabla de contenido
 
@@ -17,14 +17,16 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
    - [Primera vez](#primera-vez)
    - [Cada vez que abres el Codespace](#cada-vez-que-abres-el-codespace)
    - [Configuración del entorno](#configuración-del-entorno)
-5. [Autenticación y roles](#autenticación-y-roles)
+   - [Variables de entorno](#variables-de-entorno)
+5. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
+6. [Autenticación y roles](#autenticación-y-roles)
    - [Endpoints principales](#endpoints-principales)
    - [Requests de referencia](#requests-de-referencia)
    - [Respuesta confirmada de login](#respuesta-confirmada-de-login)
    - [Regla crítica sobre roles](#regla-crítica-sobre-roles)
    - [Modelo de permisos por rol](#modelo-de-permisos-por-rol)
    - [Catálogo actual de roles](#catálogo-actual-de-roles)
-6. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+7. [Flujo de trabajo Git](#flujo-de-trabajo-git)
    - [Estructura de ramas](#estructura-de-ramas)
    - [Flujo correcto](#flujo-correcto)
    - [Rutina diaria recomendada](#rutina-diaria-recomendada)
@@ -32,24 +34,24 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
    - [Actualizar todas las ramas activas con main](#actualizar-todas-las-ramas-activas-con-main)
    - [Reglas del equipo](#reglas-del-equipo)
    - [Convención de commits](#convención-de-commits)
-7. [Funcionalidades implementadas](#funcionalidades-implementadas)
-8. [Diseño y UI por rol](#diseño-y-ui-por-rol)
+8. [Funcionalidades implementadas](#funcionalidades-implementadas)
+9. [Diseño y UI por rol](#diseño-y-ui-por-rol)
    - [Paleta de colores](#paleta-de-colores)
    - [Navegación por rol](#navegación-por-rol)
    - [Secciones por rol](#secciones-por-rol)
-9. [Notas técnicas importantes](#notas-técnicas-importantes)
+10. [Notas técnicas importantes](#notas-técnicas-importantes)
 
-***
+---
 
 ## Equipo de desarrollo
 
 | Nombre | Rol en el equipo | Rama principal |
 |--------|------------------|----------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/frontend-components` / `feat/frontend-landing` |
-| Juan Felipe Bello Perez | IA / Data Scientist | `feat/ia-modulo` |
+| César David Rueda Daza | Líder / Full Stack / IA | `feat/frontend-components` / `feat/frontend-landing`|
+| Juan Felipe Bello Pérez | Frontend / IA |`feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
-***
+---
 
 ## Stack y arquitectura
 
@@ -60,7 +62,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 | Base de datos | MariaDB | 3306 |
 | Entorno | GitHub Codespaces | — |
 
-React no se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en `http://localhost:8000/api/`.[1]
+React no se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en el puerto 8000.
 
 ### Dependencias principales
 
@@ -70,8 +72,8 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 |----------|---------|-----|
 | React | 19.x | Framework principal de UI |
 | Vite | 6.x | Servidor de desarrollo y build |
-| react-router-dom | 7.14.0 | Rutas y navegación por rol |
-| Axios | Confirmar en `package.json` | Cliente HTTP para consumir la API |
+| react-router-dom | 7.x | Rutas y navegación por rol |
+| Axios | 1.x | Cliente HTTP para consumir la API |
 
 #### Backend
 
@@ -79,9 +81,9 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 |----------|---------|-----|
 | Laravel | 11.x | Framework backend y API REST |
 | PHP | 8.2 | Lenguaje del backend |
-| Laravel Sanctum | 4.3.x | Autenticación por token |
+| Laravel Sanctum | 4.x | Autenticación por token |
 
-> Cada vez que se instale una librería nueva con `npm install` o `composer require`, actualizar esta sección con versión y propósito.[5][6]
+> Cada vez que se instale una librería nueva con `npm install` o `composer require`, actualizar esta sección con versión y propósito.
 
 ### Base de datos
 
@@ -93,9 +95,9 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 | Contraseña | `remisoft123` |
 | Puerto | 3306 |
 
-> Estas credenciales son solo para desarrollo local o Codespaces. No deben reutilizarse en producción.[7]
+> Estas credenciales son solo para desarrollo en Codespaces. No deben reutilizarse en producción.
 
-***
+---
 
 ## Estructura del proyecto
 
@@ -103,60 +105,67 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 Proyecto-Remisoft/
 ├── .devcontainer/            # Configuración del entorno Codespaces
 │   ├── devcontainer.json     # Imagen, puertos y extensiones
-│   ├── setup.sh              # Instalación inicial
+│   ├── setup.sh              # Instalación inicial (corre una sola vez)
 │   └── start.sh              # Arranque automático de servicios
+├── database/                 # SQL del proyecto
+│   ├── DBFAMILIAREMI.sql     # Estructura de la base de datos
+│   ├── datos.sql             # Datos semilla para desarrollo
+│   ├── vistas/               # Vistas SQL
+│   └── procedimientos/       # Procedimientos almacenados
 ├── frontend/                 # Proyecto React + Vite
 │   └── src/
 │       ├── pages/            # Vistas principales
-│       │   ├── auth/         # Landing, login, registro
-│       │   ├── admin/        # Panel administrativo
+│       │   ├── auth/         # Landing, login, registro, recuperar contraseña
+│       │   ├── superadmin/   # Panel superadmin
+│       │   ├── gerente/      # Panel gerente
 │       │   ├── mesero/       # Toma de pedidos
 │       │   ├── repartidor/   # Gestión de domicilios
-│       │   └── cliente/      # Menú y pedidos
+│       │   └── cliente/      # (diferido)
 │       ├── components/       # Componentes reutilizables
-│       ├── api/              # Configuración Axios / cliente HTTP
+│       ├── api/              # Configuración Axios (usa VITE_API_URL)
 │       ├── hooks/            # Hooks personalizados
-│       └── context/          # Estado global de autenticación y usuario
-├── backend/                  # Proyecto Laravel
-│   └── app/
-│       ├── Http/Controllers/ # Controladores HTTP
-│       ├── Http/Requests/    # Validaciones tipo FormRequest
-│       ├── Models/           # Modelos Eloquent
-│       └── Services/         # Lógica de negocio si aplica
-├── DBFAMILIAREMI.sql         # Estructura base de datos heredada
-└── datos.sql                 # Datos semilla / prueba
+│       └── context/          # Estado global de autenticación
+└── backend/                  # Proyecto Laravel
+    └── app/
+        ├── Http/Controllers/ # Controladores HTTP
+        ├── Http/Requests/    # Validaciones tipo FormRequest
+        ├── Models/           # Modelos Eloquent
+        ├── Notifications/    # Notificaciones (ej: reset de contraseña)
+        └── Services/         # Lógica de negocio
 ```
 
-> La estructura real del repositorio debe prevalecer sobre este esquema. Si una carpeta cambia, esta sección también debe actualizarse.[8]
+> La estructura real del repositorio debe prevalecer sobre este esquema. Si una carpeta cambia, esta sección también debe actualizarse.
 
-***
+---
 
 ## Levantar el entorno
 
 ### Primera vez
 
-Al crear el Codespace, `setup.sh` deja listo el entorno:
+Al crear el Codespace, `setup.sh` deja listo el entorno automáticamente:
 
-- instala MariaDB,
-- crea la base de datos `remisoft`,
-- carga `DBFAMILIAREMI.sql` y `datos.sql`,
-- configura el `.env` de Laravel,
-- corre `composer install` y `npm install`.
+- Instala MariaDB
+- Crea la base de datos `remisoft`
+- Carga `DBFAMILIAREMI.sql`, `datos.sql`, vistas y procedimientos
+- Genera el `.env` de Laravel con las credenciales de DB y la URL del Codespace actual
+- Corre `composer install`, `php artisan key:generate` y `php artisan migrate`
+- Corre `npm install` en el frontend
+- Genera `frontend/.env` con la URL del backend (`VITE_API_URL`)
 
 ### Cada vez que abres el Codespace
 
-`start.sh` arranca los servicios automáticamente. Verifica:
+`start.sh` arranca los servicios automáticamente. Verifica que estén activos:
 
-```bash
+```
 React   → http://localhost:5173
 Laravel → http://localhost:8000
 ```
 
-Si no se levantan solos, correr manualmente:
+Si no se levantan solos, correr manualmente en terminales separadas:
 
 ```bash
 # Terminal 1
-cd backend && php artisan serve
+cd backend && php artisan serve --host=0.0.0.0 --port=8000
 
 # Terminal 2
 cd frontend && npm run dev
@@ -166,11 +175,92 @@ cd frontend && npm run dev
 
 | Archivo | Cuándo corre | Qué hace |
 |---------|-------------|----------|
-| `devcontainer.json` | Al crear el Codespace | Define imagen, puertos y extensiones |
-| `setup.sh` | Una sola vez | Instala dependencias y configura el proyecto |
+| `devcontainer.json` | Al crear el Codespace | Define imagen, puertos (8000 y 5173 como Public) y extensiones |
+| `setup.sh` | Una sola vez | Instala dependencias, configura DB, genera `.env` y corre migraciones |
 | `start.sh` | Cada vez que abres | Arranca MariaDB, Laravel y React |
 
-***
+### Variables de entorno
+
+Los archivos `.env` **no están en el repositorio** (están en `.gitignore`). `setup.sh` los genera automáticamente al crear el Codespace usando la variable `$CODESPACE_NAME` de GitHub.
+
+#### `backend/.env` — variables clave
+
+| Variable | Descripción |
+|----------|-------------|
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST` | `127.0.0.1` |
+| `DB_DATABASE` | `remisoft` |
+| `DB_USERNAME` | `remisoft` |
+| `DB_PASSWORD` | `remisoft123` |
+| `FRONTEND_URL` | URL del frontend en Codespaces (usada en `cors.php`) |
+| `MAIL_MAILER` | `smtp` |
+| `MAIL_HOST` | Host SMTP de Mailtrap |
+| `MAIL_PORT` | `2525` |
+| `MAIL_USERNAME` | Credencial Mailtrap (no subir al repo) |
+| `MAIL_PASSWORD` | Credencial Mailtrap (no subir al repo) |
+| `MAIL_FROM_ADDRESS` | `noreply@remisoft.com` |
+| `MAIL_FROM_NAME` | `RemiSoft` |
+
+#### `frontend/.env` — variables clave
+
+| Variable | Descripción |
+|----------|-------------|
+| `VITE_API_URL` | URL base del backend, ej: `https://<codespace>-8000.app.github.dev/api` |
+
+> Si el Codespace cambia de URL (cuando se crea uno nuevo), actualizar estos valores en los `.env` locales o recrear el Codespace para que `setup.sh` los genere de nuevo.
+
+---
+
+## Correo y recuperación de contraseña
+
+El proyecto usa **Mailtrap** para interceptar correos en desarrollo. Los correos reales nunca se envían a destinatarios reales.
+
+### Configuración
+
+Las credenciales de Mailtrap van en `backend/.env` (ver tabla de variables de entorno arriba). **Nunca subir las credenciales al repositorio.**
+
+Para obtener las credenciales:
+1. Ir a [mailtrap.io](https://mailtrap.io)
+2. Email Testing → Inboxes → tu inbox → SMTP Settings
+3. Copiar `Username` y `Password` al `backend/.env`
+
+### Endpoints de recuperación
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/api/forgot-password` | Recibe el email y envía el enlace de recuperación |
+| `POST` | `/api/reset-password` | Recibe token, email y nueva contraseña |
+
+#### Request — forgot-password
+
+```json
+{
+  "email": "usuario@ejemplo.com"
+}
+```
+
+#### Request — reset-password
+
+```json
+{
+  "token": "token-del-enlace",
+  "email": "usuario@ejemplo.com",
+  "password": "nueva_contraseña",
+  "password_confirmation": "nueva_contraseña"
+}
+```
+
+### Flujo completo
+
+1. Usuario ingresa su email en el formulario de recuperación
+2. Laravel envía un correo con un enlace que contiene `token` y `email` como query params
+3. El enlace apunta a `/reset-password?token=...&email=...` en el frontend
+4. `ResetPassword.jsx` lee esos params y muestra el formulario de nueva contraseña
+5. Al enviar, hace POST a `/api/reset-password` con token, email y nueva contraseña
+
+> El correo se puede verificar en el inbox de Mailtrap durante desarrollo.
+
+---
 
 ## Autenticación y roles
 
@@ -178,9 +268,11 @@ cd frontend && npm run dev
 
 | Método | Endpoint | Estado | Descripción |
 |--------|----------|--------|-------------|
-| `POST` | `/api/login` | Implementado | Valida credenciales, genera token y retorna usuario autenticado.[4] |
-| `POST` | `/api/register` | Implementado | Registra un nuevo usuario con validación de datos y unicidad.[2][3] |
-| `POST` | `/api/logout` | Revisar implementación | Debe invalidar el token actual si ya está conectado a Sanctum.[1] |
+| `POST` | `/api/login` | ✅ Implementado | Valida credenciales, genera token y retorna usuario autenticado |
+| `POST` | `/api/register` | ✅ Implementado | Registra un nuevo usuario con validación de datos y unicidad |
+| `POST` | `/api/forgot-password` | ✅ Implementado | Envía correo de recuperación vía Mailtrap |
+| `POST` | `/api/reset-password` | ✅ Implementado | Restablece la contraseña con token válido |
+| `POST` | `/api/logout` | ⚠️ Revisar | Debe invalidar el token actual de Sanctum |
 
 ### Requests de referencia
 
@@ -188,7 +280,7 @@ cd frontend && npm run dev
 
 ```json
 {
-  "email": "prueba.usuario@resto.com",
+  "email": "carlos.ramirez@resto.com",
   "contrasena": "12345678"
 }
 ```
@@ -210,41 +302,45 @@ cd frontend && npm run dev
 
 ### Respuesta confirmada de login
 
-El login ya fue probado con Postman y devuelve `token`, `rol` y `user` cuando las credenciales son correctas.[4]
+```json
+{
+  "token": "...",
+  "rol": "GERENTE",
+  "user": { ... }
+}
+```
 
 ### Regla crítica sobre roles
 
-El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve el backend, no el nombre que alguien suponga mentalmente.[4][9] Este punto ya generó un bug real: el backend devolvía `ADMIN`, pero el frontend esperaba otros nombres de rol y por eso parecía que el login "no hacía nada".[4][9]
+El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve el backend. Este punto ya generó un bug real: el backend devolvía `ADMIN`, pero el frontend esperaba otro nombre de rol y el login parecía no hacer nada.
 
 ### Modelo de permisos por rol
-
-> Esta jerarquía define qué puede crear, ver y gestionar cada rol. Debe mantenerse sincronizada con las políticas de autorización del backend (Gates / Policies en Laravel) y con las rutas protegidas del frontend.
 
 | Rol | Puede crear / gestionar | Visibilidad |
 |-----|------------------------|-------------|
 | `SUPERADMIN` | Crea y gestiona Gerentes; configura el sistema | No ve Meseros ni Repartidores |
-| `GERENTE` | Crea y gestiona Meseros, Repartidores y Cajeros de su restaurante | Ve la operación completa de su restaurante |
+| `GERENTE` | Crea y gestiona Meseros, Repartidores y Cajeros de su restaurante | Ve la operación completa |
 | `MESERO` | Toma pedidos, gestiona mesas | Vista de salón |
 | `REPARTIDOR` | Ve y gestiona sus propias entregas | Vista de domicilios asignados |
 | `CAJERO` | Gestiona caja y pagos | Vista de caja |
 
 **Reglas de jerarquía:**
-- Un `SUPERADMIN` **no** puede crear ni ver Meseros o Repartidores directamente; esa responsabilidad recae en el `GERENTE`.
-- Un `GERENTE` solo administra los usuarios de **su propio restaurante**, no los de otros.
+- `SUPERADMIN` no puede crear ni ver Meseros o Repartidores directamente; esa responsabilidad es del `GERENTE`.
+- `GERENTE` solo administra usuarios de su propio restaurante.
 - `MESERO`, `REPARTIDOR` y `CAJERO` no tienen permisos de gestión de usuarios.
 
 ### Catálogo actual de roles
 
-> **Importante:** esta tabla debe validarse contra la base de datos y mantenerse sincronizada con frontend y backend. Si cambia en BD, debe cambiar aquí y en las rutas del frontend.[10][11]
+> Esta tabla debe validarse contra la base de datos. Si cambia en BD, debe cambiar aquí y en las rutas del frontend.
 
-| Valor esperado en frontend | Observación |
-|----------------------------|-------------|
-| `ADMIN` | Confirmado en respuesta real de login.[4] |
-| `MESERO` | Debe mapear a rutas del módulo de salón. |
-| `REPARTIDOR` | Debe mapear a rutas de domicilios. |
-| `GERENTE` / `SUPERADMIN` | Solo usar si realmente existen y el backend los devuelve. No asumir nombres por costumbre.[4] |
+| Valor en BD | Ruta frontend |
+|-------------|---------------|
+| `SUPERADMIN` | `/superadmin/dashboard` |
+| `GERENTE` | `/gerente/dashboard` |
+| `MESERO` | `/mesero/pedidos` |
+| `REPARTIDOR` | `/repartidor` |
 
-***
+---
 
 ## Flujo de trabajo Git
 
@@ -258,16 +354,15 @@ develop     ← rama de integración
 ├── feat/ia-modulo
 └── feat/testing
 ```
-```
 
 ### Flujo correcto
 
 ```text
-feat/tu-rama → commit → push → Pull Request a develop → revisión → merge a develop
-                                                           ↓
-                                                   cuando esté estable
-                                                           ↓
-                                                          main
+feat/tu-rama → commit → push → Pull Request a develop → merge a develop
+                                                               ↓
+                                                       cuando esté estable
+                                                               ↓
+                                                    Pull Request a main
 ```
 
 ### Rutina diaria recomendada
@@ -291,46 +386,24 @@ git push origin feat/tu-rama-asignada
 ### Cómo descargar actualizaciones en tu rama
 
 > [!IMPORTANT]
-> Si un cambio ya fue agregado a `main`, **no va a aparecer automáticamente en tu rama**.
+> Si un cambio ya fue agregado a `main`, no va a aparecer automáticamente en tu rama.
 > Cada integrante debe traer los cambios de `main` a su propia rama antes de seguir trabajando.
 
-#### Paso a paso para traer cambios de `main` a tu rama
-
 ```bash
-# 1) Actualizar main local con lo último del remoto
+# 1) Actualizar main local
 git checkout main
 git fetch origin --prune
 git merge origin/main
 
-# 2) Volver a tu rama de trabajo
+# 2) Volver a tu rama y mezclar main
 git checkout feat/tu-rama
-
-# 3) Mezclar main dentro de tu rama
 git merge main
 
-# 4) Subir la rama actualizada
+# 3) Subir la rama actualizada
 git push origin feat/tu-rama
 ```
 
-#### Ejemplo real
-
-```bash
-git checkout main
-git fetch origin --prune
-git merge origin/main
-
-git checkout feat/testing
-git merge main
-git push origin feat/testing
-```
-
-> [!NOTE]
-> `git fetch` solo actualiza referencias remotas.
-> Para ver de verdad los cambios en tu rama, necesitas hacer `git merge main` estando parado en tu rama.
-
 ### Actualizar todas las ramas activas con main
-
-Si se necesita que todas las ramas activas tengan también lo que ya fue agregado a `main`, se puede usar este flujo:
 
 ```bash
 git checkout main
@@ -341,7 +414,6 @@ git push origin main
 for branch in develop feat/frontend-components feat/frontend-landing feat/ia-modulo feat/testing
 do
   git checkout "$branch" || continue
-  git fetch origin --prune
   git merge main
   git push origin "$branch"
 done
@@ -349,16 +421,15 @@ done
 git checkout main
 ```
 
-> [!IMPORTANTE]
-> Este proceso puede generar conflictos si una rama tiene cambios incompatibles con `main`.
-> No usarlo a ciegas sobre ramas viejas, abandonadas o con trabajo sin revisar.
+> [!WARNING]
+> Este proceso puede generar conflictos si una rama tiene cambios incompatibles con `main`. No usarlo sobre ramas con trabajo sin revisar.
 
 ### Reglas del equipo
 
 - Nunca hacer push directo a `main` o `develop`.
-- Cada tarea debe salir desde una rama `feat/*` creada a partir de `develop`.[12][13]
-- Probar en la rama de trabajo antes de integrar a `develop`.[14][15]
-- Hacer `pull` antes de tocar archivos para evitar conflictos innecesarios.[16][17]
+- Cada tarea debe salir desde una rama `feat/*` creada a partir de `develop`.
+- Probar en la rama de trabajo antes de integrar a `develop`.
+- Hacer `pull` antes de tocar archivos para evitar conflictos innecesarios.
 
 ### Convención de commits
 
@@ -372,62 +443,63 @@ git checkout main
 | `test:` | Pruebas |
 | `style:` | Formato / estilos sin cambiar lógica |
 
-***
+---
 
 ## Funcionalidades implementadas
 
 | Módulo | Estado | Descripción |
 |--------|--------|-------------|
-| Autenticación (login) | Implementado | Login real con Sanctum. Laravel valida credenciales, genera token y retorna usuario autenticado.[4] |
-| Registro de usuarios | Implementado | Endpoint funcional con validación y persistencia en base de datos.[2] |
-| Validación de duplicados | Implementado | Register responde `422` cuando identificación o correo ya existen.[3] |
-| Hash de contraseñas | Implementado | El login compara contraseña ingresada contra hash almacenado con `Hash::check()`.[1][4] |
-| Redirección por rol | Parcial | Funciona, pero depende de que frontend y backend compartan exactamente los mismos nombres de rol.[4][9] |
-| Logout | Sin confirmar | Falta verificar revocación de token desde frontend y backend.[1] |
-| Gestión de pedidos | Prototipo visual | Sin integración real al backend. |
-| Facturación | Prototipo visual | Sin persistencia real. |
-| Inventario | Prototipo visual | Sin lógica de descuento automático. |
-| Domicilios | Prototipo visual | Sin flujo real de estados. |
-| Módulo IA | No iniciado | Definido funcionalmente, sin implementación visible. |
+| Autenticación (login) | ✅ Implementado | Login real con Sanctum. Laravel valida credenciales, genera token y retorna usuario autenticado |
+| Registro de usuarios | ✅ Implementado | Endpoint funcional con validación y persistencia en base de datos |
+| Validación de duplicados | ✅ Implementado | Register responde `422` cuando identificación o correo ya existen |
+| Hash de contraseñas | ✅ Implementado | Login compara contraseña ingresada contra hash con `Hash::check()` |
+| Redirección por rol | ✅ Implementado | Frontend redirige según el valor exacto de `rol` que devuelve la API |
+| Recuperación de contraseña | ✅ Implementado | Flujo completo con Mailtrap: forgot-password → correo → reset-password |
+| Logout | ⚠️ Sin confirmar | Falta verificar revocación de token desde frontend y backend |
+| Gestión de pedidos | 🔲 Prototipo visual | Sin integración real al backend |
+| Facturación | 🔲 Prototipo visual | Sin persistencia real |
+| Inventario | 🔲 Prototipo visual | Sin lógica de descuento automático |
+| Domicilios | 🔲 Prototipo visual | Sin flujo real de estados |
+| Módulo IA | 🔲 No iniciado | Requiere meses de datos operativos antes de activarse |
 
-***
+---
 
 ## Diseño y UI por rol
 
 ### Paleta de colores
 
-| Token | Valor | Uso |
-|-------|-------|-----|
-| Rojo principal | `#D85A30` | Botones y acciones primarias |
-| Amarillo | `#EF9F27` | Advertencias |
-| Verde | `#1D9E75` | Confirmaciones |
+| Token CSS | Valor | Uso |
+|-----------|-------|-----|
+| `--rojo` | `#D85A30` | Botones y acciones primarias |
+| `--amarillo` | `#EF9F27` | Advertencias |
+| `--verde` | `#1D9E75` | Confirmaciones |
 | Texto | `#1A1A1A` | Tipografía principal |
 | Fondo | `#FDFAF7` | Fondo base |
 
 ### Navegación por rol
 
-| Rol | Ruta base esperada |
-|-----|-------------------|
-| `ADMIN` | `/admin/dashboard` |
+| Rol | Ruta base |
+|-----|-----------|
+| `SUPERADMIN` | `/superadmin/dashboard` |
+| `GERENTE` | `/gerente/dashboard` |
 | `MESERO` | `/mesero/pedidos` |
 | `REPARTIDOR` | `/repartidor` |
-| Cliente | `/cliente/menu` |
 | Público | `/`, `/login`, `/registro` |
-
-> Esta tabla debe coincidir con el valor real de `rol` que devuelve el backend. Si backend responde `ADMIN`, el frontend no debe esperar `GERENTE` salvo que exista un mapeo explícito.[4][9]
 
 ### Secciones por rol
 
-- **Administrador:** usuarios, configuración, panel principal.
+- **Superadmin:** gestión de gerentes, configuración del sistema.
+- **Gerente:** usuarios, pedidos, inventario, facturación, domicilios, caja.
 - **Mesero:** registrar venta, generar factura, ver pedidos por mesa.
 - **Repartidor:** ver pedidos asignados, dirección, método de pago y confirmar entrega.
-- **Cliente:** menú, pedidos y seguimiento básico.
 
-***
+---
 
 ## Notas técnicas importantes
 
-- El proyecto usa una base heredada con tabla `usuario`, no la convención estándar `users` de Laravel.[1][18]
-- El modelo `Usuario` requiere configuración explícita de tabla primaria y timestamps. Si la tabla no tiene `created_at` y `updated_at`, el modelo debe usar `public $timestamps = false;` para evitar errores SQL como el ya detectado.[18][19][20]
-- No asumir nombres de roles "por costumbre". El contrato correcto es el que devuelve la API en tiempo real.[4][9]
-- Cada cambio de contrato entre frontend y backend debe reflejarse en este README el mismo día que se mergea a `develop`.[5][7]
+- El proyecto usa tabla `usuario`, no la convención estándar `users` de Laravel. El modelo `Usuario` tiene configuración explícita de tabla primaria.
+- Si la tabla `usuario` no tiene `created_at` y `updated_at`, el modelo debe usar `public $timestamps = false;` para evitar errores SQL.
+- La tabla `personal_access_tokens` la crea Laravel con `php artisan migrate`, no el SQL heredado. Si falta, el login falla al intentar crear el token de Sanctum.
+- Las URLs del Codespace van en los `.env` locales, nunca en el código. `axios.js` usa `import.meta.env.VITE_API_URL` y `cors.php` usa `env('FRONTEND_URL')`.
+- No asumir nombres de roles. El contrato correcto es el que devuelve la API en tiempo real.
+- Cada cambio de contrato entre frontend y backend debe reflejarse en este README el mismo día que se mergea a `develop`.

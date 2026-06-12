@@ -52,6 +52,14 @@ function SuperAdmin() {
         </div>
 
         <div className="sa-sidebar-nav">
+
+      <aside className="sa-sidebar">
+        <div className="sa-sidebar__brand">
+          <span className="sa-sidebar__title">RemiSoft</span>
+          <span className="sa-sidebar__subtitle">Superadministrador</span>
+        </div>
+
+        <nav className="sa-sidebar__nav">
           {menuItems.map((item) => (
             <button
               key={item.label}
@@ -59,10 +67,13 @@ function SuperAdmin() {
               className={`sa-sidebar-nav-btn${activeTab === item.label ? ' sa-sidebar-nav-btn--active' : ''}`}
             >
               <span className="material-symbols-outlined sa-sidebar-nav-icon">{item.icon}</span>
+              className={`sa-nav-item ${activeTab === item.label ? 'sa-nav-item--active' : ''}`}
+            >
+              <span className="material-symbols-outlined sa-nav-item__icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
-        </div>
+        </nav>
 
         <div className="sa-sidebar-footer">
           <button className="sa-sidebar-primary-btn">
@@ -89,6 +100,20 @@ function SuperAdmin() {
           <button className="sa-sidebar-danger-btn">
             Parada de Emergencia Global
           </button>
+        <div className="sa-sidebar__footer">
+          <button className="sa-footer-link">
+            <span className="material-symbols-outlined">contact_support</span>
+            Soporte
+          </button>
+          <button className="sa-footer-link">
+            <span className="material-symbols-outlined">history_edu</span>
+            Registros
+          </button>
+          <button onClick={() => { logout(); navigate('/') }} className="sa-footer-link">
+            <span className="material-symbols-outlined">logout</span>
+            Cerrar sesión
+          </button>
+          <button className="sa-emergency-btn">Parada de Emergencia Global</button>
         </div>
       </aside>
 
@@ -101,7 +126,6 @@ function SuperAdmin() {
               <button className="sa-topbar__tab">Rutas de Auditoría</button>
             </div>
           </div>
-
           <div className="sa-topbar__right">
             <div className="sa-search">
               <span className="material-symbols-outlined sa-search__icon">search</span>
@@ -156,7 +180,6 @@ function SuperAdmin() {
                   <span>Agregar Miembro</span>
                 </button>
               </div>
-
               <div className="sa-table-card">
                 <div className="sa-table-scroll">
                   <table className="sa-table">
@@ -182,9 +205,7 @@ function SuperAdmin() {
                               </div>
                             </div>
                           </td>
-                          <td>
-                            <span className="sa-role-pill">{user.role}</span>
-                          </td>
+                          <td><span className="sa-role-pill">{user.role}</span></td>
                           <td>
                             <div className="sa-status-wrap">
                               <span className={`sa-status-dot${user.active ? ' sa-status-dot--active' : ''}`} />
@@ -208,7 +229,6 @@ function SuperAdmin() {
                     </tbody>
                   </table>
                 </div>
-
                 <div className="sa-table-footer">
                   <span>Mostrando 1 a 3 de 1,248 usuarios</span>
                   <div className="sa-pagination">
@@ -228,7 +248,6 @@ function SuperAdmin() {
             <aside className="sa-side-panels">
               <div className="sa-config-card">
                 <h2 className="sa-panel-title sa-panel-title--mb">Configuración del Sistema</h2>
-
                 <div className="sa-config-list">
                   <div className="sa-config-row">
                     <div>
@@ -240,7 +259,6 @@ function SuperAdmin() {
                       <span className="sa-switch__slider" />
                     </label>
                   </div>
-
                   <div className="sa-config-row">
                     <div>
                       <p className="sa-config-row__title">Estado de Registro</p>
@@ -251,7 +269,6 @@ function SuperAdmin() {
                       <span className="sa-switch__slider sa-switch__slider--green" />
                     </label>
                   </div>
-
                   <div className="sa-api-block">
                     <label className="sa-api-label">Clave API Global</label>
                     <div className="sa-api-input-wrap">
@@ -266,7 +283,6 @@ function SuperAdmin() {
                       </button>
                     </div>
                   </div>
-
                   <button className="sa-btn-update-env">Actualizar Entorno Global</button>
                 </div>
               </div>
@@ -276,7 +292,6 @@ function SuperAdmin() {
                   <h2 className="sa-panel-title">Solicitudes Pendientes</h2>
                   <span className="sa-urgent-badge">Urgente</span>
                 </div>
-
                 <div className="sa-requests-list">
                   {requests.map((req) => (
                     <div key={req.title} className="sa-request-item">
@@ -322,7 +337,6 @@ function SuperAdmin() {
                 <span className="material-symbols-outlined">hub</span>
               </div>
             </div>
-
             <div className="sa-audit-card">
               <div className="sa-audit-card__content">
                 <span className="material-symbols-outlined sa-audit-card__icon">auto_awesome</span>
