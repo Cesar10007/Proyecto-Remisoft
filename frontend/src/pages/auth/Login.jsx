@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext'
 import "./Auth.css";
 
 function Login({ onClose }) {
@@ -10,6 +11,7 @@ function Login({ onClose }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,11 +23,9 @@ function Login({ onClose }) {
       const { token, user, rol } = response.data;
       const rolNormalizado = String(rol).toUpperCase();
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('rol', rolNormalizado);
+      login(token, rolNormalizado); 
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Cerrar el modal antes de navegar
       onClose?.();
 
       if (rolNormalizado === 'SUPERADMIN')      navigate('/superadmin');
@@ -65,7 +65,7 @@ function Login({ onClose }) {
 
         <div className="form-group password-toggle-wrapper">
           <label className="form-label">Contraseña</label>
-          <div className="password-input-wrapper">           {/* ← agregar este div */}
+          <div className="password-input-wrapper">          
             <input
               className="form-input password-toggle-input"
               type={showPassword ? 'text' : 'password'}
@@ -83,7 +83,7 @@ function Login({ onClose }) {
                 {showPassword ? 'visibility_off' : 'visibility'}
               </span>
             </button>
-          </div>                                              {/* ← cerrar aquí */}
+          </div>                                             
         </div>
 
         {error && <p className="auth-error">{error}</p>}

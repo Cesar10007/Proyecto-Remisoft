@@ -47,17 +47,17 @@ function App() {
 
         {/* Rutas protegidas — redirigen a "/" si no hay token */}
         <Route path="/superadmin" element={
-          <PrivateRoute><SuperAdmin /></PrivateRoute>
-        } />
+          <PrivateRoute rolRequerido="SUPERADMIN"><SuperAdmin /></PrivateRoute>
+        }/>
         <Route path="/gerente" element={
-          <PrivateRoute><Gerente /></PrivateRoute>
-        } />
+          <PrivateRoute rolRequerido="GERENTE"><Gerente /></PrivateRoute>
+        }/>
         <Route path="/mesero" element={
-          <PrivateRoute><Mesero /></PrivateRoute>
-        } />
+          <PrivateRoute rolRequerido="MESERO"><Mesero /></PrivateRoute>
+        }/>
         <Route path="/repartidor" element={
-          <PrivateRoute><Repartidor /></PrivateRoute>
-        } />
+          <PrivateRoute rolRequerido="REPARTIDOR"><Repartidor /></PrivateRoute>
+        }/>
 
         <Route path="*" element={<Navigate to="/" />} />
 

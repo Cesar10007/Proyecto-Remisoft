@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import './SuperAdmin.css'
 import Footer from '../../components/layout/Footer'
 
@@ -36,6 +37,7 @@ const serverStats = [
 function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('Gestión de Usuarios')
   const navigate = useNavigate()
+  const {logout} = useAuth();
 
   return (
     <div className="sa-wrapper">
@@ -93,7 +95,7 @@ function SuperAdmin() {
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>history_edu</span>
             Registros
           </button>
-          <button onClick={() => navigate('/')} style={{
+          <button onClick={() => { logout(); navigate('/') }} style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             background: 'transparent', border: 'none', cursor: 'pointer',
             color: 'var(--texto-muted)', fontSize: '0.875rem', padding: '8px 12px',
