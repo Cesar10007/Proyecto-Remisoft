@@ -841,3 +841,139 @@
     align-items: flex-start;
   }
 }
+.sa-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: var(--bg-card);
+  border-right: 1px solid var(--borde);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.sa-sidebar-brand {
+  margin-bottom: 32px;
+  padding: 0 8px;
+}
+
+.sa-sidebar-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--rojo-dark);
+}
+
+.sa-sidebar-logo-accent {
+  color: var(--amarillo);
+}
+
+.sa-sidebar-role {
+  font-size: 0.7rem;
+  color: var(--texto-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
+}
+
+.sa-sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sa-sidebar-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.875rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  background: transparent;
+  color: var(--texto-muted);
+  border-right: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.sa-sidebar-nav-btn--active {
+  background: var(--rojo-light);
+  color: var(--rojo-dark);
+  border-right: 3px solid var(--rojo);
+}
+
+.sa-sidebar-nav-icon {
+  font-size: 20px;
+}
+
+.sa-sidebar-footer {
+  border-top: 1px solid var(--borde);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sa-sidebar-primary-btn {
+  background: var(--rojo);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.sa-sidebar-primary-btn__icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.sa-sidebar-secondary-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--texto-muted);
+  font-size: 0.875rem;
+  padding: 8px 12px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.sa-sidebar-footer-icon {
+  font-size: 18px;
+}
+
+.sa-sidebar-danger-btn {
+  background: var(--rojo);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.sa-main {
+  margin-left: 240px;
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
