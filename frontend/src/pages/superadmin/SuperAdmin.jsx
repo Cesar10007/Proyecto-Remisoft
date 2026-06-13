@@ -41,17 +41,6 @@ function SuperAdmin() {
 
   return (
     <div className="sa-wrapper">
-      <aside className="sa-sidebar">
-        <div className="sa-sidebar-brand">
-          <div className="sa-sidebar-logo">
-            Remi<span className="sa-sidebar-logo-accent">Soft</span>
-          </div>
-          <div className="sa-sidebar-role">
-            Superadministrador
-          </div>
-        </div>
-
-        <div className="sa-sidebar-nav">
 
       <aside className="sa-sidebar">
         <div className="sa-sidebar__brand">
@@ -64,9 +53,6 @@ function SuperAdmin() {
             <button
               key={item.label}
               onClick={() => setActiveTab(item.label)}
-              className={`sa-sidebar-nav-btn${activeTab === item.label ? ' sa-sidebar-nav-btn--active' : ''}`}
-            >
-              <span className="material-symbols-outlined sa-sidebar-nav-icon">{item.icon}</span>
               className={`sa-nav-item ${activeTab === item.label ? 'sa-nav-item--active' : ''}`}
             >
               <span className="material-symbols-outlined sa-nav-item__icon">{item.icon}</span>
@@ -75,31 +61,6 @@ function SuperAdmin() {
           ))}
         </nav>
 
-        <div className="sa-sidebar-footer">
-          <button className="sa-sidebar-primary-btn">
-            <span className="material-symbols-outlined sa-sidebar-primary-btn__icon">contact_support</span>
-            Soporte
-          </button>
-
-          <button className="sa-sidebar-secondary-btn">
-            <span className="material-symbols-outlined sa-sidebar-footer-icon">history_edu</span>
-            Registros
-          </button>
-
-          <button
-            onClick={() => {
-              logout()
-              navigate('/')
-            }}
-            className="sa-sidebar-secondary-btn"
-          >
-            <span className="material-symbols-outlined sa-sidebar-footer-icon">logout</span>
-            Cerrar sesión
-          </button>
-
-          <button className="sa-sidebar-danger-btn">
-            Parada de Emergencia Global
-          </button>
         <div className="sa-sidebar__footer">
           <button className="sa-footer-link">
             <span className="material-symbols-outlined">contact_support</span>
@@ -131,18 +92,10 @@ function SuperAdmin() {
               <span className="material-symbols-outlined sa-search__icon">search</span>
               <input type="text" placeholder="Buscar parámetros..." />
             </div>
-            <button className="sa-icon-btn">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="sa-icon-btn">
-              <span className="material-symbols-outlined">admin_panel_settings</span>
-            </button>
+            <button className="sa-icon-btn"><span className="material-symbols-outlined">notifications</span></button>
+            <button className="sa-icon-btn"><span className="material-symbols-outlined">admin_panel_settings</span></button>
             <div className="sa-avatar-wrap">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGYA_w4xq4FO56_E-LP5rS02cr_rwV1IeCSlk7c1APa2msilQVu0hJvDbm939jn2jZbD33jMM-XIBgUwFsxs6lqySTcBDp0eQiMBfXNtWSf9O4v348emGmL7OP4Ex311pCicMuBvV_8Z9TvW0OG1hc5q_LFI6Ld4jghagujeuxm3eoBmZqA-G8j5XPEp6_CTYO4m6GKNav0mkcszK-4bRp7N5H8PmdWYEyzVYjW_GpV64tkU022Sk0kMegnZew8FHDlcZamPyAD3g"
-                alt="Avatar de Superadmin"
-                className="sa-avatar"
-              />
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGYA_w4xq4FO56_E-LP5rS02cr_rwV1IeCSlk7c1APa2msilQVu0hJvDbm939jn2jZbD33jMM-XIBgUwFsxs6lqySTcBDp0eQiMBfXNtWSf9O4v348emGmL7OP4Ex311pCicMuBvV_8Z9TvW0OG1hc5q_LFI6Ld4jghagujeuxm3eoBmZqA-G8j5XPEp6_CTYO4m6GKNav0mkcszK-4bRp7N5H8PmdWYEyzVYjW_GpV64tkU022Sk0kMegnZew8FHDlcZamPyAD3g" alt="Avatar de Superadmin" className="sa-avatar" />
             </div>
           </div>
         </header>
@@ -152,10 +105,7 @@ function SuperAdmin() {
             {metrics.map((metric) => (
               <div key={metric.label} className="sa-metric-card">
                 <p className="sa-metric-card__label">{metric.label}</p>
-                <h3 className={`sa-metric-card__value${metric.color ? ` sa-metric-card__value--${metric.color}` : ''}`}>
-                  {metric.value}
-                </h3>
-
+                <h3 className={`sa-metric-card__value${metric.color ? ` sa-metric-card__value--${metric.color}` : ''}`}>{metric.value}</h3>
                 {metric.icon ? (
                   <div className={`sa-metric-card__detail sa-metric-card__detail--${metric.color}`}>
                     <span className="material-symbols-outlined">{metric.icon}</span>
@@ -209,19 +159,13 @@ function SuperAdmin() {
                           <td>
                             <div className="sa-status-wrap">
                               <span className={`sa-status-dot${user.active ? ' sa-status-dot--active' : ''}`} />
-                              <span className={`sa-status-text${user.active ? ' sa-status-text--active' : ''}`}>
-                                {user.status}
-                              </span>
+                              <span className={`sa-status-text${user.active ? ' sa-status-text--active' : ''}`}>{user.status}</span>
                             </div>
                           </td>
                           <td>
                             <div className="sa-actions-cell">
-                              <button className="sa-action-btn">
-                                <span className="material-symbols-outlined">edit</span>
-                              </button>
-                              <button className="sa-action-btn sa-action-btn--danger">
-                                <span className="material-symbols-outlined">block</span>
-                              </button>
+                              <button className="sa-action-btn"><span className="material-symbols-outlined">edit</span></button>
+                              <button className="sa-action-btn sa-action-btn--danger"><span className="material-symbols-outlined">block</span></button>
                             </div>
                           </td>
                         </tr>
@@ -232,14 +176,10 @@ function SuperAdmin() {
                 <div className="sa-table-footer">
                   <span>Mostrando 1 a 3 de 1,248 usuarios</span>
                   <div className="sa-pagination">
-                    <button className="sa-page-btn">
-                      <span className="material-symbols-outlined">chevron_left</span>
-                    </button>
+                    <button className="sa-page-btn"><span className="material-symbols-outlined">chevron_left</span></button>
                     <button className="sa-page-btn sa-page-btn--active">1</button>
                     <button className="sa-page-btn">2</button>
-                    <button className="sa-page-btn">
-                      <span className="material-symbols-outlined">chevron_right</span>
-                    </button>
+                    <button className="sa-page-btn"><span className="material-symbols-outlined">chevron_right</span></button>
                   </div>
                 </div>
               </div>
@@ -272,12 +212,7 @@ function SuperAdmin() {
                   <div className="sa-api-block">
                     <label className="sa-api-label">Clave API Global</label>
                     <div className="sa-api-input-wrap">
-                      <input
-                        type="password"
-                        value="sk_live_51M3fG9L9Zz8f4j3H"
-                        readOnly
-                        className="sa-api-input"
-                      />
+                      <input type="password" value="sk_live_51M3fG9L9Zz8f4j3H" readOnly className="sa-api-input" />
                       <button className="sa-api-visibility-btn">
                         <span className="material-symbols-outlined">visibility</span>
                       </button>
