@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import './Repartidor.css'
 
 const menuItems = [
@@ -34,6 +35,7 @@ const queue = [
 function Repartidor() {
   const [activeItem, setActiveItem] = useState('Entregas')
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   return (
     <div className="rd-wrapper">
@@ -69,7 +71,7 @@ function Repartidor() {
             Configuraciones
           </button>
 
-          <button onClick={() => navigate('/')} className="rd-sidebar-secondary-btn">
+          <button onClick={() => { logout(); navigate('/') }} className="rd-sidebar-secondary-btn">
             <span className="material-symbols-outlined rd-sidebar-footer-icon">logout</span>
             Cerrar sesión
           </button>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import './Mesero.css'
 
 const navItems = [
@@ -37,6 +38,7 @@ const feedItems = [
 function Mesero() {
   const [activeItem, setActiveItem] = useState('Mesas')
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   return (
     <div className="wa-wrapper">
@@ -72,7 +74,7 @@ function Mesero() {
             Configuraciones
           </button>
 
-          <button onClick={() => navigate('/')} className="wa-sidebar-secondary-btn">
+          <button onClick={() => { logout(); navigate('/') }} className="wa-sidebar-secondary-btn">
             <span className="material-symbols-outlined wa-sidebar-footer-icon">logout</span>
             Cerrar sesión
           </button>
