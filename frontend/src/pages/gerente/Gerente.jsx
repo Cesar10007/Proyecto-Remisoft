@@ -1,6 +1,7 @@
 import './Gerente.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const menuItems = [
   { icon: 'restaurant_menu', label: 'Menú' },
@@ -62,7 +63,8 @@ const barras = [
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const navigate = useNavigate()
-
+  const { logout } = useAuth()
+  
   return (
     <div className="ge-wrapper">
       <aside className="ge-sidebar">
@@ -91,7 +93,7 @@ function Gerente() {
             Cerrar Caja
           </button>
 
-          <button onClick={() => navigate('/')} className="ge-logout-btn">
+          <button onClick={() => { logout(); navigate('/') }} className="ge-logout-btn">
             <span className="material-symbols-outlined ge-logout-icon">logout</span>
             Cerrar sesión
           </button>
