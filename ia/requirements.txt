@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+prophet
+pandas
+sqlalchemy
+pymysql
+python-dotenv
+openai
+google-generativeai
+groq
