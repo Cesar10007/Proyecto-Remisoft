@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProductoController;
+
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,4 +18,6 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/productos/vista', [ProductoController::class, 'listarVista']);
+    Route::get('/productos/sp', [ProductoController::class, 'listarProcedimiento']);
 });
