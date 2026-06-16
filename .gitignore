@@ -1,2 +1,40 @@
+# ── Node ──────────────────────────────
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Laravel ───────────────────────────
+backend/.env
+backend/vendor/
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+
+# ── React / Vite ──────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# ── Python / IA ───────────────────────
 ia/.env
+ia/__pycache__/
+ia/services/__pycache__/
+ia/get-pip.py
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# ── IDEs ──────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────
+.DS_Store
+Thumbs.db

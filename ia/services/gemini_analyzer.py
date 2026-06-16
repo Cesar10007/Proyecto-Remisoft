@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-DB_URL = "mysql+pymysql://remisoft:remisoft123@localhost/remisoft"
+DB_URL = os.getenv("DB_URL", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_DAILY_LIMIT = 500
 
