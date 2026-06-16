@@ -646,3 +646,34 @@
 .ge-action-icon {
   font-size: 18px;
 }
+.ge-productos-card {
+  padding: 24px 28px;
+}
+
+.ge-productos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ge-productos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ge-productos-tabla th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: var(--texto-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--borde);
+}
+
+.ge-productos-tabla td {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--texto);
+  border-bottom: 1px solid var(--borde);
+}
