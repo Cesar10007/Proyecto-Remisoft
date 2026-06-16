@@ -2,9 +2,9 @@
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** La autenticación está completamente conectada al backend real con Laravel Sanctum. Login, registro, logout y recuperación de contraseña funcionan sobre la API. Varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.
+> **Estado actual:** La autenticación está completamente conectada al backend real con Laravel Sanctum. Login, registro, logout y recuperación de contraseña funcionan sobre la API. El dashboard de Gerente consume datos reales desde MariaDB a través de una Vista SQL (`vista_listado_productos`) y un Procedimiento Almacenado (`sp_listar_productos`). Las demás vistas del frontend son prototipos visuales mientras se implementa la lógica completa.
 
-***
+---
 
 ## Tabla de contenido
 
@@ -41,7 +41,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
    - [Secciones por rol](#secciones-por-rol)
 10. [Notas técnicas importantes](#notas-técnicas-importantes)
 
-***
+---
 
 ## Equipo de desarrollo
 
@@ -51,7 +51,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 | Juan Felipe Bello Pérez | Frontend / IA |`feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
-***
+---
 
 ## Stack y arquitectura
 
@@ -92,12 +92,12 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 | Motor | MariaDB |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | `remisoft123` |
+| Contraseña | ver `backend/.env` |
 | Puerto | 3306 |
 
 > Estas credenciales son solo para desarrollo en Codespaces. No deben reutilizarse en producción.
 
-***
+---
 
 ## Estructura del proyecto
 
@@ -136,7 +136,7 @@ Proyecto-Remisoft/
 
 > La estructura real del repositorio debe prevalecer sobre este esquema. Si una carpeta cambia, esta sección también debe actualizarse.
 
-***
+---
 
 ## Levantar el entorno
 
@@ -191,7 +191,7 @@ Los archivos `.env` **no están en el repositorio** (están en `.gitignore`). `s
 | `DB_HOST` | `127.0.0.1` |
 | `DB_DATABASE` | `remisoft` |
 | `DB_USERNAME` | `remisoft` |
-| `DB_PASSWORD` | `remisoft123` |
+| `DB_PASSWORD` | ver `backend/.env` |
 | `FRONTEND_URL` | URL del frontend en Codespaces (usada en `cors.php`) |
 | `MAIL_MAILER` | `smtp` |
 | `MAIL_HOST` | Host SMTP de Mailtrap |
@@ -209,7 +209,7 @@ Los archivos `.env` **no están en el repositorio** (están en `.gitignore`). `s
 
 > Si el Codespace cambia de URL (cuando se crea uno nuevo), actualizar estos valores en los `.env` locales o recrear el Codespace para que `setup.sh` los genere de nuevo.
 
-***
+---
 
 ## Correo y recuperación de contraseña
 
@@ -260,7 +260,7 @@ Para obtener las credenciales:
 
 > El correo se puede verificar en el inbox de Mailtrap durante desarrollo.
 
-***
+---
 
 ## Autenticación y roles
 
@@ -273,6 +273,8 @@ Para obtener las credenciales:
 | `POST` | `/api/forgot-password` | ✅ Implementado | Envía correo de recuperación vía Mailtrap |
 | `POST` | `/api/reset-password` | ✅ Implementado | Restablece la contraseña con token válido |
 | `POST` | `/api/logout` | ✅ Implementado | Revoca el token actual de Sanctum — requiere `Authorization: Bearer <token>` |
+| `GET` | `/api/productos/vista` | ✅ Implementado | Retorna listado de productos desde `vista_listado_productos` — requiere `Authorization: Bearer <token>` |
+| `GET` | `/api/productos/sp` | ✅ Implementado | Retorna listado de productos desde `sp_listar_productos` — requiere `Authorization: Bearer <token>` |
 
 ### Requests de referencia
 
@@ -297,21 +299,6 @@ Para obtener las credenciales:
   "telefono": "3005554444",
   "contrasena": "12345678",
   "contrasena_confirmation": "12345678"
-}
-```
-
-#### Logout
-
-```http
-POST /api/logout
-Authorization: Bearer <token>
-```
-
-Respuesta esperada:
-
-```json
-{
-  "message": "Sesión cerrada"
 }
 ```
 
@@ -355,7 +342,7 @@ El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve e
 | `MESERO` | `/mesero/pedidos` |
 | `REPARTIDOR` | `/repartidor` |
 
-***
+---
 
 ## Flujo de trabajo Git
 
@@ -458,7 +445,7 @@ git checkout main
 | `test:` | Pruebas |
 | `style:` | Formato / estilos sin cambiar lógica |
 
-***
+---
 
 ## Funcionalidades implementadas
 
@@ -470,14 +457,16 @@ git checkout main
 | Hash de contraseñas | ✅ Implementado | Login compara contraseña ingresada contra hash con `Hash::check()` |
 | Redirección por rol | ✅ Implementado | Frontend redirige según el valor exacto de `rol` que devuelve la API |
 | Recuperación de contraseña | ✅ Implementado | Flujo completo con Mailtrap: forgot-password → correo → reset-password |
-| Logout | ✅ Implementado | `currentAccessToken()->delete()` en `AuthController`. Ruta protegida por `auth:sanctum` |
+| Logout | ⚠️ Sin confirmar | Falta verificar revocación de token desde frontend y backend |
+| Listado de productos (Vista SQL) | ✅ Implementado | `GET /api/productos/vista` consume `vista_listado_productos` y renderiza en dashboard Gerente |
+| Listado de productos (Procedimiento) | ✅ Implementado | `GET /api/productos/sp` ejecuta `sp_listar_productos` y renderiza en dashboard Gerente |
 | Gestión de pedidos | 🔲 Prototipo visual | Sin integración real al backend |
 | Facturación | 🔲 Prototipo visual | Sin persistencia real |
 | Inventario | 🔲 Prototipo visual | Sin lógica de descuento automático |
 | Domicilios | 🔲 Prototipo visual | Sin flujo real de estados |
 | Módulo IA | 🔲 No iniciado | Requiere meses de datos operativos antes de activarse |
 
-***
+---
 
 ## Diseño y UI por rol
 
@@ -508,7 +497,7 @@ git checkout main
 - **Mesero:** registrar venta, generar factura, ver pedidos por mesa.
 - **Repartidor:** ver pedidos asignados, dirección, método de pago y confirmar entrega.
 
-***
+---
 
 ## Notas técnicas importantes
 
