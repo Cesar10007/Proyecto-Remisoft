@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import './Gerente.css'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -229,8 +230,8 @@ function Gerente() {
         </section>
 
         {/* SECCIÓN PRODUCTOS — Vista SQL y Procedimiento Almacenado */}
-        <section className="ge-card" style={{ marginTop: '1.5rem' }}>
-          <div className="ge-card-header">
+        <section className="ge-card ge-productos-card" style={{ marginTop: '1.5rem' }}>
+          <div className="ge-productos-header">
             <h3 className="ge-section-title ge-section-title--sm">Listado de Productos</h3>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
@@ -249,39 +250,37 @@ function Gerente() {
           </div>
 
           {cargandoProductos ? (
-            <p style={{ padding: '1rem', color: 'var(--muted)' }}>Cargando productos...</p>
+            <p style={{ color: 'var(--texto-muted)', fontSize: '0.85rem' }}>Cargando productos...</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+              <table className="ge-productos-tabla">
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--borde)' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Nombre</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Descripción</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Precio</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Categoría</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Tiempo prep.</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Estado</th>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Categoría</th>
+                    <th>Tiempo prep.</th>
+                    <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {productos.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '1rem', color: 'var(--muted)', textAlign: 'center' }}>
+                      <td colSpan={6} style={{ textAlign: 'center', color: 'var(--texto-muted)' }}>
                         Sin productos
                       </td>
                     </tr>
                   ) : (
                     productos.map((p, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--borde)' }}>
-                        <td style={{ padding: '0.5rem 1rem' }}>{p.Nombre}</td>
-                        <td style={{ padding: '0.5rem 1rem' }}>{p.Descripcion}</td>
-                        <td style={{ padding: '0.5rem 1rem' }}>${Number(p.precio_venta).toLocaleString('es-CO')}</td>
-                        <td style={{ padding: '0.5rem 1rem' }}>{p.Categoria}</td>
-                        <td style={{ padding: '0.5rem 1rem' }}>{p.Tiempo_preparacion} min</td>
-                        <td style={{ padding: '0.5rem 1rem' }}>
-                          <span style={{ color: p.Estado ? 'var(--verde)' : 'var(--rojo)' }}>
-                            {p.Estado ? 'Activo' : 'Inactivo'}
-                          </span>
+                      <tr key={i}>
+                        <td><strong>{p.Nombre}</strong></td>
+                        <td>{p.Descripcion}</td>
+                        <td>${Number(p.precio_venta).toLocaleString('es-CO')}</td>
+                        <td>{p.Categoria}</td>
+                        <td>{p.Tiempo_preparacion} min</td>
+                        <td style={{ color: p.Estado ? 'var(--verde)' : 'var(--rojo)' }}>
+                          {p.Estado ? 'Activo' : 'Inactivo'}
                         </td>
                       </tr>
                     ))
