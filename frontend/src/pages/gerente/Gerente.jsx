@@ -1,7 +1,8 @@
 import './Gerente.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../api/axios'
 
 const menuItems = [
   { icon: 'restaurant_menu', label: 'Menú' },
@@ -63,8 +64,23 @@ const barras = [
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const navigate = useNavigate()
-  const { logout } = useAuth()
-  
+  const { logout, user } = useAuth()
+  const [productos, setProductos] = useState([])
+  const [fuenteProductos, setFuenteProductos] = useState('vista')
+  const [cargandoProductos, setCargandoProductos] = useState(false)
+
+  useEffect(() => {
+    const endpoint = fuenteProductos === 'vista'
+      ? '/productos/vista'
+      : '/productos/sp'
+
+    setCargandoProductos(true)
+    api.get(endpoint)
+      .then(res => setProductos(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setCargandoProductos(false))
+  }, [fuenteProductos])
+
   return (
     <div className="ge-wrapper">
       <aside className="ge-sidebar">
@@ -104,7 +120,7 @@ function Gerente() {
         <header className="ge-topbar">
           <div>
             <h1 className="ge-page-title">{seccionActiva}</h1>
-            <p className="ge-page-subtitle">Bienvenido de nuevo, Gerente</p>
+            <p className="ge-page-subtitle">Bienvenido de nuevo, {user?.nombre ?? 'Gerente'}</p>
           </div>
 
           <div className="ge-topbar-actions">
@@ -115,7 +131,7 @@ function Gerente() {
 
             <div className="ge-user-pill">
               <div className="ge-user-avatar">G</div>
-              <span className="ge-user-name">Gerente</span>
+              <span className="ge-user-name">{user?.nombre ?? 'Gerente'}</span>
             </div>
           </div>
         </header>
@@ -127,12 +143,10 @@ function Gerente() {
                 <span className={`material-symbols-outlined ge-metric-icon ge-tone-${m.badgeColor}`}>
                   {m.icon}
                 </span>
-
                 <span className={`ge-badge ge-tone-${m.badgeColor}`}>
                   {m.badge}
                 </span>
               </div>
-
               <div>
                 <p className="ge-metric-label">{m.label}</p>
                 <p className="ge-metric-value">{m.valor}</p>
@@ -148,7 +162,6 @@ function Gerente() {
                 <h3 className="ge-section-title">Tendencia semanal</h3>
                 <p className="ge-section-subtitle">Predicción de demanda basada en historial</p>
               </div>
-
               <div className="ge-legend">
                 <span className="ge-legend-item ge-legend-item--red">
                   <span className="ge-legend-dot"></span>
@@ -160,7 +173,6 @@ function Gerente() {
                 </span>
               </div>
             </div>
-
             <div className="ge-bars-chart">
               {barras.map(b => (
                 <div key={b.dia} className="ge-bar-column">
@@ -177,13 +189,11 @@ function Gerente() {
           <div className="ge-side-column">
             <div className="ge-card ge-quick-card">
               <h4 className="ge-small-title">Acciones rápidas</h4>
-
               <div className="ge-quick-actions">
                 <button className="ge-primary-btn ge-primary-btn--split">
                   Nuevo Pedido
                   <span className="material-symbols-outlined ge-action-icon">arrow_forward</span>
                 </button>
-
                 <button className="ge-secondary-btn ge-secondary-btn--split">
                   Control de Menú
                   <span className="material-symbols-outlined ge-action-icon">edit_note</span>
@@ -196,7 +206,6 @@ function Gerente() {
                 <h4 className="ge-small-title">Estado inventario</h4>
                 <span className="ge-live-badge">En vivo</span>
               </div>
-
               <div className="ge-inventory-list">
                 {inventario.map(i => (
                   <div key={i.nombre} className="ge-inventory-item">
@@ -206,7 +215,6 @@ function Gerente() {
                         {i.porcentaje}%
                       </span>
                     </div>
-
                     <div className="ge-progress-track">
                       <div
                         className={`ge-progress-fill ge-fill-${i.color}`}
@@ -220,11 +228,74 @@ function Gerente() {
           </div>
         </section>
 
+        {/* SECCIÓN PRODUCTOS — Vista SQL y Procedimiento Almacenado */}
+        <section className="ge-card" style={{ marginTop: '1.5rem' }}>
+          <div className="ge-card-header">
+            <h3 className="ge-section-title ge-section-title--sm">Listado de Productos</h3>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                className={`ge-secondary-btn ${fuenteProductos === 'vista' ? 'is-active' : ''}`}
+                onClick={() => setFuenteProductos('vista')}
+              >
+                Vista SQL
+              </button>
+              <button
+                className={`ge-secondary-btn ${fuenteProductos === 'sp' ? 'is-active' : ''}`}
+                onClick={() => setFuenteProductos('sp')}
+              >
+                Procedimiento
+              </button>
+            </div>
+          </div>
+
+          {cargandoProductos ? (
+            <p style={{ padding: '1rem', color: 'var(--muted)' }}>Cargando productos...</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--borde)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Nombre</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Descripción</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Precio</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Categoría</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Tiempo prep.</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem 1rem' }}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productos.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '1rem', color: 'var(--muted)', textAlign: 'center' }}>
+                        Sin productos
+                      </td>
+                    </tr>
+                  ) : (
+                    productos.map((p, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--borde)' }}>
+                        <td style={{ padding: '0.5rem 1rem' }}>{p.Nombre}</td>
+                        <td style={{ padding: '0.5rem 1rem' }}>{p.Descripcion}</td>
+                        <td style={{ padding: '0.5rem 1rem' }}>${Number(p.precio_venta).toLocaleString('es-CO')}</td>
+                        <td style={{ padding: '0.5rem 1rem' }}>{p.Categoria}</td>
+                        <td style={{ padding: '0.5rem 1rem' }}>{p.Tiempo_preparacion} min</td>
+                        <td style={{ padding: '0.5rem 1rem' }}>
+                          <span style={{ color: p.Estado ? 'var(--verde)' : 'var(--rojo)' }}>
+                            {p.Estado ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
         <section className="ge-bottom-grid">
           <div className="ge-card ge-tables-card">
             <div className="ge-card-header">
               <h3 className="ge-section-title ge-section-title--sm">Estado de mesas</h3>
-
               <div className="ge-legend">
                 <span className="ge-legend-item ge-legend-item--green">
                   <span className="ge-legend-dot"></span>
@@ -236,7 +307,6 @@ function Gerente() {
                 </span>
               </div>
             </div>
-
             <div className="ge-tables-grid">
               {mesas.map(m => (
                 <div key={m.id} className={`ge-table-box ${m.ocupada ? 'is-occupied' : 'is-free'}`}>
@@ -254,7 +324,6 @@ function Gerente() {
               <h3 className="ge-section-title ge-section-title--sm">Movimientos recientes</h3>
               <button className="ge-link-btn">Ver todo</button>
             </div>
-
             <div className="ge-movements-list">
               {movimientos.map((mov, i) => (
                 <div key={i} className="ge-movement-item">
@@ -262,13 +331,11 @@ function Gerente() {
                     <div className={`ge-movement-icon-wrap ${mov.positivo ? 'is-positive' : 'is-negative'}`}>
                       <span className="material-symbols-outlined ge-movement-icon">{mov.icon}</span>
                     </div>
-
                     <div>
                       <p className="ge-movement-title">{mov.titulo}</p>
                       <p className="ge-movement-sub">{mov.sub}</p>
                     </div>
                   </div>
-
                   <span className={`ge-movement-amount ${mov.positivo ? 'is-positive' : 'is-negative'}`}>
                     {mov.monto}
                   </span>
