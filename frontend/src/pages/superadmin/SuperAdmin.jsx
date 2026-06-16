@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './SuperAdmin.css'
+import '../gerente/Gerente.css'
 import Footer from '../../components/layout/Footer'
 
 const menuItems = [
@@ -42,43 +43,42 @@ function SuperAdmin() {
   return (
     <div className="sa-wrapper">
 
-      <aside className="sa-sidebar">
-        <div className="sa-sidebar__brand">
-          <span className="sa-sidebar__title">RemiSoft</span>
-          <span className="sa-sidebar__subtitle">Superadministrador</span>
+      <aside className="ge-sidebar">
+        <div className="ge-sidebar-brand">
+          <div className="ge-logo">
+            Remi<span className="ge-logo-accent">Soft</span>
+          </div>
+          <div className="ge-role">Superadministrador</div>
         </div>
 
-        <nav className="sa-sidebar__nav">
-          {menuItems.map((item) => (
+        <div className="ge-sidebar-menu">
+          {menuItems.map(item => (
             <button
               key={item.label}
               onClick={() => setActiveTab(item.label)}
-              className={`sa-nav-item ${activeTab === item.label ? 'sa-nav-item--active' : ''}`}
+              className={`ge-menu-btn ${activeTab === item.label ? 'is-active' : ''}`}
             >
-              <span className="material-symbols-outlined sa-nav-item__icon">{item.icon}</span>
+              <span className="material-symbols-outlined ge-menu-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}
-        </nav>
+        </div>
 
-        <div className="sa-sidebar__footer">
-          <button className="sa-footer-link">
-            <span className="material-symbols-outlined">contact_support</span>
-            Soporte
-          </button>
-          <button className="sa-footer-link">
-            <span className="material-symbols-outlined">history_edu</span>
-            Registros
-          </button>
-          <button onClick={() => { logout(); navigate('/') }} className="sa-footer-link">
-            <span className="material-symbols-outlined">logout</span>
+        <div className="ge-sidebar-footer">
+          <button className="ge-primary-btn">Soporte</button>
+
+          <button onClick={() => { logout(); navigate('/') }} className="ge-logout-btn">
+            <span className="material-symbols-outlined ge-logout-icon">logout</span>
             Cerrar sesión
           </button>
-          <button className="sa-emergency-btn">Parada de Emergencia Global</button>
+
+          <button className="ge-secondary-btn ge-secondary-btn--split ge-primary-btn--split" style={{ marginTop: 8 }}>
+            Parada de Emergencia Global
+          </button>
         </div>
       </aside>
 
-      <main className="sa-main">
+      <main className="sa-main" style={{ marginLeft: '240px' }}>
         <header className="sa-topbar">
           <div className="sa-topbar__left">
             <h1 className="sa-topbar__title">Centro de Comando Administrativo</h1>
