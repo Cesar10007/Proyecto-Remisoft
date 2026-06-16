@@ -2,9 +2,9 @@
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** La autenticación está conectada al backend real con Laravel Sanctum. Login, registro y recuperación de contraseña funcionan sobre la API. Varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.
+> **Estado actual:** La autenticación está completamente conectada al backend real con Laravel Sanctum. Login, registro, logout y recuperación de contraseña funcionan sobre la API. Varias vistas del frontend siguen siendo prototipos visuales mientras se implementa la lógica completa.
 
----
+***
 
 ## Tabla de contenido
 
@@ -41,7 +41,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
    - [Secciones por rol](#secciones-por-rol)
 10. [Notas técnicas importantes](#notas-técnicas-importantes)
 
----
+***
 
 ## Equipo de desarrollo
 
@@ -51,7 +51,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 | Juan Felipe Bello Pérez | Frontend / IA |`feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
----
+***
 
 ## Stack y arquitectura
 
@@ -97,7 +97,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 
 > Estas credenciales son solo para desarrollo en Codespaces. No deben reutilizarse en producción.
 
----
+***
 
 ## Estructura del proyecto
 
@@ -136,7 +136,7 @@ Proyecto-Remisoft/
 
 > La estructura real del repositorio debe prevalecer sobre este esquema. Si una carpeta cambia, esta sección también debe actualizarse.
 
----
+***
 
 ## Levantar el entorno
 
@@ -209,7 +209,7 @@ Los archivos `.env` **no están en el repositorio** (están en `.gitignore`). `s
 
 > Si el Codespace cambia de URL (cuando se crea uno nuevo), actualizar estos valores en los `.env` locales o recrear el Codespace para que `setup.sh` los genere de nuevo.
 
----
+***
 
 ## Correo y recuperación de contraseña
 
@@ -260,7 +260,7 @@ Para obtener las credenciales:
 
 > El correo se puede verificar en el inbox de Mailtrap durante desarrollo.
 
----
+***
 
 ## Autenticación y roles
 
@@ -272,7 +272,7 @@ Para obtener las credenciales:
 | `POST` | `/api/register` | ✅ Implementado | Registra un nuevo usuario con validación de datos y unicidad |
 | `POST` | `/api/forgot-password` | ✅ Implementado | Envía correo de recuperación vía Mailtrap |
 | `POST` | `/api/reset-password` | ✅ Implementado | Restablece la contraseña con token válido |
-| `POST` | `/api/logout` | ⚠️ Revisar | Debe invalidar el token actual de Sanctum |
+| `POST` | `/api/logout` | ✅ Implementado | Revoca el token actual de Sanctum — requiere `Authorization: Bearer <token>` |
 
 ### Requests de referencia
 
@@ -297,6 +297,21 @@ Para obtener las credenciales:
   "telefono": "3005554444",
   "contrasena": "12345678",
   "contrasena_confirmation": "12345678"
+}
+```
+
+#### Logout
+
+```http
+POST /api/logout
+Authorization: Bearer <token>
+```
+
+Respuesta esperada:
+
+```json
+{
+  "message": "Sesión cerrada"
 }
 ```
 
@@ -340,7 +355,7 @@ El frontend debe navegar usando **exactamente** el valor de `rol` que devuelve e
 | `MESERO` | `/mesero/pedidos` |
 | `REPARTIDOR` | `/repartidor` |
 
----
+***
 
 ## Flujo de trabajo Git
 
@@ -443,7 +458,7 @@ git checkout main
 | `test:` | Pruebas |
 | `style:` | Formato / estilos sin cambiar lógica |
 
----
+***
 
 ## Funcionalidades implementadas
 
@@ -455,14 +470,14 @@ git checkout main
 | Hash de contraseñas | ✅ Implementado | Login compara contraseña ingresada contra hash con `Hash::check()` |
 | Redirección por rol | ✅ Implementado | Frontend redirige según el valor exacto de `rol` que devuelve la API |
 | Recuperación de contraseña | ✅ Implementado | Flujo completo con Mailtrap: forgot-password → correo → reset-password |
-| Logout | ⚠️ Sin confirmar | Falta verificar revocación de token desde frontend y backend |
+| Logout | ✅ Implementado | `currentAccessToken()->delete()` en `AuthController`. Ruta protegida por `auth:sanctum` |
 | Gestión de pedidos | 🔲 Prototipo visual | Sin integración real al backend |
 | Facturación | 🔲 Prototipo visual | Sin persistencia real |
 | Inventario | 🔲 Prototipo visual | Sin lógica de descuento automático |
 | Domicilios | 🔲 Prototipo visual | Sin flujo real de estados |
 | Módulo IA | 🔲 No iniciado | Requiere meses de datos operativos antes de activarse |
 
----
+***
 
 ## Diseño y UI por rol
 
@@ -493,7 +508,7 @@ git checkout main
 - **Mesero:** registrar venta, generar factura, ver pedidos por mesa.
 - **Repartidor:** ver pedidos asignados, dirección, método de pago y confirmar entrega.
 
----
+***
 
 ## Notas técnicas importantes
 
