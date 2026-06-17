@@ -23,8 +23,7 @@ function Login({ onClose }) {
       const { token, user, rol } = response.data;
       const rolNormalizado = String(rol).toUpperCase();
 
-      login(token, rolNormalizado); 
-      localStorage.setItem('user', JSON.stringify(user));
+      login(token, rolNormalizado, user);
 
       onClose?.();
 

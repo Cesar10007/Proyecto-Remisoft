@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -38,7 +39,7 @@ const serverStats = [
 function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('Gestión de Usuarios')
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
 
   return (
     <div className="sa-wrapper">
@@ -150,7 +151,7 @@ function SuperAdmin() {
                                 <img src={user.avatar} alt={user.name} className="sa-user-avatar" />
                               </div>
                               <div>
-                                <p className="sa-user-name">{user.name}</p>
+                                <p className="sa-user-name">{user?.nombre ?? 'SuperAdmin'}</p>
                                 <p className="sa-user-email">{user.email}</p>
                               </div>
                             </div>
