@@ -22,9 +22,8 @@ REACT_PID=$!
 sleep 3
 
 # ── PUERTOS PÚBLICOS ──
-gh codespace ports visibility 8000:public 2>/dev/null || true
-gh codespace ports visibility 5173:public 2>/dev/null || true
-
+gh codespace ports visibility 8000:public -c "$CODESPACE_NAME" 2>/dev/null || true
+gh codespace ports visibility 5173:public -c "$CODESPACE_NAME" 2>/dev/null || true
 echo ""
 echo "========================================="
 echo "  RemiSoft — Entorno listo"
