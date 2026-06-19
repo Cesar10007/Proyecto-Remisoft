@@ -1,6 +1,10 @@
 import './Auth.css'
 
-function Landing() {
+interface LandingProps {
+  onRegister: () => void
+}
+
+function Landing({ onRegister }: LandingProps) {
   return (
     <>
       {/* HERO */}
@@ -25,12 +29,12 @@ function Landing() {
           </p>
 
           <div className="hero-actions">
-            <button className="btn btn-primary" onClick={() => window.openModal('registro')}>
+            <button className="btn btn-primary" onClick={onRegister}>
               Comenzar ahora
             </button>
             <button
               className="btn btn-ghost"
-              onClick={() => document.getElementById('funciones').scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('funciones')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Ver funciones
             </button>
