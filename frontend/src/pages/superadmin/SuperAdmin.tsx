@@ -151,7 +151,7 @@ function SuperAdmin() {
                                 <img src={user.avatar} alt={user.name} className="sa-user-avatar" />
                               </div>
                               <div>
-                                <p className="sa-user-name">{user?.nombre ?? 'SuperAdmin'}</p>
+                                <p className="sa-user-name">{user?.name ?? 'SuperAdmin'}</p>
                                 <p className="sa-user-email">{user.email}</p>
                               </div>
                             </div>
