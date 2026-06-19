@@ -179,7 +179,7 @@ function Gerente() {
                 <div key={b.dia} className="ge-bar-column">
                   <div
                     className="ge-bar-fill"
-                    style={{ '--bar-height': `${b.alto}%` }}
+                    style={{ ['--bar-height']: `${b.alto}%` } as React.CSSProperties}
                   ></div>
                   <span className="ge-bar-label">{b.dia}</span>
                 </div>
@@ -219,7 +219,7 @@ function Gerente() {
                     <div className="ge-progress-track">
                       <div
                         className={`ge-progress-fill ge-fill-${i.color}`}
-                        style={{ '--progress': `${i.porcentaje}%` }}
+                        style={{ ['--progress']: `${i.porcentaje}%` } as React.CSSProperties}
                       ></div>
                     </div>
                   </div>
