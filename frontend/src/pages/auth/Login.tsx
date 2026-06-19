@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext'
+import { setCredentials } from '../../store/authSlice';
+import { useAuth } from '../../context/AuthContext';
 import "./Auth.css";
 
-function Login({ onClose }) {
+interface LoginProps {
+  onClose?: () => void
+}
+
+function Login({ onClose }: LoginProps) {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); 
+  const dispatch = useDispatch();
+  const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -23,6 +30,9 @@ function Login({ onClose }) {
       const { token, user, rol } = response.data;
       const rolNormalizado = String(rol).toUpperCase();
 
+      // Redux
+      dispatch(setCredentials({ token, rol: rolNormalizado, user }));
+      // AuthContext (para compatibilidad con dashboards)
       login(token, rolNormalizado, user);
 
       onClose?.();
@@ -33,10 +43,10 @@ function Login({ onClose }) {
       else if (rolNormalizado === 'REPARTIDOR') navigate('/repartidor');
       else navigate('/');
 
-    } catch (err) {
-      if (err.response?.status === 401)       setError('Credenciales incorrectas');
-      else if (err.response?.status === 422)  setError('Revisa los datos ingresados');
-      else                                    setError('Error al conectar con el servidor');
+    } catch (err: any) {
+      if (err.response?.status === 401)      setError('Credenciales incorrectas');
+      else if (err.response?.status === 422) setError('Revisa los datos ingresados');
+      else                                   setError('Error al conectar con el servidor');
     } finally {
       setLoading(false);
     }
@@ -64,7 +74,7 @@ function Login({ onClose }) {
 
         <div className="form-group password-toggle-wrapper">
           <label className="form-label">Contraseña</label>
-          <div className="password-input-wrapper">          
+          <div className="password-input-wrapper">
             <input
               className="form-input password-toggle-input"
               type={showPassword ? 'text' : 'password'}
@@ -82,7 +92,7 @@ function Login({ onClose }) {
                 {showPassword ? 'visibility_off' : 'visibility'}
               </span>
             </button>
-          </div>                                             
+          </div>
         </div>
 
         {error && <p className="auth-error">{error}</p>}
@@ -98,7 +108,7 @@ function Login({ onClose }) {
           type="button"
           className="auth-link"
           onClick={() => { onClose?.(); navigate('/forgot-password'); }}
-          >
+        >
           ¿Olvidaste tu contraseña?
         </button>
       </form>
