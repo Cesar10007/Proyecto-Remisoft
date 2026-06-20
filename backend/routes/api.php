@@ -20,4 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/productos/vista', [ProductoController::class, 'listarVista']);
     Route::get('/productos/sp', [ProductoController::class, 'listarProcedimiento']);
+    Route::post('/productos', [ProductoController::class, 'crear']);
+    Route::put('/productos/{id}', [ProductoController::class, 'actualizar']);
+    Route::delete('/productos/{id}', [ProductoController::class, 'eliminar']);
 });
