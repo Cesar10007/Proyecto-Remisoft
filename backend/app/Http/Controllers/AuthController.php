@@ -38,19 +38,19 @@ class AuthController extends Controller
     public function register(RegisterUsuarioRequest $request)
     {
         $usuario = Usuario::create([
-            'id_rol' => $request->id_rol,
-            'identificacion' => $request->identificacion,
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'email' => $request->email,
-            'telefono' => $request->telefono,
+            'id_rol'          => 6,
+            'identificacion'  => $request->identificacion,
+            'nombre'          => $request->nombre,
+            'apellido'        => $request->apellido,
+            'email'           => $request->email,
+            'telefono'        => $request->telefono,
             'contrasena_hash' => Hash::make($request->contrasena),
-            'activo' => 1,
+            'activo'          => 1,
         ]);
 
         return response()->json([
             'message' => 'Usuario registrado correctamente',
-            'user' => $usuario,
+            'user'    => $usuario,
         ], 201);
     }
 
