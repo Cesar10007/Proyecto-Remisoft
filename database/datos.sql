@@ -37,7 +37,8 @@ INSERT INTO `rol` (`id_rol`, `nombre`, `descripcion`) VALUES
 (2, 'GERENTE',    'Administrador del restaurante'),
 (3, 'CAJERO',     'Gestión de caja y pagos'),
 (4, 'MESERO',     'Toma y gestión de pedidos en mesa'),
-(5, 'REPARTIDOR', 'Entrega de pedidos a domicilio');
+(5, 'REPARTIDOR', 'Entrega de pedidos a domicilio'),
+(6, 'CLIENTE', 'Usuario cliente del restaurante');
 
 -- 2. USUARIO
 INSERT INTO usuario (id_rol, identificacion, nombre, apellido, email, telefono, contrasena_hash, activo) VALUES
