@@ -41,6 +41,7 @@ function Login({ onClose }: LoginProps) {
       else if (rolNormalizado === 'GERENTE')    navigate('/gerente');
       else if (rolNormalizado === 'MESERO')     navigate('/mesero');
       else if (rolNormalizado === 'REPARTIDOR') navigate('/repartidor');
+      else if (rolNormalizado === 'CLIENTE')    navigate('/cliente');
       else navigate('/');
 
     } catch (err: any) {
