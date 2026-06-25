@@ -78,7 +78,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 | Motor | MariaDB |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | ver `backend/.env` |
+| Contraseña | remisoft123 |
 | Puerto | 3306 |
 
 ---
