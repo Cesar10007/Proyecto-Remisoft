@@ -52,6 +52,7 @@ INSERT INTO usuario (id_rol, identificacion, nombre, apellido, email, telefono, 
 (5, '1008', 'Isabella',   'Vargas',   'isabella.vargas@resto.com',   '3156667778', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
 (2, '1009', 'Sebastián',  'Díaz',     'sebastian.diaz@resto.com',    '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1),
 (4, '1010', 'Camila',     'Moreno',   'camila.moreno@resto.com',     '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
+(6, '1011', 'Cliente',    'Prueba',   'cliente@resto.com',          '3001234568', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe',  1);
 
 -- 3. CLIENTE
 INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps, tipo_documento, Num_documento) VALUES

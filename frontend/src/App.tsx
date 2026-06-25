@@ -9,21 +9,18 @@ import ResetPassword from './pages/auth/ResetPassword'
 import Modal from './components/common/Modal'
 import PrivateRoute from './components/common/PrivateRoute'
 import ForgotPassword from './pages/auth/ForgotPassword'
-
-
 import SuperAdmin from './pages/superadmin/SuperAdmin'
 import Gerente from './pages/gerente/Gerente'
 import Mesero from './pages/mesero/Mesero'
 import Repartidor from './pages/repartidor/Repartidor'
+import Cliente from './pages/cliente/Cliente'
 
 function App() {
-  const [modal, setModal] = useState(null)
+  const [modal, setModal] = useState<string | null>(null)
 
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Rutas públicas */}
         <Route path="/" element={
           <>
             <Navbar onLogin={() => setModal('login')} onRegister={() => setModal('registro')} />
@@ -40,12 +37,9 @@ function App() {
           </>
         } />
 
-        {/* Página de reset de contraseña — pública, viene del enlace del correo */}
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-
-        {/* Rutas protegidas — redirigen a "/" si no hay token */}
         <Route path="/superadmin" element={
           <PrivateRoute rolRequerido="SUPERADMIN"><SuperAdmin /></PrivateRoute>
         }/>
@@ -58,9 +52,11 @@ function App() {
         <Route path="/repartidor" element={
           <PrivateRoute rolRequerido="REPARTIDOR"><Repartidor /></PrivateRoute>
         }/>
+        <Route path="/cliente" element={
+          <PrivateRoute rolRequerido="CLIENTE"><Cliente /></PrivateRoute>
+        }/>
 
         <Route path="*" element={<Navigate to="/" />} />
-
       </Routes>
     </BrowserRouter>
   )
