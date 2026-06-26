@@ -69,7 +69,7 @@ const inputStyle: React.CSSProperties = {
 function Mesero() {
   const [activeItem, setActiveItem] = useState('Mesas')
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
 
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [cargandoPedidos, setCargandoPedidos] = useState(false)
@@ -175,7 +175,7 @@ function Mesero() {
       <main className="wa-main">
         <header className="wa-topbar">
           <div className="wa-topbar__left">
-            <span className="wa-topbar__brand">POS Culinario</span>
+            <span className="wa-topbar__brand">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
             <div className="wa-topbar__tabs">
               <button className="wa-topbar__tab wa-topbar__tab--active">Plano del Piso</button>
               <button className="wa-topbar__tab">Pago Rápido</button>
@@ -190,7 +190,7 @@ function Mesero() {
               <span className="material-symbols-outlined">notifications</span>
             </button>
             <div className="wa-profile">
-              <span className="wa-profile__name">Julian Rossi</span>
+              <span className="wa-profile__name">{user?.nombre ?? 'Mesero'}</span>
               <span className="material-symbols-outlined wa-profile__icon">account_circle</span>
             </div>
           </div>
