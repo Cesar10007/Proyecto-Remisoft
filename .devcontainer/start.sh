@@ -15,8 +15,7 @@ LARAVEL_PID=$!
 
 # ── REACT ── (corre en segundo plano, puerto 5173)
 cd /workspaces/Proyecto-Remisoft/frontend
-npm run dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
-REACT_PID=$!
+pnpm dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
 
 
 sleep 3

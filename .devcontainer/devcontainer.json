@@ -27,7 +27,7 @@
     }
   },
   "remoteUser": "root",
-  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@latest --activate && bash .devcontainer/setup.sh",
   "postStartCommand": "bash .devcontainer/start.sh",
   "customizations": {
     "vscode": {

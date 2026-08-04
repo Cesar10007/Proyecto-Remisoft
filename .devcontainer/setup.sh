@@ -52,12 +52,12 @@ php artisan migrate --force --no-interaction 2>/dev/null || true
 
 # ── REACT ──
 if [ -f /workspaces/Proyecto-Remisoft/frontend/package.json ]; then
-  echo "Instalando dependencias de React..."
+  echo "Instalando dependencias de React (pnpm)..."
   cd /workspaces/Proyecto-Remisoft/frontend
-  npm install || true
+  pnpm install || true
 else
   echo "AVISO: No se encontró frontend/package.json — React no fue instalado."
-  echo "Corre manualmente: npm create vite@latest frontend -- --template react"
+  echo "Corre manualmente: pnpm create vite@latest frontend -- --template react"
 fi
 
 # ── FRONTEND .env ──
