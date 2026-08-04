@@ -5,21 +5,22 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     },
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "forwardPorts": [8000, 3306, 5173],
   "portsAttributes": {
-    "8000": { 
+    "8000": {
       "label": "Laravel (php artisan serve)",
       "onAutoForward": "silent",
       "visibility": "public"
     },
-    "5173": { 
-      "label": "React/Vite (npm run dev)",
+    "5173": {
+      "label": "React/Vite (pnpm run dev)",
       "onAutoForward": "silent",
       "visibility": "public"
     },
-    "3306": { 
+    "3306": {
       "label": "MariaDB",
       "onAutoForward": "ignore",
       "visibility": "private"
