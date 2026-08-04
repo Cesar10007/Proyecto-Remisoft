@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterUsuarioRequest;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
@@ -21,12 +22,22 @@ class AuthController extends Controller
             ->first();
 
         if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena_hash)) {
+            // No se registra el email completo por RNF-001.8 ("sin email completo").
+            AuditLogger::log('LOGIN_FAILED', [
+                'email_hint' => $request->email ? substr($request->email, 0, 3) . '***' : null,
+                'motivo'     => $usuario ? 'contrasena_incorrecta' : 'usuario_no_existe',
+            ]);
+
             return response()->json([
                 'message' => 'Correo o contraseña incorrectos'
             ], 401);
         }
 
         $token = $usuario->createToken('auth_token')->plainTextToken;
+
+        AuditLogger::log('LOGIN_SUCCESS', [
+            'id_usuario' => $usuario->id_usuario,
+        ]);
 
         return response()->json([
             'token' => $token,
