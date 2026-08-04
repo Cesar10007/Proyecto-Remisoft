@@ -12,13 +12,17 @@ use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\DomicilioController;
 
 // Rutas públicas
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+// RNF-001.3 — throttle:auth limita a 10 intentos / 15 min por IP.
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+});
+
 Route::get('/reset-password/{token}', function () {
     return response()->json(['message' => 'Usa el enlace del correo para restablecer tu contraseña.']);
 })->name('password.reset');
-Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
