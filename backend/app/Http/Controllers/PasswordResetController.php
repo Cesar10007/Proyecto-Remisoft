@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,10 @@ class PasswordResetController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
+            AuditLogger::log('PASSWORD_RESET_REQUESTED', [
+                'email_hint' => substr($request->email, 0, 3) . '***',
+            ]);
+
             return response()->json(['message' => 'Enlace enviado a tu correo']);
         }
 
@@ -43,6 +48,10 @@ class PasswordResetController extends Controller
                 $usuario->contrasena_hash = Hash::make($password);
                 $usuario->save();
                 event(new PasswordReset($usuario));
+
+                AuditLogger::log('PASSWORD_CHANGED', [
+                    'id_usuario' => $usuario->id_usuario,
+                ]);
             }
         );
 

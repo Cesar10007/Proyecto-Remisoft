@@ -39,9 +39,9 @@ if [ ! -f /workspaces/Proyecto-Remisoft/backend/.env ]; then
   sed -i 's/# DB_PASSWORD=/DB_PASSWORD=remisoft123/' /workspaces/Proyecto-Remisoft/backend/.env
 
   if [ -n "$CODESPACE_NAME" ]; then
-    echo "FRONTEND_URL=https://${CODESPACE_NAME}-5173.app.github.dev" >> /workspaces/Proyecto-Remisoft/backend/.env
+    sed -i "s#^FRONTEND_URL=.*#FRONTEND_URL=https://${CODESPACE_NAME}-5173.app.github.dev#" /workspaces/Proyecto-Remisoft/backend/.env
   else
-    echo "FRONTEND_URL=http://localhost:5173" >> /workspaces/Proyecto-Remisoft/backend/.env
+    sed -i "s#^FRONTEND_URL=.*#FRONTEND_URL=http://localhost:5173#" /workspaces/Proyecto-Remisoft/backend/.env
   fi
 fi
 
@@ -52,12 +52,12 @@ php artisan migrate --force --no-interaction 2>/dev/null || true
 
 # ── REACT ──
 if [ -f /workspaces/Proyecto-Remisoft/frontend/package.json ]; then
-  echo "Instalando dependencias de React..."
+  echo "Instalando dependencias de React (pnpm)..."
   cd /workspaces/Proyecto-Remisoft/frontend
-  npm install || true
+  pnpm install || true
 else
   echo "AVISO: No se encontró frontend/package.json — React no fue instalado."
-  echo "Corre manualmente: npm create vite@latest frontend -- --template react"
+  echo "Corre manualmente: pnpm create vite@latest frontend -- --template react"
 fi
 
 # ── FRONTEND .env ──

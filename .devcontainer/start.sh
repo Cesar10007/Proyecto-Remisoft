@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ── MATAR PROCESOS PREVIOS SI EXISTEN ──
+fuser -k 8000/tcp 2>/dev/null || true
+fuser -k 5173/tcp 2>/dev/null || true
+
 # ── MARIADB ──
 service mariadb start
 sleep 2
@@ -11,11 +15,14 @@ LARAVEL_PID=$!
 
 # ── REACT ── (corre en segundo plano, puerto 5173)
 cd /workspaces/Proyecto-Remisoft/frontend
-npm run dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
-REACT_PID=$!
+pnpm dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
+
 
 sleep 3
 
+# ── PUERTOS PÚBLICOS ──
+gh codespace ports visibility 8000:public -c "$CODESPACE_NAME" 2>/dev/null || true
+gh codespace ports visibility 5173:public -c "$CODESPACE_NAME" 2>/dev/null || true
 echo ""
 echo "========================================="
 echo "  RemiSoft — Entorno listo"
