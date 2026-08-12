@@ -27,7 +27,24 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 ---
 
-## Criterios de aceptación:
+## Criterio de aceptación 001
   - **Dado que** El administrador puede filtrar por rango de fechas, mesero, mesa o estado.
   - **cuando** Se puede exportar el historial.
   - **entonces** Cada factura muestra su estado: pagada, anulada.
+## Criterio de aceptación 002
+  - **Dado que** el administrador accede al historial.
+  - **cuando** aplica filtros por fecha, mesero, mesa o estado.
+  - **entonces** el sistema muestra solo las facturas que coinciden.
+## Criterio de aceptación 003
+  - **Dado que** el administrador consulta el historial.
+  - **cuando** solicita exportarlo.
+  - **entonces** el sistema genera el archivo con los registros filtrados.
+## Criterio de aceptación 004
+  - **Dado que** una factura está en el historial.
+  - **cuando** se visualiza.
+  - **entonces** muestra su estado (pagada o anulada).
+## Criterio de aceptación 005
+  - **Dado que** no existen facturas para los filtros aplicados.
+  - **cuando** se consulta.
+  - **entonces** el sistema indica que no hay resultados.
+  
