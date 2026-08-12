@@ -14,6 +14,8 @@ app.get('/health', (req, res) => res.json({ status: 'RemiSoft Express online' })
 app.use('/api/cajas', cajasRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 
+app.use('/api/ingredientes', ingredientesRoutes);
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: 'Error interno del servidor' });
