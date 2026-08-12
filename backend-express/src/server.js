@@ -12,6 +12,7 @@ app.use(express.json());
 app.get('/health', (req, res) => res.json({ status: 'RemiSoft Express online' }));
 
 app.use('/api/cajas', cajasRoutes);
+app.use('/api/ingredientes', ingredientesRoutes);
 
 app.use('/api/ingredientes', ingredientesRoutes);
 
