@@ -27,11 +27,11 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 ## Equipo de desarrollo
 
-| Nombre | Rol en el equipo | Rama principal |
-|--------|------------------|----------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/testing` |
-| Juan Felipe Bello Pérez | Frontend / IA | `feat/ia-modulo` |
-| Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
+| Nombre | Rol en el equipo | Rama principal | Correo | 
+|--------|------------------|----------------|--------|
+| César David Rueda Daza | Líder / Full Stack | `feat/testing` | ruedacesardavid@gmail.com |
+| Juan Felipe Bello Pérez | Frontend / IA | `feat/ia-modulo` | jfbellop@gmail.com |
+| Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` | kevinbueno081@gmail.com |
 
 ---
 
@@ -78,7 +78,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 | Motor | MariaDB |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | ver `backend/.env` |
+| Contraseña | remisoft123 |
 | Puerto | 3306 |
 
 ---
