@@ -13,6 +13,14 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      '/api/domicilios': {
+      target: 'http://localhost:3000',
+      changeOrigin: true,
+    },
+      '/api/ingredientes': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })
