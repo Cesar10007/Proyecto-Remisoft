@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Migracion progresiva de Proyecto-Remisoft de Laravel a Express. Empieza con el modulo de Cajas.",
+  "description": "Migracion progresiva de Proyecto-Remisoft de Laravel a Express con Prisma.",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:db:pull": "prisma db pull",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

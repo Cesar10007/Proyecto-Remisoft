@@ -1,14 +1,35 @@
-# Backend Express (migración en progreso)
+# Backend Express + Prisma
 
-Este backend reemplaza progresivamente a `backend/` (Laravel). Mientras dure
-la migración, ambos backends conviven: el frontend usa un proxy en Vite
-(`/api/cajas/*` → Express, todo lo demás → Laravel).
+Backend en Express.js para la migración progresiva de RemiSoft desde Laravel hacia Node.js con Prisma.
 
-## Alcance actual
-- Cajas (CRUD completo — index, crear, actualizar, eliminar)
-- Todo lo demás sigue en `backend/`
+Este backend reemplaza poco a poco al backend Laravel ubicado en `../backend`.  
+Durante la migración, Laravel y Express conviven en paralelo.
 
-## Autenticación
-No reimplementa login. Valida el mismo token de Laravel Sanctum leyendo
-directamente la tabla `personal_access_tokens` (compartimos la misma BD
-MariaDB que Laravel). Ver `src/middleware/auth.js`.
+---
+
+## Estado actual de la migración
+
+Actualmente Express maneja los siguientes módulos:
+
+- Cajas
+- Ingredientes
+- Domicilios
+- Proveedores
+
+El resto de módulos siguen funcionando temporalmente en Laravel.
+
+---
+
+## Arquitectura temporal
+
+Durante la migración, el frontend React/Vite consume siempre `/api`.
+
+El proxy de Vite decide si la petición va a Express o a Laravel:
+
+```txt
+React/Vite :5173
+   ├── /api/cajas        -> Express :3000
+   ├── /api/ingredientes -> Express :3000
+   ├── /api/domicilios   -> Express :3000
+   ├── /api/proveedores  -> Express :3000
+   └── resto de /api     -> Laravel :8000
