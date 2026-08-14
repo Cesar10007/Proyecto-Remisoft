@@ -27,7 +27,23 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 ---
 
-## Criterios de aceptación:
+## Criterio de aceptación 001
   - **Dado que** El mesero selecciona la mesa y agrega productos al pedido.
   - **cuando** El pedido se envía automáticamente a cocina.
   - **entonces** La mesa queda marcada como ocupada.
+## Criterio de aceptación 002
+  - **Dado que** el mesero selecciona una mesa disponible.
+  - **cuando** agrega productos al pedido.
+  - **entonces** el sistema arma el pedido asociado a esa mesa.
+## Criterio de aceptación 003
+  - **Dado que** el pedido se confirma.
+  - **cuando** se envía.
+  - **entonces** llega automáticamente a la vista de cocina.
+## Criterio de aceptación 004
+  - **Dado que** un pedido fue registrado.
+  - **cuando** se guarda.
+  - **entonces** la mesa correspondiente queda marcada como ocupada.
+## Criterio de aceptación 005
+  - **Dado que** se intenta registrar un pedido sin productos.
+  - **cuando** se envía el formulario.
+  - **entonces** el sistema lo rechaza indicando que debe tener al menos un product.
