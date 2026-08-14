@@ -4,6 +4,7 @@ import cors from 'cors';
 
 import authRoutes from './routes/auth.routes.js';
 import cajasRoutes from './routes/cajas.routes.js';
+import clienteRoutes from './routes/cliente.routes.js';
 import ingredientesRoutes from './routes/ingredientes.routes.js';
 import domiciliosRoutes from './routes/domicilios.routes.js';
 import proveedorRoutes from './routes/proveedor.routes.js';
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cajas', cajasRoutes);
+app.use('/api/clientes', clienteRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/domicilios', domiciliosRoutes);
 app.use('/api/proveedores', proveedorRoutes);
