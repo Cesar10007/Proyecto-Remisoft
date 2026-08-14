@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
-
-const prisma = new PrismaClient();
+import bcrypt from 'bcryptjs';
+import prisma from '../config/db.js';
 
 /**
  * Paso 1: Recibe el email, genera un token y lo guarda en password_reset_tokens.
@@ -103,12 +101,14 @@ export async function resetPassword(req, res, next) {
       });
     }
 
+    // Hashear la nueva contraseña con bcrypt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Actualizar contraseña del usuario
-    // Nota: aquí deberÁ¡as usar bcrypt o similar para hashear la contraseña
-    // Si ya usas bcrypt en auth.controller.js, úsalo también aquí
     await prisma.usuarios.update({
       where: { email },
-      data: { password } // TODO: hashear con bcrypt
+      data: { password: hashedPassword }
     });
 
     // Eliminar el token usado
