@@ -1,5 +1,5 @@
 {
-  "name": "RemiSoft - Laravel + React",
+  "name": "RemiSoft - Laravel + Express + React",
   "image": "mcr.microsoft.com/devcontainers/php:1-8.2-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
@@ -8,15 +8,20 @@
     "ghcr.io/devcontainers-contrib/features/pnpm:2": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [8000, 3306, 5173],
+  "forwardPorts": [8000, 3000, 3306, 5173],
   "portsAttributes": {
     "8000": {
-      "label": "Laravel (php artisan serve)",
+      "label": "Laravel API temporal",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "3000": {
+      "label": "Express API + Prisma",
       "onAutoForward": "silent",
       "visibility": "public"
     },
     "5173": {
-      "label": "React/Vite (pnpm run dev)",
+      "label": "React/Vite",
       "onAutoForward": "silent",
       "visibility": "public"
     },
@@ -39,7 +44,8 @@
         "eamodio.gitlens",
         "mtxr.sqltools",
         "mtxr.sqltools-driver-mysql",
-        "PKief.material-icon-theme"
+        "PKief.material-icon-theme",
+        "Prisma.prisma"
       ]
     }
   }

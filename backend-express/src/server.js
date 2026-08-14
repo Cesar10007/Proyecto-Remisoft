@@ -2,10 +2,15 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 
+import authRoutes from './routes/auth.routes.js';
 import cajasRoutes from './routes/cajas.routes.js';
+import clienteRoutes from './routes/cliente.routes.js';
 import ingredientesRoutes from './routes/ingredientes.routes.js';
 import domiciliosRoutes from './routes/domicilios.routes.js';
 import proveedorRoutes from './routes/proveedor.routes.js';
+import productosRoutes from './routes/productos.routes.js';
+import usuariosRoutes from './routes/usuarios.routes.js';
+import pedidosRoutes from './routes/pedidos.routes.js';
 
 const app = express();
 
@@ -22,10 +27,21 @@ app.get('/health', (req, res) => {
   res.json({ status: 'RemiSoft Express online' });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/cajas', cajasRoutes);
+app.use('/api/clientes', clienteRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/domicilios', domiciliosRoutes);
 app.use('/api/proveedores', proveedorRoutes);
+app.use('/api/productos', productosRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/pedidos', pedidosRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    message: `Ruta no encontrada: ${req.method} ${req.originalUrl}`,
+  });
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
