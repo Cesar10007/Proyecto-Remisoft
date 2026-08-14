@@ -5,6 +5,7 @@ import authMiddleware from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 
 import authRoutes from './routes/auth.routes.js';
+import passwordResetRoutes from './routes/passwordReset.routes.js';
 import cajasRoutes from './routes/cajas.routes.js';
 import clienteRoutes from './routes/cliente.routes.js';
 import domiciliosRoutes from './routes/domicilios.routes.js';
@@ -28,6 +29,7 @@ app.get('/health', (req, res) => {
 
 // Rutas públicas
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes);
 
 // Rutas protegidas
 app.use(authMiddleware);
