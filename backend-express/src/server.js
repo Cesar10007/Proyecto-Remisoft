@@ -8,6 +8,7 @@ import clienteRoutes from './routes/cliente.routes.js';
 import ingredientesRoutes from './routes/ingredientes.routes.js';
 import domiciliosRoutes from './routes/domicilios.routes.js';
 import proveedorRoutes from './routes/proveedor.routes.js';
+import productosRoutes from './routes/productos.routes.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/clientes', clienteRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/domicilios', domiciliosRoutes);
 app.use('/api/proveedores', proveedorRoutes);
+app.use('/api/productos', productosRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -37,13 +37,15 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/api/productos': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
 
-      // Todo lo que no esté migrado todavía sigue en Laravel.
-      // /api/login sigue en Laravel por ahora.
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-    },
+    }
   },
 })
