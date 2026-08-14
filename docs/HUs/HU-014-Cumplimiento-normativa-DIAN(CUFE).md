@@ -27,7 +27,24 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 ---
 
-## Criterios de aceptacion:
+## Criterio de aceptacion 001
   - **Dado que** Cada factura generada incluye el CUFE según resolución 000042 de 2020.
   - **cuando** La factura se almacena en formato XML.
   - **entonces** Los valores se muestran en COP con el formato correcto.
+## Criterio de aceptacion 002
+  - **Dado que** se genera una factura.
+  - **cuando** se emite.
+  - **entonces** incluye el CUFE conforme a la resolución 000042 de 2020.
+## Criterio de aceptacion 003
+  - **Dado que** una factura fue generada.
+  - **cuando** se almacena.
+  - **entonces** se guarda en formato XML válido según la norma DIAN.
+## Criterio de aceptacion 004
+  - **Dado que** se muestra una factura.
+  - **cuando** se visualizan los valores.
+  - **entonces** aparecen en pesos colombianos (COP) con el formato correcto.
+## Criterio de aceptacion 005
+  - **Dado que** falla la generación del CUFE.
+  - **cuando** el sistema lo detecta.
+  - **entonces** impide emitir la factura hasta corregir el error.
+

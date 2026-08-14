@@ -27,7 +27,23 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 ---
 
-## Criterios de aceptación:
-- **Dado que** Al confirmar un pedido, los ingredientes del plato se descuentan según receta.
-- **cuando** El movimiento queda registrado con fecha y pedido asociado.
-- **entonces** Si el stock es insuficiente, el sistema alerta antes de confirmar.
+## Criterio de aceptación 001
+  - **Dado que** Al confirmar un pedido, los ingredientes del plato se descuentan según receta.
+  - **cuando** El movimiento queda registrado con fecha y pedido asociado.
+  - **entonces** Si el stock es insuficiente, el sistema alerta antes de confirmar.
+## Criterio de aceptación 002
+  - **Dado que** se confirma un pedido.
+  - **cuando** se procesa.
+  - **entonces** los ingredientes del plato se descuentan del inventario según la receta.
+## Criterio de aceptación 003
+  - **Dado que** se realiza un descuento de inventario.
+  - **cuando** se ejecuta.
+  - **entonces** el movimiento queda registrado con fecha y pedido asociado.
+## Criterio de aceptación 004
+  - **Dado que** el stock de un ingrediente es insuficiente.
+  - **cuando** se intenta confirmar el pedido,
+  - **entonces** el sistema alerta antes de procesarlo.
+## Criterio de aceptación 005
+  - **Dado que** se cancela un pedido ya confirmado.
+  - **cuando** se revierte.
+  - **entonces** el inventario descontado se restaura correctamente.
