@@ -1,9 +1,9 @@
-import pool from '../config/db.js';
+import prisma from '../config/db.js';
 
 export async function index(req, res, next) {
   try {
-    const [rows] = await pool.query('SELECT * FROM caja');
-    res.json(rows);
+    const cajas = await prisma.caja.findMany();
+    res.json(cajas);
   } catch (err) {
     next(err);
   }
@@ -20,10 +20,9 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: 'El campo estado no puede superar 20 caracteres' });
     }
 
-    await pool.query(
-      'INSERT INTO caja (nombre, estado) VALUES (?, ?)',
-      [nombre, estado || 'ACTIVA']
-    );
+    await prisma.caja.create({
+      data: { nombre, estado: estado || 'ACTIVA' },
+    });
 
     res.status(201).json({ message: 'Caja creada' });
   } catch (err) {
@@ -43,13 +42,16 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: 'El campo estado no puede superar 20 caracteres' });
     }
 
-    await pool.query(
-      'UPDATE caja SET nombre = ?, estado = ? WHERE id_caja = ?',
-      [nombre, estado || 'ACTIVA', id]
-    );
+    await prisma.caja.update({
+      where: { id_caja: Number(id) },
+      data: { nombre, estado: estado || 'ACTIVA' },
+    });
 
     res.json({ message: 'Caja actualizada' });
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ message: 'Caja no encontrada' });
+    }
     next(err);
   }
 }
@@ -57,14 +59,15 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-
-    await pool.query(
-      "UPDATE caja SET estado = 'INACTIVA' WHERE id_caja = ?",
-      [id]
-    );
-
+    await prisma.caja.update({
+      where: { id_caja: Number(id) },
+      data: { estado: 'INACTIVA' },
+    });
     res.json({ message: 'Caja desactivada' });
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ message: 'Caja no encontrada' });
+    }
     next(err);
   }
 }

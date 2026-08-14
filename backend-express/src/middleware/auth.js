@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import pool from '../config/db.js';
+import prisma from '../config/db.js';
 
 export async function authSanctum(req, res, next) {
   try {
@@ -17,14 +17,10 @@ export async function authSanctum(req, res, next) {
 
     const hashed = crypto.createHash('sha256').update(plainText).digest('hex');
 
-    const [rows] = await pool.query(
-      `SELECT pat.id, pat.tokenable_id, pat.expires_at
-       FROM personal_access_tokens pat
-       WHERE pat.id = ? AND pat.token = ?`,
-      [id, hashed]
-    );
+    const tokenRow = await prisma.personal_access_tokens.findFirst({
+      where: { id: BigInt(id), token: hashed },
+    });
 
-    const tokenRow = rows[0];
     if (!tokenRow) {
       return res.status(401).json({ message: 'Token inválido' });
     }
@@ -33,20 +29,24 @@ export async function authSanctum(req, res, next) {
       return res.status(401).json({ message: 'Token expirado' });
     }
 
-    const [usuarios] = await pool.query(
-      `SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.id_rol, r.nombre AS rol
-       FROM usuario u
-       JOIN rol r ON r.id_rol = u.id_rol
-       WHERE u.id_usuario = ?`,
-      [tokenRow.tokenable_id]
-    );
+    const usuario = await prisma.usuario.findUnique({
+      where: { id_usuario: Number(tokenRow.tokenable_id) },
+      include: { rol: true },
+    });
 
-    const usuario = usuarios[0];
     if (!usuario) {
       return res.status(401).json({ message: 'Usuario no encontrado' });
     }
 
-    req.user = usuario;
+    req.user = {
+      id_usuario: usuario.id_usuario,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      id_rol: usuario.id_rol,
+      rol: usuario.rol?.nombre,
+    };
+
     next();
   } catch (err) {
     next(err);
