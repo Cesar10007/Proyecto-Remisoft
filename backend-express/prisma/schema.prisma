@@ -1,0 +1,478 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Cliente {
+  id_cliente      Int       @id @default(autoincrement())
+  Nombre          String?   @db.VarChar(50)
+  Apellido        String?   @db.VarChar(50)
+  Email           String?   @unique(map: "Email") @db.VarChar(60)
+  Telefono        String?   @db.VarChar(20)
+  Direccion       String?   @db.VarChar(120)
+  coordenadas_gps String?   @db.VarChar(80)
+  tipo_documento  String?   @db.VarChar(30)
+  Num_documento   String?   @db.VarChar(30)
+  fecha_registro  DateTime? @default(now()) @db.DateTime(0)
+  pedido          pedido[]
+}
+
+model Detalle_pedido {
+  id_detalle      Int            @id @default(autoincrement())
+  id_pedido       Int
+  id_producto     Int
+  Cantidad        Int?
+  Precio_unitario Decimal?       @db.Decimal(10, 2)
+  estado_item     String?        @default("PENDIENTE") @db.VarChar(20)
+  pedido          pedido         @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "Detalle_pedido_ibfk_1")
+  Producto        Producto       @relation(fields: [id_producto], references: [id_producto], onUpdate: Restrict, map: "Detalle_pedido_ibfk_2")
+  Factura_item    Factura_item[]
+
+  @@index([id_pedido], map: "id_pedido")
+  @@index([id_producto], map: "id_producto")
+}
+
+model Factura {
+  id_factura    Int            @id @default(autoincrement())
+  id_pedido     Int            @unique(map: "id_pedido")
+  Fecha_emision DateTime?      @default(now()) @db.DateTime(0)
+  consecutivo   String?        @db.VarChar(40)
+  CUFE          String?        @db.VarChar(80)
+  IVA           Decimal?       @db.Decimal(10, 2)
+  Descuento     Decimal?       @default(0.00) @db.Decimal(10, 2)
+  Propina       Decimal?       @default(0.00) @db.Decimal(10, 2)
+  total         Decimal?       @db.Decimal(10, 2)
+  estado        String?        @default("EMITIDA") @db.VarChar(20)
+  pedido        pedido         @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "Factura_ibfk_1")
+  Factura_item  Factura_item[]
+  pago          pago[]
+}
+
+model Factura_item {
+  id_factura         Int
+  id_detalle_pedido  Int
+  cantidad_facturada Int?
+  Factura            Factura        @relation(fields: [id_factura], references: [id_factura], onUpdate: Restrict, map: "Factura_item_ibfk_1")
+  Detalle_pedido     Detalle_pedido @relation(fields: [id_detalle_pedido], references: [id_detalle], onUpdate: Restrict, map: "Factura_item_ibfk_2")
+
+  @@id([id_factura, id_detalle_pedido])
+  @@index([id_detalle_pedido], map: "id_detalle_pedido")
+}
+
+model IA {
+  id_IA                     Int              @id @default(autoincrement())
+  Fecha_generacion          DateTime?        @default(now()) @db.DateTime(0)
+  Tipo_prediccion           String?          @db.VarChar(50)
+  Resultado_generado        String?          @db.VarChar(500)
+  Recomendaciones_generales String?          @db.VarChar(500)
+  Nivel_confianza           Decimal?         @db.Decimal(4, 3)
+  periodo_inicio            DateTime?        @db.Date
+  periodo_fin               DateTime?        @db.Date
+  IA_INGREDIENTE            IA_INGREDIENTE[]
+  IA_PRODUCTO               IA_PRODUCTO[]
+}
+
+model IA_INGREDIENTE {
+  id_IA_ingrediente            Int         @id @default(autoincrement())
+  id_IA                        Int
+  id_ingrediente               Int
+  Demanda_predicha_ingrediente Decimal?    @db.Decimal(10, 2)
+  Nivel_confianza              Decimal?    @db.Decimal(4, 3)
+  Ingrediente_critico          Boolean?    @default(false)
+  IA                           IA          @relation(fields: [id_IA], references: [id_IA], onUpdate: Restrict, map: "IA_INGREDIENTE_ibfk_1")
+  Ingrediente                  Ingrediente @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "IA_INGREDIENTE_ibfk_2")
+
+  @@index([id_IA], map: "id_IA")
+  @@index([id_ingrediente], map: "id_ingrediente")
+}
+
+model IA_PRODUCTO {
+  id_IA_producto            Int      @id @default(autoincrement())
+  id_IA                     Int
+  id_producto               Int
+  demanda_predicho_producto Decimal? @db.Decimal(10, 2)
+  nivel_confianza_producto  Decimal? @db.Decimal(4, 3)
+  Producto_critico          Boolean? @default(false)
+  Recomendacion_producto    String?  @db.VarChar(200)
+  IA                        IA       @relation(fields: [id_IA], references: [id_IA], onUpdate: Restrict, map: "IA_PRODUCTO_ibfk_1")
+  Producto                  Producto @relation(fields: [id_producto], references: [id_producto], onUpdate: Restrict, map: "IA_PRODUCTO_ibfk_2")
+
+  @@index([id_IA], map: "id_IA")
+  @@index([id_producto], map: "id_producto")
+}
+
+model Ingrediente {
+  id_ingrediente        Int                     @id @default(autoincrement())
+  nombre                String?                 @db.VarChar(50)
+  descripcion           String?                 @db.VarChar(500)
+  unidad_medida         String?                 @db.VarChar(20)
+  costo_unitario_ref    Decimal?                @db.Decimal(10, 2)
+  stock_minimo          Decimal?                @default(0.00) @db.Decimal(10, 2)
+  IA_INGREDIENTE        IA_INGREDIENTE[]
+  Receta                Receta[]
+  detalle_orden_compra  detalle_orden_compra[]
+  inventario_mov        inventario_mov[]
+  lote_ingrediente      lote_ingrediente[]
+  proveedor_ingrediente proveedor_ingrediente[]
+}
+
+model Producto {
+  id_producto        Int              @id @default(autoincrement())
+  Nombre             String?          @db.VarChar(50)
+  Descripcion        String?          @db.VarChar(500)
+  precio_venta       Decimal?         @db.Decimal(10, 2)
+  Categoria          String?          @db.VarChar(30)
+  Tiempo_preparacion DateTime?        @db.Time(0)
+  Estado             Int?             @default(1)
+  Detalle_pedido     Detalle_pedido[]
+  IA_PRODUCTO        IA_PRODUCTO[]
+  Receta             Receta[]
+}
+
+model Receta {
+  id_receta          Int         @id @default(autoincrement())
+  id_producto        Int
+  id_ingrediente     Int
+  Cantidad_necesaria Decimal?    @db.Decimal(10, 3)
+  Unidad             String?     @db.VarChar(20)
+  Producto           Producto    @relation(fields: [id_producto], references: [id_producto], onUpdate: Restrict, map: "Receta_ibfk_1")
+  Ingrediente        Ingrediente @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "Receta_ibfk_2")
+
+  @@index([id_ingrediente], map: "id_ingrediente")
+  @@index([id_producto], map: "id_producto")
+}
+
+model cache {
+  key        String @id @db.VarChar(255)
+  value      String @db.MediumText
+  expiration Int
+
+  @@index([expiration], map: "cache_expiration_index")
+}
+
+model cache_locks {
+  key        String @id @db.VarChar(255)
+  owner      String @db.VarChar(255)
+  expiration Int
+
+  @@index([expiration], map: "cache_locks_expiration_index")
+}
+
+model caja {
+  id_caja        Int          @id @default(autoincrement())
+  nombre         String?      @db.VarChar(40)
+  estado         String?      @default("ACTIVA") @db.VarChar(20)
+  fecha_registro DateTime?    @default(now()) @db.DateTime(0)
+  turno_caja     turno_caja[]
+}
+
+model detalle_orden_compra {
+  id_detalle_compra   Int          @id @default(autoincrement())
+  id_orden_compra     Int
+  id_ingrediente      Int
+  cantidad_solicitada Decimal?     @db.Decimal(10, 2)
+  cantidad_recibida   Decimal?     @default(0.00) @db.Decimal(10, 2)
+  precio_unitario     Decimal?     @db.Decimal(10, 2)
+  orden_compra        orden_compra @relation(fields: [id_orden_compra], references: [id_orden_compra], onUpdate: Restrict, map: "detalle_orden_compra_ibfk_1")
+  Ingrediente         Ingrediente  @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "detalle_orden_compra_ibfk_2")
+
+  @@index([id_ingrediente], map: "id_ingrediente")
+  @@index([id_orden_compra], map: "id_orden_compra")
+}
+
+model domicilio {
+  id_domicilio     Int       @id @default(autoincrement())
+  id_pedido        Int       @unique(map: "id_pedido")
+  direccion        String?   @db.VarChar(150)
+  coordenadas_gps  String?   @db.VarChar(80)
+  estado           String?   @default("ASIGNADO") @db.VarChar(20)
+  Fecha_asignacion DateTime? @default(now()) @db.DateTime(0)
+  fecha_entrega    DateTime? @db.DateTime(0)
+  id_repartidor    Int?
+  pedido           pedido    @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "domicilio_ibfk_1")
+  usuario          usuario?  @relation(fields: [id_repartidor], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "domicilio_ibfk_2")
+
+  @@index([id_repartidor], map: "id_repartidor")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model flujo_caja {
+  id_flujo   Int        @id @default(autoincrement())
+  id_turno   Int
+  fecha      DateTime?  @default(now()) @db.DateTime(0)
+  concepto   String?    @db.VarChar(100)
+  ingresos   Decimal?   @default(0.00) @db.Decimal(10, 2)
+  egresos    Decimal?   @default(0.00) @db.Decimal(10, 2)
+  saldo      Decimal?   @db.Decimal(10, 2)
+  metodo     String?    @db.VarChar(30)
+  referencia String?    @db.VarChar(80)
+  id_pago    Int?
+  turno_caja turno_caja @relation(fields: [id_turno], references: [id_turno], onUpdate: Restrict, map: "flujo_caja_ibfk_1")
+  pago       pago?      @relation(fields: [id_pago], references: [id_pago], onDelete: Restrict, onUpdate: Restrict, map: "flujo_caja_ibfk_2")
+
+  @@index([id_pago], map: "id_pago")
+  @@index([id_turno], map: "id_turno")
+}
+
+model inventario_mov {
+  id_movimiento    Int               @id @default(autoincrement())
+  id_ingrediente   Int
+  id_usuario       Int?
+  fecha_hora       DateTime?         @default(now()) @db.DateTime(0)
+  tipo_movimiento  String?           @db.VarChar(20)
+  cantidad         Decimal?          @db.Decimal(10, 3)
+  costo_unitario   Decimal?          @db.Decimal(10, 2)
+  observaciones    String?           @db.VarChar(1000)
+  origen_tipo      String?           @db.VarChar(30)
+  origen_id        Int?
+  id_lote          Int?
+  Ingrediente      Ingrediente       @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "inventario_mov_ibfk_1")
+  usuario          usuario?          @relation(fields: [id_usuario], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_2")
+  lote_ingrediente lote_ingrediente? @relation(fields: [id_lote], references: [id_lote], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_3")
+
+  @@index([id_ingrediente], map: "id_ingrediente")
+  @@index([id_lote], map: "id_lote")
+  @@index([id_usuario], map: "id_usuario")
+}
+
+model job_batches {
+  id             String  @id @db.VarChar(255)
+  name           String  @db.VarChar(255)
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String  @db.LongText
+  options        String? @db.MediumText
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.LongText
+  attempts     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model lote_ingrediente {
+  id_lote           Int              @id @default(autoincrement())
+  id_ingrediente    Int
+  numero_lote       String?          @unique(map: "numero_lote") @db.VarChar(40)
+  fecha_ingreso     DateTime?        @db.Date
+  fecha_vencimiento DateTime?        @db.Date
+  stock_inicial     Decimal?         @db.Decimal(10, 3)
+  stock_actual      Decimal?         @db.Decimal(10, 3)
+  costo_promedio    Decimal?         @db.Decimal(10, 2)
+  observaciones     String?          @db.VarChar(500)
+  fecha_registro    DateTime?        @default(now()) @db.DateTime(0)
+  inventario_mov    inventario_mov[]
+  Ingrediente       Ingrediente      @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "lote_ingrediente_ibfk_1")
+
+  @@index([id_ingrediente], map: "id_ingrediente")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model orden_compra {
+  id_orden_compra        Int                    @id @default(autoincrement())
+  id_proveedor           Int
+  id_usuario             Int
+  fecha_orden            DateTime?              @default(now()) @db.DateTime(0)
+  fecha_entrega_esperada DateTime?              @db.Date
+  fecha_entrega_real     DateTime?              @db.Date
+  estado                 String?                @default("PENDIENTE") @db.VarChar(30)
+  observaciones          String?                @db.VarChar(500)
+  detalle_orden_compra   detalle_orden_compra[]
+  proveedor              proveedor              @relation(fields: [id_proveedor], references: [id_proveedor], onUpdate: Restrict, map: "orden_compra_ibfk_1")
+  usuario                usuario                @relation(fields: [id_usuario], references: [id_usuario], onUpdate: Restrict, map: "orden_compra_ibfk_2")
+
+  @@index([id_proveedor], map: "id_proveedor")
+  @@index([id_usuario], map: "id_usuario")
+}
+
+model pago {
+  id_pago           Int          @id @default(autoincrement())
+  id_factura        Int
+  id_usuario_cajero Int
+  fecha_pago        DateTime?    @default(now()) @db.DateTime(0)
+  metodo            String?      @db.VarChar(30)
+  monto             Decimal?     @db.Decimal(10, 2)
+  referencia        String?      @db.VarChar(80)
+  estado            String?      @default("APROBADO") @db.VarChar(20)
+  id_turno          Int?
+  flujo_caja        flujo_caja[]
+  Factura           Factura      @relation(fields: [id_factura], references: [id_factura], onUpdate: Restrict, map: "pago_ibfk_1")
+  usuario           usuario      @relation(fields: [id_usuario_cajero], references: [id_usuario], onUpdate: Restrict, map: "pago_ibfk_2")
+  turno_caja        turno_caja?  @relation(fields: [id_turno], references: [id_turno], onDelete: Restrict, onUpdate: Restrict, map: "pago_ibfk_3")
+
+  @@index([id_factura], map: "id_factura")
+  @@index([id_turno], map: "id_turno")
+  @@index([id_usuario_cajero], map: "id_usuario_cajero")
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+model pedido {
+  id_pedido      Int              @id @default(autoincrement())
+  id_cliente     Int?
+  id_mesero      Int?
+  Fecha_hora     DateTime?        @default(now()) @db.DateTime(0)
+  estado         String?          @default("ABIERTO") @db.VarChar(20)
+  Tipo_pedido    String?          @db.VarChar(20)
+  Mesa_num       Int?
+  notas          String?          @db.VarChar(500)
+  Detalle_pedido Detalle_pedido[]
+  Factura        Factura?
+  domicilio      domicilio?
+  Cliente        Cliente?         @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Restrict, map: "pedido_ibfk_1")
+  usuario        usuario?         @relation(fields: [id_mesero], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "pedido_ibfk_2")
+
+  @@index([id_cliente], map: "id_cliente")
+  @@index([id_mesero], map: "id_mesero")
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.Text
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([expires_at], map: "personal_access_tokens_expires_at_index")
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model proveedor {
+  id_proveedor          Int                     @id @default(autoincrement())
+  nombre                String?                 @db.VarChar(100)
+  nombre_contacto       String?                 @db.VarChar(100)
+  telefono              String?                 @db.VarChar(20)
+  email                 String?                 @db.VarChar(100)
+  direccion             String?                 @db.VarChar(200)
+  nit                   String?                 @db.VarChar(30)
+  tipo_proveedor        String?                 @db.VarChar(50)
+  estado                String?                 @default("ACTIVO") @db.VarChar(20)
+  fecha_registro        DateTime?               @default(now()) @db.DateTime(0)
+  orden_compra          orden_compra[]
+  proveedor_ingrediente proveedor_ingrediente[]
+}
+
+model proveedor_ingrediente {
+  id_proveedor           Int
+  id_ingrediente         Int
+  precio_acordado        Decimal?    @db.Decimal(10, 2)
+  tiempo_entrega_dias    Int?
+  calidad_rating         Decimal?    @db.Decimal(2, 1)
+  es_proveedor_principal Boolean?    @default(false)
+  fecha_ultima_compra    DateTime?   @db.DateTime(0)
+  proveedor              proveedor   @relation(fields: [id_proveedor], references: [id_proveedor], onUpdate: Restrict, map: "proveedor_ingrediente_ibfk_1")
+  Ingrediente            Ingrediente @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "proveedor_ingrediente_ibfk_2")
+
+  @@id([id_proveedor, id_ingrediente])
+  @@index([id_ingrediente], map: "id_ingrediente")
+}
+
+model rol {
+  id_rol      Int       @id @default(autoincrement())
+  nombre      String?   @unique(map: "nombre") @db.VarChar(30)
+  descripcion String?   @db.VarChar(200)
+  usuario     usuario[]
+}
+
+model sessions {
+  id            String  @id @db.VarChar(255)
+  user_id       BigInt? @db.UnsignedBigInt
+  ip_address    String? @db.VarChar(45)
+  user_agent    String? @db.Text
+  payload       String  @db.LongText
+  last_activity Int
+
+  @@index([last_activity], map: "sessions_last_activity_index")
+  @@index([user_id], map: "sessions_user_id_index")
+}
+
+model turno_caja {
+  id_turno          Int          @id @default(autoincrement())
+  id_caja           Int
+  id_usuario_cajero Int
+  fecha_apertura    DateTime?    @db.DateTime(0)
+  fecha_cierre      DateTime?    @db.DateTime(0)
+  efectivo_inicial  Decimal?     @db.Decimal(10, 2)
+  efectivo_esperado Decimal?     @db.Decimal(10, 2)
+  efectivo_real     Decimal?     @db.Decimal(10, 2)
+  diferencia        Decimal?     @db.Decimal(10, 2)
+  notas             String?      @db.VarChar(500)
+  estado            String?      @default("ABIERTA") @db.VarChar(20)
+  flujo_caja        flujo_caja[]
+  pago              pago[]
+  caja              caja         @relation(fields: [id_caja], references: [id_caja], onUpdate: Restrict, map: "turno_caja_ibfk_1")
+  usuario           usuario      @relation(fields: [id_usuario_cajero], references: [id_usuario], onUpdate: Restrict, map: "turno_caja_ibfk_2")
+
+  @@index([id_caja], map: "id_caja")
+  @@index([id_usuario_cajero], map: "id_usuario_cajero")
+}
+
+model users {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String    @db.VarChar(255)
+  email             String    @unique(map: "users_email_unique") @db.VarChar(255)
+  email_verified_at DateTime? @db.Timestamp(0)
+  password          String    @db.VarChar(255)
+  remember_token    String?   @db.VarChar(100)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+}
+
+model usuario {
+  id_usuario      Int              @id @default(autoincrement())
+  id_rol          Int
+  identificacion  String?          @db.VarChar(20)
+  nombre          String?          @db.VarChar(60)
+  apellido        String?          @db.VarChar(60)
+  email           String?          @unique(map: "email") @db.VarChar(100)
+  telefono        String?          @db.VarChar(20)
+  contrasena_hash String?          @db.VarChar(255)
+  activo          Boolean?         @default(true)
+  fecha_registro  DateTime?        @default(now()) @db.DateTime(0)
+  domicilio       domicilio[]
+  inventario_mov  inventario_mov[]
+  orden_compra    orden_compra[]
+  pago            pago[]
+  pedido          pedido[]
+  turno_caja      turno_caja[]
+  rol             rol              @relation(fields: [id_rol], references: [id_rol], onUpdate: Restrict, map: "usuario_ibfk_1")
+
+  @@index([id_rol], map: "id_rol")
+}
