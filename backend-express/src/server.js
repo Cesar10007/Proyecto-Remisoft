@@ -4,6 +4,7 @@ import cors from 'cors';
 import cajasRoutes from './routes/cajas.routes.js';
 import ingredientesRoutes from './routes/ingredientes.routes.js';
 import domiciliosRoutes from './routes/domicilios.routes.js';
+import proveedorRoutes from './routes/proveedor.routes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get('/health', (req, res) => res.json({ status: 'RemiSoft Express online' })
 app.use('/api/cajas', cajasRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/domicilios', domiciliosRoutes);
+app.use('/api/proveedores', proveedorRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
