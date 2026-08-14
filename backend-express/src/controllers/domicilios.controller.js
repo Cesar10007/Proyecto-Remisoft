@@ -1,14 +1,25 @@
-import pool from '../config/db.js';
+import prisma from '../config/db.js';
 
 export async function index(req, res, next) {
   try {
-    const [rows] = await pool.query(
-      `SELECT d.*, p.estado AS estado_pedido, c.Nombre AS nombre_cliente
-       FROM domicilio d
-       JOIN pedido p ON d.id_pedido = p.id_pedido
-       LEFT JOIN \`Cliente\` c ON p.id_cliente = c.id_cliente`
-    );
-    res.json(rows);
+    const domicilios = await prisma.domicilio.findMany({
+      include: { pedido: { include: { Cliente: true } } },
+    });
+
+    const aplanado = domicilios.map((d) => ({
+      id_domicilio: d.id_domicilio,
+      id_pedido: d.id_pedido,
+      direccion: d.direccion,
+      coordenadas_gps: d.coordenadas_gps,
+      estado: d.estado,
+      Fecha_asignacion: d.Fecha_asignacion,
+      fecha_entrega: d.fecha_entrega,
+      id_repartidor: d.id_repartidor,
+      estado_pedido: d.pedido?.estado ?? null,
+      nombre_cliente: d.pedido?.Cliente?.Nombre ?? null,
+    }));
+
+    res.json(aplanado);
   } catch (err) {
     next(err);
   }
@@ -31,17 +42,21 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: 'El campo id_repartidor debe ser un número entero' });
     }
 
-    await pool.query(
-      'INSERT INTO domicilio (id_pedido, direccion, estado, id_repartidor) VALUES (?, ?, ?, ?)',
-      [id_pedido, direccion, estado || 'ASIGNADO', id_repartidor ?? null]
-    );
+    await prisma.domicilio.create({
+      data: {
+        id_pedido: Number(id_pedido),
+        direccion,
+        estado: estado || 'ASIGNADO',
+        id_repartidor: id_repartidor ? Number(id_repartidor) : null,
+      },
+    });
 
     res.status(201).json({ message: 'Domicilio creado' });
   } catch (err) {
-    if (err.errno === 1452) {
+    if (err.code === 'P2003') {
       return res.status(422).json({ message: 'El pedido o el repartidor indicado no existe' });
     }
-    if (err.errno === 1062) {
+    if (err.code === 'P2002') {
       return res.status(409).json({ message: 'Ese pedido ya tiene un domicilio asignado' });
     }
     next(err);
@@ -63,15 +78,22 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: 'El campo id_repartidor debe ser un número entero' });
     }
 
-    await pool.query(
-      'UPDATE domicilio SET direccion = ?, estado = ?, id_repartidor = ? WHERE id_domicilio = ?',
-      [direccion, estado ?? null, id_repartidor ?? null, id]
-    );
+    await prisma.domicilio.update({
+      where: { id_domicilio: Number(id) },
+      data: {
+        direccion,
+        estado: estado ?? null,
+        id_repartidor: id_repartidor ? Number(id_repartidor) : null,
+      },
+    });
 
     res.json({ message: 'Domicilio actualizado' });
   } catch (err) {
-    if (err.errno === 1452) {
+    if (err.code === 'P2003') {
       return res.status(422).json({ message: 'El repartidor indicado no existe' });
+    }
+    if (err.code === 'P2025') {
+      return res.status(404).json({ message: 'Domicilio no encontrado' });
     }
     next(err);
   }
@@ -80,9 +102,15 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-    await pool.query("UPDATE domicilio SET estado = 'CANCELADO' WHERE id_domicilio = ?", [id]);
+    await prisma.domicilio.update({
+      where: { id_domicilio: Number(id) },
+      data: { estado: 'CANCELADO' },
+    });
     res.json({ message: 'Domicilio cancelado' });
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ message: 'Domicilio no encontrado' });
+    }
     next(err);
   }
 }

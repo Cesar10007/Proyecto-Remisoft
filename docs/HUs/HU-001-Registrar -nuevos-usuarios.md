@@ -32,16 +32,17 @@ Sistema Web Inteligente para Restaurante Familia Remi.
   - **cuando** envía el formulario.
   - **entonces** el sistema valida que todos los campos obligatorios estén completos antes de guardar.
 ## Criterio de aceptación 003
-  - **Dado que** el administrador registra un email ya existente.
-  - **cuando** el sistema valida los datos.
+  - **Dado que** el administrador registra un email ya existente,
+  - **cuando** el sistema valida los datos,
   - **entonces** rechaza el registro e indica que el correo ya está en uso.
 ## Criterio de aceptación 004
-  - **Dado que** el registro es exitoso.
-  - **cuando** se guarda el usuario.
+  - **Dado que** el registro es exitoso,
+  - **cuando** se guarda el usuario,
   - **entonces** queda activo en el sistema con el rol asignado.
 ## Criterio de aceptación 005
-  - **Dado que** el administrador no selecciona un rol.
-  - **cuando** intenta guardar el usuario.
+  - **Dado que** el administrador no selecciona un rol,
+  - **cuando** intenta guardar el usuario,
   - **entonces** el sistema muestra un error y no crea el registro.
-  
-  
+
+
+>>>>>>> main
