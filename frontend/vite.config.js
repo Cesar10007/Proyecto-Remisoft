@@ -13,6 +13,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      '/api/auth': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
       '/api/cajas': {
         target: 'http://localhost:3000',
         changeOrigin: true,
@@ -30,7 +34,8 @@ export default defineConfig({
         changeOrigin: true,
       },
 
-      // Todo lo que no esté migrado todavía sigue en Laravel
+      // Todo lo que no esté migrado todavía sigue en Laravel.
+      // /api/login sigue en Laravel por ahora.
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,

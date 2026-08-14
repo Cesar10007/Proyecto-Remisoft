@@ -74,6 +74,9 @@ DB_USERNAME=remisoft
 DB_PASSWORD=remisoft123
 
 DATABASE_URL="mysql://remisoft:remisoft123@127.0.0.1:3306/remisoft"
+
+JWT_SECRET=remisoft_dev_jwt_secret_cambiar_en_produccion
+JWT_EXPIRES_IN=8h
 ENV
 
   cd "$PROJECT_DIR/backend-express"
