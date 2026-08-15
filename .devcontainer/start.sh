@@ -1,9 +1,10 @@
 #!/bin/bash
+set -e
 
 PROJECT_DIR="${PROJECT_DIR:-/workspaces/Proyecto-Remisoft}"
 corepack enable 2>/dev/null || true
 
-# ── MATAR PROCESOS PREVIOS SI EXISTEN ──
+# ── DETENER PROCESOS PREVIOS ──
 fuser -k 8000/tcp 2>/dev/null || true
 fuser -k 3000/tcp 2>/dev/null || true
 fuser -k 5173/tcp 2>/dev/null || true
@@ -12,12 +13,27 @@ fuser -k 5173/tcp 2>/dev/null || true
 service mariadb start
 sleep 2
 
-# ── LARAVEL ── temporal durante la migración, puerto 8000
+# ── PRISMA ──
+# Aplica solamente las migraciones pendientes.
+# Nunca usar "prisma migrate reset" aquí: borraría los datos.
+if [ -f "$PROJECT_DIR/backend-express/package.json" ]; then
+  cd "$PROJECT_DIR/backend-express"
+
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm exec prisma migrate deploy
+    pnpm exec prisma generate
+  else
+    npx prisma migrate deploy
+    npx prisma generate
+  fi
+fi
+
+# ── LARAVEL ──
 cd "$PROJECT_DIR/backend"
 php artisan serve --host=0.0.0.0 --port=8000 > /tmp/laravel.log 2>&1 &
 LARAVEL_PID=$!
 
-# ── EXPRESS + PRISMA ── módulos migrados, puerto 3000
+# ── EXPRESS + PRISMA ──
 cd "$PROJECT_DIR/backend-express"
 
 if command -v pnpm >/dev/null 2>&1; then
@@ -28,13 +44,13 @@ fi
 
 EXPRESS_PID=$!
 
-# ── REACT ── frontend, puerto 5173
+# ── REACT ──
 cd "$PROJECT_DIR/frontend"
 
 if command -v pnpm >/dev/null 2>&1; then
-  pnpm dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
+  pnpm dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
 else
-  npm run dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
+  npm run dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
 fi
 
 REACT_PID=$!
@@ -55,14 +71,7 @@ echo "  React   → http://localhost:5173"
 echo "  Express → http://localhost:3000"
 echo "  Laravel → http://localhost:8000"
 echo ""
-echo "  Flujo temporal de migración:"
-echo "    React /api/cajas        → Express"
-echo "    React /api/ingredientes → Express"
-echo "    React /api/domicilios   → Express"
-echo "    React /api/proveedores  → Express"
-echo "    React resto de /api     → Laravel"
-echo ""
-echo "  Logs en tiempo real:"
+echo "  Logs:"
 echo "    Laravel: tail -f /tmp/laravel.log"
 echo "    Express: tail -f /tmp/express.log"
 echo "    React:   tail -f /tmp/react.log"
