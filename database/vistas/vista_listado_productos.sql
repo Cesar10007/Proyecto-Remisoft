@@ -1,12 +1,13 @@
 -- ============================================================
 -- VISTA: vista_listado_productos
--- Muestra todos los campos de la tabla Producto
--- excepto el campo id_producto
+-- Lista productos con su identificador para permitir editar
+-- y eliminar desde el frontend.
 -- Compatible con MySQL / MariaDB
 -- ============================================================
 
 CREATE OR REPLACE VIEW vista_listado_productos AS
 SELECT
+    id_producto,
     Nombre,
     Descripcion,
     precio_venta,
@@ -15,9 +16,6 @@ SELECT
     Estado
 FROM Producto;
 
--- ============================================================
--- USO DE LA VISTA:
--- ============================================================
 -- Consultar todos los productos:
 SELECT * FROM vista_listado_productos;
 
