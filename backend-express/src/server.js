@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import { authRequired as authMiddleware } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -41,13 +43,36 @@ import usuariosRoutes from './routes/usuarios.routes.js';
 const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-app.use(cors());
-app.use(express.json());
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.',
+  },
+});
+
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  }),
+);
+
+app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'RemiSoft Express online' });
 });
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordResetRoutes);
