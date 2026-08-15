@@ -57,13 +57,17 @@ function parseTimeToDate(value) {
   }
 
   if (typeof value !== 'string') {
-    return { error: 'El campo Tiempo_preparacion debe ser texto con formato HH:MM:SS' };
+    return {
+      error: 'El campo Tiempo_preparacion debe ser texto con formato HH:MM:SS',
+    };
   }
 
   const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/);
 
   if (!match) {
-    return { error: 'El campo Tiempo_preparacion debe tener formato HH:MM:SS' };
+    return {
+      error: 'El campo Tiempo_preparacion debe tener formato HH:MM:SS',
+    };
   }
 
   const hours = Number(match[1]);
@@ -88,7 +92,9 @@ function formatTime(value) {
   }
 
   if (value instanceof Date) {
-    return `${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(value.getUTCSeconds())}`;
+    return `${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(
+      value.getUTCSeconds(),
+    )}`;
   }
 
   return '';
@@ -96,13 +102,13 @@ function formatTime(value) {
 
 function formatProducto(producto) {
   return {
-    id_producto: producto.id_producto,
+    id_producto: Number(producto.id_producto),
     Nombre: producto.Nombre ?? '',
     Descripcion: producto.Descripcion ?? '',
     precio_venta: producto.precio_venta?.toString() ?? '0.00',
     Categoria: producto.Categoria ?? '',
     Tiempo_preparacion: formatTime(producto.Tiempo_preparacion),
-    Estado: producto.Estado ?? 1,
+    Estado: Number(producto.Estado ?? 1),
   };
 }
 
@@ -147,6 +153,18 @@ async function listarProductos() {
   return productos.map(formatProducto);
 }
 
+function obtenerPrimerResultSet(resultados) {
+  if (!Array.isArray(resultados)) {
+    return resultados;
+  }
+
+  if (Array.isArray(resultados[0])) {
+    return resultados[0];
+  }
+
+  return resultados;
+}
+
 // GET /api/productos
 export async function index(req, res, next) {
   try {
@@ -158,26 +176,39 @@ export async function index(req, res, next) {
 }
 
 // GET /api/productos/vista
-//
-// Reemplaza la vista SQL vista_listado_productos.
-// Conservamos el endpoint para no romper el frontend.
+// Consulta la vista SQL real: vista_listado_productos.
 export async function listarVista(req, res, next) {
   try {
-    const productos = await listarProductos();
-    res.json(productos);
+    const productos = await prisma.$queryRaw`
+      SELECT
+        id_producto,
+        Nombre,
+        Descripcion,
+        precio_venta,
+        Categoria,
+        Tiempo_preparacion,
+        Estado
+      FROM vista_listado_productos
+      ORDER BY id_producto ASC
+    `;
+
+    res.json(productos.map(formatProducto));
   } catch (err) {
     next(err);
   }
 }
 
 // GET /api/productos/sp
-//
-// Reemplaza el procedimiento almacenado sp_listar_productos.
-// Conservamos el endpoint para no romper el frontend.
+// Ejecuta el procedimiento almacenado real: sp_listar_productos.
 export async function listarProcedimiento(req, res, next) {
   try {
-    const productos = await listarProductos();
-    res.json(productos);
+    const resultados = await prisma.$queryRaw`
+      CALL sp_listar_productos()
+    `;
+
+    const productos = obtenerPrimerResultSet(resultados);
+
+    res.json(productos.map(formatProducto));
   } catch (err) {
     next(err);
   }
@@ -258,9 +289,7 @@ export async function actualizar(req, res, next) {
 }
 
 // DELETE /api/productos/:id
-//
-// Igual que Laravel: no borra físicamente.
-// Alterna Estado 1/0.
+// Igual que Laravel: no borra físicamente; alterna Estado 1/0.
 export async function eliminar(req, res, next) {
   try {
     const id = parseId(req.params.id);
