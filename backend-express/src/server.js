@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import authMiddleware from './middleware/auth.js';
+import { authRequired as authMiddleware } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
+
 import authRoutes from './routes/auth.routes.js';
 import passwordResetRoutes from './routes/passwordReset.routes.js';
 import ajusteInventarioRoutes from './routes/ajusteInventario.routes.js';
@@ -36,15 +37,23 @@ import tipoUsuarioRoutes from './routes/tipoUsuario.routes.js';
 import turnosRoutes from './routes/turnos.routes.js';
 import unidadMedidaRoutes from './routes/unidadMedida.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
+
 const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
+
 app.use(cors());
 app.use(express.json());
-app.get('/health', (req, res) => { res.json({ status: 'RemiSoft Express online' }); });
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'RemiSoft Express online' });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', passwordResetRoutes);
+
 app.use(authMiddleware);
+
 app.use('/api/ajuste-inventario', ajusteInventarioRoutes);
 app.use('/api/cajas', cajasRoutes);
 app.use('/api/categorias', categoriaProductosRoutes);
@@ -77,5 +86,9 @@ app.use('/api/tipos-usuario', tipoUsuarioRoutes);
 app.use('/api/turnos', turnosRoutes);
 app.use('/api/unidades-medida', unidadMedidaRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+
 app.use(errorHandler);
-app.listen(port, host, () => { console.log(`RemiSoft Express escuchando en http://${host}:${port}`); });
+
+app.listen(port, host, () => {
+  console.log(`RemiSoft Express escuchando en http://${host}:${port}`);
+});
