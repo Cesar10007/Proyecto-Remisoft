@@ -588,3 +588,4 @@ ALTER TABLE `turno_caja` ADD CONSTRAINT `turno_caja_ibfk_2` FOREIGN KEY (`id_usu
 
 -- AddForeignKey
 ALTER TABLE `usuario` ADD CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `rol`(`id_rol`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
