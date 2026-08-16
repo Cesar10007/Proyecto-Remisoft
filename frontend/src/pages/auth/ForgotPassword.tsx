@@ -15,7 +15,7 @@ function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      await api.post('/forgot-password', { email });
+      await api.post('/auth/send-reset-link', { email });
       setEnviado(true);
     } catch (err) {
       if (err.response?.status === 422) {

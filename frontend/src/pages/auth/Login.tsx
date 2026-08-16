@@ -26,7 +26,7 @@ function Login({ onClose }: LoginProps) {
     setLoading(true);
 
     try {
-      const response = await api.post('/login', { email, contrasena });
+      const response = await api.post('/auth/login', { email, contrasena });
       const { token, user, rol } = response.data;
       const rolNormalizado = String(rol).toUpperCase();
 

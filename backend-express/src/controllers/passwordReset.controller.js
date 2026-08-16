@@ -1,124 +1,157 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/db.js';
+import { sendPasswordResetEmail } from '../services/mail.service.js';
 
-/**
- * Paso 1: Recibe el email, genera un token y lo guarda en password_reset_tokens.
- * En producción, aquí se enviará¡¡ un email con el enlace de reseteo.
- */
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+const BCRYPT_ROUNDS = 12;
+
+function passwordIsValid(password) {
+  return (
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[!@#$%^&*(),.?":{}|<>_+\-]/.test(password)
+  );
+}
+
+function genericResetMessage() {
+  return {
+    success: true,
+    message:
+      'Si el correo está registrado, recibirás un enlace de recuperación.',
+  };
+}
+
+// POST /api/auth/send-reset-link
 export async function sendResetLink(req, res, next) {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'El email es requerido',
-        code: 'MISSING_EMAIL'
+    if (!email || typeof email !== 'string') {
+      return res.status(422).json({
+        errors: {
+          email: ['El correo electrónico es requerido.'],
+        },
       });
     }
 
-    // Verificar que el usuario existe
-    const user = await prisma.usuarios.findUnique({
-      where: { email }
+    const emailNormalizado = email.trim().toLowerCase();
+
+    const user = await prisma.usuario.findUnique({
+      where: { email: emailNormalizado },
+      select: { id_usuario: true },
     });
 
+    /*
+     * No revela si una cuenta existe: la respuesta para un email
+     * inexistente es exactamente la misma.
+     */
     if (!user) {
-      // Por seguridad, no revelamos si el email existe o no
-      return res.status(200).json({
-        success: true,
-        message: 'Si el email está registrado, recibirÁ¡s un enlace de recuperación'
-      });
+      return res.status(200).json(genericResetMessage());
     }
 
-    // Generar token aleatorio
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+    const createdAt = new Date();
 
-    // Guardar o actualizar el token en password_reset_tokens
     await prisma.password_reset_tokens.upsert({
-      where: { email },
-      update: { token, created_at: expiresAt },
-      create: { email, token, created_at: expiresAt }
+      where: { email: emailNormalizado },
+      update: {
+        token,
+        created_at: createdAt,
+      },
+      create: {
+        email: emailNormalizado,
+        token,
+        created_at: createdAt,
+      },
     });
 
-    // TODO: Enviar email con el enlace de reseteo
-    // Ejemplo: https://tu-frontend.com/reset-password?token=...&email=...
-    console.log(`[PasswordReset] Token generado para ${email}: ${token}`);
+    /*
+     * Si SMTP falla, se informa el error al middleware y no se entrega
+     * una respuesta de éxito que sugiera equivocadamente que llegó el email.
+     * El siguiente intento generará y reemplazará el token anterior.
+     */
+    await sendPasswordResetEmail(emailNormalizado, token);
 
-    res.status(200).json({
-      success: true,
-      message: 'Si el email está registrado, recibirÁ¡s un enlace de recuperación'
-    });
+    return res.status(200).json(genericResetMessage());
   } catch (error) {
     next(error);
   }
 }
 
-/**
- * Paso 2: Recibe token + email + nueva contraseña, valida y actualiza.
- */
+// POST /api/auth/reset-password
 export async function resetPassword(req, res, next) {
   try {
     const { token, email, password } = req.body;
+    const errors = {};
 
-    // Validaciones básicas
-    if (!token || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Token, email y contraseña son requeridos',
-        code: 'MISSING_FIELDS'
-      });
+    if (!token || typeof token !== 'string') {
+      errors.token = ['El token es requerido.'];
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: 'La contraseña debe tener al menos 8 caracteres',
-        code: 'PASSWORD_TOO_SHORT'
-      });
+    if (!email || typeof email !== 'string') {
+      errors.email = ['El correo electrónico es requerido.'];
     }
 
-    // Verificar que el token existe y no expiró¡¢³
+    if (!passwordIsValid(password)) {
+      errors.password = [
+        'La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial.',
+      ];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(422).json({ errors });
+    }
+
+    const emailNormalizado = email.trim().toLowerCase();
+
     const resetToken = await prisma.password_reset_tokens.findUnique({
-      where: { email }
+      where: { email: emailNormalizado },
     });
 
-    if (!resetToken || resetToken.token !== token) {
+    if (
+      !resetToken ||
+      !resetToken.created_at ||
+      !crypto.timingSafeEqual(
+        Buffer.from(resetToken.token),
+        Buffer.from(token),
+      )
+    ) {
       return res.status(400).json({
-        success: false,
-        message: 'Token invlido o expirado',
-        code: 'INVALID_TOKEN'
+        message: 'El enlace de recuperación es inválido o expiró.',
       });
     }
 
-    if (new Date(resetToken.created_at) < new Date()) {
-      // Token expirado
-      await prisma.password_reset_tokens.delete({ where: { email } });
+    const expiresAt = new Date(
+      resetToken.created_at.getTime() + RESET_TOKEN_TTL_MS,
+    );
+
+    if (expiresAt <= new Date()) {
+      await prisma.password_reset_tokens.delete({
+        where: { email: emailNormalizado },
+      });
+
       return res.status(400).json({
-        success: false,
-        message: 'Token expirado',
-        code: 'TOKEN_EXPIRED'
+        message: 'El enlace de recuperación expiró.',
       });
     }
 
-    // Hashear la nueva contraseña con bcrypt
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const contrasena_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    // Actualizar contraseña del usuario
-    await prisma.usuarios.update({
-      where: { email },
-      data: { password: hashedPassword }
-    });
+    await prisma.$transaction([
+      prisma.usuario.update({
+        where: { email: emailNormalizado },
+        data: { contrasena_hash },
+      }),
+      prisma.password_reset_tokens.delete({
+        where: { email: emailNormalizado },
+      }),
+    ]);
 
-    // Eliminar el token usado
-    await prisma.password_reset_tokens.delete({
-      where: { email }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Contraseñ¡¡¡ actualizada correctamente'
+    return res.status(200).json({
+      message: 'Contraseña actualizada correctamente.',
     });
   } catch (error) {
     next(error);
