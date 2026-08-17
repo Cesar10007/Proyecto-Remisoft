@@ -30,7 +30,9 @@ function validateEmail(value, required = false) {
     return 'El campo Email es requerido';
   }
 
-  if (isEmpty(value)) return null;
+  if (isEmpty(value)) {
+    return null;
+  }
 
   if (typeof value !== 'string') {
     return 'El campo Email debe ser texto';
@@ -85,7 +87,35 @@ function validarCliente(body) {
 export async function index(req, res, next) {
   try {
     const clientes = await prisma.cliente.findMany({
-      orderBy: { id_cliente: 'asc' },
+      orderBy: {
+        id_cliente: 'asc',
+      },
+    });
+
+    res.json(clientes);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET /api/clientes/buscar?telefono=...
+export async function buscarPorTelefono(req, res, next) {
+  try {
+    const { telefono } = req.query;
+
+    if (typeof telefono !== 'string' || telefono.trim() === '') {
+      return res.status(422).json({
+        message: 'El parámetro telefono es requerido',
+      });
+    }
+
+    const clientes = await prisma.cliente.findMany({
+      where: {
+        Telefono: telefono.trim(),
+      },
+      orderBy: {
+        id_cliente: 'asc',
+      },
     });
 
     res.json(clientes);
@@ -106,11 +136,15 @@ export async function show(req, res, next) {
     }
 
     const cliente = await prisma.cliente.findUnique({
-      where: { id_cliente: id },
+      where: {
+        id_cliente: id,
+      },
     });
 
     if (!cliente) {
-      return res.status(404).json({ message: 'Cliente no encontrado' });
+      return res.status(404).json({
+        message: 'Cliente no encontrado',
+      });
     }
 
     res.json(cliente);
@@ -125,12 +159,18 @@ export async function crear(req, res, next) {
     const { error, data } = validarCliente(req.body);
 
     if (error) {
-      return res.status(422).json({ message: error });
+      return res.status(422).json({
+        message: error,
+      });
     }
 
-    await prisma.cliente.create({ data });
+    await prisma.cliente.create({
+      data,
+    });
 
-    res.status(201).json({ message: 'Cliente creado' });
+    res.status(201).json({
+      message: 'Cliente creado',
+    });
   } catch (err) {
     if (err.code === 'P2002') {
       return res.status(409).json({
@@ -156,15 +196,21 @@ export async function actualizar(req, res, next) {
     const { error, data } = validarCliente(req.body);
 
     if (error) {
-      return res.status(422).json({ message: error });
+      return res.status(422).json({
+        message: error,
+      });
     }
 
     await prisma.cliente.update({
-      where: { id_cliente: id },
+      where: {
+        id_cliente: id,
+      },
       data,
     });
 
-    res.json({ message: 'Cliente actualizado' });
+    res.json({
+      message: 'Cliente actualizado',
+    });
   } catch (err) {
     if (err.code === 'P2002') {
       return res.status(409).json({
@@ -173,7 +219,9 @@ export async function actualizar(req, res, next) {
     }
 
     if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Cliente no encontrado' });
+      return res.status(404).json({
+        message: 'Cliente no encontrado',
+      });
     }
 
     next(err);
@@ -192,10 +240,14 @@ export async function eliminar(req, res, next) {
     }
 
     await prisma.cliente.delete({
-      where: { id_cliente: id },
+      where: {
+        id_cliente: id,
+      },
     });
 
-    res.json({ message: 'Cliente eliminado' });
+    res.json({
+      message: 'Cliente eliminado',
+    });
   } catch (err) {
     if (err.code === 'P2003' || err.code === 'P2014') {
       return res.status(409).json({
@@ -204,7 +256,9 @@ export async function eliminar(req, res, next) {
     }
 
     if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Cliente no encontrado' });
+      return res.status(404).json({
+        message: 'Cliente no encontrado',
+      });
     }
 
     next(err);
