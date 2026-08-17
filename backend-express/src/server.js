@@ -82,7 +82,6 @@ app.get('/health', (_req, res) => {
 
 /* Rutas públicas sensibles: limitar antes de registrar los routers. */
 app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/send-reset-link', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
 
