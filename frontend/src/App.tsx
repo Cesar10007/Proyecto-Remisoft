@@ -27,7 +27,7 @@ function App() {
               <Navbar onLogin={() => setModal('login')} />
 
               <main>
-                <Landing />
+                <Landing onLogin={() => setModal('login')} />
               </main>
 
               <Footer />
