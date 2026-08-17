@@ -1,10 +1,10 @@
 import './Auth.css'
 
 interface LandingProps {
-  onRegister: () => void
+  onLogin: () => void
 }
 
-function Landing({ onRegister }: LandingProps) {
+function Landing({ onLogin }: LandingProps) {
   return (
     <>
       {/* HERO */}
@@ -24,17 +24,27 @@ function Landing({ onRegister }: LandingProps) {
           </h1>
 
           <p>
-            RemiSoft centraliza pedidos, inventario, facturación y domicilios en una sola plataforma.
-            Diseñado para el restaurante Familia Remi.
+            RemiSoft centraliza pedidos, inventario, facturación y domicilios
+            en una sola plataforma. Diseñado para el restaurante Familia Remi.
           </p>
 
           <div className="hero-actions">
-            <button className="btn btn-primary" onClick={onRegister}>
-              Comenzar ahora
-            </button>
             <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onLogin}
+            >
+              Iniciar sesión
+            </button>
+
+            <button
+              type="button"
               className="btn btn-ghost"
-              onClick={() => document.getElementById('funciones')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() =>
+                document
+                  .getElementById('funciones')
+                  ?.scrollIntoView({ behavior: 'smooth' })
+              }
             >
               Ver funciones
             </button>
@@ -45,10 +55,12 @@ function Landing({ onRegister }: LandingProps) {
               <div className="stat-num">7</div>
               <div className="stat-label">Módulos principales</div>
             </div>
+
             <div>
               <div className="stat-num">4</div>
               <div className="stat-label">Roles de usuario</div>
             </div>
+
             <div>
               <div className="stat-num">IA</div>
               <div className="stat-label">Análisis predictivo</div>
@@ -73,10 +85,12 @@ function Landing({ onRegister }: LandingProps) {
                   <div className="dash-card-label">Ventas</div>
                   <div className="dash-card-val rojo">$284k</div>
                 </div>
+
                 <div className="dash-card">
                   <div className="dash-card-label">Pedidos</div>
                   <div className="dash-card-val verde">38</div>
                 </div>
+
                 <div className="dash-card">
                   <div className="dash-card-label">Domicilios</div>
                   <div className="dash-card-val amarillo">12</div>
@@ -88,24 +102,36 @@ function Landing({ onRegister }: LandingProps) {
               <div className="dash-orders">
                 <div className="order-row">
                   <span>Mesa 3 · Combo corriente ×2</span>
-                  <span className="order-badge badge-pending">Preparando</span>
+                  <span className="order-badge badge-pending">
+                    Preparando
+                  </span>
                 </div>
+
                 <div className="order-row">
                   <span>Mesa 7 · Hamburguesa BBQ</span>
                   <span className="order-badge badge-done">Listo</span>
                 </div>
+
                 <div className="order-row">
                   <span>Domicilio #041 · Cra 5 #22</span>
-                  <span className="order-badge badge-delivery">En camino</span>
+                  <span className="order-badge badge-delivery">
+                    En camino
+                  </span>
                 </div>
+
                 <div className="order-row">
                   <span>Mesa 1 · Desayuno ejecutivo ×3</span>
-                  <span className="order-badge badge-pending">Preparando</span>
+                  <span className="order-badge badge-pending">
+                    Preparando
+                  </span>
                 </div>
               </div>
 
               <div className="inventory-alert">
-                <div className="inventory-alert-title">⚠ Alerta de inventario — IA</div>
+                <div className="inventory-alert-title">
+                  ⚠ Alerta de inventario — IA
+                </div>
+
                 <div className="inventory-alert-text">
                   Papas fritas por debajo del mínimo. Se recomienda compra hoy.
                 </div>
@@ -117,9 +143,7 @@ function Landing({ onRegister }: LandingProps) {
 
       {/* FEATURES */}
       <section className="section" id="funciones">
-        <div className="section-tag">
-          Funcionalidades
-        </div>
+        <div className="section-tag">Funcionalidades</div>
 
         <h2>
           Todo lo que necesita
@@ -128,44 +152,63 @@ function Landing({ onRegister }: LandingProps) {
         </h2>
 
         <p className="section-sub">
-          Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft cubre el ciclo completo de operación.
+          Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft
+          cubre el ciclo completo de operación.
         </p>
 
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon icon-rojo">🧾</div>
             <h3>Gestión de pedidos</h3>
-            <p>Registro de pedidos por mesa o domicilio. Descuento automático de inventario según recetas configuradas.</p>
+            <p>
+              Registro de pedidos por mesa o domicilio. Descuento automático de
+              inventario según recetas configuradas.
+            </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon icon-verde">📦</div>
             <h3>Control de inventario</h3>
-            <p>Seguimiento en tiempo real de insumos. Alertas cuando el stock llega al mínimo definido por el administrador.</p>
+            <p>
+              Seguimiento en tiempo real de insumos. Alertas cuando el stock
+              llega al mínimo definido por el administrador.
+            </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon icon-amarillo">📄</div>
             <h3>Facturación DIAN</h3>
-            <p>Generación automática de facturas electrónicas con CUFE, cumpliendo la resolución 000042 de 2020.</p>
+            <p>
+              Generación automática de facturas electrónicas con CUFE,
+              cumpliendo la resolución 000042 de 2020.
+            </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon icon-rojo">🛵</div>
             <h3>Módulo de domicilios</h3>
-            <p>Seguimiento en tiempo real de entregas. Estados actualizables por el repartidor desde su dispositivo.</p>
+            <p>
+              Seguimiento en tiempo real de entregas. Estados actualizables por
+              el repartidor desde su dispositivo.
+            </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon icon-verde">🤖</div>
             <h3>Análisis con IA</h3>
-            <p>Predicción de demanda por producto e ingrediente. Reportes automáticos de rentabilidad y tendencias de consumo.</p>
+            <p>
+              Predicción de demanda por producto e ingrediente. Reportes
+              automáticos de rentabilidad y tendencias de consumo.
+            </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon icon-amarillo">💰</div>
             <h3>Caja y facturación</h3>
-            <p>Apertura y cierre de turno, flujo de caja, múltiples métodos de pago y exportación de reportes contables.</p>
+            <p>
+              Apertura y cierre de turno, flujo de caja, múltiples métodos de
+              pago y exportación de reportes contables.
+            </p>
           </div>
         </div>
       </section>
@@ -185,25 +228,37 @@ function Landing({ onRegister }: LandingProps) {
             <div className="role-card">
               <div className="role-avatar">👑</div>
               <h3>Administrador</h3>
-              <p>Gestión total: usuarios, menú, reportes, inventario y configuración del sistema.</p>
+              <p>
+                Gestión total: usuarios, menú, reportes, inventario y
+                configuración del sistema.
+              </p>
             </div>
 
             <div className="role-card">
               <div className="role-avatar">🍽</div>
               <h3>Mesero</h3>
-              <p>Toma de pedidos por mesa, envío a cocina y seguimiento del estado del servicio.</p>
+              <p>
+                Toma de pedidos por mesa, envío a cocina y seguimiento del
+                estado del servicio.
+              </p>
             </div>
 
             <div className="role-card">
               <div className="role-avatar">🛵</div>
               <h3>Repartidor</h3>
-              <p>Visualización de domicilios asignados, actualización de estado en tiempo real.</p>
+              <p>
+                Visualización de domicilios asignados, actualización de estado
+                en tiempo real.
+              </p>
             </div>
 
             <div className="role-card">
               <div className="role-avatar">👤</div>
               <h3>Cliente</h3>
-              <p>Exploración del menú, pedidos a domicilio, historial de compras y calificación del servicio.</p>
+              <p>
+                Datos de contacto y entrega registrados por el personal al
+                tomar el pedido. No requiere cuenta ni contraseña.
+              </p>
             </div>
           </div>
         </div>

@@ -38,7 +38,6 @@ const roles = [
   { id: 3, nombre: 'CAJERO' },
   { id: 4, nombre: 'MESERO' },
   { id: 5, nombre: 'REPARTIDOR' },
-  { id: 6, nombre: 'CLIENTE' },
 ]
 
 interface Usuario {
