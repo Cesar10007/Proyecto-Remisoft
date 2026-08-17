@@ -1,10 +1,22 @@
-function Navbar({ onLogin, onRegister }) {
+interface NavbarProps {
+  onLogin: () => void
+}
+
+function Navbar({ onLogin }: NavbarProps) {
   return (
     <nav className="nav-publica">
-      <a href="#" className="nav-logo">Remi<span>Soft</span></a>
+      <a href="#" className="nav-logo">
+        Remi<span>Soft</span>
+      </a>
+
       <div className="nav-actions">
-        <button className="btn btn-ghost" onClick={onLogin}>Iniciar sesión</button>
-        <button className="btn btn-primary" onClick={onRegister}>Registrarse</button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onLogin}
+        >
+          Iniciar sesión
+        </button>
       </div>
     </nav>
   )
