@@ -51,6 +51,18 @@ function validateEstado(value) {
   return null;
 }
 
+function validateCategoriaId(value) {
+  if (isEmpty(value)) return null;
+
+  const idCategoria = Number(value);
+
+  if (!Number.isInteger(idCategoria) || idCategoria <= 0) {
+    return 'El campo id_categoria debe ser un entero positivo';
+  }
+
+  return null;
+}
+
 function parseTimeToDate(value) {
   if (isEmpty(value)) {
     return { value: null };
@@ -106,13 +118,39 @@ function formatProducto(producto) {
     Nombre: producto.Nombre ?? '',
     Descripcion: producto.Descripcion ?? '',
     precio_venta: producto.precio_venta?.toString() ?? '0.00',
+
+    // Campo antiguo conservado por compatibilidad.
     Categoria: producto.Categoria ?? '',
+
+    // Nueva relación normalizada.
+    id_categoria: producto.id_categoria ?? null,
+    categoria: producto.categoria
+      ? {
+          id_categoria: Number(producto.categoria.id_categoria),
+          nombre: producto.categoria.nombre,
+          descripcion: producto.categoria.descripcion ?? null,
+        }
+      : null,
+
     Tiempo_preparacion: formatTime(producto.Tiempo_preparacion),
     Estado: Number(producto.Estado ?? 1),
   };
 }
 
-function validarProducto(body) {
+async function categoriaExiste(idCategoria) {
+  if (idCategoria === null || idCategoria === undefined) {
+    return true;
+  }
+
+  const categoria = await prisma.categoria_productos.findUnique({
+    where: { id_categoria: idCategoria },
+    select: { id_categoria: true },
+  });
+
+  return Boolean(categoria);
+}
+
+async function validarProducto(body) {
   const timeResult = parseTimeToDate(body.Tiempo_preparacion);
 
   if (timeResult.error) {
@@ -124,6 +162,7 @@ function validarProducto(body) {
     validateString(body.Descripcion, 'Descripcion', 500),
     validatePrecio(body.precio_venta),
     validateString(body.Categoria, 'Categoria', 30),
+    validateCategoriaId(body.id_categoria),
     validateEstado(body.Estado),
   ];
 
@@ -133,12 +172,26 @@ function validarProducto(body) {
     return { error };
   }
 
+  const idCategoria = isEmpty(body.id_categoria)
+    ? null
+    : Number(body.id_categoria);
+
+  if (!(await categoriaExiste(idCategoria))) {
+    return { error: 'La categoría indicada no existe' };
+  }
+
   return {
     data: {
       Nombre: body.Nombre,
       Descripcion: body.Descripcion || null,
       precio_venta: Number(body.precio_venta),
+
+      // Campo antiguo conservado por compatibilidad.
       Categoria: body.Categoria || null,
+
+      // Nueva clave foránea.
+      id_categoria: idCategoria,
+
       Tiempo_preparacion: timeResult.value,
       Estado: isEmpty(body.Estado) ? 1 : Number(body.Estado),
     },
@@ -147,6 +200,15 @@ function validarProducto(body) {
 
 async function listarProductos() {
   const productos = await prisma.producto.findMany({
+    include: {
+      categoria: {
+        select: {
+          id_categoria: true,
+          nombre: true,
+          descripcion: true,
+        },
+      },
+    },
     orderBy: { id_producto: 'asc' },
   });
 
@@ -227,6 +289,15 @@ export async function show(req, res, next) {
 
     const producto = await prisma.producto.findUnique({
       where: { id_producto: id },
+      include: {
+        categoria: {
+          select: {
+            id_categoria: true,
+            nombre: true,
+            descripcion: true,
+          },
+        },
+      },
     });
 
     if (!producto) {
@@ -242,7 +313,7 @@ export async function show(req, res, next) {
 // POST /api/productos
 export async function crear(req, res, next) {
   try {
-    const { error, data } = validarProducto(req.body);
+    const { error, data } = await validarProducto(req.body);
 
     if (error) {
       return res.status(422).json({ message: error });
@@ -267,7 +338,7 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    const { error, data } = validarProducto(req.body);
+    const { error, data } = await validarProducto(req.body);
 
     if (error) {
       return res.status(422).json({ message: error });
