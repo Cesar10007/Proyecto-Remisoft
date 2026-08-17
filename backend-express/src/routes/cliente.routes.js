@@ -7,6 +7,7 @@ const router = Router();
 router.use(authRequired);
 
 router.get('/', clienteController.index);
+router.get('/buscar', clienteController.buscarPorTelefono);
 router.get('/:id', clienteController.show);
 router.post('/', clienteController.crear);
 router.put('/:id', clienteController.actualizar);
