@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-
+import tailwindcss from '@tailwindcss/vite'
 // Durante la migración conviven dos backends:
 // - Express puerto 3000: módulos ya migrados a Prisma.
 // - Laravel puerto 8000: módulos pendientes de migrar.
@@ -10,7 +10,7 @@ import react from '@vitejs/plugin-react'
 // porque '/api' funciona como fallback hacia Laravel.
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     proxy: {
       '/api/auth': {
