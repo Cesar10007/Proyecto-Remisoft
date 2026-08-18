@@ -11,6 +11,7 @@ import PrivateRoute from './components/common/PrivateRoute'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import SuperAdmin from './pages/superadmin/SuperAdmin'
 import Gerente from './pages/gerente/Gerente'
+import Cajero from './pages/cajero/Cajero'
 import Mesero from './pages/mesero/Mesero'
 import Repartidor from './pages/repartidor/Repartidor'
 import Cliente from './pages/cliente/Cliente'
@@ -46,6 +47,7 @@ function App() {
         <Route path="/gerente" element={
           <PrivateRoute rolRequerido="GERENTE"><Gerente /></PrivateRoute>
         }/>
+        <Route path="/cajero" element={<Cajero />} />
         <Route path="/mesero" element={
           <PrivateRoute rolRequerido="MESERO"><Mesero /></PrivateRoute>
         }/>

@@ -186,100 +186,211 @@ function Landing({ onRegister }: LandingProps) {
       </section>
 
       {/* FEATURES */}
-      <section className="section" id="funciones">
-        <div className="section-tag">
-          Funcionalidades
+<section className="mx-auto max-w-[1200px] px-[5%] py-20" id="funciones">
+  <div className="mb-3 text-[0.75rem] font-medium uppercase tracking-[2px] text-[var(--rojo)]">
+    Funcionalidades
+  </div>
+
+  <h2 className="mb-3 font-['Syne'] text-[clamp(1.8rem,3vw,2.6rem)] font-bold leading-tight tracking-[-1px]">
+    Todo lo que necesita
+    <br />
+    un restaurante moderno
+  </h2>
+
+  <p className="mb-12 max-w-[520px] text-base font-light leading-[1.7] text-[var(--texto-muted)]">
+    Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft
+    cubre el ciclo completo de operación.
+  </p>
+
+  <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--rojo-light)] text-sm font-bold text-[var(--rojo-dark)]">
+        PED
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Gestión de pedidos
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Registro de pedidos por mesa o domicilio. Descuento automático de
+        inventario según recetas configuradas.
+      </p>
+    </div>
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--verde-light)] text-sm font-bold text-[var(--verde)]">
+        INV
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Control de inventario
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Seguimiento en tiempo real de insumos. Alertas cuando el stock llega
+        al mínimo definido por el administrador.
+      </p>
+    </div>
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--amarillo-light)] text-sm font-bold text-[#BA7517]">
+        FAC
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Facturación DIAN
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Generación automática de facturas electrónicas con CUFE, cumpliendo
+        la resolución 000042 de 2020.
+      </p>
+    </div>
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--rojo-light)] text-sm font-bold text-[var(--rojo-dark)]">
+        DOM
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Módulo de domicilios
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Seguimiento en tiempo real de entregas. Estados actualizables por el
+        repartidor desde su dispositivo.
+      </p>
+    </div>
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--verde-light)] text-sm font-bold text-[var(--verde)]">
+        IA
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Análisis con IA
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Predicción de demanda por producto e ingrediente. Reportes
+        automáticos de rentabilidad y tendencias de consumo.
+      </p>
+    </div>
+
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--amarillo-light)] text-sm font-bold text-[#BA7517]">
+        CAJ
+      </div>
+
+      <h3 className="mb-2 font-['Syne'] text-base font-bold">
+        Caja y facturación
+      </h3>
+
+      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
+        Apertura y cierre de turno, flujo de caja, múltiples métodos de pago
+        y exportación de reportes contables.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+{/* ROLES */}
+<section className="bg-[linear-gradient(135deg,#1a1a1a_0%,#2d1a10_100%)] px-[5%] py-20">
+  <div className="mx-auto max-w-[1200px]">
+
+    <div className="mb-3 text-[0.75rem] font-medium uppercase tracking-[2px] text-[var(--amarillo)]">
+      Usuarios del sistema
+    </div>
+
+    <h2 className="mb-3 font-['Syne'] text-[clamp(1.8rem,3vw,2.6rem)] font-bold leading-tight tracking-[-1px] text-white">
+      Un sistema, cuatro roles
+    </h2>
+
+    <p className="mb-12 max-w-[520px] text-base font-light leading-[1.7] text-white/55">
+      Cada perfil accede únicamente a las funciones que le corresponden.
+    </p>
+
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
+        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+          ADM
         </div>
 
-        <h2>
-          Todo lo que necesita
-          <br />
-          un restaurante moderno
-        </h2>
+        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
+          Administrador
+        </h3>
 
-        <p className="section-sub">
-          Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft cubre el ciclo completo de operación.
+        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
+          Gestión total: usuarios, menú, reportes, inventario y configuración
+          del sistema.
         </p>
+      </div>
 
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon icon-rojo">🧾</div>
-            <h3>Gestión de pedidos</h3>
-            <p>Registro de pedidos por mesa o domicilio. Descuento automático de inventario según recetas configuradas.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon icon-verde">📦</div>
-            <h3>Control de inventario</h3>
-            <p>Seguimiento en tiempo real de insumos. Alertas cuando el stock llega al mínimo definido por el administrador.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon icon-amarillo">📄</div>
-            <h3>Facturación DIAN</h3>
-            <p>Generación automática de facturas electrónicas con CUFE, cumpliendo la resolución 000042 de 2020.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon icon-rojo">🛵</div>
-            <h3>Módulo de domicilios</h3>
-            <p>Seguimiento en tiempo real de entregas. Estados actualizables por el repartidor desde su dispositivo.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon icon-verde">🤖</div>
-            <h3>Análisis con IA</h3>
-            <p>Predicción de demanda por producto e ingrediente. Reportes automáticos de rentabilidad y tendencias de consumo.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon icon-amarillo">💰</div>
-            <h3>Caja y facturación</h3>
-            <p>Apertura y cierre de turno, flujo de caja, múltiples métodos de pago y exportación de reportes contables.</p>
-          </div>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
+        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+          MES
         </div>
-      </section>
 
-      {/* ROLES */}
-      <section className="roles-section">
-        <div className="roles-inner">
-          <div className="section-tag">Usuarios del sistema</div>
+        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
+          Mesero
+        </h3>
 
-          <h2 className="roles-title">Un sistema, cuatro roles</h2>
+        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
+          Toma de pedidos por mesa, envío a cocina y seguimiento del estado
+          del servicio.
+        </p>
+      </div>
 
-          <p className="section-sub">
-            Cada perfil accede únicamente a las funciones que le corresponden.
-          </p>
-
-          <div className="roles-grid">
-            <div className="role-card">
-              <div className="role-avatar">👑</div>
-              <h3>Administrador</h3>
-              <p>Gestión total: usuarios, menú, reportes, inventario y configuración del sistema.</p>
-            </div>
-
-            <div className="role-card">
-              <div className="role-avatar">🍽</div>
-              <h3>Mesero</h3>
-              <p>Toma de pedidos por mesa, envío a cocina y seguimiento del estado del servicio.</p>
-            </div>
-
-            <div className="role-card">
-              <div className="role-avatar">🛵</div>
-              <h3>Repartidor</h3>
-              <p>Visualización de domicilios asignados, actualización de estado en tiempo real.</p>
-            </div>
-
-            <div className="role-card">
-              <div className="role-avatar">👤</div>
-              <h3>Cliente</h3>
-              <p>Exploración del menú, pedidos a domicilio, historial de compras y calificación del servicio.</p>
-            </div>
-          </div>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
+        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+          REP
         </div>
-      </section>
-    </>
+
+        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
+          Repartidor
+        </h3>
+
+        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
+          Visualización de domicilios asignados, actualización de estado en
+          tiempo real.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
+        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+          CLI
+        </div>
+
+        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
+          Cliente
+        </h3>
+
+        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
+          Exploración del menú, pedidos a domicilio, historial de compras y
+          calificación del servicio.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+</>
   )
 }
-
 export default Landing
