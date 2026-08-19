@@ -1,10 +1,8 @@
-import './Auth.css'
-
 interface LandingProps {
-  onRegister: () => void
+  onLogin: () => void
 }
 
-function Landing({ onRegister }: LandingProps) {
+function Landing({ onLogin }: LandingProps) {
   return (
     <>
       {/* HERO */}
@@ -30,13 +28,15 @@ function Landing({ onRegister }: LandingProps) {
 
           <div className="flex flex-wrap gap-3">
             <button
+              type="button"
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-[var(--rojo)] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-sm font-medium text-white transition-all duration-200 ease-in-out hover:-translate-y-px hover:border-[var(--rojo-dark)] hover:bg-[var(--rojo-dark)]"
-              onClick={onRegister}
+              onClick={onLogin}
             >
-              Comenzar ahora
+              Iniciar sesión
             </button>
 
             <button
+              type="button"
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-[var(--borde)] bg-transparent px-5 py-2 font-['DM_Sans'] text-sm font-medium text-[var(--texto-muted)] transition-all duration-200 ease-in-out hover:border-[#c0b8b0] hover:bg-[#f0ebe5] hover:text-[var(--texto)]"
               onClick={() =>
                 document
@@ -50,30 +50,18 @@ function Landing({ onRegister }: LandingProps) {
 
           <div className="mt-10 flex gap-5 border-t border-[var(--borde)] pt-8 md:gap-8">
             <div>
-              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">
-                7
-              </div>
-              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">
-                Módulos principales
-              </div>
+              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">7</div>
+              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">Módulos principales</div>
             </div>
 
             <div>
-              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">
-                4
-              </div>
-              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">
-                Roles de usuario
-              </div>
+              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">4</div>
+              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">Roles de usuario</div>
             </div>
 
             <div>
-              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">
-                IA
-              </div>
-              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">
-                Análisis predictivo
-              </div>
+              <div className="font-['Syne'] text-[1.8rem] font-bold text-[var(--texto)]">IA</div>
+              <div className="mt-0.5 text-[0.78rem] text-[var(--texto-muted)]">Análisis predictivo</div>
             </div>
           </div>
         </div>
@@ -82,7 +70,6 @@ function Landing({ onRegister }: LandingProps) {
         <div className="relative hidden md:block">
           <div className="overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] shadow-[var(--sombra),0_0_0_6px_rgba(216,90,48,0.04)] [transform:perspective(1000px)_rotateY(-4deg)_rotateX(2deg)] transition-transform duration-500 ease-in-out hover:[transform:perspective(1000px)_rotateY(0deg)_rotateX(0deg)]">
 
-            {/* Barra superior del navegador */}
             <div className="flex items-center gap-2 border-b border-[var(--borde)] bg-[#f4efe9] px-4 py-2.5">
               <div className="h-2.5 w-2.5 rounded-full bg-[#F09595]"></div>
               <div className="h-2.5 w-2.5 rounded-full bg-[#EF9F27]"></div>
@@ -93,52 +80,33 @@ function Landing({ onRegister }: LandingProps) {
               </div>
             </div>
 
-            {/* Contenido del mockup */}
             <div className="p-4">
-
               <div className="mb-2.5 font-['Syne'] text-[0.75rem] font-bold text-[#6c757d]">
                 Panel de hoy
               </div>
 
-              {/* Tarjetas */}
               <div className="mb-3 grid grid-cols-3 gap-2">
-
                 <div className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] p-3">
-                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">
-                    Ventas
-                  </div>
-                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[var(--rojo-dark)]">
-                    $284k
-                  </div>
+                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">Ventas</div>
+                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[var(--rojo-dark)]">$284k</div>
                 </div>
 
                 <div className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] p-3">
-                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">
-                    Pedidos
-                  </div>
-                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[var(--verde)]">
-                    38
-                  </div>
+                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">Pedidos</div>
+                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[var(--verde)]">38</div>
                 </div>
 
                 <div className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] p-3">
-                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">
-                    Domicilios
-                  </div>
-                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[#BA7517]">
-                    12
-                  </div>
+                  <div className="mb-1 text-[0.65rem] text-[var(--texto-muted)]">Domicilios</div>
+                  <div className="font-['Syne'] text-[1.1rem] font-bold text-[#BA7517]">12</div>
                 </div>
-
               </div>
 
               <div className="mb-2 font-['Syne'] text-[0.7rem] font-bold text-[#6c757d]">
                 Pedidos activos
               </div>
 
-              {/* Pedidos */}
               <div className="flex flex-col gap-1.5">
-
                 <div className="flex items-center justify-between rounded-lg border border-[var(--borde)] bg-[#f9f5f0] px-3 py-2 text-[0.72rem]">
                   <span>Mesa 3 · Combo corriente ×2</span>
                   <span className="rounded-full bg-[var(--amarillo-light)] px-2 py-0.5 text-[0.6rem] font-medium text-[#854F0B]">
@@ -166,231 +134,22 @@ function Landing({ onRegister }: LandingProps) {
                     Preparando
                   </span>
                 </div>
-
               </div>
 
-              {/* Alerta de inventario */}
               <div className="mt-3 rounded-[10px] border border-[#dee2e6] bg-[#f8f9fa] p-2.5">
                 <div className="mb-0.5 text-[0.65rem] font-medium text-[#a30000]">
                   ⚠ Alerta de inventario — IA
                 </div>
-
                 <div className="text-[0.68rem] text-[#6c757d]">
                   Papas fritas por debajo del mínimo. Se recomienda compra hoy.
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </section>
-
-      {/* FEATURES */}
-<section className="mx-auto max-w-[1200px] px-[5%] py-20" id="funciones">
-  <div className="mb-3 text-[0.75rem] font-medium uppercase tracking-[2px] text-[var(--rojo)]">
-    Funcionalidades
-  </div>
-
-  <h2 className="mb-3 font-['Syne'] text-[clamp(1.8rem,3vw,2.6rem)] font-bold leading-tight tracking-[-1px]">
-    Todo lo que necesita
-    <br />
-    un restaurante moderno
-  </h2>
-
-  <p className="mb-12 max-w-[520px] text-base font-light leading-[1.7] text-[var(--texto-muted)]">
-    Desde la toma del pedido hasta la factura electrónica DIAN, RemiSoft
-    cubre el ciclo completo de operación.
-  </p>
-
-  <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--rojo-light)] text-sm font-bold text-[var(--rojo-dark)]">
-        PED
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Gestión de pedidos
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Registro de pedidos por mesa o domicilio. Descuento automático de
-        inventario según recetas configuradas.
-      </p>
-    </div>
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--verde-light)] text-sm font-bold text-[var(--verde)]">
-        INV
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Control de inventario
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Seguimiento en tiempo real de insumos. Alertas cuando el stock llega
-        al mínimo definido por el administrador.
-      </p>
-    </div>
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--amarillo-light)] text-sm font-bold text-[#BA7517]">
-        FAC
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Facturación DIAN
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Generación automática de facturas electrónicas con CUFE, cumpliendo
-        la resolución 000042 de 2020.
-      </p>
-    </div>
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--rojo-light)] text-sm font-bold text-[var(--rojo-dark)]">
-        DOM
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Módulo de domicilios
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Seguimiento en tiempo real de entregas. Estados actualizables por el
-        repartidor desde su dispositivo.
-      </p>
-    </div>
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--verde-light)] text-sm font-bold text-[var(--verde)]">
-        IA
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Análisis con IA
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Predicción de demanda por producto e ingrediente. Reportes
-        automáticos de rentabilidad y tendencias de consumo.
-      </p>
-    </div>
-
-    <div className="group relative overflow-hidden rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--sombra)]">
-      <div className="absolute top-0 left-0 right-0 h-[3px] origin-left scale-x-0 bg-[var(--rojo)] transition-transform duration-300 group-hover:scale-x-100" />
-
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--amarillo-light)] text-sm font-bold text-[#BA7517]">
-        CAJ
-      </div>
-
-      <h3 className="mb-2 font-['Syne'] text-base font-bold">
-        Caja y facturación
-      </h3>
-
-      <p className="text-sm font-light leading-[1.6] text-[var(--texto-muted)]">
-        Apertura y cierre de turno, flujo de caja, múltiples métodos de pago
-        y exportación de reportes contables.
-      </p>
-    </div>
-
-  </div>
-</section>
-
-{/* ROLES */}
-<section className="bg-[linear-gradient(135deg,#1a1a1a_0%,#2d1a10_100%)] px-[5%] py-20">
-  <div className="mx-auto max-w-[1200px]">
-
-    <div className="mb-3 text-[0.75rem] font-medium uppercase tracking-[2px] text-[var(--amarillo)]">
-      Usuarios del sistema
-    </div>
-
-    <h2 className="mb-3 font-['Syne'] text-[clamp(1.8rem,3vw,2.6rem)] font-bold leading-tight tracking-[-1px] text-white">
-      Un sistema, cuatro roles
-    </h2>
-
-    <p className="mb-12 max-w-[520px] text-base font-light leading-[1.7] text-white/55">
-      Cada perfil accede únicamente a las funciones que le corresponden.
-    </p>
-
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
-        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
-          ADM
-        </div>
-
-        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
-          Administrador
-        </h3>
-
-        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
-          Gestión total: usuarios, menú, reportes, inventario y configuración
-          del sistema.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
-        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
-          MES
-        </div>
-
-        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
-          Mesero
-        </h3>
-
-        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
-          Toma de pedidos por mesa, envío a cocina y seguimiento del estado
-          del servicio.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
-        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
-          REP
-        </div>
-
-        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
-          Repartidor
-        </h3>
-
-        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
-          Visualización de domicilios asignados, actualización de estado en
-          tiempo real.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(216,90,48,0.4)] hover:bg-[rgba(216,90,48,0.15)]">
-        <div className="mx-auto mb-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
-          CLI
-        </div>
-
-        <h3 className="mb-1.5 font-['Syne'] text-[0.95rem] font-bold text-white">
-          Cliente
-        </h3>
-
-        <p className="text-[0.78rem] font-light leading-[1.5] text-white/50">
-          Exploración del menú, pedidos a domicilio, historial de compras y
-          calificación del servicio.
-        </p>
-      </div>
-
-    </div>
-  </div>
-</section>
-</>
+    </>
   )
 }
+
 export default Landing

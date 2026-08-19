@@ -21,79 +21,178 @@ export async function sendPasswordResetEmail(email, token) {
   const text = [
     'Hola',
     '',
-    'Recibimos una solicitud para restablecer tu contraseña.',
+    'Recibimos una solicitud para restablecer la contraseña de tu cuenta de RemiSoft.',
     '',
-    `Restablece tu contraseña aquí: ${resetUrl}`,
+    `Puedes restablecer tu contraseña aquí: ${resetUrl}`,
     '',
-    'Si no solicitaste este cambio, puedes ignorar este correo.',
+    'Este enlace expirará en 30 minutos.',
+    '',
+    'Si no solicitaste este cambio, puedes ignorar este correo de forma segura.',
     '',
     'Saludos,',
-    'RemiSoft',
+    'El equipo de RemiSoft',
   ].join('\n');
 
   const html = `
 <!doctype html>
 <html lang="es">
-  <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#555555;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restablecer contraseña - RemiSoft</title>
+  </head>
+
+  <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#555555;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-      Restablece tu contraseña de RemiSoft.
+      Restablece de forma segura tu contraseña de RemiSoft.
     </div>
 
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f5f5f5;margin:0;padding:32px 12px;">
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="width:100%;background-color:#f3f4f6;margin:0;padding:32px 16px;"
+    >
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:680px;background-color:#ffffff;border:1px solid #e5e5e5;border-radius:8px;">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="width:100%;max-width:620px;background-color:#ffffff;border:1px solid #e3e3e3;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;"
+          >
             <tr>
-              <td style="padding:42px 38px 24px;text-align:center;">
-                <div style="font-size:42px;line-height:1;font-weight:700;letter-spacing:-2px;color:#a53f1d;">
+              <td
+                align="center"
+                style="padding:34px 24px 28px;border-bottom:1px solid #eeeeee;"
+              >
+                <div
+                  style="font-family:Arial,Helvetica,sans-serif;font-size:38px;line-height:1;font-weight:700;letter-spacing:-2px;color:#a53f1d;"
+                >
                   Remi<span style="color:#f2aa22;">Soft</span>
                 </div>
+
+                <p
+                  style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#888888;"
+                >
+                  Seguridad y gestión para tu restaurante
+                </p>
               </td>
             </tr>
 
             <tr>
-              <td style="padding:0 38px 34px;">
-                <h1 style="margin:0 0 24px;font-size:24px;line-height:1.3;color:#171717;">
-                  Hola
+              <td style="padding:36px 38px 34px;">
+                <h1
+                  style="margin:0 0 22px;font-family:Arial,Helvetica,sans-serif;font-size:25px;line-height:1.3;font-weight:700;color:#252525;"
+                >
+                  Restablecer contraseña
                 </h1>
 
-                <p style="margin:0 0 32px;font-size:18px;line-height:1.6;color:#666666;">
-                  Recibimos una solicitud para restablecer tu contraseña.
+                <p
+                  style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.65;color:#606060;"
+                >
+                  Hola,
                 </p>
 
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 38px;">
+                <p
+                  style="margin:0 0 22px;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.65;color:#606060;"
+                >
+                  Recibimos una solicitud para restablecer la contraseña de tu cuenta de RemiSoft.
+                </p>
+
+                <p
+                  style="margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.65;color:#606060;"
+                >
+                  Haz clic en el siguiente botón para crear una nueva contraseña:
+                </p>
+
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  align="center"
+                  style="margin:0 auto 30px;"
+                >
                   <tr>
-                    <td align="center" bgcolor="#171717" style="border-radius:5px;">
+                    <td
+                      align="center"
+                      bgcolor="#df5a2f"
+                      style="border-radius:7px;background-color:#df5a2f;"
+                    >
                       <a
                         href="${resetUrl}"
                         target="_blank"
-                        style="display:inline-block;padding:14px 22px;border-radius:5px;background-color:#171717;color:#ffffff;font-size:16px;font-weight:400;text-decoration:none;"
+                        style="display:inline-block;padding:15px 26px;border-radius:7px;background-color:#df5a2f;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;text-decoration:none;"
                       >
-                        Restablecer contraseña
+                        Restablecer mi contraseña
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:0 0 30px;font-size:17px;line-height:1.6;color:#666666;">
-                  Si no solicitaste este cambio, puedes ignorar este correo.
+                <p
+                  style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#777777;"
+                >
+                  Por razones de seguridad, este enlace expirará en <strong>30 minutos</strong>.
                 </p>
 
-                <p style="margin:0;font-size:17px;line-height:1.6;color:#666666;">
+                <p
+                  style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#777777;"
+                >
+                  Si no solicitaste este cambio, puedes ignorar este correo de forma segura. Tu contraseña actual no se modificará.
+                </p>
+
+                <p
+                  style="margin:28px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#777777;"
+                >
                   Saludos,<br />
-                  RemiSoft
+                  <strong style="color:#555555;">El equipo de RemiSoft</strong>
                 </p>
 
-                <div style="height:1px;margin:32px 0;background-color:#dddddd;"></div>
+                <div
+                  style="height:1px;margin:30px 0;background-color:#e5e5e5;"
+                ></div>
 
-                <p style="margin:0;font-size:15px;line-height:1.6;color:#666666;">
-                  Si tienes problemas para hacer clic en el botón, copia y pega esta URL en tu navegador:
+                <p
+                  style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#888888;"
+                >
+                  Si el botón no funciona, copia y pega esta dirección en tu navegador:
                 </p>
 
-                <p style="margin:8px 0 0;word-break:break-all;font-size:14px;line-height:1.5;">
-                  <a href="${resetUrl}" target="_blank" style="color:#245f9e;text-decoration:underline;">
+                <div
+                  style="padding:12px;background-color:#f8f8f8;border:1px solid #eeeeee;border-radius:6px;"
+                >
+                  <a
+                    href="${resetUrl}"
+                    target="_blank"
+                    style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#245f9e;text-decoration:underline;word-break:break-all;"
+                  >
                     ${resetUrl}
                   </a>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                align="center"
+                style="padding:18px 24px;background-color:#fafafa;border-top:1px solid #eeeeee;"
+              >
+                <p
+                  style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#999999;"
+                >
+                  © 2026 RemiSoft. Todos los derechos reservados.
+                </p>
+
+                <p
+                  style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#999999;"
+                >
+                  Este es un mensaje automático. Por favor, no respondas a este correo.
                 </p>
               </td>
             </tr>
