@@ -1,4 +1,15 @@
+![Banner RemiSoft](./docs/banner-remisoft.png)
+
 # RemiSoft — Sistema Web Inteligente para Restaurantes
+
+![Estado](https://img.shields.io/badge/estado-migración%20activa-e67e22)
+![Versión](https://img.shields.io/badge/versión-0.1.9-2f80ed)
+![Licencia](https://img.shields.io/badge/licencia-proyecto%20académico-27ae60)
+![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61dafb)
+![Backend](https://img.shields.io/badge/backend-Express%20%2B%20Prisma-6c5ce7)
+![Base de datos](https://img.shields.io/badge/base%20de%20datos-MariaDB-c0392b)
+
+---
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
