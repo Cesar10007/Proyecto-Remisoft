@@ -2,7 +2,7 @@
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** Frontend y backend completamente conectados. Backend Express + Prisma, autenticación JWT, módulos administrativos y pruebas CRUD funcionando sobre datos reales de MariaDB. La carpeta activa del backend es `backend/` y Laravel ya no forma parte del arranque del entorno.
+> **Estado actual:** Frontend y backend completamente conectados. Backend Express + Prisma, autenticación JWT y módulos administrativos funcionando sobre datos de prueba de MariaDB. La carpeta activa del backend es `backend/`.
 
 ---
 
@@ -16,12 +16,10 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 6. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
 7. [Autenticación y roles](#autenticación-y-roles)
 8. [API externa — TheMealDB](#api-externa--themealdb)
-9. [Comunicación padre-hijo en React](#comunicación-padre-hijo-en-react)
-10. [Interfaces y CRUD implementados](#interfaces-y-crud-implementados)
-11. [Endpoints del backend](#endpoints-del-backend)
-12. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-13. [Diseño y UI](#diseño-y-ui)
-14. [Notas técnicas importantes](#notas-técnicas-importantes)
+9. [Endpoints del backend](#endpoints-del-backend)
+10. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+11. [Diseño y UI](#diseño-y-ui)
+12. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ---
 
@@ -39,13 +37,13 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Capa | Tecnología | Puerto |
 |------|------------|--------|
-| Frontend | React 19 + Vite + TypeScript | 5173 |
-| Backend | Node.js + Express | 3000 |
-| Base de datos | MariaDB | 3306 |
-| ORM y migraciones | Prisma | — |
+| Frontend | React 19 + Vite 6 + TypeScript 5 | 5173 |
+| Backend | Node.js 20 + Express 5 | 3000 |
+| Base de datos | MariaDB 11 | 3306 |
+| ORM y migraciones | Prisma 6 | — |
 | Entorno | GitHub Codespaces | — |
 | Auth | JWT | — |
-| Estado global | Redux Toolkit | — |
+| Estado global | Redux Toolkit 2 + AuthContext | — |
 | API externa | No confirmada en el backend Express actual | — |
 
 React no se comunica directamente con MariaDB. Todo pasa por la API REST de Express en el puerto 3000.
@@ -68,22 +66,22 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| Node.js | — | Runtime del backend |
-| Express | — | Framework backend y API REST |
-| Prisma | — | ORM, cliente tipado y migraciones |
-| mysql2 | — | Conexión auxiliar con MariaDB |
-| jsonwebtoken | — | Emisión y validación de JWT |
-| bcryptjs | — | Hash y verificación de contraseñas |
-| Nodemailer | — | Recuperación de contraseña por correo |
+| Node.js | 20.x | Runtime del backend |
+| Express | 5.x | Framework backend y API REST |
+| Prisma | 6.x | ORM, cliente tipado y migraciones |
+| mysql2 | 3.x | Conexión auxiliar con MariaDB |
+| jsonwebtoken | 9.x | Emisión y validación de JWT |
+| bcryptjs | 2.x | Hash y verificación de contraseñas |
+| Nodemailer | 7.x | Recuperación de contraseña por correo |
 
 ### Base de datos
 
 | Campo | Valor |
 |-------|-------|
-| Motor | MariaDB |
+| Motor | MariaDB 11 |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | ver `backend/.env` |
+| Contraseña | `remisoft` (dato ficticio de desarrollo) |
 | Puerto | 3306 |
 
 ---
@@ -234,39 +232,6 @@ La integración con TheMealDB no forma parte del backend Express activo confirma
 
 ---
 
-## Comunicación padre-hijo en React
-
-### Padre → Hijo (Props)
-
-La comunicación entre componentes se realiza mediante props y callbacks, según las necesidades de `App.tsx`, los componentes de layout y los dashboards.
-
-### Hijo → Padre (Callbacks)
-
-Los componentes hijos notifican eventos al padre mediante callbacks como cierre de modales, actualización de sesión y acciones de formularios.
-
----
-
-## Interfaces y CRUD implementados
-
-| # | Entidad | Dashboard | Crear | Editar | Activar/Desactivar | Datos reales BD |
-|---|---------|-----------|-------|--------|--------------------|-----------------|
-| 1 | Productos | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 2 | Usuarios | SuperAdmin | ✅ | ✅ | ✅ | ✅ |
-| 3 | Clientes | SuperAdmin | ✅ | ✅ | ✅ | ✅ |
-| 4 | Proveedores | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 5 | Ingredientes | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 6 | Cajas | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 7 | Pedidos | Mesero | ✅ | ✅ | ✅ | ✅ |
-| 8 | Domicilios | Repartidor | ✅ | ✅ | ✅ | ✅ |
-
-> El “eliminar” en las entidades principales utiliza desactivación o soft delete para preservar la integridad referencial de la base de datos.
-
-### Vista SQL y Procedimiento Almacenado
-
-El backend conserva el uso de vistas SQL y procedimientos almacenados de MariaDB cuando los módulos los requieren. Prisma gestiona el esquema principal mediante migraciones versionadas.
-
----
-
 ## Endpoints del backend
 
 Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
@@ -367,11 +332,12 @@ rama de trabajo → commit → push → Pull Request a develop → merge → Pul
 
 ## Notas técnicas importantes
 
-- El proyecto usa la tabla `usuario`, no la convención `users` de Laravel.
-- `axios.ts` usa un interceptor para adjuntar el token JWT en cada request automáticamente.
-- Las URLs del Codespace van en los `.env` locales, nunca en el código fuente.
-- El soft delete o cambio de estado se utiliza cuando una entidad tiene relaciones que impiden su eliminación física.
-- Prisma gestiona el esquema mediante `prisma migrate deploy` y el cliente mediante `prisma generate`.
-- Redux y AuthContext coexisten por compatibilidad con los dashboards existentes.
+- El frontend se comunica con MariaDB únicamente a través de la API REST de Express.
+- `backend/` es la ruta oficial del backend activo y contiene `src/`, `routes/`, `controllers/`, `middleware/` y `prisma/`.
+- Prisma gestiona el esquema y las migraciones mediante `prisma migrate deploy`; `prisma generate` regenera el cliente de Prisma.
+- JWT se utiliza para emitir y validar tokens de autenticación.
+- `axios.ts` adjunta automáticamente el token JWT mediante un interceptor.
+- Las URLs de Codespaces, contraseñas y secretos deben permanecer en los archivos `.env` locales.
+- MariaDB usa datos ficticios de desarrollo; la contraseña documentada es `remisoft`.
 - Los puertos activos son 3000 para Express, 5173 para Vite y 3306 para MariaDB.
-- Laravel, Composer, `php artisan` y el puerto 8000 ya no forman parte del arranque activo.
+- `setup.sh` y `start.sh` automatizan la preparación y el arranque del entorno.
