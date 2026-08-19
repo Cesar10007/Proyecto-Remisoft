@@ -1,42 +1,61 @@
-# Restricciones del proyecto
+# Restricciones y stack tecnológico
 
-## Arquitectura vigente
+Este documento conserva las restricciones generales del proyecto y describe el stack vigente después de la migración a Express + Prisma.
 
-| Capa | Tecnología |
-| --- | --- |
-| Frontend | React 19 + Vite 6 |
-| Backend | Node.js + Express |
-| ORM | Prisma |
-| Base de datos | MariaDB |
-| Autenticación | JWT |
-| Gestor de paquetes | pnpm |
+## Stack vigente
 
-## Reglas de desarrollo
+| Capa | Tecnología | Uso en el proyecto |
+| --- | --- | --- |
+| Frontend | React 19 + Vite 6 | Interfaz web y proxy de la API |
+| Backend | Node.js + Express | API HTTP y lógica de negocio |
+| ORM | Prisma | Acceso tipado a MariaDB y migraciones |
+| Base de datos | MariaDB | Persistencia compartida |
+| Autenticación | JWT | Login y protección de endpoints |
+| Correo | Nodemailer | Recuperación de contraseña |
+| Gestor de paquetes | pnpm | Instalación y scripts |
+| Entorno | Dev Container / Codespaces | Desarrollo reproducible |
 
-- `main` y `develop` están protegidas: los cambios se integran mediante Pull Request.
-- Crea cada rama `feat/*` desde `develop` actualizado.
-- No hagas push directo a `main` ni `develop`.
-- Revisa el diff y ejecuta las verificaciones antes del merge.
-- No subas archivos `.env`, contraseñas, tokens ni credenciales.
-- Usa migraciones versionadas de Prisma para modificar el esquema.
-- Prueba los endpoints contra MariaDB y no asumas que compilar implica que el flujo funciona.
-- No agregues funcionalidades fuera del alcance solicitado.
-- Conserva compatibilidad con los datos existentes durante la migración.
+## Estructura y puertos
 
-## Puertos
-
+- `backend/`: API Express, controladores, rutas, middleware y Prisma.
+- `frontend/`: aplicación React/Vite.
+- `database/`: recursos auxiliares de base de datos.
+- `docs/`: documentación funcional y técnica.
 - MariaDB: `3306`.
 - Express: `3000`.
 - React/Vite: `5173`.
 
-El puerto `8000` y el arranque de Laravel no forman parte del entorno activo.
+El puerto `8000`, Composer, `php artisan` y el arranque de Laravel no forman parte del entorno activo.
 
-## Flujo de validación
+## Reglas de desarrollo
 
-1. Instala dependencias con pnpm.
-2. Ejecuta `prisma generate`.
-3. Ejecuta `prisma migrate deploy`.
-4. Inicia Express y React/Vite.
-5. Prueba autenticación y módulos activos con datos reales o de prueba controlados.
-6. Ejecuta lint, build y pruebas disponibles.
-7. Revisa el diff y abre un Pull Request.
+- `main` y `develop` están protegidas; los cambios se integran mediante Pull Request.
+- Crea cada rama `feat/*`, `fix/*` o `docs/*` desde `develop` actualizado.
+- No hagas push directo a `main` ni `develop`.
+- Mantén los cambios agrupados por objetivo y revisa el diff antes del merge.
+- Usa migraciones versionadas de Prisma para modificar el esquema.
+- Prueba los endpoints contra MariaDB; compilar no sustituye las pruebas funcionales.
+- No subas archivos `.env`, contraseñas, tokens ni credenciales.
+- No agregues funcionalidades fuera del alcance solicitado.
+- Conserva compatibilidad con los datos existentes cuando el cambio lo requiera.
+
+## Flujo de entorno
+
+1. Instala las dependencias con pnpm.
+2. Configura los archivos `.env` a partir de los ejemplos.
+3. Ejecuta `prisma generate`.
+4. Ejecuta `prisma migrate deploy`.
+5. Inicia MariaDB, Express y React/Vite.
+6. Verifica salud, autenticación y módulos activos.
+7. Ejecuta lint, build y pruebas CRUD.
+8. Revisa el diff y abre el Pull Request hacia `develop`.
+
+## Criterios de validación
+
+- El backend responde en el puerto `3000`.
+- El frontend responde en el puerto `5173`.
+- MariaDB está disponible y las migraciones terminan sin errores.
+- Las rutas protegidas rechazan solicitudes sin autenticación.
+- Los roles y pantallas permitidas coinciden con la matriz del proyecto.
+- Los módulos activos funcionan con datos reales o controlados.
+- El entorno no depende del arranque de Laravel ni del puerto `8000`.
