@@ -15,11 +15,10 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 5. [Variables de entorno](#variables-de-entorno)
 6. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
 7. [Autenticación y roles](#autenticación-y-roles)
-8. [API externa — TheMealDB](#api-externa--themealdb)
-9. [Endpoints del backend](#endpoints-del-backend)
-10. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-11. [Diseño y UI](#diseño-y-ui)
-12. [Notas técnicas importantes](#notas-técnicas-importantes)
+8. [Endpoints del backend](#endpoints-del-backend)
+9. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+10. [Diseño y UI](#diseño-y-ui)
+11. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ---
 
@@ -27,7 +26,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Nombre | Rol en el equipo | Rama principal |
 |--------|------------------|----------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/testing` |
+| César David Rueda Daza | Líder / Full Stack | Ramas por funcionalidad o nueva implementación |
 | Juan Felipe Bello Pérez | Frontend / IA | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
@@ -37,14 +36,13 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Capa | Tecnología | Puerto |
 |------|------------|--------|
-| Frontend | React 19 + Vite 6 + TypeScript 5 | 5173 |
-| Backend | Node.js 20 + Express 5 | 3000 |
+| Frontend | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 | 5173 |
+| Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 |
 | Base de datos | MariaDB 11 | 3306 |
-| ORM y migraciones | Prisma 6 | — |
+| ORM y migraciones | Prisma 6.14.0 | — |
 | Entorno | GitHub Codespaces | — |
 | Auth | JWT | — |
-| Estado global | Redux Toolkit 2 + AuthContext | — |
-| API externa | No confirmada en el backend Express actual | — |
+| Estado global | Redux Toolkit 2 | — |
 
 React no se comunica directamente con MariaDB. Todo pasa por la API REST de Express en el puerto 3000.
 
@@ -54,9 +52,9 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| React | 19.x | Framework principal de UI |
-| Vite | 6.x | Servidor de desarrollo y build |
-| TypeScript | 5.x | Tipado estático |
+| React | 19.1.1 | Framework principal de UI |
+| Vite | 7.0.6 | Servidor de desarrollo y build |
+| TypeScript | 5.8.3 | Tipado estático |
 | react-router-dom | 7.x | Rutas y navegación por rol |
 | Axios | 1.x | Cliente HTTP para consumir la API |
 | Redux Toolkit | 2.x | Estado global (token, rol, usuario) |
@@ -66,9 +64,9 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| Node.js | 20.x | Runtime del backend |
-| Express | 5.x | Framework backend y API REST |
-| Prisma | 6.x | ORM, cliente tipado y migraciones |
+| Node.js | v20.19.4 | Runtime del backend |
+| Express | 5.1.0 | Framework backend y API REST |
+| Prisma | 6.14.0 | ORM, cliente tipado y migraciones |
 | mysql2 | 3.x | Conexión auxiliar con MariaDB |
 | jsonwebtoken | 9.x | Emisión y validación de JWT |
 | bcryptjs | 2.x | Hash y verificación de contraseñas |
@@ -81,7 +79,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 | Motor | MariaDB 11 |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | `remisoft` (dato ficticio de desarrollo) |
+| Contraseña | `remisoft123` (dato ficticio de desarrollo) |
 | Puerto | 3306 |
 
 ---
@@ -96,9 +94,14 @@ Proyecto-Remisoft/
 │   └── start.sh              # Arranque automático de servicios
 ├── database/
 │   ├── DBFAMILIAREMI.sql     # Estructura de la base de datos
-│   ├── datos.sql             # Datos semilla para desarrollo
-│   ├── vistas/               # Vistas SQL
-│   └── procedimientos/       # Procedimientos almacenados
+│   ├── datos.sql              # Datos semilla para desarrollo
+│   ├── vistas/                # Vistas SQL
+│   └── procedimientos/        # Procedimientos almacenados
+├── docs/
+│   ├── HUs/                  # Historias de usuario
+│   ├── RFs/                  # Requisitos funcionales
+│   ├── RNFs/                 # Requisitos no funcionales
+│   └── restricciones.md      # Restricciones y stack del proyecto
 ├── frontend/
 │   └── src/
 │       ├── pages/
@@ -226,12 +229,6 @@ El rol `CLIENTE` (`id_rol = 6`) ya no es un usuario autenticable. La entidad `Cl
 
 ---
 
-## API externa — TheMealDB
-
-La integración con TheMealDB no forma parte del backend Express activo confirmado. Si se conserva alguna pantalla o llamada antigua, debe validarse antes de documentarla como funcionalidad vigente.
-
----
-
 ## Endpoints del backend
 
 Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
@@ -338,6 +335,6 @@ rama de trabajo → commit → push → Pull Request a develop → merge → Pul
 - JWT se utiliza para emitir y validar tokens de autenticación.
 - `axios.ts` adjunta automáticamente el token JWT mediante un interceptor.
 - Las URLs de Codespaces, contraseñas y secretos deben permanecer en los archivos `.env` locales.
-- MariaDB usa datos ficticios de desarrollo; la contraseña documentada es `remisoft`.
+- MariaDB usa datos ficticios de desarrollo; la contraseña documentada es `remisoft123`.
 - Los puertos activos son 3000 para Express, 5173 para Vite y 3306 para MariaDB.
 - `setup.sh` y `start.sh` automatizan la preparación y el arranque del entorno.
