@@ -79,7 +79,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 | Motor | MariaDB 11 |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | `remisoft123` (dato ficticio de desarrollo) |
+| Contraseña | `remisoft123`|
 | Puerto | 3306 |
 
 ---
