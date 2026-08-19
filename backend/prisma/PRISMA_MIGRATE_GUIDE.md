@@ -1,27 +1,25 @@
-# Guía de Prisma Migrate y Validaciones de Seguridad
+# Guía de migraciones Prisma
 
-## Estado Actual
+## Aplicar migraciones existentes
 
-- **Schema:** Generado por introspeccin (`prisma db pull`) de la BD existente
-- **Migraciones:** NO generadas aún
-- **Proteccin SQL:** Prisma usa queries parametrizadas por defecto (protege contra inyecciones)
-
-## Generar Migraciones
+Desde la raíz del repositorio:
 
 ```bash
-cd backend-express
-pnpm exec prisma migrate dev --name init
+pnpm --dir backend exec prisma migrate deploy
 ```
 
-## Validaciones Recomendadas
+## Generar una migración de desarrollo
 
-| Campo | Validacin | Regex |
-|-------|-----------|-------|
-| Email | Formato email | `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` |
-| Nombre | Solo letras | `/^[a-zA-Z\s]+$/` |
-| Teléfono | Solo nmeros | `/^\d{10}$/` |
-| Contrasea | Mnimo 8 | `/.{8,}/` |
+Con MariaDB disponible y las variables de entorno configuradas:
 
-## Seguridad
+```bash
+pnpm --dir backend exec prisma migrate dev --name nombre_del_cambio
+```
 
-Prisma usa queries parametrizadas por defecto - protege contra SQL injection automáticamente.
+## Regenerar el cliente
+
+```bash
+pnpm --dir backend exec prisma generate
+```
+
+Las migraciones versionadas se encuentran en `backend/prisma/migrations/`. Revisa el SQL generado antes de crear un Pull Request y no edites una migración ya aplicada en un entorno compartido.
