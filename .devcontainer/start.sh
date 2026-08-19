@@ -13,8 +13,8 @@ service mariadb start
 sleep 2
 
 # ── PRISMA ──
-if [ -f "$PROJECT_DIR/backend-express/package.json" ]; then
-  cd "$PROJECT_DIR/backend-express"
+if [ -f "$PROJECT_DIR/backend/package.json" ]; then
+  cd "$PROJECT_DIR/backend"
 
   if command -v pnpm >/dev/null 2>&1; then
     pnpm exec prisma migrate deploy
@@ -26,7 +26,7 @@ if [ -f "$PROJECT_DIR/backend-express/package.json" ]; then
 fi
 
 # ── EXPRESS + PRISMA ──
-cd "$PROJECT_DIR/backend-express"
+cd "$PROJECT_DIR/backend"
 
 if command -v pnpm >/dev/null 2>&1; then
   PORT=3000 HOST=0.0.0.0 pnpm dev > /tmp/express.log 2>&1 &

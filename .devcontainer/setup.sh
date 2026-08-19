@@ -38,10 +38,10 @@ mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'remisoft'@'127.0.0.1' WITH GRA
 mysql -u root -e "FLUSH PRIVILEGES;"
 
 # ── EXPRESS + PRISMA ──
-if [ -f "$PROJECT_DIR/backend-express/package.json" ]; then
+if [ -f "$PROJECT_DIR/backend/package.json" ]; then
   log "Configurando Backend Express + Prisma..."
 
-  cat > "$PROJECT_DIR/backend-express/.env" <<ENV
+  cat > "$PROJECT_DIR/backend/.env" <<ENV
 PORT=3000
 HOST=0.0.0.0
 NODE_ENV=development
@@ -59,7 +59,7 @@ JWT_SECRET=remisoft_dev_jwt_secret_cambiar_en_produccion
 JWT_EXPIRES_IN=8h
 ENV
 
-  cd "$PROJECT_DIR/backend-express"
+  cd "$PROJECT_DIR/backend"
 
   if command -v pnpm >/dev/null 2>&1; then
     pnpm install
@@ -80,7 +80,7 @@ ENV
     echo "La base ya contiene datos; no se vuelve a importar datos.sql."
   fi
 else
-  echo "AVISO: No se encontró backend-express/package.json."
+  echo "AVISO: No se encontró backend/package.json."
 fi
 
 # ── VISTAS Y PROCEDIMIENTOS ──
@@ -117,7 +117,7 @@ cat <<'EOF'
 Entorno RemiSoft listo.
 
 Terminal 1 — Express + Prisma:
-  cd backend-express && pnpm dev
+  cd backend && pnpm dev
 
 Terminal 2 — React:
   cd frontend && pnpm dev -- --host 0.0.0.0
