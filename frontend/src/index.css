@@ -1,4 +1,21 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+@theme {
+  --color-rojo: #D85A30;
+  --color-rojo-dark: #993C1D;
+  --color-rojo-light: #FAECE7;
+  --color-rojo-mid: #F0997B;
+  --color-amarillo: #EF9F27;
+  --color-amarillo-light: #FAEEDA;
+  --color-verde: #1D9E75;
+  --color-verde-light: #E1F5EE;
+  --color-texto: #1a1a1a;
+  --color-texto-muted: #5F5E5A;
+  --color-bg: #FDFAF7;
+  --color-bg-card: #ffffff;
+  --color-borde: rgba(0,0,0,0.09);
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
