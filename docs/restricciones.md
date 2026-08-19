@@ -1,141 +1,42 @@
-# Restricciones del Proyecto — RemiSoft
+# Restricciones del proyecto
 
-<!--
-  ¿Qué? Restricciones globales que gobiernan todo el proyecto.
-  ¿Para qué? Definir límites claros de tecnología, diseño, seguridad y organización que no son negociables.
-  ¿Impacto? Cualquier decisión técnica o de diseño debe verificarse contra estas restricciones antes de implementarse.
--->
+## Arquitectura vigente
 
----
+| Capa | Tecnología |
+| --- | --- |
+| Frontend | React 19 + Vite 6 |
+| Backend | Node.js + Express |
+| ORM | Prisma |
+| Base de datos | MariaDB |
+| Autenticación | JWT |
+| Gestor de paquetes | pnpm |
 
-## 1. Restricciones Tecnológicas
+## Reglas de desarrollo
 
-### RT-001 — Stack Tecnológico Fijo
+- `main` y `develop` están protegidas: los cambios se integran mediante Pull Request.
+- Crea cada rama `feat/*` desde `develop` actualizado.
+- No hagas push directo a `main` ni `develop`.
+- Revisa el diff y ejecuta las verificaciones antes del merge.
+- No subas archivos `.env`, contraseñas, tokens ni credenciales.
+- Usa migraciones versionadas de Prisma para modificar el esquema.
+- Prueba los endpoints contra MariaDB y no asumas que compilar implica que el flujo funciona.
+- No agregues funcionalidades fuera del alcance solicitado.
+- Conserva compatibilidad con los datos existentes durante la migración.
 
-El stack tecnológico está definido y **no puede modificarse** sin aprobación explícita de César (líder) o del instructor:
+## Puertos
 
-| Capa            | Tecnología                          |
-| --------------- | ------------------------------------ |
-| Framework FE    | React 19 + Vite 6                   |
-| Framework BE    | PHP 8.2 + Laravel 11                |
-| Base de datos   | MariaDB                             |
-| ORM             | Eloquent (Laravel)                  |
-| Auth            | Laravel Sanctum (tokens)            |
-| Hashing         | bcrypt (Laravel `Hash::make`)       |
-| Rutas FE        | react-router-dom                    |
-| Entorno         | GitHub Codespaces                   |
+- MariaDB: `3306`.
+- Express: `3000`.
+- React/Vite: `5173`.
 
-### RT-002 — Gestión de Paquetes
+El puerto `8000` y el arranque de Laravel no forman parte del entorno activo.
 
-- Frontend: `npm` (no mezclar con `yarn`/`pnpm`)
-- Backend: `composer`
-- Cada librería nueva debe registrarse en el README con versión exacta y propósito
+## Flujo de validación
 
-### RT-003 — Idiomas Soportados (i18n)
-
-- Si el sistema soporta más de un idioma, solo `"es"` (Español) por defecto — cualquier otro idioma debe aprobarse antes de agregarse
-
----
-
-## 2. Restricciones de Herramientas y Entorno
-
-### RH-001 — Control de Versiones
-
-- Ramas: `main` (estable) → `develop` (integración) → `feat/tu-rama` (trabajo individual)
-- **NUNCA** hacer commits directamente en `main` ni en `develop`
-- **NUNCA** usar `git push --force`
-- Los merges a `develop` requieren Pull Request revisado por César
-- Los merges a `main` solo se hacen desde `develop` cuando está estable
-
-### RH-002 — Entorno de Desarrollo
-
-- El entorno se levanta en GitHub Codespaces vía `.devcontainer/setup.sh` y `start.sh`
-- Backend: `php artisan serve` (puerto 8000)
-- Frontend: `npm run dev` (puerto 5173)
-- Base de datos: MariaDB (puerto 3306), inspección con SQLTools en VS Code
-
----
-
-## 3. Restricciones de Diseño Visual
-
-### RD-001 — Paleta de Colores Fija
-
-- Usar exclusivamente los tokens definidos: rojo `#D85A30`, amarillo `#EF9F27`, verde `#1D9E75`, texto `#1a1a1a`, fondo `#FDFAF7`
-- No introducir colores nuevos sin aprobación
-
-### RD-002 — Consistencia Visual por Rol
-
-- Todas las interfaces deben mantener el mismo sidebar, misma lógica de topbar, misma paleta y jerarquía tipográfica, mismos estilos de cards y botones
-- Solo cambia el contenido específico de cada rol (Admin, Mesero, Repartidor, Cliente)
-
----
-
-## 4. Restricciones de Idioma
-
-### RI-001 — Código en Inglés
-
-Todo lo que sea código debe estar en inglés: variables, funciones, clases, nombres de archivos/carpetas de código, endpoints, nombres de tablas/columnas, nombres de componentes React.
-
-### RI-002 — Documentación en Español
-
-Todo lo que sea documentación debe estar en español: comentarios en el código, archivos `.md`, README, mensajes de error visibles al usuario.
-
-**Excepción**: mensajes de commit siguen la convención acordada por el equipo (`feat:`, `fix:`, `docs:`, etc. en inglés como prefijo).
-
----
-
-## 5. Restricciones Organizacionales
-
-### RO-001 — Calidad Mínima No Negociable
-
-- Sin errores de linter antes de hacer commit
-- Cada funcionalidad crítica (login, pedidos, facturación, inventario) debe probarse manualmente antes de marcarse como "Implementada" en el README
-
-### RO-002 — Formato de Commits
-
-- Prefijos permitidos: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`
-- Ejemplo: `git commit -m "feat: agregar módulo de autenticación por roles"`
-
-### RO-003 — Variables de Entorno
-
-- El archivo `.env` no debe versionarse (debe estar en `.gitignore`)
-- Nunca hardcodear: contraseñas, tokens, credenciales de BD
-- Las credenciales de desarrollo (`remisoft`/`remisoft123`) son solo para el entorno de Codespaces, nunca para producción
-
----
-
-## 6. Restricciones de Seguridad
-
-### RS-001 — Contraseñas
-
-- Nunca almacenar contraseñas en texto plano
-- Nunca exponer el hash de la contraseña en respuestas HTTP
-- Nunca loggear contraseñas, ni siquiera parcialmente
-
-### RS-002 — Secrets y Credenciales
-
-- Nunca hardcodear secrets, tokens o credenciales de BD en el código fuente
-- Usar variables de entorno para toda configuración sensible
-
-### RS-003 — CORS y Headers
-
-- Nunca usar orígenes CORS abiertos (`*`) en producción
-- Configurar CORS con orígenes explícitos en `config/cors.php`
-
-### RS-004 — Cumplimiento Legal (DIAN)
-
-- Toda factura generada debe incluir CUFE según la resolución DIAN vigente
-- Los valores monetarios deben mostrarse siempre en COP con formato correcto
-
-
-
-
-
-
-
-
-
-
-
-
-
+1. Instala dependencias con pnpm.
+2. Ejecuta `prisma generate`.
+3. Ejecuta `prisma migrate deploy`.
+4. Inicia Express y React/Vite.
+5. Prueba autenticación y módulos activos con datos reales o de prueba controlados.
+6. Ejecuta lint, build y pruebas disponibles.
+7. Revisa el diff y abre un Pull Request.
