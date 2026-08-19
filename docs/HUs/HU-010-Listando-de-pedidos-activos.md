@@ -27,7 +27,24 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 ---
 
-## Criterios de aceptación:
+## Criterio de aceptación 001
   - **Dado que** El panel muestra todos los pedidos activos agrupados por mesa.
   - **cuando** Se indica el tiempo transcurrido desde que se tomó el pedido.
   - **entonces** El administrador puede filtrar por estado.
+## Criterio de aceptación 002
+  - **Dado que** el administrador abre el panel.
+  - **cuando** consulta los pedidos.
+  - **entonces** ve todos los pedidos activos agrupados por mesa.
+## Criterio de aceptación 003
+  - **Dado que** un pedido está en curso.
+  - **cuando** se muestra en el listado.
+  - **entonces** se indica el tiempo transcurrido desde que se tomó.
+## Criterio de aceptación 004
+  - **Dado que** el administrador aplica un filtro.
+  - **cuando** selecciona un estado.
+  - **entonces** el listado muestra solo los pedidos que coinciden.
+## Criterio de aceptación 005
+  - **Dado que** no hay pedidos activos.
+  - **cuando** se consulta el listado.
+  - **entonces** el sistema informa que no hay pedidos en curso.
+

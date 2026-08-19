@@ -251,3 +251,106 @@
   letter-spacing: -1px;
   margin-bottom: 12px;
 }
+
+/* ── FORMULARIOS (movido desde index.css) ── */
+.auth-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 36px;
+    border: 1px solid var(--borde);
+    box-shadow: var(--sombra);
+}
+.auth-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.4px;
+}
+.auth-card .auth-sub {
+    font-size: 0.83rem;
+    color: var(--texto-muted);
+    margin-bottom: 24px;
+    font-weight: 300;
+}
+.form-group { margin-bottom: 14px; }
+.form-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--texto-muted);
+    margin-bottom: 5px;
+}
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: #fdfaf7;
+    color: var(--texto);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+.form-input:focus {
+    border-color: var(--rojo);
+    box-shadow: 0 0 0 3px rgba(216,90,48,0.12);
+}
+.form-input::placeholder { color: #b0a9a2; }
+.form-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: #fdfaf7;
+    color: var(--texto);
+    transition: border-color 0.15s;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235F5E5A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+.form-select:focus { border-color: var(--rojo); box-shadow: 0 0 0 3px rgba(216,90,48,0.12); }
+.btn-form {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 6px;
+    transition: all 0.18s;
+}
+.btn-form-primary {
+    background: var(--rojo);
+    color: #fff;
+}
+.btn-form-primary:hover { background: var(--rojo-dark); transform: translateY(-1px); }
+.btn-form-outline {
+    background: transparent;
+    color: var(--rojo-dark);
+    border: 1.5px solid #F0997B;
+}
+.btn-form-outline:hover { background: var(--rojo-light); }
+.auth-divider {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--texto-muted);
+    margin: 14px 0;
+    position: relative;
+}
+.auth-divider::before, .auth-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%; width: 38%;
+    height: 1px; background: var(--borde);
+}
+.auth-divider::before { left: 0; }
+.auth-divider::after { right: 0; }

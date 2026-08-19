@@ -1,0 +1,50 @@
+# RF-002 — Gestión de Pedidos en Salón
+
+**Historias de usuario relacionadas**: HU-006, HU-007, HU-008, HU-009, HU-010
+
+**Tipo**: Requisito
+**Prioridad**: Alta / Esencial
+**Fuente del requisito**: NA
+
+## Descripción
+
+El sistema deberá permitir que los meseros registren pedidos desde la interfaz web, asignando cada solicitud a una mesa específica o a un cliente identificado.
+
+Asimismo, el sistema deberá procesar automáticamente el pedido, descontando del inventario los productos e ingredientes correspondientes a cada plato, de acuerdo con las cantidades definidas en las recetas del restaurante.
+
+De igual forma, el sistema deberá generar de forma inmediata la factura asociada al consumo, incluyendo el desglose de los productos solicitados, precios, subtotal, impuestos y total, de manera que se facilite el control operativo y la trazabilidad del servicio prestado.
+
+---
+
+## Flujo del proceso
+
+| Paso | Descripción |
+| ---- | ----------- |
+| 1    | El mesero selecciona la mesa y agrega los productos solicitados por el cliente. |
+| 2    | El sistema crea el pedido con estado `pendiente` y lo envía a cocina en tiempo real. |
+| 3    | El sistema descuenta automáticamente del inventario los ingredientes de cada plato según su receta. |
+| 4    | El mesero puede modificar el pedido (agregar/quitar productos) mientras siga en estado `pendiente`. |
+| 5    | Cocina actualiza el estado del pedido: `en preparación` → `listo` → `entregado`. |
+| 6    | El mesero o cajero cierra la cuenta de la mesa una vez el cliente termina el consumo. |
+| 7    | El sistema genera automáticamente la factura asociada, con el detalle completo del consumo. |
+| 8    | La mesa queda liberada y disponible para un nuevo pedido. |
+
+---
+
+## Reglas de Negocio
+
+| ID     | Regla |
+| ------ | ----- |
+| RN-001 | Un pedido debe estar asociado a una mesa o a un cliente identificado. |
+| RN-002 | Solo se pueden modificar pedidos en estado `pendiente`; una vez en preparación, no se pueden alterar productos. |
+| RN-003 | El descuento de inventario es automático y ocurre al confirmar el pedido, no al facturar. |
+| RN-004 | Si no hay stock suficiente de un ingrediente, el sistema debe alertar antes de confirmar el pedido. |
+| RN-005 | Una mesa no puede recibir un nuevo pedido mientras tenga una cuenta abierta sin cerrar. |
+| RN-006 | El cierre de cuenta genera la factura de forma automática e inmediata. |
+
+---
+
+## Inputs / Outputs
+
+**Input** (registrar pedido):
+{ "mesa_id": "integer", "productos": [ { "producto_id": "integer", "cantidad": "integer" } ] }

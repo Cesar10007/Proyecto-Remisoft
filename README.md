@@ -2,7 +2,7 @@
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** Frontend y backend completamente conectados. Autenticación con Laravel Sanctum, 6 roles implementados, 8 interfaces con CRUD completo funcionando sobre datos reales de MariaDB. Dashboard de cliente con integración a API externa (TheMealDB).
+> **Estado actual:** Frontend y backend completamente conectados. Backend Express + Prisma, autenticación JWT y módulos administrativos funcionando sobre datos de prueba de MariaDB. La carpeta activa del backend es `backend/`.
 
 ---
 
@@ -15,13 +15,10 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 5. [Variables de entorno](#variables-de-entorno)
 6. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
 7. [Autenticación y roles](#autenticación-y-roles)
-8. [API externa — TheMealDB](#api-externa--themealdb)
-9. [Comunicación padre-hijo en React](#comunicación-padre-hijo-en-react)
-10. [Interfaces y CRUD implementados](#interfaces-y-crud-implementados)
-11. [Endpoints del backend](#endpoints-del-backend)
-12. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-13. [Diseño y UI](#diseño-y-ui)
-14. [Notas técnicas importantes](#notas-técnicas-importantes)
+8. [Endpoints del backend](#endpoints-del-backend)
+9. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+10. [Diseño y UI](#diseño-y-ui)
+11. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ---
 
@@ -29,7 +26,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Nombre | Rol en el equipo | Rama principal |
 |--------|------------------|----------------|
-| César David Rueda Daza | Líder / Full Stack | `feat/testing` |
+| César David Rueda Daza | Líder / Full Stack | Ramas por funcionalidad o nueva implementación |
 | Juan Felipe Bello Pérez | Frontend / IA | `feat/ia-modulo` |
 | Kevin Duvan Bueno Melo | Tester / QA | `feat/testing` |
 
@@ -39,15 +36,15 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Capa | Tecnología | Puerto |
 |------|------------|--------|
-| Frontend | React 19 + Vite + TypeScript | 5173 |
-| Backend | PHP 8.2 + Laravel 11 | 8000 |
-| Base de datos | MariaDB | 3306 |
+| Frontend | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 | 5173 |
+| Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 |
+| Base de datos | MariaDB 11 | 3306 |
+| ORM y migraciones | Prisma 6.14.0 | — |
 | Entorno | GitHub Codespaces | — |
-| Auth | Laravel Sanctum | — |
-| Estado global | Redux Toolkit | — |
-| API externa | TheMealDB | — |
+| Auth | JWT | — |
+| Estado global | Redux Toolkit 2 | — |
 
-React no se comunica directamente con MariaDB. Todo pasa por la API REST de Laravel en el puerto 8000.
+React no se comunica directamente con MariaDB. Todo pasa por la API REST de Express en el puerto 3000.
 
 ### Dependencias principales
 
@@ -55,9 +52,9 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| React | 19.x | Framework principal de UI |
-| Vite | 6.x | Servidor de desarrollo y build |
-| TypeScript | 5.x | Tipado estático |
+| React | 19.1.1 | Framework principal de UI |
+| Vite | 7.0.6 | Servidor de desarrollo y build |
+| TypeScript | 5.8.3 | Tipado estático |
 | react-router-dom | 7.x | Rutas y navegación por rol |
 | Axios | 1.x | Cliente HTTP para consumir la API |
 | Redux Toolkit | 2.x | Estado global (token, rol, usuario) |
@@ -67,18 +64,22 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Lara
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| Laravel | 11.x | Framework backend y API REST |
-| PHP | 8.2 | Lenguaje del backend |
-| Laravel Sanctum | 4.x | Autenticación por token |
+| Node.js | v20.19.4 | Runtime del backend |
+| Express | 5.1.0 | Framework backend y API REST |
+| Prisma | 6.14.0 | ORM, cliente tipado y migraciones |
+| mysql2 | 3.x | Conexión auxiliar con MariaDB |
+| jsonwebtoken | 9.x | Emisión y validación de JWT |
+| bcryptjs | 2.x | Hash y verificación de contraseñas |
+| Nodemailer | 7.x | Recuperación de contraseña por correo |
 
 ### Base de datos
 
 | Campo | Valor |
 |-------|-------|
-| Motor | MariaDB |
+| Motor | MariaDB 11 |
 | Base de datos | `remisoft` |
 | Usuario | `remisoft` |
-| Contraseña | ver `backend/.env` |
+| Contraseña | `remisoft123`|
 | Puerto | 3306 |
 
 ---
@@ -93,33 +94,36 @@ Proyecto-Remisoft/
 │   └── start.sh              # Arranque automático de servicios
 ├── database/
 │   ├── DBFAMILIAREMI.sql     # Estructura de la base de datos
-│   ├── datos.sql             # Datos semilla para desarrollo
-│   ├── vistas/               # Vistas SQL
-│   └── procedimientos/       # Procedimientos almacenados
+│   ├── datos.sql              # Datos semilla para desarrollo
+│   ├── vistas/                # Vistas SQL
+│   └── procedimientos/        # Procedimientos almacenados
+├── docs/
+│   ├── HUs/                  # Historias de usuario
+│   ├── RFs/                  # Requisitos funcionales
+│   ├── RNFs/                 # Requisitos no funcionales
+│   └── restricciones.md      # Restricciones y stack del proyecto
 ├── frontend/
 │   └── src/
 │       ├── pages/
-│       │   ├── auth/         # Landing, Login, Register, ForgotPassword, ResetPassword
-│       │   ├── superadmin/   # Dashboard SuperAdmin (CRUD Usuarios + Clientes)
-│       │   ├── gerente/      # Dashboard Gerente (CRUD Productos + Ingredientes + Proveedores + Cajas)
-│       │   ├── mesero/       # Dashboard Mesero (CRUD Pedidos)
-│       │   ├── repartidor/   # Dashboard Repartidor (CRUD Domicilios)
-│       │   └── cliente/      # Dashboard Cliente (Menú + TheMealDB API)
-│       ├── components/
-│       │   ├── common/       # Modal, PrivateRoute
-│       │   └── layout/       # Navbar, Footer
-│       ├── api/              # axios.ts — configuración con interceptor de token
-│       ├── store/            # Redux store, authSlice
-│       └── context/          # AuthContext — estado de sesión
+│       │   ├── auth/         # Login, registro y recuperación
+│       │   ├── superadmin/   # Dashboard SuperAdmin
+│       │   ├── gerente/      # Dashboard Gerente
+│       │   ├── mesero/       # Dashboard Mesero
+│       │   └── repartidor/   # Dashboard Repartidor
+│       ├── components/       # Componentes reutilizables y layout
+│       ├── api/              # axios.ts y configuración de API
+│       ├── store/            # Redux store y authSlice
+│       └── context/          # AuthContext
 └── backend/
-    └── app/
-        ├── Http/Controllers/ # AuthController, ProductoController, ClienteController,
-        │                     # UsuarioController, ProveedorController, IngredienteController,
-        │                     # CajaController, PedidoController, DomicilioController,
-        │                     # PasswordResetController
-        ├── Http/Requests/    # RegisterUsuarioRequest
-        ├── Models/           # Usuario, Rol
-        └── Notifications/    # ResetPasswordNotification
+    ├── prisma/
+    │   ├── migrations/       # Migraciones versionadas
+    │   └── schema.prisma     # Modelo de datos
+    └── src/
+        ├── config/           # Conexión a MariaDB
+        ├── controllers/      # Controladores
+        ├── middleware/       # Autenticación y validaciones
+        ├── routes/           # Rutas Express
+        └── server.js         # Montaje de la API
 ```
 
 ---
@@ -130,27 +134,28 @@ Proyecto-Remisoft/
 
 Al crear el Codespace, `setup.sh` deja listo el entorno automáticamente:
 
-- Instala MariaDB
-- Crea la base de datos `remisoft`
-- Carga `DBFAMILIAREMI.sql`, `datos.sql`, vistas y procedimientos
-- Genera el `.env` de Laravel con las credenciales de DB y la URL del Codespace
-- Corre `composer install`, `php artisan key:generate` y `php artisan migrate`
-- Corre `npm install` en el frontend
-- Genera `frontend/.env` con la URL del backend (`VITE_API_URL`)
+- Instala MariaDB.
+- Crea la base de datos `remisoft`.
+- Ejecuta `prisma migrate deploy`.
+- Ejecuta `prisma generate`.
+- Carga datos, vistas y procedimientos cuando corresponde.
+- Instala las dependencias del backend y frontend.
+- Genera los archivos `.env` desde los ejemplos.
+- No ejecuta Composer, `php artisan` ni Laravel.
 
 ### Cada vez que abres el Codespace
 
 `start.sh` arranca los servicios automáticamente. Si no se levantan solos:
 
 ```bash
-# Terminal 1 — Backend
-cd backend && php artisan serve --host=0.0.0.0 --port=8000
+# Terminal 1 — Backend Express
+pnpm --dir backend dev
 
 # Terminal 2 — Frontend
-cd frontend && npm run dev
+pnpm --dir frontend dev
 ```
 
-> **Importante:** Los puertos 8000 y 5173 deben estar en **Public** en la pestaña Ports de Codespaces. Se resetean a Private al reabrir el workspace.
+> **Importante:** Express escucha en el puerto 3000 y Vite en el 5173. El puerto 8000 ya no forma parte del entorno activo.
 
 ---
 
@@ -162,45 +167,49 @@ Los archivos `.env` no están en el repositorio. `setup.sh` los genera automáti
 
 | Variable | Descripción |
 |----------|-------------|
-| `DB_CONNECTION` | `mysql` |
-| `DB_DATABASE` | `remisoft` |
-| `DB_USERNAME` | `remisoft` |
-| `FRONTEND_URL` | URL del frontend en Codespaces (usada en `cors.php`) |
-| `MAIL_MAILER` | `smtp` |
-| `MAIL_HOST` | Host SMTP de Mailtrap |
-| `MAIL_PORT` | `2525` |
+| `DB_HOST` | Host de MariaDB |
+| `DB_PORT` | Puerto de MariaDB |
+| `DB_DATABASE` | Base de datos `remisoft` |
+| `DB_USERNAME` | Usuario de MariaDB |
+| `DB_PASSWORD` | Contraseña de MariaDB |
+| `JWT_SECRET` | Secreto para firmar tokens JWT |
+| `FRONTEND_URL` | URL del frontend para CORS |
+| Variables SMTP | Configuración de correo |
 
 #### `frontend/.env` — variables clave
 
 | Variable | Descripción |
 |----------|-------------|
-| `VITE_API_URL` | URL base del backend, ej: `https://<codespace>-8000.app.github.dev/api` |
+| `VITE_API_URL` | URL base del backend, normalmente `/api` |
 
 ---
 
 ## Correo y recuperación de contraseña
 
-El proyecto usa **Mailtrap** para interceptar correos en desarrollo.
+El proyecto usa Nodemailer/SMTP para enviar correos de recuperación en desarrollo.
 
 ### Endpoints
 
 | Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/api/forgot-password` | Envía enlace de recuperación al email |
-| `POST` | `/api/reset-password` | Restablece contraseña con token válido |
+|----------|----------|-------------|
+| `POST` | `/api/auth/forgot-password` | Envía enlace de recuperación al email |
+| `POST` | `/api/auth/reset-password` | Restablece contraseña con token válido |
 
 ### Flujo
 
-1. Usuario ingresa email en `/forgot-password`
-2. Laravel envía correo con enlace que contiene `token` y `email`
-3. El enlace apunta a `/reset-password?token=...&email=...`
-4. `ResetPassword.tsx` lee los params y permite ingresar nueva contraseña
+1. Usuario ingresa email en `/forgot-password`.
+2. Express genera un token temporal.
+3. Nodemailer envía el correo con el enlace.
+4. El enlace apunta a `/reset-password?token=...&email=...`.
+5. `ResetPassword` lee los parámetros y permite ingresar la nueva contraseña.
 
 ---
 
 ## Autenticación y roles
 
 ### Catálogo de roles
+
+El rol `CLIENTE` (`id_rol = 6`) ya no es un usuario autenticable. La entidad `Cliente` se conserva para contacto, pedidos, domicilios y búsqueda por teléfono.
 
 | id_rol | Nombre | Ruta frontend | Descripción |
 |--------|--------|---------------|-------------|
@@ -209,105 +218,14 @@ El proyecto usa **Mailtrap** para interceptar correos en desarrollo.
 | 3 | `CAJERO` | — | Gestión de caja y pagos |
 | 4 | `MESERO` | `/mesero` | Toma y gestión de pedidos |
 | 5 | `REPARTIDOR` | `/repartidor` | Entrega de pedidos a domicilio |
-| 6 | `CLIENTE` | `/cliente` | Usuario cliente del restaurante |
-
-### Usuarios de prueba
-
-Todos tienen contraseña: `123456`
-
-| Email | Rol |
-|-------|-----|
-| `carlos.ramirez@resto.com` | SUPERADMIN |
-| `laura.gomez@resto.com` | GERENTE |
-| `andres.torres@resto.com` | CAJERO |
-| `sofia.martinez@resto.com` | MESERO |
-| `juan.lopez@resto.com` | REPARTIDOR |
-| `cliente@resto.com` | CLIENTE |
-
-### Registro público
-
-El endpoint `/api/register` asigna automáticamente `id_rol = 6` (CLIENTE). No es posible registrarse con otro rol desde el formulario público.
 
 ### Flujo de autenticación
 
-1. Login → Laravel valida credenciales → devuelve `{ token, rol, user }`
-2. Frontend guarda token en `localStorage` y en Redux store
-3. `axios.ts` adjunta el token automáticamente en cada request via interceptor
-4. `PrivateRoute` valida rol antes de renderizar cada dashboard
-5. Logout revoca el token en Sanctum
-
----
-
-## API externa — TheMealDB
-
-**Endpoint usado:** `https://www.themealdb.com/api/json/v1/1/random.php`
-
-**Integración:** Dashboard del Cliente (`/cliente`). Se realizan 3 llamadas en paralelo con `Promise.all` para mostrar 3 platos aleatorios del mundo en la sección "Sugerencias del día".
-
-**Propósito de negocio:** Inspiración culinaria para el cliente mientras visualiza el menú del restaurante.
-
-No requiere API key. Los datos incluyen nombre del plato, imagen, categoría y país de origen.
-
----
-
-## Comunicación padre-hijo en React
-
-### Padre → Hijo (Props)
-
-**Dónde:** `App.tsx` → `Navbar.tsx` y `Landing.tsx`
-
-```tsx
-// App.tsx (padre) pasa callbacks como props
-<Navbar onLogin={() => setModal('login')} onRegister={() => setModal('registro')} />
-<Landing onRegister={() => setModal('registro')} />
-```
-
-`Navbar` y `Landing` reciben estas funciones y las invocan cuando el usuario hace clic en los botones de Login/Registro, lo que abre el modal en `App.tsx`.
-
-### Hijo → Padre (Callbacks)
-
-**Dónde:** `Login.tsx` y `Register.tsx` → `App.tsx`
-
-```tsx
-// Login.tsx (hijo) llama al callback del padre para cerrar el modal
-<Login onClose={() => setModal(null)} />
-
-// Dentro de Login.tsx
-onClose?.()  // notifica al padre que cierre el modal
-```
-
-**Dónde también:** `Modal.tsx` → cualquier dashboard
-
-```tsx
-// Modal recibe onClose del padre y lo ejecuta al hacer clic fuera
-<Modal isOpen={modalAbierto} onClose={cerrarModal}>
-```
-
----
-
-## Interfaces y CRUD implementados
-
-| # | Entidad | Dashboard | Crear | Editar | Activar/Desactivar | Datos reales BD |
-|---|---------|-----------|-------|--------|--------------------|-----------------|
-| 1 | Productos | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 2 | Usuarios | SuperAdmin | ✅ | ✅ | ✅ | ✅ |
-| 3 | Clientes | SuperAdmin | ✅ | ✅ | ✅ | ✅ |
-| 4 | Proveedores | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 5 | Ingredientes | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 6 | Cajas | Gerente | ✅ | ✅ | ✅ | ✅ |
-| 7 | Pedidos | Mesero | ✅ | ✅ | ✅ | ✅ |
-| 8 | Domicilios | Repartidor | ✅ | ✅ | ✅ | ✅ |
-
-> El "eliminar" en todas las entidades es un **soft delete** (cambio de estado) para preservar la integridad referencial de la base de datos. Un producto con pedidos asociados no puede borrarse físicamente sin romper `Detalle_pedido`.
-
-### Vista SQL y Procedimiento Almacenado
-
-El dashboard de Gerente implementa un **selector de fuente de datos** para productos:
-
-- **Vista SQL** (`vista_listado_productos`) — consulta directa optimizada
-- **Procedimiento Almacenado** (`sp_listar_productos`) — encapsulamiento de lógica en BD
-
-Esto cumple el requisito académico de demostrar dos mecanismos distintos de consulta en MariaDB.
+1. Login → Express valida credenciales → devuelve `{ token, rol, user }`.
+2. Frontend guarda token en `localStorage` y en Redux store.
+3. `axios.ts` adjunta el token automáticamente en cada request mediante interceptor.
+4. `PrivateRoute` valida el acceso antes de renderizar cada dashboard.
+5. Logout elimina el token y finaliza la sesión.
 
 ---
 
@@ -315,30 +233,33 @@ Esto cumple el requisito académico de demostrar dos mecanismos distintos de con
 
 Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
 
-### Autenticación (públicas)
+### Autenticación públicas
 
 | Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/login` | Login con email y contraseña |
-| POST | `/api/register` | Registro (asigna rol CLIENTE automáticamente) |
-| POST | `/api/forgot-password` | Envía correo de recuperación |
-| POST | `/api/reset-password` | Restablece contraseña |
+|----------|----------|-------------|
+| POST | `/api/auth/login` | Login con email y contraseña |
+| POST | `/api/auth/forgot-password` | Envía correo de recuperación |
+| POST | `/api/auth/reset-password` | Restablece contraseña con token |
+| GET | `/api/auth/me` | Consulta la sesión autenticada |
 
 ### Protegidas
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/logout` | Revoca token |
-| GET | `/api/productos/vista` | Productos desde Vista SQL |
-| GET | `/api/productos/sp` | Productos desde Procedimiento Almacenado |
-| POST/PUT/DELETE | `/api/productos/{id}` | CRUD Productos |
-| GET/POST/PUT/DELETE | `/api/clientes/{id?}` | CRUD Clientes |
-| GET/POST/PUT/DELETE | `/api/usuarios/{id?}` | CRUD Usuarios |
-| GET/POST/PUT/DELETE | `/api/proveedores/{id?}` | CRUD Proveedores |
-| GET/POST/PUT/DELETE | `/api/ingredientes/{id?}` | CRUD Ingredientes |
-| GET/POST/PUT/DELETE | `/api/cajas/{id?}` | CRUD Cajas |
-| GET/POST/PUT/DELETE | `/api/pedidos/{id?}` | CRUD Pedidos |
-| GET/POST/PUT/DELETE | `/api/domicilios/{id?}` | CRUD Domicilios |
+| Módulo | Endpoint base |
+|---------|---------------|
+| Usuarios | `/api/usuarios` |
+| Productos | `/api/productos` |
+| Clientes | `/api/clientes` |
+| Proveedores | `/api/proveedores` |
+| Ingredientes | `/api/ingredientes` |
+| Cajas | `/api/cajas` |
+| Pedidos | `/api/pedidos` |
+| Domicilios | `/api/domicilios` |
+| Compras | `/api/compras` |
+| Inventario | `/api/inventario` |
+| Facturas | `/api/facturas` |
+| Configuración | `/api/configuracion` |
+
+También existen rutas para categorías, detalles, gastos, turnos, permisos, notificaciones, estados, roles y tipos auxiliares.
 
 ---
 
@@ -349,13 +270,13 @@ Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
 ```text
 main        ← código estable y aprobado
 develop     ← rama de integración
-└── feat/testing   ← rama activa de desarrollo
+└── feat/testing / feat/ia-modulo / docs/finalizar-migracion
 ```
 
 ### Flujo correcto
 
 ```text
-feat/testing → commit → push → Pull Request a develop → merge → Pull Request a main
+rama de trabajo → commit → push → Pull Request a develop → merge → Pull Request a main
 ```
 
 ### Convención de commits
@@ -371,9 +292,10 @@ feat/testing → commit → push → Pull Request a develop → merge → Pull R
 
 ### Reglas del equipo
 
-- Nunca hacer push directo a `main` o `develop`
-- Probar en la rama de trabajo antes de integrar
-- Hacer `pull` antes de tocar archivos
+- Nunca hacer push directo a `main` o `develop`.
+- Probar en la rama de trabajo antes de integrar.
+- Hacer `pull` antes de tocar archivos.
+- Revisar el diff antes del merge.
 
 ---
 
@@ -401,16 +323,18 @@ feat/testing → commit → push → Pull Request a develop → merge → Pull R
 | `GERENTE` | `/gerente` |
 | `MESERO` | `/mesero` |
 | `REPARTIDOR` | `/repartidor` |
-| `CLIENTE` | `/cliente` |
 | Público | `/`, `/forgot-password`, `/reset-password` |
 
 ---
 
 ## Notas técnicas importantes
 
-- El proyecto usa tabla `usuario`, no la convención `users` de Laravel. El modelo `Usuario` tiene configuración explícita de tabla primaria y `public $timestamps = false`.
-- `axios.ts` usa interceptor para adjuntar el token de Sanctum en cada request automáticamente.
-- Las URLs del Codespace van en los `.env` locales, nunca en el código fuente.
-- El soft delete en Productos usa el campo `Estado` (1/0) en lugar de DELETE físico para preservar integridad referencial con `Detalle_pedido`, `Receta` e `IA_PRODUCTO`.
-- Redux y AuthContext coexisten por compatibilidad: Redux maneja el estado global, AuthContext provee el contexto a los dashboards existentes.
-- Los puertos 8000 y 5173 deben marcarse como Public en Codespaces cada vez que se reabre el workspace.
+- El frontend se comunica con MariaDB únicamente a través de la API REST de Express.
+- `backend/` es la ruta oficial del backend activo y contiene `src/`, `routes/`, `controllers/`, `middleware/` y `prisma/`.
+- Prisma gestiona el esquema y las migraciones mediante `prisma migrate deploy`; `prisma generate` regenera el cliente de Prisma.
+- JWT se utiliza para emitir y validar tokens de autenticación.
+- `axios.ts` adjunta automáticamente el token JWT mediante un interceptor.
+- Las URLs de Codespaces, contraseñas y secretos deben permanecer en los archivos `.env` locales.
+- MariaDB usa datos ficticios de desarrollo; la contraseña documentada es `remisoft123`.
+- Los puertos activos son 3000 para Express, 5173 para Vite y 3306 para MariaDB.
+- `setup.sh` y `start.sh` automatizan la preparación y el arranque del entorno.

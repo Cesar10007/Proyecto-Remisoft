@@ -1,41 +1,72 @@
 #!/bin/bash
+set -e
 
-# ── MATAR PROCESOS PREVIOS SI EXISTEN ──
-fuser -k 8000/tcp 2>/dev/null || true
+PROJECT_DIR="${PROJECT_DIR:-/workspaces/Proyecto-Remisoft}"
+corepack enable 2>/dev/null || true
+
+# ── DETENER PROCESOS PREVIOS ──
+fuser -k 3000/tcp 2>/dev/null || true
 fuser -k 5173/tcp 2>/dev/null || true
 
 # ── MARIADB ──
 service mariadb start
 sleep 2
 
-# ── LARAVEL ── (corre en segundo plano, puerto 8000)
-cd /workspaces/Proyecto-Remisoft/backend
-php artisan serve --host=0.0.0.0 --port=8000 > /tmp/laravel.log 2>&1 &
-LARAVEL_PID=$!
+# ── PRISMA ──
+if [ -f "$PROJECT_DIR/backend/package.json" ]; then
+  cd "$PROJECT_DIR/backend"
 
-# ── REACT ── (corre en segundo plano, puerto 5173)
-cd /workspaces/Proyecto-Remisoft/frontend
-npm run dev -- --host 0.0.0.0 > /tmp/react.log 2>&1 &
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm exec prisma migrate deploy
+    pnpm exec prisma generate
+  else
+    npx prisma migrate deploy
+    npx prisma generate
+  fi
+fi
+
+# ── EXPRESS + PRISMA ──
+cd "$PROJECT_DIR/backend"
+
+if command -v pnpm >/dev/null 2>&1; then
+  PORT=3000 HOST=0.0.0.0 pnpm dev > /tmp/express.log 2>&1 &
+else
+  PORT=3000 HOST=0.0.0.0 npm run dev > /tmp/express.log 2>&1 &
+fi
+
+EXPRESS_PID=$!
+
+# ── REACT ──
+cd "$PROJECT_DIR/frontend"
+
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
+else
+  npm run dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
+fi
+
 REACT_PID=$!
-
 
 sleep 3
 
 # ── PUERTOS PÚBLICOS ──
-gh codespace ports visibility 8000:public -c "$CODESPACE_NAME" 2>/dev/null || true
-gh codespace ports visibility 5173:public -c "$CODESPACE_NAME" 2>/dev/null || true
+if [ -n "${CODESPACE_NAME:-}" ]; then
+  gh codespace ports visibility 3000:public -c "$CODESPACE_NAME" 2>/dev/null || true
+  gh codespace ports visibility 5173:public -c "$CODESPACE_NAME" 2>/dev/null || true
+fi
+
 echo ""
 echo "========================================="
 echo "  RemiSoft — Entorno listo"
 echo "========================================="
 echo ""
-echo "  React  →  http://localhost:5173"
-echo "  Laravel →  http://localhost:8000"
+echo "  React   → http://localhost:5173"
+echo "  Express → http://localhost:3000"
 echo ""
-echo "  Logs en tiempo real:"
-echo "    Laravel: tail -f /tmp/laravel.log"
+echo "  Logs:"
+echo "    Express: tail -f /tmp/express.log"
 echo "    React:   tail -f /tmp/react.log"
 echo ""
 echo "  Para detener los servicios:"
-echo "    kill $LARAVEL_PID $REACT_PID"
+echo "    kill $EXPRESS_PID $REACT_PID"
 echo "========================================="
