@@ -1,3 +1,5 @@
+import Button from '../common/Button'
+
 interface NavbarProps {
   onLogin: () => void
 }
@@ -14,13 +16,7 @@ function Navbar({ onLogin }: NavbarProps) {
       </a>
 
       <div className="flex items-center gap-2.5">
-        <button
-          type="button"
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-[var(--rojo)] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-sm font-medium text-white no-underline transition-all duration-200 ease-in-out hover:-translate-y-px hover:border-[var(--rojo-dark)] hover:bg-[var(--rojo-dark)]"
-          onClick={onLogin}
-        >
-          Iniciar sesión
-        </button>
+        <Button onClick={onLogin}>Iniciar sesión</Button>
       </div>
     </nav>
   )

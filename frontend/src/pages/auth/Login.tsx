@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux'
 import api from '../../api/axios'
 import { setCredentials } from '../../store/authSlice'
 import { useAuth } from '../../context/AuthContext'
+import Button from '../../components/common/Button'
 
 interface LoginProps {
   onClose?: () => void
@@ -145,13 +146,9 @@ function Login({ onClose }: LoginProps) {
           </p>
         )}
 
-        <button
-          type="submit"
-          className="mt-1 w-full cursor-pointer justify-center rounded-full border-[1.5px] border-[var(--rojo)] bg-[var(--rojo)] px-5 py-2.5 font-['DM_Sans'] text-sm font-medium text-white transition-all duration-200 ease-in-out hover:-translate-y-px hover:border-[var(--rojo-dark)] hover:bg-[var(--rojo-dark)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-          disabled={loading}
-        >
+        <Button type="submit" fullWidth disabled={loading} className="mt-1">
           {loading ? 'Ingresando...' : 'Ingresar'}
-        </button>
+        </Button>
 
         <button
           type="button"
