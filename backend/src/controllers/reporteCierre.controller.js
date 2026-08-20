@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try { const { id_turno, fecha_desde, fecha_hasta } = req.query; const where = {}; if (id_turno) where.id_turno = parseInt(id_turno); if (fecha_desde || fecha_hasta) { where.fecha = {}; if (fecha_desde) where.fecha.gte = new Date(fecha_desde); if (fecha_hasta) where.fecha.lte = new Date(fecha_hasta); } const items = await prisma.reporte_cierre.findMany({ where, include: { turnos: true, usuarios: true }, orderBy: { fecha: 'desc' } }); res.status(200).json({ success: true, data: items, count: items.length }); }
   catch (error) { next(error); }
