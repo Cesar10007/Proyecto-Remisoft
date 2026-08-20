@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 import { sendPasswordResetEmail } from '../services/mail.service.js';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;

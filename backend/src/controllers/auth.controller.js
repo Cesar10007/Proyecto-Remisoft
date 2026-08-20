@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 
 function normalizeLaravelBcryptHash(hash) {
   if (!hash) return hash;

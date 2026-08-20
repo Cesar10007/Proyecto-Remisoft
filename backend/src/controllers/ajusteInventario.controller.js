@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try { const { id_ingrediente } = req.query; const where = id_ingrediente ? { id_ingrediente: parseInt(id_ingrediente) } : {}; const items = await prisma.ajuste_inventario.findMany({ where, include: { ingredientes: true, usuarios: true }, orderBy: { fecha: 'desc' } }); res.status(200).json({ success: true, data: items, count: items.length }); }
   catch (error) { next(error); }
