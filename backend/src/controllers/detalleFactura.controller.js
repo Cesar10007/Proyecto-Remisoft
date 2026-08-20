@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try { const { id_factura } = req.query; const where = id_factura ? { id_factura: parseInt(id_factura) } : {}; const items = await prisma.detalle_factura.findMany({ where, include: { facturas: true, productos: true } }); res.status(200).json({ success: true, data: items, count: items.length }); }
   catch (error) { next(error); }

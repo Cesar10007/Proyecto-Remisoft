@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try { const { id_usuario, leida } = req.query; const where = {}; if (id_usuario) where.id_usuario = parseInt(id_usuario); if (leida !== undefined) where.leida = leida === 'true'; const items = await prisma.notificacion.findMany({ where, include: { usuarios: true }, orderBy: { fecha: 'desc' } }); res.status(200).json({ success: true, data: items, count: items.length }); }
   catch (error) { next(error); }

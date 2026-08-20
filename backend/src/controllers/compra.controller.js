@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try { const items = await prisma.compra.findMany({ include: { proveedores: true }, orderBy: { fecha: 'desc' } }); res.status(200).json({ success: true, data: items, count: items.length }); }
   catch (error) { next(error); }
