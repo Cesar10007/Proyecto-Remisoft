@@ -22,6 +22,18 @@ log "Configurando entorno RemiSoft..."
 [ -f "$FRONTEND_DIR/package.json" ] || fail "No se encontró frontend/package.json"
 [ -f "$FRONTEND_DIR/pnpm-lock.yaml" ] || fail "No se encontró frontend/pnpm-lock.yaml"
 
+node -e "
+const p = require('$BACKEND_DIR/package.json');
+if (!p.dependencies || !p.dependencies.express) {
+  console.error('backend/package.json no declara express. No continúo: el manifiesto está vacío o corrupto.');
+  process.exit(1);
+}
+if (p.packageManager !== 'pnpm@10.15.0') {
+  console.error('Se esperaba packageManager pnpm@10.15.0, hay:', p.packageManager);
+  process.exit(1);
+}
+"
+
 if [ -n "${CODESPACE_NAME:-}" ]; then
   FRONTEND_ORIGIN="https://${CODESPACE_NAME}-5173.app.github.dev"
 else
@@ -30,6 +42,7 @@ fi
 
 git config --global --add safe.directory "$PROJECT_DIR" 2>/dev/null || true
 corepack enable 2>/dev/null || true
+corepack prepare pnpm@10.15.0 --activate
 
 cd "$BACKEND_DIR"
 corepack install
@@ -72,9 +85,10 @@ JWT_EXPIRES_IN=8h
 ENV
 
 cd "$BACKEND_DIR"
-corepack pnpm install --frozen-lockfile
-corepack pnpm exec prisma migrate deploy
+CI=true corepack pnpm install --frozen-lockfile
+corepack pnpm rebuild @prisma/engines prisma || true
 corepack pnpm exec prisma generate
+corepack pnpm exec prisma migrate deploy
 
 PRODUCTOS=$(mysql -N -s -u root remisoft -e "SELECT COUNT(*) FROM Producto;" 2>/dev/null || echo "0")
 if [ "$PRODUCTOS" = "0" ] && [ -f "$PROJECT_DIR/database/datos.sql" ]; then
@@ -94,7 +108,7 @@ done
 
 log "Instalando dependencias de React..."
 cd "$FRONTEND_DIR"
-corepack pnpm install --frozen-lockfile
+CI=true corepack pnpm install --frozen-lockfile
 
 cat > "$FRONTEND_DIR/.env" <<ENV
 VITE_API_URL=/api
@@ -104,11 +118,7 @@ cat <<'EOF'
 
 =========================================
 Entorno RemiSoft listo.
-
-Terminal 1 — Express + Prisma:
-  cd backend && pnpm dev
-
-Terminal 2 — React:
-  cd frontend && pnpm dev -- --host 0.0.0.0
+start.sh levantará Express (3000) y React (5173).
+No hace falta entrar a backend/ ni correr pnpm install.
 =========================================
 EOF
