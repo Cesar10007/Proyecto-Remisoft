@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import prisma from '../generated/prisma/client.js';
+import prisma from '../config/prisma.js';
 
 function getBearerToken(req) {
   const header = req.headers.authorization || '';
