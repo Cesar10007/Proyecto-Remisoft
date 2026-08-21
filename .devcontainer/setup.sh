@@ -85,7 +85,7 @@ JWT_EXPIRES_IN=8h
 ENV
 
 cd "$BACKEND_DIR"
-corepack pnpm install --frozen-lockfile
+CI=true corepack pnpm install --frozen-lockfile
 corepack pnpm rebuild @prisma/engines prisma || true
 corepack pnpm exec prisma generate
 corepack pnpm exec prisma migrate deploy
@@ -108,7 +108,7 @@ done
 
 log "Instalando dependencias de React..."
 cd "$FRONTEND_DIR"
-corepack pnpm install --frozen-lockfile
+CI=true corepack pnpm install --frozen-lockfile
 
 cat > "$FRONTEND_DIR/.env" <<ENV
 VITE_API_URL=/api
