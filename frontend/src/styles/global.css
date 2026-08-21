@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
     --rojo: #D85A30;
     --rojo-dark: #993C1D;
@@ -18,13 +16,28 @@
     --borde: rgba(0,0,0,0.09);
     --sombra: 0 2px 24px rgba(216,90,48,0.08), 0 1px 4px rgba(0,0,0,0.06);
 }
-
+[data-theme="dark"] {
+    --rojo: #E8703F;
+    --rojo-dark: #F0997B;
+    --rojo-light: rgba(216,90,48,0.15);
+    --rojo-mid: #C96A45;
+    --amarillo: #F2B24D;
+    --amarillo-light: rgba(239,159,39,0.15);
+    --verde: #34C08F;
+    --verde-light: rgba(29,158,117,0.15);
+    --texto: #F0EEEB;
+    --texto-muted: #A8A29C;
+    --bg: #17130F;
+    --bg-card: #221C17;
+    --borde: rgba(255,255,255,0.1);
+    --sombra: 0 2px 24px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.2);
+}
 html { scroll-behavior: smooth; }
-
 body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--texto);
     min-height: 100vh;
     overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
