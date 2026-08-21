@@ -246,46 +246,70 @@ function Gerente() {
     if (!confirm(`¿Deseas ${estado === 'ACTIVA' ? 'desactivar' : 'activar'} esta caja?`)) return
     try { await api.delete(`/cajas/${id}`); api.get('/cajas').then(r => setCajas(r.data)) } catch { alert('Error') }
   }
-
   return (
-    <div className="ge-wrapper">
-      <aside className="ge-sidebar">
-        <div className="ge-sidebar-brand">
-          <div className="ge-logo">Remi<span className="ge-logo-accent">Soft</span></div>
-          <div className="ge-role">Gerente</div>
+
+    <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
+      <aside className="fixed left-0 top-0 z-[100] flex min-h-screen w-[240px] flex-col border-r border-[var(--borde)] bg-[var(--bg-card)] p-4">
+        <div className="mb-8 px-2">
+          <div className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rojo-dark)]">
+            Remi<span className="text-[var(--amarillo)]">Soft</span>
+          </div>
+          <div className="mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)]">
+            Gerente
+          </div>
         </div>
-        <div className="ge-sidebar-menu">
+        <div className="flex flex-1 flex-col gap-0.5">
           {menuItems.map(item => (
-            <button key={item.label} onClick={() => setSeccionActiva(item.label)}
-              className={`ge-menu-btn ${seccionActiva === item.label ? 'is-active' : ''}`}>
-              <span className="material-symbols-outlined ge-menu-icon">{item.icon}</span>
+            <button
+              key={item.label}
+              onClick={() => setSeccionActiva(item.label)}
+              className={`flex items-center gap-3 rounded-[10px] border-r-[3px] px-3 py-2.5 text-left font-['DM_Sans'] text-[0.875rem] font-medium transition-all duration-150 ease-in-out ${
+                seccionActiva === item.label
+                  ? 'border-r-[var(--rojo)] bg-[var(--rojo-light)] text-[var(--rojo-dark)]'
+                  : 'border-r-transparent bg-transparent text-[var(--texto-muted)]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
-        <div className="ge-sidebar-footer">
-          <button className="ge-primary-btn">Cerrar Caja</button>
-          <button onClick={() => { logout(); navigate('/') }} className="ge-logout-btn">
-            <span className="material-symbols-outlined ge-logout-icon">logout</span>
+        <div className="flex flex-col gap-1 border-t border-[var(--borde)] pt-4">
+          <button className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">
+            Cerrar Caja
+          </button>
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="flex items-center gap-2 rounded-[10px] bg-transparent px-3 py-2 font-['DM_Sans'] text-[0.875rem] text-[var(--texto-muted)]"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="ge-main">
-        <header className="ge-topbar">
+      <main className="ml-[240px] flex flex-1 flex-col gap-8 p-8">
+        <header className="flex items-center justify-between">
           <div>
-            <h1 className="ge-page-title">{seccionActiva}</h1>
-            <p className="ge-page-subtitle">Bienvenido de nuevo, {user?.nombre ?? 'Gerente'}</p>
+            <h1 className="font-['Syne'] text-[1.6rem] font-extrabold tracking-[-0.5px] text-[var(--texto)]">
+              {seccionActiva}
+            </h1>
+            <p className="mt-0.5 text-[0.85rem] text-[var(--texto-muted)]">
+              Bienvenido de nuevo, {user?.nombre ?? 'Gerente'}
+            </p>
           </div>
-          <div className="ge-topbar-actions">
-            <button className="ge-notification-btn">
-              <span className="material-symbols-outlined ge-notification-icon">notifications</span>
-              <span className="ge-notification-dot"></span>
+          <div className="flex items-center gap-3">
+            <button className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] text-[var(--texto-muted)]">
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-[var(--bg-card)] bg-[var(--rojo)]"></span>
             </button>
-            <div className="ge-user-pill">
-              <div className="ge-user-avatar">G</div>
-              <span className="ge-user-name">{user?.nombre ?? 'Gerente'}</span>
+            <div className="flex items-center gap-2.5 rounded-full border border-[var(--borde)] bg-[var(--bg-card)] py-1.5 pl-1.5 pr-3.5">
+              <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--rojo-light)] text-[0.85rem] font-bold text-[var(--rojo-dark)]">
+                G
+              </div>
+              <span className="text-[0.85rem] font-medium text-[var(--texto)]">
+                {user?.nombre ?? 'Gerente'}
+              </span>
             </div>
           </div>
         </header>
