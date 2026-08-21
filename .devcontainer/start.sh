@@ -2,54 +2,34 @@
 set -e
 
 PROJECT_DIR="${PROJECT_DIR:-/workspaces/Proyecto-Remisoft}"
-corepack enable 2>/dev/null || true
+BACKEND_DIR="$PROJECT_DIR/backend"
+FRONTEND_DIR="$PROJECT_DIR/frontend"
 
-# ── DETENER PROCESOS PREVIOS ──
+corepack enable 2>/dev/null || true
+corepack prepare pnpm@10.15.0 --activate
+
 fuser -k 3000/tcp 2>/dev/null || true
 fuser -k 5173/tcp 2>/dev/null || true
 
-# ── MARIADB ──
 service mariadb start
 sleep 2
 
-# ── PRISMA ──
-if [ -f "$PROJECT_DIR/backend/package.json" ]; then
-  cd "$PROJECT_DIR/backend"
-
-  if command -v pnpm >/dev/null 2>&1; then
-    pnpm exec prisma migrate deploy
-    pnpm exec prisma generate
-  else
-    npx prisma migrate deploy
-    npx prisma generate
-  fi
+if [ -f "$BACKEND_DIR/package.json" ]; then
+  cd "$BACKEND_DIR"
+  corepack pnpm exec prisma migrate deploy
+  corepack pnpm exec prisma generate
 fi
 
-# ── EXPRESS + PRISMA ──
-cd "$PROJECT_DIR/backend"
-
-if command -v pnpm >/dev/null 2>&1; then
-  PORT=3000 HOST=0.0.0.0 pnpm dev > /tmp/express.log 2>&1 &
-else
-  PORT=3000 HOST=0.0.0.0 npm run dev > /tmp/express.log 2>&1 &
-fi
-
+cd "$BACKEND_DIR"
+PORT=3000 HOST=0.0.0.0 corepack pnpm dev > /tmp/express.log 2>&1 &
 EXPRESS_PID=$!
 
-# ── REACT ──
-cd "$PROJECT_DIR/frontend"
-
-if command -v pnpm >/dev/null 2>&1; then
-  pnpm dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
-else
-  npm run dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
-fi
-
+cd "$FRONTEND_DIR"
+corepack pnpm dev -- --host=0.0.0.0 > /tmp/react.log 2>&1 &
 REACT_PID=$!
 
 sleep 3
 
-# ── PUERTOS PÚBLICOS ──
 if [ -n "${CODESPACE_NAME:-}" ]; then
   gh codespace ports visibility 3000:public -c "$CODESPACE_NAME" 2>/dev/null || true
   gh codespace ports visibility 5173:public -c "$CODESPACE_NAME" 2>/dev/null || true
