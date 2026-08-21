@@ -1,7 +1,8 @@
 {
   "name": "remisoft-backend",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "packageManager": "pnpm@10.15.0",
   "type": "module",
   "description": "Backend Express de Proyecto-Remisoft con Prisma y MariaDB.",
   "scripts": {
@@ -11,5 +12,22 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "node prisma/seed.js",
     "lint": "eslint ."
+  },
+  "dependencies": {
+    "@prisma/adapter-mariadb": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@prisma/client-runtime-utils": "^7.9.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^9.0.5"
+  },
+  "devDependencies": {
+    "prisma": "^7.9.1"
   }
 }

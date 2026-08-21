@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import mysql from 'mysql2/promise';
+import { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const {
   DB_HOST = '127.0.0.1',
@@ -15,12 +16,14 @@ if (!DB_USERNAME || !DB_PASSWORD || !DB_DATABASE) {
   );
 }
 
-export const pool = mysql.createPool({
+const adapter = new PrismaMariaDb({
   host: DB_HOST,
   port: Number(DB_PORT),
   user: DB_USERNAME,
   password: DB_PASSWORD,
   database: DB_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
 });
+
+const prisma = new PrismaClient({ adapter });
+
+export default prisma;
