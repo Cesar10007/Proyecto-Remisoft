@@ -397,77 +397,119 @@ function Mesero() {
                             actualizando el estado del padre con los datos del pedido
           */}
           {activeItem === 'Pedidos' && (
-            <section style={{ margin: '1.5rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--borde)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Gestión de Pedidos</h3>
-                <button className="wa-sidebar-primary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={abrirCrearPedido}>
+            <section className="m-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="text-[1rem] font-bold">Gestión de Pedidos</h3>
+                <button
+                  className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+                  onClick={abrirCrearPedido}
+                >
                   + Nuevo Pedido
                 </button>
               </div>
-              {cargandoPedidos
-                ? <p style={{ color: 'var(--texto-muted)', fontSize: '0.85rem' }}>Cargando...</p>
-                : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid var(--borde)' }}>
-                          {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: 'var(--texto-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
+              {cargandoPedidos ? (
+                <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-[0.875rem]">
+                    <thead>
+                      <tr className="border-b border-[var(--borde)]">
+                        {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
+                          <th key={h} className="whitespace-nowrap px-3 py-2.5 text-left font-semibold text-[var(--texto-muted)]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pedidos.length === 0 ? (
+                        <tr><td colSpan={8} className="py-8 text-center text-[var(--texto-muted)]">Sin pedidos registrados</td></tr>
+                      ) : pedidos.map(p => (
+                        <tr key={p.id_pedido} className="border-b border-[var(--borde)]">
+                          <td className="px-3 py-2.5 font-semibold">{p.id_pedido}</td>
+                          <td className="px-3 py-2.5">{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
+                          <td className="px-3 py-2.5">{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
+                          <td className="px-3 py-2.5">{p.Tipo_pedido}</td>
+                          <td className="px-3 py-2.5">{p.Mesa_num ?? '—'}</td>
+                          <td className={`px-3 py-2.5 ${
+                            p.estado === 'ABIERTO' ? 'text-[var(--verde)]' : p.estado === 'CANCELADO' ? 'text-[var(--rojo)]' : 'text-[var(--texto-muted)]'
+                          }`}>{p.estado}</td>
+                          <td className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5">{p.notas || '—'}</td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex gap-2">
+                              <button
+                                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+                                onClick={() => abrirEditarPedido(p)}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
+                                onClick={() => cancelarPedido(p.id_pedido)}
+                                disabled={p.estado === 'CANCELADO'}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {pedidos.length === 0
-                          ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--texto-muted)' }}>Sin pedidos registrados</td></tr>
-                          : pedidos.map(p => (
-                            <tr key={p.id_pedido} style={{ borderBottom: '1px solid var(--borde)' }}>
-                              <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>{p.id_pedido}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.Tipo_pedido}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.Mesa_num ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem', color: p.estado === 'ABIERTO' ? 'var(--verde, #22c55e)' : p.estado === 'CANCELADO' ? 'var(--rojo, #ef4444)' : 'var(--texto-muted)' }}>{p.estado}</td>
-                              <td style={{ padding: '0.6rem 0.75rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.notas || '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.35rem 0.85rem', fontSize: '0.8rem' }} onClick={() => abrirEditarPedido(p)}>Editar</button>
-                                  <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.35rem 0.85rem', fontSize: '0.8rem', color: 'var(--rojo, #ef4444)', borderColor: 'var(--rojo, #ef4444)' }} onClick={() => cancelarPedido(p.id_pedido)} disabled={p.estado === 'CANCELADO'}>Cancelar</button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               <Modal isOpen={modalPedido} onClose={() => setModalPedido(false)}>
-                <div style={{ padding: '0 1.5rem 1.5rem' }}>
-                  <h3 style={{ marginBottom: '1.25rem', fontWeight: 700 }}>{modoEdicionPedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div className="px-6 pb-6">
+                  <h3 className="mb-5 font-bold">{modoEdicionPedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
+                  <div className="flex flex-col gap-3.5">
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>ID Cliente</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.id_cliente} onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.id_cliente}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>ID Mesero</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.id_mesero} onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Mesero</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.id_mesero}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Tipo de Pedido *</label>
-                      <select style={inputStyle} value={pedidoActual.Tipo_pedido} onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}>
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Tipo de Pedido *</label>
+                      <select
+                        value={pedidoActual.Tipo_pedido}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}
+                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      >
                         <option value="MESA">MESA</option>
                         <option value="DOMICILIO">DOMICILIO</option>
                         <option value="LLEVAR">LLEVAR</option>
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Número de Mesa</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.Mesa_num} onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de Mesa</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.Mesa_num}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Estado</label>
-                      <select style={inputStyle} value={pedidoActual.estado} onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}>
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Estado</label>
+                      <select
+                        value={pedidoActual.estado}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}
+                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      >
                         <option value="ABIERTO">ABIERTO</option>
                         <option value="EN_PROCESO">EN_PROCESO</option>
                         <option value="LISTO">LISTO</option>
@@ -476,23 +518,40 @@ function Mesero() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Notas</label>
-                      <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '80px' } as React.CSSProperties} placeholder="Indicaciones especiales..." value={pedidoActual.notas} onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Notas</label>
+                      <textarea
+                        placeholder="Indicaciones especiales..."
+                        value={pedidoActual.notas}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))}
+                        className="min-h-[80px] w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
-                    {errorPedido && <p style={{ color: 'var(--rojo, #ef4444)', fontSize: '0.82rem', background: 'rgba(239,68,68,0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>{errorPedido}</p>}
-                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                      <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={() => setModalPedido(false)}>Cancelar</button>
-                      <button className="wa-sidebar-primary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={guardarPedido} disabled={guardandoPedido}>{guardandoPedido ? 'Guardando...' : modoEdicionPedido ? 'Actualizar' : 'Crear Pedido'}</button>
+                    {errorPedido && (
+                      <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">{errorPedido}</p>
+                    )}
+                    <div className="mt-2 flex justify-end gap-3">
+                      <button
+                        className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                        onClick={() => setModalPedido(false)}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                        onClick={guardarPedido}
+                        disabled={guardandoPedido}
+                      >
+                        {guardandoPedido ? 'Guardando...' : modoEdicionPedido ? 'Actualizar' : 'Crear Pedido'}
+                      </button>
                     </div>
                   </div>
                 </div>
               </Modal>
             </section>
           )}
-
           {(activeItem === 'Caja' || activeItem === 'Facturas') && (
-            <div style={{ margin: '1.5rem', padding: '3rem', textAlign: 'center', color: 'var(--texto-muted)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '2rem', display: 'block', marginBottom: '0.75rem' }}>{activeItem === 'Caja' ? 'point_of_sale' : 'description'}</span>
+            <div className="m-6 p-12 text-center text-[var(--texto-muted)]">
+              <span className="material-symbols-outlined mb-3 block text-[2rem]">{activeItem === 'Caja' ? 'point_of_sale' : 'description'}</span>
               Sección <strong>{activeItem}</strong> en construcción
             </div>
           )}
