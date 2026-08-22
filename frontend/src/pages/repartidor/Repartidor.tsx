@@ -203,96 +203,109 @@ function Repartidor() {
       <main className="ml-60 min-w-0 flex-1">
         {activeItem === 'Resumen' && (
           <>
-            <div className="rd-topbar">
-              <div className="rd-topbar__left">
-                <p className="rd-topbar__subtitle">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+              <div className="flex flex-col gap-1">
+                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
               </div>
-              <div className="rd-topbar__right">
-                <div className="rd-search">
-                  <span className="material-symbols-outlined rd-search__icon">search</span>
-                  <input type="text" placeholder="Buscar una orden específica..." />
+              <div className="flex flex-wrap items-center gap-3.5">
+                <div className="relative w-80">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--rd-text-muted)]">search</span>
+                  <input
+                    type="text"
+                    placeholder="Buscar una orden específica..."
+                    className="w-full rounded-full border border-[var(--rd-border)] bg-white py-2.5 pl-10 pr-4 outline-none"
+                  />
                 </div>
-                <div className="rd-status-pill">
-                  <span className="rd-status-pill__dot" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--rd-success-soft)] px-3 py-2 text-[0.76rem] font-bold text-[var(--rd-success)]">
+                  <span className="h-2 w-2 rounded-full bg-[var(--rd-success)]" />
                   En turno
                 </div>
-                <button className="rd-icon-btn">
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>notifications</span>
+                <button className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-white text-[var(--rd-text-muted)]">
+                  <span className="material-symbols-outlined text-[20px]">notifications</span>
                 </button>
-                <div className="rd-avatar-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.9rem', color: 'var(--rd-primary-dark)', background: '#f2ece8', flexShrink: 0 }}>
+                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#f2ece8] text-[0.9rem] font-bold text-[var(--rd-primary-dark)]">
                   {(user?.nombre ?? 'R')[0].toUpperCase()}
                 </div>
               </div>
             </div>
 
-            <div className="rd-content">
-              <div className="rd-stats-grid">
-                <div className="rd-stat-card rd-stat-card--highlighted">
-                  <span className="rd-stat-card__label">Ganancias del día</span>
-                  <span className="rd-stat-card__value">$142.500</span>
-                  <span className="rd-stat-card__detail">+12% vs ayer</span>
+            <div className="flex flex-col gap-6 p-7">
+              <div className="grid grid-cols-3 gap-4.5">
+                <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
+                  <span className="font-['Syne'] text-[2rem] font-extrabold">$142.500</span>
+                  <span className="text-[0.8rem] font-semibold text-white/82">+12% vs ayer</span>
                 </div>
-                <div className="rd-stat-card">
-                  <span className="rd-stat-card__label">Entregas completadas</span>
-                  <span className="rd-stat-card__value rd-stat-card__value--success">18</span>
-                  <span className="rd-stat-card__detail rd-stat-card__detail--success">2 pendientes en cola</span>
+                <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregas completadas</span>
+                  <span className="font-['Syne'] text-[2rem] font-extrabold text-[var(--rd-success)]">18</span>
+                  <span className="text-[0.8rem] font-semibold text-[var(--rd-success)]">2 pendientes en cola</span>
                 </div>
-                <div className="rd-stat-card">
-                  <span className="rd-stat-card__label">Tiempo de turno</span>
-                  <span className="rd-stat-card__value">6h 14m</span>
-                  <span className="rd-stat-card__detail">Inicio: 11:30 AM</span>
+                <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Tiempo de turno</span>
+                  <span className="font-['Syne'] text-[2rem] font-extrabold">6h 14m</span>
+                  <span className="text-[0.8rem] font-semibold text-[var(--rd-text-muted)]">Inicio: 11:30 AM</span>
                 </div>
               </div>
 
-              <div className="rd-grid">
-                <div className="rd-map-card">
-                  <div className="rd-map-card__media">
-                    <img src="https://picsum.photos/seed/bogota-map/800/260" alt="Mapa de entregas" width={800} height={260} loading="lazy" />
-                    <div className="rd-map-card__overlay" />
-                    <div className="rd-map-card__nav">
-                      <div className="rd-map-card__nav-icon">
-                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>navigation</span>
+              <div className="grid grid-cols-[2fr_1fr] gap-6">
+                <div className="overflow-hidden rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)]">
+                  <div className="relative h-[260px]">
+                    <img
+                      src="https://picsum.photos/seed/bogota-map/800/260"
+                      alt="Mapa de entregas"
+                      width={800}
+                      height={260}
+                      loading="lazy"
+                      className="block h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/38 to-transparent" />
+                    <div className="absolute bottom-5 left-5 z-[2] flex items-center gap-3 text-white">
+                      <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-white text-[var(--rd-primary)]">
+                        <span className="material-symbols-outlined text-[20px]">navigation</span>
                       </div>
                       <div>
-                        <p>Optimizando ruta</p>
-                        <h4>Bogotá · Entrega óptima</h4>
+                        <p className="text-[0.72rem] opacity-82">Optimizando ruta</p>
+                        <h4 className="text-[1rem] font-extrabold">Bogotá · Entrega óptima</h4>
                       </div>
                     </div>
                   </div>
-                  <div className="rd-map-card__body">
-                    <div className="rd-customer-row">
+                  <div className="flex flex-col gap-5 p-6">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="rd-caption">Cliente actual</p>
-                        <p className="rd-customer-name">Carlos Méndez</p>
-                        <div className="rd-address-row">
-                          <span className="material-symbols-outlined">location_on</span>
+                        <p className="mb-1.5 text-[0.7rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Cliente actual</p>
+                        <p className="font-['Syne'] text-[1.5rem] font-extrabold">Carlos Méndez</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-[var(--rd-text-muted)]">
+                          <span className="material-symbols-outlined text-[18px] text-[var(--rd-primary)]">location_on</span>
                           <span>Calle 72 # 14-25, Bogotá</span>
                         </div>
                       </div>
-                      <button className="rd-call-btn">
+                      <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-none bg-[#f8f4f1] text-[var(--rd-primary-dark)]">
                         <span className="material-symbols-outlined">call</span>
                       </button>
                     </div>
-                    <div className="rd-order-card">
-                      <ul className="rd-order-list">
-                        <li><span>1x Truffle Risotto</span><span>$32.000</span></li>
-                        <li><span>2x Vintage Negroni</span><span>$28.000</span></li>
-                        <li className="rd-order-list__total"><span>Total</span><span>$60.000</span></li>
+                    <div className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4.5">
+                      <ul className="flex flex-col gap-3">
+                        <li className="flex justify-between gap-3 font-bold"><span>1x Truffle Risotto</span><span>$32.000</span></li>
+                        <li className="flex justify-between gap-3 font-bold"><span>2x Vintage Negroni</span><span>$28.000</span></li>
+                        <li className="mt-1.5 flex justify-between gap-3 border-t border-[#ebe4df] pt-3.5 text-[1rem] font-bold">
+                          <span>Total</span><span className="text-[var(--rd-primary-dark)]">$60.000</span>
+                        </li>
                       </ul>
                     </div>
-                    <div className="rd-payment-block">
-                      <div className="rd-payment-grid">
-                        <button className="rd-payment-btn">
+                    <div className="flex flex-col gap-3.5">
+                      <div className="grid grid-cols-3 gap-3">
+                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#eee5df] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">payments</span>Efectivo
                         </button>
-                        <button className="rd-payment-btn rd-payment-btn--active">
+                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--rd-primary)] bg-[var(--rd-primary-soft)] px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-primary-dark)]">
                           <span className="material-symbols-outlined">credit_card</span>Tarjeta
                         </button>
-                        <button className="rd-payment-btn">
+                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#eee5df] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">qr_code_2</span>App Pay
                         </button>
                       </div>
-                      <button className="rd-confirm-btn">
+                      <button className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-4 text-[1rem] font-extrabold text-white">
                         <span className="material-symbols-outlined">check_circle</span>
                         Confirmar entrega
                       </button>
@@ -300,34 +313,34 @@ function Repartidor() {
                   </div>
                 </div>
 
-                <div className="rd-side-column">
-                  <div className="rd-queue-card">
-                    <div className="rd-panel-header">
+                <div className="flex flex-col gap-6">
+                  <div className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
+                    <div className="mb-4 flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="rd-panel-title">Cola de Pedidos</h3>
-                        <p className="rd-panel-subtitle">Próximas entregas asignadas</p>
+                        <h3 className="font-['Syne'] text-[1.25rem] font-extrabold">Cola de Pedidos</h3>
+                        <p className="mt-1 text-[0.85rem] text-[var(--rd-text-muted)]">Próximas entregas asignadas</p>
                       </div>
-                      <span className="rd-orders-count">2 órdenes</span>
+                      <span className="inline-flex items-center rounded-full bg-[var(--rd-primary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[var(--rd-primary-dark)]">2 órdenes</span>
                     </div>
-                    <div className="rd-queue-list">
+                    <div className="flex flex-col gap-3.5">
                       {[
                         { id: '#8845', restaurant: 'The Bistro Main', address: '42 West Side Apts', eta: '12 min', distance: '2.4 km', icon: 'restaurant' },
                         { id: '#8848', restaurant: "Mamma's Kitchen", address: 'Central Plaza Hotel', eta: '22 min', distance: '4.1 km', icon: 'local_pizza' },
                       ].map(q => (
-                        <div key={q.id} className="rd-queue-item">
-                          <div className="rd-queue-item__top">
-                            <div className="rd-queue-item__identity">
-                              <div className="rd-queue-item__icon">
+                        <div key={q.id} className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4">
+                          <div className="mb-3.5 flex items-start justify-between gap-3">
+                            <div className="flex gap-3">
+                              <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[#f7f2ee] text-[var(--rd-primary)]">
                                 <span className="material-symbols-outlined">{q.icon}</span>
                               </div>
                               <div>
-                                <h5>Pedido {q.id}</h5>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--rd-text-muted)' }}>{q.restaurant}</p>
+                                <h5 className="font-extrabold">Pedido {q.id}</h5>
+                                <p className="mt-0.5 text-[0.8rem] text-[var(--rd-text-muted)]">{q.restaurant}</p>
                               </div>
                             </div>
-                            <span className="rd-badge">{q.eta}</span>
+                            <span className="inline-flex items-center rounded-full bg-[var(--rd-secondary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[#9a5e10]">{q.eta}</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--rd-text-muted)' }}>
+                          <div className="flex justify-between text-[0.78rem] text-[var(--rd-text-muted)]">
                             <span>{q.address}</span>
                             <span>{q.distance}</span>
                           </div>
@@ -336,23 +349,21 @@ function Repartidor() {
                     </div>
                   </div>
 
-                  <div className="rd-performance-card">
-                    <div className="rd-panel-header rd-panel-header--compact">
-                      <div>
-                        <h3 className="rd-panel-title">Top Performers</h3>
-                        <p className="rd-panel-subtitle">Top Repartidores hoy</p>
-                      </div>
+                  <div className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
+                    <div className="mb-4.5">
+                      <h3 className="font-['Syne'] text-[1.25rem] font-extrabold">Top Performers</h3>
+                      <p className="mt-1 text-[0.85rem] text-[var(--rd-text-muted)]">Top Repartidores hoy</p>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="flex flex-col gap-3">
                       {['Carlos M.', 'Diana R.', 'Luis P.'].map((name, i) => (
-                        <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '34px', height: '34px', borderRadius: '999px', background: '#f2ece8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', color: 'var(--rd-primary-dark)' }}>
+                        <div key={name} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#f2ece8] text-[0.8rem] font-bold text-[var(--rd-primary-dark)]">
                               {name[0]}
                             </div>
-                            <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{name}</span>
+                            <span className="text-[0.88rem] font-semibold">{name}</span>
                           </div>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--rd-text-muted)' }}>{18 - i * 2} entregas</span>
+                          <span className="text-[0.78rem] text-[var(--rd-text-muted)]">{18 - i * 2} entregas</span>
                         </div>
                       ))}
                     </div>
