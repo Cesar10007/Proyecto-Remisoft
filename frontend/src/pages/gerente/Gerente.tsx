@@ -654,23 +654,43 @@ function Gerente() {
 
         {/* FLUJO DE CAJA — CRUD Cajas */}
         {seccionActiva === 'Flujo de Caja' && (
-          <section className="ge-card ge-productos-card" style={{ marginTop: '1.5rem' }}>
-            <div className="ge-productos-header">
-              <h3 className="ge-section-title ge-section-title--sm">Gestión de Cajas</h3>
-              <button className="ge-primary-btn" onClick={abrirCrearCaja}>+ Nueva Caja</button>
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Gestión de Cajas</h3>
+              <button
+                className="rounded-[10px] bg-[var(--rojo)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+                onClick={abrirCrearCaja}
+              >
+                + Nueva Caja
+              </button>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="ge-productos-tabla">
-                <thead><tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Nombre</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {cajas.length === 0 ? <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--texto-muted)' }}>Cargando...</td></tr> : cajas.map(c => (
+                  {cajas.length === 0 ? (
+                    <tr><td colSpan={3} className="py-4 text-center text-[var(--texto-muted)]">Cargando...</td></tr>
+                  ) : cajas.map(c => (
                     <tr key={c.id_caja}>
-                      <td><strong>{c.nombre}</strong></td>
-                      <td style={{ color: c.estado === 'ACTIVA' ? 'var(--verde)' : 'var(--rojo)' }}>{c.estado}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button className="ge-secondary-btn" onClick={() => abrirEditarCaja(c)}>Editar</button>
-                          <button className={c.estado === 'ACTIVA' ? 'ge-logout-btn' : 'ge-primary-btn'} onClick={() => toggleCaja(c.id_caja, c.estado)}>{c.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}</button>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{c.nombre}</strong></td>
+                      <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] ${c.estado === 'ACTIVA' ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{c.estado}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
+                        <div className="flex gap-2">
+                          <button className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarCaja(c)}>Editar</button>
+                          <button
+                            className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
+                              c.estado === 'ACTIVA' ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
+                            }`}
+                            onClick={() => toggleCaja(c.id_caja, c.estado)}
+                          >
+                            {c.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}
+                          </button>
                         </div>
                       </td>
                     </tr>
