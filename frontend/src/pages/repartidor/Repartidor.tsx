@@ -375,69 +375,86 @@ function Repartidor() {
         )}
         {activeItem === 'Entregas' && (
           <>
-            <div className="rd-topbar">
-              <div className="rd-topbar__left">
-                <h1 className="rd-topbar__title">Gestión de Entregas</h1>
-                <p className="rd-topbar__subtitle">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+              <div className="flex flex-col gap-1">
+                <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Gestión de Entregas</h1>
+                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
               </div>
-              <div className="rd-topbar__right">
-                <button className="rd-confirm-btn" style={{ width: 'auto', padding: '10px 20px', fontSize: '0.875rem' }} onClick={abrirCrearDomicilio}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+              <div className="flex flex-wrap items-center gap-3.5">
+                <button
+                  className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-5 py-2.5 text-[0.875rem] font-extrabold text-white"
+                  onClick={abrirCrearDomicilio}
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
                   Nuevo Domicilio
                 </button>
               </div>
             </div>
 
-            <div className="rd-content">
+            <div className="flex flex-col gap-6 p-7">
               {cargandoDomicilios ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--rd-text-muted)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>sync</span>
+                <div className="p-12 text-center text-[var(--rd-text-muted)]">
+                  <span className="material-symbols-outlined mb-2 block text-[2rem]">sync</span>
                   Cargando domicilios...
                 </div>
               ) : domicilios.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--rd-text-muted)', background: 'var(--rd-card)', borderRadius: '22px', border: '1px solid var(--rd-border)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.75rem', color: 'var(--rd-primary)' }}>local_shipping</span>
-                  <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--rd-text)' }}>Sin domicilios registrados</p>
-                  <p style={{ fontSize: '0.85rem', marginTop: '0.4rem' }}>Crea el primer domicilio con el botón de arriba</p>
+                <div className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-16 text-center text-[var(--rd-text-muted)]">
+                  <span className="material-symbols-outlined mb-3 block text-[2.5rem] text-[var(--rd-primary)]">local_shipping</span>
+                  <p className="text-[1rem] font-bold text-[var(--rd-text)]">Sin domicilios registrados</p>
+                  <p className="mt-1.5 text-[0.85rem]">Crea el primer domicilio con el botón de arriba</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4.5">
                   {domicilios.map(d => (
-                    <div key={d.id_domicilio} className="rd-queue-item" style={{ borderRadius: '22px', padding: '22px', background: 'var(--rd-card)', border: '1px solid var(--rd-border)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          <div className="rd-queue-item__icon">
+                    <div key={d.id_domicilio} className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
+                      <div className="mb-3.5 flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[#f7f2ee] text-[var(--rd-primary)]">
                             <span className="material-symbols-outlined">local_shipping</span>
                           </div>
                           <div>
-                            <p style={{ fontWeight: 800, fontSize: '0.95rem' }}>Domicilio #{d.id_domicilio}</p>
-                            <p style={{ fontSize: '0.78rem', color: 'var(--rd-text-muted)' }}>Pedido #{d.id_pedido}</p>
+                            <p className="text-[0.95rem] font-extrabold">Domicilio #{d.id_domicilio}</p>
+                            <p className="text-[0.78rem] text-[var(--rd-text-muted)]">Pedido #{d.id_pedido}</p>
                           </div>
                         </div>
-                        <span style={{ padding: '4px 12px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700, background: estadoBg[d.estado] ?? '#f0ebe7', color: estadoColor[d.estado] ?? 'var(--rd-text-muted)' }}>
+                        <span
+                          className="rounded-full px-3 py-1 text-[0.72rem] font-bold"
+                          style={{ background: estadoBg[d.estado] ?? '#f0ebe7', color: estadoColor[d.estado] ?? 'var(--rd-text-muted)' }}
+                        >
                           {d.estado}
                         </span>
                       </div>
-                      <div className="rd-address-row" style={{ marginBottom: '10px' }}>
-                        <span className="material-symbols-outlined">location_on</span>
-                        <span style={{ fontSize: '0.875rem' }}>{d.direccion}</span>
+                      <div className="mb-2.5 flex items-center gap-1.5 text-[var(--rd-text-muted)]">
+                        <span className="material-symbols-outlined text-[18px] text-[var(--rd-primary)]">location_on</span>
+                        <span className="text-[0.875rem]">{d.direccion}</span>
                       </div>
                       {d.nombre_cliente && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--rd-text-muted)', fontSize: '0.82rem' }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person</span>
+                        <div className="mb-2.5 flex items-center gap-1.5 text-[0.82rem] text-[var(--rd-text-muted)]">
+                          <span className="material-symbols-outlined text-[16px]">person</span>
                           {d.nombre_cliente}
                         </div>
                       )}
                       {d.estado_pedido && (
-                        <div style={{ fontSize: '0.78rem', color: 'var(--rd-text-muted)', marginBottom: '14px' }}>
+                        <div className="mb-3.5 text-[0.78rem] text-[var(--rd-text-muted)]">
                           Estado pedido: <strong>{d.estado_pedido}</strong>
                         </div>
                       )}
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                        <button onClick={() => abrirEditarDomicilio(d)} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1.5px solid var(--rd-border)', background: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', color: 'var(--rd-primary-dark)' }}>
+                      <div className="mt-1 flex gap-2.5">
+                        <button
+                          onClick={() => abrirEditarDomicilio(d)}
+                          className="flex-1 rounded-xl border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-2.5 text-[0.82rem] font-bold text-[var(--rd-primary-dark)]"
+                        >
                           Editar
                         </button>
-                        <button onClick={() => cancelarDomicilio(d.id_domicilio)} disabled={d.estado === 'CANCELADO'} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1.5px solid #f0ebe7', background: d.estado === 'CANCELADO' ? '#f8f4f1' : 'var(--rd-primary-soft)', fontWeight: 700, fontSize: '0.82rem', cursor: d.estado === 'CANCELADO' ? 'not-allowed' : 'pointer', color: d.estado === 'CANCELADO' ? 'var(--rd-text-muted)' : 'var(--rd-danger)', opacity: d.estado === 'CANCELADO' ? 0.5 : 1 }}>
+                        <button
+                          onClick={() => cancelarDomicilio(d.id_domicilio)}
+                          disabled={d.estado === 'CANCELADO'}
+                          className={`flex-1 rounded-xl border-[1.5px] border-[#f0ebe7] px-3 py-2.5 text-[0.82rem] font-bold ${
+                            d.estado === 'CANCELADO'
+                              ? 'cursor-not-allowed bg-[#f8f4f1] text-[var(--rd-text-muted)] opacity-50'
+                              : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--rd-danger)]'
+                          }`}
+                        >
                           Cancelar
                         </button>
                       </div>
@@ -448,26 +465,39 @@ function Repartidor() {
             </div>
 
             <Modal isOpen={modalDomicilio} onClose={() => setModalDomicilio(false)}>
-              <div style={{ padding: '0 1.5rem 1.5rem' }}>
-                <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontFamily: 'Syne, sans-serif', fontSize: '1.2rem' }}>
+              <div className="px-6 pb-6">
+                <h3 className="mb-6 font-['Syne'] text-[1.2rem] font-extrabold">
                   {modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="flex flex-col gap-4">
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--rd-text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>ID Pedido *</label>
-                    <input style={inputStyle} type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido}
+                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Pedido *</label>
+                    <input
+                      type="number"
+                      placeholder="Ej: 12"
+                      value={domicilioActual.id_pedido}
                       onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))}
-                      disabled={modoEdicionDomicilio} />
+                      disabled={modoEdicionDomicilio}
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                    />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--rd-text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Dirección *</label>
-                    <input style={inputStyle} type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
+                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Dirección *</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Calle 45 # 12-34, Bogotá"
+                      value={domicilioActual.direccion}
+                      onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))}
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                    />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--rd-text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Estado</label>
-                    <select style={inputStyle} value={domicilioActual.estado}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
+                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Estado</label>
+                    <select
+                      value={domicilioActual.estado}
+                      onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}
+                      className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                    >
                       <option value="ASIGNADO">ASIGNADO</option>
                       <option value="EN_CAMINO">EN_CAMINO</option>
                       <option value="ENTREGADO">ENTREGADO</option>
@@ -475,20 +505,32 @@ function Repartidor() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--rd-text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>ID Repartidor</label>
-                    <input style={inputStyle} type="number" placeholder="Opcional" value={domicilioActual.id_repartidor}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
+                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Repartidor</label>
+                    <input
+                      type="number"
+                      placeholder="Opcional"
+                      value={domicilioActual.id_repartidor}
+                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))}
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                    />
                   </div>
                   {errorDomicilio && (
-                    <p style={{ color: 'var(--rd-danger)', fontSize: '0.82rem', background: '#fdecea', padding: '0.6rem 0.85rem', borderRadius: '10px' }}>
+                    <p className="rounded-[10px] bg-[#fdecea] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
                       {errorDomicilio}
                     </p>
                   )}
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '0.5rem' }}>
-                    <button onClick={() => setModalDomicilio(false)} style={{ flex: 1, padding: '12px', borderRadius: '14px', border: '1.5px solid var(--rd-border)', background: '#fff', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', color: 'var(--rd-text-muted)' }}>
+                  <div className="mt-2 flex gap-2.5">
+                    <button
+                      onClick={() => setModalDomicilio(false)}
+                      className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
+                    >
                       Cancelar
                     </button>
-                    <button onClick={guardarDomicilio} disabled={guardandoDomicilio} className="rd-confirm-btn" style={{ flex: 2, padding: '12px', fontSize: '0.875rem' }}>
+                    <button
+                      onClick={guardarDomicilio}
+                      disabled={guardandoDomicilio}
+                      className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+                    >
                       {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
                     </button>
                   </div>
@@ -497,14 +539,13 @@ function Repartidor() {
             </Modal>
           </>
         )}
-
         {(activeItem === 'Historial' || activeItem === 'Soporte') && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--rd-text-muted)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--rd-primary)' }}>
+          <div className="flex min-h-[60vh] flex-col items-center justify-center text-[var(--rd-text-muted)]">
+            <span className="material-symbols-outlined mb-4 text-[3rem] text-[var(--rd-primary)]">
               {activeItem === 'Historial' ? 'history' : 'support_agent'}
             </span>
-            <p style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: 'var(--rd-text)' }}>{activeItem}</p>
-            <p style={{ marginTop: '0.4rem', fontSize: '0.875rem' }}>Sección en construcción</p>
+            <p className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rd-text)]">{activeItem}</p>
+            <p className="mt-1.5 text-[0.875rem]">Sección en construcción</p>
           </div>
         )}
       </main>
