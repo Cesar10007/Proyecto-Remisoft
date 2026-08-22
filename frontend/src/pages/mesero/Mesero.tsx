@@ -139,64 +139,106 @@ function Mesero() {
     if (!confirm('¿Deseas cancelar este pedido?')) return
     try { await api.delete(`/pedidos/${id}`); cargarPedidos() } catch { alert('Error al cancelar') }
   }
-
   return (
-    <div className="wa-wrapper">
-      <aside className="wa-sidebar">
-        <div className="wa-sidebar-brand">
-          <div className="wa-sidebar-logo">Remi<span className="wa-sidebar-logo-accent">Soft</span></div>
-          <div className="wa-sidebar-role">Mesero</div>
+
+    <div
+      className="flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
+      style={{
+        ['--wa-primary' as any]: '#a5360d',
+        ['--wa-primary-dark' as any]: '#852400',
+        ['--wa-primary-light' as any]: '#ffdbd0',
+        ['--wa-primary-container' as any]: '#c74d24',
+        ['--wa-secondary' as any]: '#855400',
+        ['--wa-secondary-light' as any]: '#ffddb7',
+        ['--wa-secondary-fixed-dim' as any]: '#ffb95d',
+        ['--wa-secondary-container' as any]: '#fcaa33',
+        ['--wa-tertiary' as any]: '#00694c',
+        ['--wa-tertiary-light' as any]: '#86f8c9',
+        ['--wa-bg' as any]: '#fcf9f8',
+        ['--wa-surface' as any]: '#ffffff',
+        ['--wa-surface-low' as any]: '#f6f3f2',
+        ['--wa-surface-mid' as any]: '#f0eded',
+        ['--wa-surface-high' as any]: '#e5e2e1',
+        ['--wa-text' as any]: '#1c1b1b',
+        ['--wa-text-muted' as any]: '#58423b',
+        ['--wa-border' as any]: 'rgba(224, 192, 182, 0.2)',
+        background: 'var(--wa-bg)',
+        color: 'var(--wa-text)',
+      }}
+    >
+      <aside className="flex h-screen w-64 min-w-64 shrink-0 flex-col bg-[var(--wa-bg)] p-6 px-4">
+        <div className="mb-10 px-2">
+          <span className="block text-[1.25rem] font-extrabold tracking-[-0.03em] text-[var(--wa-primary)]">
+            Remi<span className="text-[var(--wa-primary)]">Soft</span>
+          </span>
+          <div className="mt-1 text-[0.625rem] font-bold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">
+            Mesero
+          </div>
         </div>
-        <div className="wa-sidebar-nav">
+        <div className="flex flex-1 flex-col gap-2">
           {navItems.map((item) => (
-            <button key={item.label} onClick={() => setActiveItem(item.label)}
-              className={`wa-sidebar-nav-btn${activeItem === item.label ? ' wa-sidebar-nav-btn--active' : ''}`}>
-              <span className="material-symbols-outlined wa-sidebar-nav-icon">{item.icon}</span>
+            <button
+              key={item.label}
+              onClick={() => setActiveItem(item.label)}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-[0.95rem] font-bold transition-all duration-150 ease-in-out active:scale-[0.97] ${
+                activeItem === item.label
+                  ? 'bg-[var(--wa-surface)] text-[var(--wa-primary)] shadow-[0_2px_10px_rgba(28,27,27,0.05)]'
+                  : 'bg-transparent text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
-        <div className="wa-sidebar-footer">
-          <button className="wa-sidebar-primary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">add</span>
+        <div className="mt-auto flex flex-col gap-2">
+          <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] px-4 py-3.5 text-[0.9rem] font-extrabold text-white shadow-[0_16px_24px_rgba(165,54,13,0.22)]">
+            <span className="material-symbols-outlined text-[18px]">add</span>
             Acción Rápida
           </button>
-          <button className="wa-sidebar-secondary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">settings</span>
+          <button className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]">
+            <span className="material-symbols-outlined text-[18px]">settings</span>
             Configuraciones
           </button>
-          <button onClick={() => { logout(); navigate('/') }} className="wa-sidebar-secondary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">logout</span>
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="wa-main">
-        <header className="wa-topbar">
-          <div className="wa-topbar__left">
-            <span className="wa-topbar__brand">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
-            <div className="wa-topbar__tabs">
-              <button className="wa-topbar__tab wa-topbar__tab--active">Plano del Piso</button>
-              <button className="wa-topbar__tab">Pago Rápido</button>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)]">
+        <header className="flex items-center justify-between gap-6 border-b border-[var(--wa-border)] bg-[rgba(252,249,248,0.8)] px-6 py-3 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.06)] backdrop-blur-[12px]">
+          <div className="flex items-center gap-6">
+            <span className="text-[1.125rem] font-black text-[var(--wa-text)]">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
+            <div className="flex items-center gap-6">
+              <button className="border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-primary)]">Plano del Piso</button>
+              <button className="border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">Pago Rápido</button>
             </div>
           </div>
-          <div className="wa-topbar__right">
-            <div className="wa-search">
-              <span className="material-symbols-outlined wa-search__icon">search</span>
-              <input type="text" placeholder="Buscar mesas o artículos..." />
+          <div className="flex items-center gap-6">
+            <div className="relative w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-[var(--wa-text-muted)]">search</span>
+              <input
+                type="text"
+                placeholder="Buscar mesas o artículos..."
+                className="w-full rounded-full border border-[var(--wa-border)] bg-[var(--wa-surface)] py-2.5 pl-10 pr-4 text-[0.875rem] outline-none focus:border-[var(--wa-primary)]"
+              />
             </div>
-            <button className="wa-icon-btn">
+            <button className="flex items-center justify-center border-none bg-transparent text-[var(--wa-text-muted)]">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <div className="wa-profile">
-              <span className="wa-profile__name">{user?.nombre ?? 'Mesero'}</span>
-              <span className="material-symbols-outlined wa-profile__icon">account_circle</span>
+            <div className="flex items-center gap-2 border-l border-[var(--wa-border)] pl-4">
+              <span className="block text-[0.75rem] font-extrabold">{user?.nombre ?? 'Mesero'}</span>
+              <span className="material-symbols-outlined text-[var(--wa-primary)] [font-variation-settings:'FILL'_1]">account_circle</span>
             </div>
           </div>
         </header>
 
-        <div className="wa-content">
+        <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-6">
 
           {activeItem === 'Mesas' && (
             <>
@@ -393,5 +435,6 @@ function Mesero() {
     </div>
   )
 }
+
 
 export default Mesero
