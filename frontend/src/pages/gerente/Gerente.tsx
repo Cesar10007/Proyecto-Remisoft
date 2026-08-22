@@ -704,89 +704,264 @@ function Gerente() {
 
       {/* MODAL PRODUCTOS */}
       <Modal isOpen={modalProducto} onClose={() => setModalProducto(false)}>
-        <div style={{ padding: '1.5rem', minWidth: '400px' }}>
-          <h3 style={{ margin: '0 0 1rem', color: 'var(--texto)' }}>{modoEdicionProducto ? 'Editar Producto' : 'Nuevo Producto'}</h3>
-          {errorProducto && <p style={{ color: 'var(--rojo)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>{errorProducto}</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input placeholder="Nombre *" value={productoActual.Nombre} onChange={e => setProductoActual(p => ({ ...p, Nombre: e.target.value }))} style={inputStyle} />
-            <textarea placeholder="Descripción" value={productoActual.Descripcion} onChange={e => setProductoActual(p => ({ ...p, Descripcion: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
-            <input type="number" placeholder="Precio *" value={productoActual.precio_venta} onChange={e => setProductoActual(p => ({ ...p, precio_venta: e.target.value }))} style={inputStyle} />
-            <input placeholder="Categoría" value={productoActual.Categoria} onChange={e => setProductoActual(p => ({ ...p, Categoria: e.target.value }))} style={inputStyle} />
-            <input placeholder="Tiempo prep. (HH:MM:SS)" value={productoActual.Tiempo_preparacion} onChange={e => setProductoActual(p => ({ ...p, Tiempo_preparacion: e.target.value }))} style={inputStyle} />
-            <select value={productoActual.Estado} onChange={e => setProductoActual(p => ({ ...p, Estado: Number(e.target.value) }))} style={inputStyle}>
-              <option value={1}>Activo</option><option value={0}>Inactivo</option>
+        <div className="min-w-[400px] p-6">
+          <h3 className="mb-4 font-['Syne'] text-[1.2rem] font-bold text-[var(--texto)]">
+            {modoEdicionProducto ? 'Editar Producto' : 'Nuevo Producto'}
+          </h3>
+          {errorProducto && (
+            <p className="mb-3 text-[0.85rem] text-[var(--rojo)]">{errorProducto}</p>
+          )}
+          <div className="flex flex-col gap-3">
+            <input
+              placeholder="Nombre *"
+              value={productoActual.Nombre}
+              onChange={e => setProductoActual(p => ({ ...p, Nombre: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <textarea
+              placeholder="Descripción"
+              value={productoActual.Descripcion}
+              onChange={e => setProductoActual(p => ({ ...p, Descripcion: e.target.value }))}
+              rows={3}
+              className="w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <input
+              type="number"
+              placeholder="Precio *"
+              value={productoActual.precio_venta}
+              onChange={e => setProductoActual(p => ({ ...p, precio_venta: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <input
+              placeholder="Categoría"
+              value={productoActual.Categoria}
+              onChange={e => setProductoActual(p => ({ ...p, Categoria: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <input
+              placeholder="Tiempo prep. (HH:MM:SS)"
+              value={productoActual.Tiempo_preparacion}
+              onChange={e => setProductoActual(p => ({ ...p, Tiempo_preparacion: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <select
+              value={productoActual.Estado}
+              onChange={e => setProductoActual(p => ({ ...p, Estado: Number(e.target.value) }))}
+              className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            >
+              <option value={1}>Activo</option>
+              <option value={0}>Inactivo</option>
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-            <button className="ge-secondary-btn" onClick={() => setModalProducto(false)} disabled={guardandoProducto}>Cancelar</button>
-            <button className="ge-primary-btn" onClick={guardarProducto} disabled={guardandoProducto}>{guardandoProducto ? 'Guardando...' : modoEdicionProducto ? 'Actualizar' : 'Crear'}</button>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              onClick={() => setModalProducto(false)}
+              disabled={guardandoProducto}
+            >
+              Cancelar
+            </button>
+            <button
+              className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+              onClick={guardarProducto}
+              disabled={guardandoProducto}
+            >
+              {guardandoProducto ? 'Guardando...' : modoEdicionProducto ? 'Actualizar' : 'Crear'}
+            </button>
           </div>
         </div>
       </Modal>
 
       {/* MODAL INGREDIENTES */}
       <Modal isOpen={modalIngrediente} onClose={() => setModalIngrediente(false)}>
-        <div style={{ padding: '1.5rem', minWidth: '400px' }}>
-          <h3 style={{ margin: '0 0 1rem', color: 'var(--texto)' }}>{modoEdicionIngrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}</h3>
-          {errorIngrediente && <p style={{ color: 'var(--rojo)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>{errorIngrediente}</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input placeholder="Nombre *" value={ingredienteActual.nombre} onChange={e => setIngredienteActual(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-            <textarea placeholder="Descripción" value={ingredienteActual.descripcion} onChange={e => setIngredienteActual(p => ({ ...p, descripcion: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <input placeholder="Unidad de medida" value={ingredienteActual.unidad_medida} onChange={e => setIngredienteActual(p => ({ ...p, unidad_medida: e.target.value }))} style={inputStyle} />
-              <input type="number" placeholder="Costo unitario ref." value={ingredienteActual.costo_unitario_ref} onChange={e => setIngredienteActual(p => ({ ...p, costo_unitario_ref: e.target.value }))} style={inputStyle} />
+        <div className="min-w-[400px] p-6">
+          <h3 className="mb-4 font-['Syne'] text-[1.2rem] font-bold text-[var(--texto)]">
+            {modoEdicionIngrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
+          </h3>
+          {errorIngrediente && (
+            <p className="mb-3 text-[0.85rem] text-[var(--rojo)]">{errorIngrediente}</p>
+          )}
+          <div className="flex flex-col gap-3">
+            <input
+              placeholder="Nombre *"
+              value={ingredienteActual.nombre}
+              onChange={e => setIngredienteActual(p => ({ ...p, nombre: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <textarea
+              placeholder="Descripción"
+              value={ingredienteActual.descripcion}
+              onChange={e => setIngredienteActual(p => ({ ...p, descripcion: e.target.value }))}
+              rows={2}
+              className="w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                placeholder="Unidad de medida"
+                value={ingredienteActual.unidad_medida}
+                onChange={e => setIngredienteActual(p => ({ ...p, unidad_medida: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
+              <input
+                type="number"
+                placeholder="Costo unitario ref."
+                value={ingredienteActual.costo_unitario_ref}
+                onChange={e => setIngredienteActual(p => ({ ...p, costo_unitario_ref: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
             </div>
-            <input type="number" placeholder="Stock mínimo" value={ingredienteActual.stock_minimo} onChange={e => setIngredienteActual(p => ({ ...p, stock_minimo: e.target.value }))} style={inputStyle} />
+            <input
+              type="number"
+              placeholder="Stock mínimo"
+              value={ingredienteActual.stock_minimo}
+              onChange={e => setIngredienteActual(p => ({ ...p, stock_minimo: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-            <button className="ge-secondary-btn" onClick={() => setModalIngrediente(false)} disabled={guardandoIngrediente}>Cancelar</button>
-            <button className="ge-primary-btn" onClick={guardarIngrediente} disabled={guardandoIngrediente}>{guardandoIngrediente ? 'Guardando...' : modoEdicionIngrediente ? 'Actualizar' : 'Crear'}</button>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              onClick={() => setModalIngrediente(false)}
+              disabled={guardandoIngrediente}
+            >
+              Cancelar
+            </button>
+            <button
+              className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+              onClick={guardarIngrediente}
+              disabled={guardandoIngrediente}
+            >
+              {guardandoIngrediente ? 'Guardando...' : modoEdicionIngrediente ? 'Actualizar' : 'Crear'}
+            </button>
           </div>
         </div>
       </Modal>
 
       {/* MODAL PROVEEDORES */}
       <Modal isOpen={modalProveedor} onClose={() => setModalProveedor(false)}>
-        <div style={{ padding: '1.5rem', minWidth: '420px' }}>
-          <h3 style={{ margin: '0 0 1rem', color: 'var(--texto)' }}>{modoEdicionProveedor ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h3>
-          {errorProveedor && <p style={{ color: 'var(--rojo)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>{errorProveedor}</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input placeholder="Nombre *" value={proveedorActual.nombre} onChange={e => setProveedorActual(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-            <input placeholder="Nombre contacto" value={proveedorActual.nombre_contacto} onChange={e => setProveedorActual(p => ({ ...p, nombre_contacto: e.target.value }))} style={inputStyle} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <input placeholder="Teléfono" value={proveedorActual.telefono} onChange={e => setProveedorActual(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} />
-              <input type="email" placeholder="Email" value={proveedorActual.email} onChange={e => setProveedorActual(p => ({ ...p, email: e.target.value }))} style={inputStyle} />
+        <div className="min-w-[420px] p-6">
+          <h3 className="mb-4 font-['Syne'] text-[1.2rem] font-bold text-[var(--texto)]">
+            {modoEdicionProveedor ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+          </h3>
+          {errorProveedor && (
+            <p className="mb-3 text-[0.85rem] text-[var(--rojo)]">{errorProveedor}</p>
+          )}
+          <div className="flex flex-col gap-3">
+            <input
+              placeholder="Nombre *"
+              value={proveedorActual.nombre}
+              onChange={e => setProveedorActual(p => ({ ...p, nombre: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <input
+              placeholder="Nombre contacto"
+              value={proveedorActual.nombre_contacto}
+              onChange={e => setProveedorActual(p => ({ ...p, nombre_contacto: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                placeholder="Teléfono"
+                value={proveedorActual.telefono}
+                onChange={e => setProveedorActual(p => ({ ...p, telefono: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={proveedorActual.email}
+                onChange={e => setProveedorActual(p => ({ ...p, email: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
             </div>
-            <input placeholder="Dirección" value={proveedorActual.direccion} onChange={e => setProveedorActual(p => ({ ...p, direccion: e.target.value }))} style={inputStyle} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <input placeholder="NIT" value={proveedorActual.nit} onChange={e => setProveedorActual(p => ({ ...p, nit: e.target.value }))} style={inputStyle} />
-              <input placeholder="Tipo proveedor" value={proveedorActual.tipo_proveedor} onChange={e => setProveedorActual(p => ({ ...p, tipo_proveedor: e.target.value }))} style={inputStyle} />
+            <input
+              placeholder="Dirección"
+              value={proveedorActual.direccion}
+              onChange={e => setProveedorActual(p => ({ ...p, direccion: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                placeholder="NIT"
+                value={proveedorActual.nit}
+                onChange={e => setProveedorActual(p => ({ ...p, nit: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
+              <input
+                placeholder="Tipo proveedor"
+                value={proveedorActual.tipo_proveedor}
+                onChange={e => setProveedorActual(p => ({ ...p, tipo_proveedor: e.target.value }))}
+                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+              />
             </div>
-            <select value={proveedorActual.estado} onChange={e => setProveedorActual(p => ({ ...p, estado: e.target.value }))} style={inputStyle}>
-              <option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option>
+            <select
+              value={proveedorActual.estado}
+              onChange={e => setProveedorActual(p => ({ ...p, estado: e.target.value }))}
+              className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            >
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-            <button className="ge-secondary-btn" onClick={() => setModalProveedor(false)} disabled={guardandoProveedor}>Cancelar</button>
-            <button className="ge-primary-btn" onClick={guardarProveedor} disabled={guardandoProveedor}>{guardandoProveedor ? 'Guardando...' : modoEdicionProveedor ? 'Actualizar' : 'Crear'}</button>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              onClick={() => setModalProveedor(false)}
+              disabled={guardandoProveedor}
+            >
+              Cancelar
+            </button>
+            <button
+              className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+              onClick={guardarProveedor}
+              disabled={guardandoProveedor}
+            >
+              {guardandoProveedor ? 'Guardando...' : modoEdicionProveedor ? 'Actualizar' : 'Crear'}
+            </button>
           </div>
         </div>
       </Modal>
 
       {/* MODAL CAJAS */}
       <Modal isOpen={modalCaja} onClose={() => setModalCaja(false)}>
-        <div style={{ padding: '1.5rem', minWidth: '380px' }}>
-          <h3 style={{ margin: '0 0 1rem', color: 'var(--texto)' }}>{modoEdicionCaja ? 'Editar Caja' : 'Nueva Caja'}</h3>
-          {errorCaja && <p style={{ color: 'var(--rojo)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>{errorCaja}</p>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input placeholder="Nombre de la caja *" value={cajaActual.nombre} onChange={e => setCajaActual(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-            <select value={cajaActual.estado} onChange={e => setCajaActual(p => ({ ...p, estado: e.target.value }))} style={inputStyle}>
-              <option value="ACTIVA">Activa</option><option value="INACTIVA">Inactiva</option>
+        <div className="min-w-[380px] p-6">
+          <h3 className="mb-4 font-['Syne'] text-[1.2rem] font-bold text-[var(--texto)]">
+            {modoEdicionCaja ? 'Editar Caja' : 'Nueva Caja'}
+          </h3>
+          {errorCaja && (
+            <p className="mb-3 text-[0.85rem] text-[var(--rojo)]">{errorCaja}</p>
+          )}
+          <div className="flex flex-col gap-3">
+            <input
+              placeholder="Nombre de la caja *"
+              value={cajaActual.nombre}
+              onChange={e => setCajaActual(p => ({ ...p, nombre: e.target.value }))}
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            />
+            <select
+              value={cajaActual.estado}
+              onChange={e => setCajaActual(p => ({ ...p, estado: e.target.value }))}
+              className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.95rem] text-[var(--texto)] outline-none"
+            >
+              <option value="ACTIVA">Activa</option>
+              <option value="INACTIVA">Inactiva</option>
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-            <button className="ge-secondary-btn" onClick={() => setModalCaja(false)} disabled={guardandoCaja}>Cancelar</button>
-            <button className="ge-primary-btn" onClick={guardarCaja} disabled={guardandoCaja}>{guardandoCaja ? 'Guardando...' : modoEdicionCaja ? 'Actualizar' : 'Crear'}</button>
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              onClick={() => setModalCaja(false)}
+              disabled={guardandoCaja}
+            >
+              Cancelar
+            </button>
+            <button
+              className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+              onClick={guardarCaja}
+              disabled={guardandoCaja}
+            >
+              {guardandoCaja ? 'Guardando...' : modoEdicionCaja ? 'Actualizar' : 'Crear'}
+            </button>
           </div>
         </div>
       </Modal>
