@@ -12,7 +12,7 @@ function passwordIsValid(password) {
     password.length >= 8 &&
     /[A-Z]/.test(password) &&
     /\d/.test(password) &&
-    /[!@#$%^&*(),.?":{}|<>_+\-]/.test(password)
+    /[!@#$%^&*(),.?":{}|<>_+-]/.test(password)
   );
 }
 
