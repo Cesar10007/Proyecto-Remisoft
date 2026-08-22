@@ -130,50 +130,77 @@ function Repartidor() {
   }
 
   return (
-    <div className="rd-wrapper">
-
+    <div
+      className="flex min-h-screen font-['DM_Sans']"
+      style={{
+        ['--rd-primary' as any]: '#d85a30',
+        ['--rd-primary-dark' as any]: '#993c1d',
+        ['--rd-primary-soft' as any]: '#faece7',
+        ['--rd-secondary' as any]: '#ef9f27',
+        ['--rd-secondary-soft' as any]: '#faeeda',
+        ['--rd-success' as any]: '#1d9e75',
+        ['--rd-success-soft' as any]: '#e1f5ee',
+        ['--rd-danger' as any]: '#c24732',
+        ['--rd-bg' as any]: '#fdfaf7',
+        ['--rd-card' as any]: '#ffffff',
+        ['--rd-border' as any]: 'rgba(0,0,0,0.08)',
+        ['--rd-text' as any]: '#1a1a1a',
+        ['--rd-text-muted' as any]: '#5f5e5a',
+        background: 'var(--rd-bg)',
+        color: 'var(--rd-text)',
+      }}
+    >
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="rd-sidebar">
-        <div className="rd-sidebar__brand">
-          <span className="rd-sidebar__title">
-            Remi<span style={{ color: 'var(--rd-secondary)' }}>Soft</span>
+      <aside className="fixed left-0 top-0 z-20 flex min-h-screen w-60 flex-col border-r border-[var(--rd-border)] bg-[var(--rd-card)] p-4">
+        <div className="mb-8 px-2">
+          <span className="block font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rd-primary-dark)]">
+            Remi<span className="text-[var(--rd-secondary)]">Soft</span>
           </span>
-          <span className="rd-sidebar__subtitle">Operación de Reparto</span>
+          <span className="mt-1 block text-[0.7rem] uppercase tracking-[1.5px] text-[var(--rd-text-muted)]">
+            Operación de Reparto
+          </span>
         </div>
 
-        <nav className="rd-sidebar__nav">
+        <nav className="flex flex-1 flex-col gap-0.5">
           {menuItems.map(item => (
             <button
               key={item.label}
               onClick={() => setActiveItem(item.label)}
-              className={`rd-nav-item${activeItem === item.label ? ' rd-nav-item--active' : ''}`}
+              className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[0.92rem] font-medium ${
+                activeItem === item.label
+                  ? 'bg-[var(--rd-primary-soft)] font-bold text-[var(--rd-primary-dark)]'
+                  : 'bg-transparent text-[var(--rd-text-muted)] hover:bg-[#f8f4f1] hover:text-[var(--rd-text)]'
+              }`}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{item.icon}</span>
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               {item.label}
               {item.label === 'Soporte' && (
-                <span style={{ marginLeft: 'auto', background: 'var(--rd-primary)', color: '#fff', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px' }}>3</span>
+                <span className="ml-auto rounded-full bg-[var(--rd-primary)] px-2 py-0.5 text-[0.7rem] font-bold text-white">3</span>
               )}
             </button>
           ))}
         </nav>
 
-        <div className="rd-sidebar__footer">
-          <button className="rd-primary-side-btn">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '8px', verticalAlign: 'middle' }}>schedule</span>
+        <div className="mt-auto flex flex-col gap-2.5 px-1">
+          <button className="w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3.5 font-bold text-white">
+            <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
             Finalizar turno
           </button>
-          <button className="rd-footer-link">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
+          <button className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[var(--rd-text-muted)] hover:bg-[#f8f4f1]">
+            <span className="material-symbols-outlined text-[18px]">settings</span>
             Configuraciones
           </button>
-          <button onClick={() => { logout(); navigate('/') }} className="rd-footer-link rd-footer-link--danger">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[#b64646] hover:bg-[#f8f4f1]"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="rd-main">
+      <main className="ml-60 min-w-0 flex-1">
         {activeItem === 'Resumen' && (
           <>
             <div className="rd-topbar">
