@@ -1,22 +1,22 @@
+import Button from '../common/Button'
+
 interface NavbarProps {
   onLogin: () => void
 }
 
 function Navbar({ onLogin }: NavbarProps) {
   return (
-    <nav className="nav-publica">
-      <a href="#" className="nav-logo">
-        Remi<span>Soft</span>
+    <nav className="fixed top-0 left-0 right-0 z-[100] flex h-16 items-center justify-between border-b border-[var(--borde)] bg-[rgba(253,250,247,0.92)] px-[5%] backdrop-blur-[12px]">
+      
+      <a
+        href="#"
+        className="font-['Syne'] text-[1.4rem] font-extrabold tracking-[-0.5px] text-[var(--rojo-dark)] no-underline"
+      >
+        Remi<span className="text-[var(--amarillo)]">Soft</span>
       </a>
 
-      <div className="nav-actions">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={onLogin}
-        >
-          Iniciar sesión
-        </button>
+      <div className="flex items-center gap-2.5">
+        <Button onClick={onLogin}>Iniciar sesión</Button>
       </div>
     </nav>
   )
