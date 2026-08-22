@@ -597,27 +597,51 @@ function Gerente() {
         )}
         {/* PROVEEDORES — CRUD */}
         {seccionActiva === 'Proveedores' && (
-          <section className="ge-card ge-productos-card" style={{ marginTop: '1.5rem' }}>
-            <div className="ge-productos-header">
-              <h3 className="ge-section-title ge-section-title--sm">Gestión de Proveedores</h3>
-              <button className="ge-primary-btn" onClick={abrirCrearProveedor}>+ Nuevo Proveedor</button>
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Gestión de Proveedores</h3>
+              <button
+                className="rounded-[10px] bg-[var(--rojo)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+                onClick={abrirCrearProveedor}
+              >
+                + Nuevo Proveedor
+              </button>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="ge-productos-tabla">
-                <thead><tr><th>Nombre</th><th>Contacto</th><th>Teléfono</th><th>Email</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Nombre</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Contacto</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Teléfono</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Email</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Tipo</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {proveedores.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--texto-muted)' }}>Cargando...</td></tr> : proveedores.map(p => (
+                  {proveedores.length === 0 ? (
+                    <tr><td colSpan={7} className="py-4 text-center text-[var(--texto-muted)]">Cargando...</td></tr>
+                  ) : proveedores.map(p => (
                     <tr key={p.id_proveedor}>
-                      <td><strong>{p.nombre}</strong></td>
-                      <td>{p.nombre_contacto}</td>
-                      <td>{p.telefono}</td>
-                      <td>{p.email}</td>
-                      <td>{p.tipo_proveedor}</td>
-                      <td style={{ color: p.estado === 'ACTIVO' ? 'var(--verde)' : 'var(--rojo)' }}>{p.estado}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button className="ge-secondary-btn" onClick={() => abrirEditarProveedor(p)}>Editar</button>
-                          <button className={p.estado === 'ACTIVO' ? 'ge-logout-btn' : 'ge-primary-btn'} onClick={() => toggleProveedor(p.id_proveedor, p.estado)}>{p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</button>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{p.nombre}</strong></td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.nombre_contacto}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.telefono}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.email}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.tipo_proveedor}</td>
+                      <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] ${p.estado === 'ACTIVO' ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{p.estado}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
+                        <div className="flex gap-2">
+                          <button className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProveedor(p)}>Editar</button>
+                          <button
+                            className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
+                              p.estado === 'ACTIVO' ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
+                            }`}
+                            onClick={() => toggleProveedor(p.id_proveedor, p.estado)}
+                          >
+                            {p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
+                          </button>
                         </div>
                       </td>
                     </tr>
