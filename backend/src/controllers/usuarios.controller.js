@@ -103,12 +103,28 @@ function validatePassword(value, required = false) {
     return 'El campo contrasena debe ser texto';
   }
 
-  if (value.length < 6) {
-    return 'El campo contrasena debe tener mínimo 6 caracteres';
+  if (value.length < 8) {
+    return 'La contraseña debe tener mínimo 8 caracteres';
   }
 
   if (value.length > 255) {
-    return 'El campo contrasena no puede superar 255 caracteres';
+    return 'La contraseña no puede superar 255 caracteres';
+  }
+
+  if (!/[a-z]/.test(value)) {
+    return 'La contraseña debe incluir al menos una letra minúscula';
+  }
+
+  if (!/[A-Z]/.test(value)) {
+    return 'La contraseña debe incluir al menos una letra mayúscula';
+  }
+
+  if (!/\d/.test(value)) {
+    return 'La contraseña debe incluir al menos un número';
+  }
+
+  if (!/[^A-Za-z0-9]/.test(value)) {
+    return 'La contraseña debe incluir al menos un carácter especial';
   }
 
   return null;
@@ -353,7 +369,7 @@ export async function crear(req, res, next) {
       });
     }
 
-    const contrasena_hash = await bcrypt.hash(contrasena, 10);
+    const contrasena_hash = await bcrypt.hash(contrasena, 12);
 
     await prisma.usuario.create({
       data: {
@@ -454,7 +470,7 @@ export async function actualizar(req, res, next) {
     const updateData = { ...data };
 
     if (!isEmpty(contrasena)) {
-      updateData.contrasena_hash = await bcrypt.hash(contrasena, 10);
+      updateData.contrasena_hash = await bcrypt.hash(contrasena, 12);
     }
 
     await prisma.usuario.update({
