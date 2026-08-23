@@ -86,6 +86,14 @@ app.use('/api/roles', rolRoutes);
 app.use('/api/turnos', turnosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Ruta no encontrada',
+    code: 'NOT_FOUND',
+  });
+});
+
 app.use(errorHandler);
 
 app.listen(port, host, () => {
