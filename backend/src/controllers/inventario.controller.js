@@ -1,52 +1,89 @@
 import prisma from '../config/prisma.js';
 
+const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
+const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
+
+function parseIngredientId(value) {
+  const id = Number.parseInt(value, 10);
+
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function calcularStockActual(movimientos) {
+  return movimientos.reduce((total, movimiento) => {
+    const cantidad = Number(movimiento.cantidad ?? 0);
+
+    if (TIPOS_MOVIMIENTO_SUMA.has(movimiento.tipo_movimiento)) {
+      return total + cantidad;
+    }
+
+    if (TIPOS_MOVIMIENTO_RESTA.has(movimiento.tipo_movimiento)) {
+      return total - cantidad;
+    }
+
+    return total;
+  }, 0);
+}
+
+function serializarIngrediente(ingrediente) {
+  const stockActual = calcularStockActual(ingrediente.inventario_mov);
+
+  return {
+    id_ingrediente: ingrediente.id_ingrediente,
+    nombre: ingrediente.nombre,
+    descripcion: ingrediente.descripcion,
+    unidad_medida: ingrediente.unidad_medida,
+    costo_unitario_ref: ingrediente.costo_unitario_ref,
+    stock_minimo: ingrediente.stock_minimo,
+    stock_actual: stockActual,
+    stock_bajo: stockActual <= Number(ingrediente.stock_minimo ?? 0),
+    movimientos: ingrediente.inventario_mov.length,
+  };
+}
+
 /**
  * GET /api/inventario
- * Listar todo el inventario con ingredientes relacionados
+ * Lista ingredientes con stock calculado desde inventario_mov.
  */
 export async function index(req, res, next) {
   try {
-    const { id_ingrediente, stock_minimo } = req.query;
+    const idIngrediente = req.query.id_ingrediente
+      ? parseIngredientId(req.query.id_ingrediente)
+      : null;
 
-    const where = {};
-
-    if (id_ingrediente) {
-      where.id_ingrediente = parseInt(id_ingrediente);
-    }
-
-    // Filtrar por stock bajo (opcional)
-    if (stock_minimo === 'true') {
-      const inventario = await prisma.inventario.findMany({
-        where,
-        include: {
-          ingredientes: true
-        }
-      });
-      
-      // Filtrar manualmente los que tienen stock bajo
-      const stockBajo = inventario.filter(item => 
-        item.stock_actual <= (item.stock_minimo || 0)
-      );
-
-      return res.status(200).json({
-        success: true,
-        data: stockBajo,
-        count: stockBajo.length,
-        message: 'Mostrando items con stock bajo'
+    if (req.query.id_ingrediente && !idIngrediente) {
+      return res.status(400).json({
+        success: false,
+        message: 'id_ingrediente debe ser un entero positivo.',
+        code: 'INVALID_INGREDIENTE_ID',
       });
     }
 
-    const inventario = await prisma.inventario.findMany({
-      where,
+    const ingredientes = await prisma.ingrediente.findMany({
+      where: idIngrediente ? { id_ingrediente: idIngrediente } : undefined,
       include: {
-        ingredientes: true
-      }
+        inventario_mov: {
+          select: {
+            tipo_movimiento: true,
+            cantidad: true,
+          },
+        },
+      },
+      orderBy: {
+        id_ingrediente: 'asc',
+      },
     });
 
-    res.status(200).json({
+    const inventario = ingredientes.map(serializarIngrediente);
+    const soloStockBajo = req.query.stock_minimo === 'true';
+    const data = soloStockBajo
+      ? inventario.filter((item) => item.stock_bajo)
+      : inventario;
+
+    return res.status(200).json({
       success: true,
-      data: inventario,
-      count: inventario.length
+      data,
+      count: data.length,
     });
   } catch (error) {
     next(error);
@@ -55,262 +92,47 @@ export async function index(req, res, next) {
 
 /**
  * GET /api/inventario/:id
- * Obtener un item de inventario por ID
+ * Obtiene un ingrediente con stock calculado e historial de movimientos.
  */
 export async function show(req, res, next) {
   try {
-    const { id } = req.params;
+    const idIngrediente = parseIngredientId(req.params.id);
 
-    const item = await prisma.inventario.findUnique({
-      where: { id_inventario: parseInt(id) },
-      include: {
-        ingredientes: true
-      }
-    });
-
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item de inventario no encontrado',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: item
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * POST /api/inventario
- * Crear un nuevo item de inventario
- */
-export async function store(req, res, next) {
-  try {
-    const { id_ingrediente, stock_actual, stock_minimo, stock_maximo, ubicacion } = req.body;
-
-    // Validaciones
-    if (!id_ingrediente) {
+    if (!idIngrediente) {
       return res.status(400).json({
         success: false,
-        message: 'El ID del ingrediente es requerido',
-        code: 'MISSING_INGREDIENTE_ID'
+        message: 'El ID debe ser un entero positivo.',
+        code: 'INVALID_INGREDIENTE_ID',
       });
     }
 
-    // Verificar que el ingrediente existe
-    const ingrediente = await prisma.ingredientes.findUnique({
-      where: { id_ingrediente: parseInt(id_ingrediente) }
+    const ingrediente = await prisma.ingrediente.findUnique({
+      where: {
+        id_ingrediente: idIngrediente,
+      },
+      include: {
+        inventario_mov: {
+          orderBy: {
+            fecha_hora: 'desc',
+          },
+        },
+      },
     });
 
     if (!ingrediente) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        message: 'El ingrediente especificado no existe',
-        code: 'INVALID_INGREDIENTE_ID'
+        message: 'Ingrediente no encontrado.',
+        code: 'NOT_FOUND',
       });
     }
 
-    // Verificar que no ya existe inventario para este ingrediente
-    const inventarioExistente = await prisma.inventario.findUnique({
-      where: { id_ingrediente: parseInt(id_ingrediente) }
-    });
-
-    if (inventarioExistente) {
-      return res.status(409).json({
-        success: false,
-        message: 'El ingrediente ya tiene un registro de inventario',
-        code: 'DUPLICATE_INVENTORY'
-      });
-    }
-
-    // Crear inventario
-    const inventario = await prisma.inventario.create({
+    return res.status(200).json({
+      success: true,
       data: {
-        id_ingrediente: parseInt(id_ingrediente),
-        stock_actual: stock_actual ? parseFloat(stock_actual) : 0,
-        stock_minimo: stock_minimo ? parseFloat(stock_minimo) : 0,
-        stock_maximo: stock_maximo ? parseFloat(stock_maximo) : null,
-        ubicacion: ubicacion || null
+        ...serializarIngrediente(ingrediente),
+        historial_movimientos: ingrediente.inventario_mov,
       },
-      include: {
-        ingredientes: true
-      }
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Item de inventario creado exitosamente',
-      data: inventario
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * PUT /api/inventario/:id
- * Actualizar un item de inventario
- */
-export async function update(req, res, next) {
-  try {
-    const { id } = req.params;
-    const { stock_actual, stock_minimo, stock_maximo, ubicacion } = req.body;
-
-    // Verificar que existe
-    const inventarioExistente = await prisma.inventario.findUnique({
-      where: { id_inventario: parseInt(id) }
-    });
-
-    if (!inventarioExistente) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item de inventario no encontrado',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Actualizar
-    const inventario = await prisma.inventario.update({
-      where: { id_inventario: parseInt(id) },
-      data: {
-        stock_actual: stock_actual !== undefined ? parseFloat(stock_actual) : undefined,
-        stock_minimo: stock_minimo !== undefined ? parseFloat(stock_minimo) : undefined,
-        stock_maximo: stock_maximo !== undefined ? parseFloat(stock_maximo) : undefined,
-        ubicacion: ubicacion !== undefined ? ubicacion : undefined
-      },
-      include: {
-        ingredientes: true
-      }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Inventario actualizado exitosamente',
-      data: inventario
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * DELETE /api/inventario/:id
- * Eliminar un item de inventario
- */
-export async function destroy(req, res, next) {
-  try {
-    const { id } = req.params;
-
-    // Verificar que existe
-    const inventario = await prisma.inventario.findUnique({
-      where: { id_inventario: parseInt(id) }
-    });
-
-    if (!inventario) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item de inventario no encontrado',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Eliminar
-    await prisma.inventario.delete({
-      where: { id_inventario: parseInt(id) }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Item de inventario eliminado exitosamente'
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * POST /api/inventario/:id/ajustar
- * Ajustar stock (positivo o negativo) con razón
- */
-export async function ajustarStock(req, res, next) {
-  try {
-    const { id } = req.params;
-    const { cantidad, razon, tipo_ajuste } = req.body;
-
-    // Validaciones
-    if (!cantidad || typeof cantidad !== 'number') {
-      return res.status(400).json({
-        success: false,
-        message: 'La cantidad es requerida y debe ser un número',
-        code: 'MISSING_CANTIDAD'
-      });
-    }
-
-    if (!tipo_ajuste || !['entrada', 'salida', 'ajuste', 'merma'].includes(tipo_ajuste)) {
-      return res.status(400).json({
-        success: false,
-        message: 'El tipo de ajuste debe ser: entrada, salida, ajuste o merma',
-        code: 'INVALID_TIPO_AJUSTE'
-      });
-    }
-
-    // Verificar que existe
-    const inventario = await prisma.inventario.findUnique({
-      where: { id_inventario: parseInt(id) },
-      include: { ingredientes: true }
-    });
-
-    if (!inventario) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item de inventario no encontrado',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Calcular nuevo stock
-    const stockActual = inventario.stock_actual || 0;
-    const nuevoStock = tipo_ajuste === 'salida' || tipo_ajuste === 'merma' 
-      ? stockActual - Math.abs(cantidad) 
-      : stockActual + Math.abs(cantidad);
-
-    // Validar que no quede negativo
-    if (nuevoStock < 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Stock insuficiente. Actual: ${stockActual}, Requerido: ${Math.abs(cantidad)}`,
-        code: 'INSUFFICIENT_STOCK'
-      });
-    }
-
-    // Actualizar stock
-    const inventarioActualizado = await prisma.inventario.update({
-      where: { id_inventario: parseInt(id) },
-      data: { stock_actual: nuevoStock },
-      include: { ingredientes: true }
-    });
-
-    // TODO: Crear registro en ajuste_inventario para auditora
-    // await prisma.ajuste_inventario.create({ ... })
-
-    res.status(200).json({
-      success: true,
-      message: `Stock ajustado: ${stockActual} → ${nuevoStock}`,
-      data: {
-        inventario: inventarioActualizado,
-        ajuste: {
-          cantidad,
-          tipo: tipo_ajuste,
-          razon: razon || null,
-          stock_anterior: stockActual,
-          stock_nuevo: nuevoStock
-        }
-      }
     });
   } catch (error) {
     next(error);
@@ -319,29 +141,33 @@ export async function ajustarStock(req, res, next) {
 
 /**
  * GET /api/inventario/alertas/stock-bajo
- * Obtener alertas de stock bajo
+ * Lista ingredientes cuyo stock calculado está en o bajo su mínimo.
  */
 export async function stockBajo(req, res, next) {
   try {
-    const inventario = await prisma.inventario.findMany({
-      where: {
-        stock_actual: {
-          lte: prisma.inventario.fields.stock_minimo
-        }
-      },
+    const ingredientes = await prisma.ingrediente.findMany({
       include: {
-        ingredientes: true
+        inventario_mov: {
+          select: {
+            tipo_movimiento: true,
+            cantidad: true,
+          },
+        },
       },
       orderBy: {
-        stock_actual: 'asc'
-      }
+        id_ingrediente: 'asc',
+      },
     });
 
-    res.status(200).json({
+    const data = ingredientes
+      .map(serializarIngrediente)
+      .filter((item) => item.stock_bajo);
+
+    return res.status(200).json({
       success: true,
-      data: inventario,
-      count: inventario.length,
-      message: `${inventario.length} items con stock bajo`
+      data,
+      count: data.length,
+      message: `${data.length} ingredientes con stock bajo.`,
     });
   } catch (error) {
     next(error);
