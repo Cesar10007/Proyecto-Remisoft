@@ -1,86 +1,57 @@
 import prisma from '../config/prisma.js';
 
 function parseId(value) {
-  const id = Number.parseInt(value, 10);
-  return Number.isNaN(id) ? null : id;
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-export async function index(req, res, next) {
+// GET /api/categorias
+export async function index(_req, res, next) {
   try {
     const categorias = await prisma.categoria_productos.findMany({
-      orderBy: {
-        id_categoria: 'asc',
-      },
+      orderBy: { nombre: 'asc' },
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: categorias,
       count: categorias.length,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 }
 
+// GET /api/categorias/:id
 export async function show(req, res, next) {
   try {
-    const idCategoria = parseId(req.params.id);
+    const id = parseId(req.params.id);
 
-    if (idCategoria === null) {
-      return res.status(400).json({
+    if (!id) {
+      return res.status(422).json({
         success: false,
-        message: 'ID de categoría inválido',
+        message: 'El id de la categoría debe ser un número entero válido.',
         code: 'INVALID_ID',
       });
     }
 
     const categoria = await prisma.categoria_productos.findUnique({
-      where: {
-        id_categoria: idCategoria,
-      },
+      where: { id_categoria: id },
     });
 
     if (!categoria) {
       return res.status(404).json({
         success: false,
-        message: 'No encontrada',
+        message: 'Categoría no encontrada.',
         code: 'NOT_FOUND',
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: categoria,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
-}
-
-export async function store(req, res) {
-  return res.status(501).json({
-    success: false,
-    message:
-      'Las categorías se obtienen desde la tabla categoria_productos y no tienen CRUD independiente',
-    code: 'CATEGORY_CRUD_NOT_SUPPORTED',
-  });
-}
-
-export async function update(req, res) {
-  return res.status(501).json({
-    success: false,
-    message:
-      'Las categorías se obtienen desde la tabla categoria_productos y no tienen CRUD independiente',
-    code: 'CATEGORY_CRUD_NOT_SUPPORTED',
-  });
-}
-
-export async function destroy(req, res) {
-  return res.status(501).json({
-    success: false,
-    message:
-      'Las categorías se obtienen desde la tabla categoria_productos y no tienen CRUD independiente',
-    code: 'CATEGORY_CRUD_NOT_SUPPORTED',
-  });
 }

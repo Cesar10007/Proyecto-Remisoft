@@ -10,9 +10,11 @@ function passwordIsValid(password) {
   return (
     typeof password === 'string' &&
     password.length >= 8 &&
+    password.length <= 255 &&
+    /[a-z]/.test(password) &&
     /[A-Z]/.test(password) &&
     /\d/.test(password) &&
-    /[!@#$%^&*(),.?":{}|<>_+-]/.test(password)
+    /[^A-Za-z0-9]/.test(password)
   );
 }
 
@@ -97,7 +99,7 @@ export async function resetPassword(req, res, next) {
 
     if (!passwordIsValid(password)) {
       errors.password = [
-        'La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial.',
+        'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.',
       ];
     }
 
