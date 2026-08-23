@@ -6,7 +6,9 @@ export default function errorHandler(err, req, res, next) {
   }
 
   if (err.code === 'P2002') {
-    const field = err.meta?.target ? err.meta.target.join(', ') : 'campo';
+    const field = err.meta?.target
+      ? err.meta.target.join(', ')
+      : 'campo';
 
     return res.status(409).json({
       success: false,
@@ -18,7 +20,8 @@ export default function errorHandler(err, req, res, next) {
   if (err.code === 'P2003') {
     return res.status(400).json({
       success: false,
-      message: 'No se puede completar la operación porque existen registros relacionados',
+      message:
+        'No se puede completar la operación porque existen registros relacionados',
       code: 'FOREIGN_KEY_CONSTRAINT',
     });
   }
@@ -31,7 +34,15 @@ export default function errorHandler(err, req, res, next) {
     });
   }
 
-  const status = err.status || err.statusCode || 500;
+  const status =
+    Number.isInteger(err.status) && err.status >= 400 && err.status < 600
+      ? err.status
+      : Number.isInteger(err.statusCode) &&
+          err.statusCode >= 400 &&
+          err.statusCode < 600
+        ? err.statusCode
+        : 500;
+
   const isProduction = process.env.NODE_ENV === 'production';
 
   return res.status(status).json({
@@ -39,6 +50,8 @@ export default function errorHandler(err, req, res, next) {
     message: isProduction
       ? 'Error interno del servidor'
       : err.message || 'Error interno del servidor',
-    code: isProduction ? 'INTERNAL_ERROR' : err.code || 'INTERNAL_ERROR',
+    code: isProduction
+      ? 'INTERNAL_ERROR'
+      : err.code || 'INTERNAL_ERROR',
   });
 }
