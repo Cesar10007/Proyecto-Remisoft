@@ -57,6 +57,8 @@ INSERT INTO restaurante (
 
 -- 3. USUARIO
 -- Carga usuarios internos con sus roles operativos y cuentas activas.
+-- 3. USUARIO
+-- Todos los usuarios de prueba usan la contraseña: 123456
 INSERT INTO usuario (
   id_usuario,
   id_rol,
@@ -69,17 +71,16 @@ INSERT INTO usuario (
   contrasena_hash,
   activo
 ) VALUES
-  (1, 1, NULL, '1001', 'Admin', 'Sistema', 'admin@resto.com', '3000000000', '...', 1),
-  (2, 2, 1, '1002', 'Laura', 'Gómez', 'laura.gomez@resto.com', '3009876543', '...', 1),
-  (3, 3, 1, '1003', 'Andrés', 'Torres', 'andres.torres@resto.com', '3101112223', '...', 1),
-  (4, 4, 1, '1004', 'Sofía', 'Martínez', 'sofia.martinez@resto.com', '3154445556', '...', 1),
-  (5, 5, 1, '1005', 'Juan', 'López', 'juan.lopez@resto.com', '3207778889', '...', 1),
-  (9, 2, 2, '1009', 'Sebastián', 'Díaz', 'sebastian.diaz@resto.com', '3203334445', '...', 1),
-  (6, 4, 2, '1006', 'Valentina', 'Herrera', 'valentina.herrera@resto.com', '3001239876', '...', 1),
-  (7, 3, 2, '1007', 'Miguel', 'Castro', 'miguel.castro@resto.com', '3109998887', '...', 1),
-  (8, 5, 2, '1008', 'Isabella', 'Vargas', 'isabella.vargas@resto.com', '3156667778', '...', 1),
-  (10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '...', 1);
-
+(1, 1, NULL, '1001', 'Carlos', 'Ramírez', 'carlos.ramirez@resto.com', '3001234567', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(2, 2, 1, '1002', 'Laura', 'Gómez', 'laura.gomez@resto.com', '3009876543', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(3, 3, 1, '1003', 'Andrés', 'Torres', 'andres.torres@resto.com', '3101112223', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(4, 4, 1, '1004', 'Sofía', 'Martínez', 'sofia.martinez@resto.com', '3154445556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(5, 5, 1, '1005', 'Juan', 'López', 'juan.lopez@resto.com', '3207778889', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(6, 4, 2, '1006', 'Valentina', 'Herrera', 'valentina.herrera@resto.com', '3001239876', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(7, 3, 2, '1007', 'Miguel', 'Castro', 'miguel.castro@resto.com', '3109998887', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(8, 5, 2, '1008', 'Isabella', 'Vargas', 'isabella.vargas@resto.com', '3156667778', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(9, 2, 2, '1009', 'Sebastián', 'Díaz', 'sebastian.diaz@resto.com', '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
 -- 4. CLIENTE
 -- Estas personas son clientes de pedidos, no usuarios con rol CLIENTE.
 -- Se incluyen datos de contacto y ubicación para pedidos a domicilio.
