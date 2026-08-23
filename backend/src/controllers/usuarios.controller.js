@@ -1,105 +1,134 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
 
+
 function parseId(id) {
   const parsed = Number(id);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+
 function isEmpty(value) {
   return value === undefined || value === null || value === '';
 }
+
 
 function cleanString(value) {
   return typeof value === 'string' ? value.trim() : value;
 }
 
+
 function validateString(value, field, max, required = false) {
   const cleaned = cleanString(value);
+
 
   if (required && isEmpty(cleaned)) {
     return `El campo ${field} es requerido`;
   }
 
+
   if (!isEmpty(cleaned) && typeof cleaned !== 'string') {
     return `El campo ${field} debe ser texto`;
   }
+
 
   if (!isEmpty(cleaned) && cleaned.length > max) {
     return `El campo ${field} no puede superar ${max} caracteres`;
   }
 
+
   return null;
 }
 
+
 function validateEmail(value) {
   const cleaned = cleanString(value);
+
 
   if (isEmpty(cleaned)) {
     return 'El campo email es requerido';
   }
 
+
   if (typeof cleaned !== 'string') {
     return 'El campo email debe ser texto';
   }
+
 
   if (cleaned.length > 100) {
     return 'El campo email no puede superar 100 caracteres';
   }
 
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 
   if (!emailRegex.test(cleaned)) {
     return 'El campo email debe ser un correo válido';
   }
 
+
   return null;
 }
 
+
 function validateIdRol(value) {
   const idRol = Number(value);
+
 
   if (!Number.isInteger(idRol) || idRol <= 0) {
     return 'El campo id_rol es requerido y debe ser un número entero válido';
   }
 
+
   return null;
 }
+
 
 function validatePassword(value, required = false) {
   if (required && isEmpty(value)) {
     return 'El campo contrasena es requerido';
   }
 
+
   if (isEmpty(value)) {
     return null;
   }
+
 
   if (typeof value !== 'string') {
     return 'El campo contrasena debe ser texto';
   }
 
+
   if (value.length < 6) {
     return 'El campo contrasena debe tener mínimo 6 caracteres';
   }
+
 
   if (value.length > 255) {
     return 'El campo contrasena no puede superar 255 caracteres';
   }
 
+
   return null;
 }
+
 
 function parseActivo(value, defaultValue = true) {
   if (isEmpty(value)) return defaultValue;
 
+
   if (typeof value === 'boolean') return value;
+
 
   if (value === 1 || value === '1' || value === 'true') return true;
   if (value === 0 || value === '0' || value === 'false') return false;
 
+
   return defaultValue;
 }
+
 
 function formatUsuario(usuario) {
   return {
@@ -116,6 +145,7 @@ function formatUsuario(usuario) {
   };
 }
 
+
 function validarUsuario(body, { requirePassword = false } = {}) {
   const validations = [
     validateIdRol(body.id_rol),
@@ -127,11 +157,14 @@ function validarUsuario(body, { requirePassword = false } = {}) {
     validatePassword(body.contrasena, requirePassword),
   ];
 
+
   const error = validations.find(Boolean);
+
 
   if (error) {
     return { error };
   }
+
 
   return {
     data: {
@@ -147,10 +180,34 @@ function validarUsuario(body, { requirePassword = false } = {}) {
   };
 }
 
+
 // GET /api/usuarios
 export async function index(req, res, next) {
   try {
+    const rolUsuario = req.user?.rol?.toUpperCase();
+    const idRestaurante = req.user?.id_restaurante;
+    const idUsuario = req.user?.id_usuario;
+
+    let where = {};
+
+    if (rolUsuario === 'SUPERADMIN') {
+      where = { id_rol: 2 };
+    } else if (rolUsuario === 'GERENTE') {
+      where = {
+        id_restaurante: idRestaurante,
+        OR: [
+          { id_rol: { in: [3, 4, 5] } },
+          { id_usuario: idUsuario },
+        ],
+      };
+    } else {
+      return res.status(403).json({
+        message: 'No tienes permisos para realizar esta acción.',
+      });
+    }
+
     const usuarios = await prisma.usuario.findMany({
+      where,
       include: { rol: true },
       orderBy: { id_usuario: 'asc' },
     });
@@ -160,6 +217,7 @@ export async function index(req, res, next) {
     next(err);
   }
 }
+
 
 // GET /api/usuarios/:id
 export async function show(req, res, next) {
@@ -172,6 +230,10 @@ export async function show(req, res, next) {
       });
     }
 
+    const rolUsuario = req.user?.rol?.toUpperCase();
+    const idRestaurante = req.user?.id_restaurante;
+    const idUsuario = req.user?.id_usuario;
+
     const usuario = await prisma.usuario.findUnique({
       where: { id_usuario: id },
       include: { rol: true },
@@ -181,11 +243,31 @@ export async function show(req, res, next) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
+    if (rolUsuario === 'SUPERADMIN') {
+      if (usuario.id_rol !== 2) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+    } else if (rolUsuario === 'GERENTE') {
+      const puedeVer =
+        usuario.id_usuario === idUsuario ||
+        (usuario.id_restaurante === idRestaurante &&
+          [3, 4, 5].includes(usuario.id_rol));
+
+      if (!puedeVer) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+    } else {
+      return res.status(403).json({
+        message: 'No tienes permisos para realizar esta acción.',
+      });
+    }
+
     res.json(formatUsuario(usuario));
   } catch (err) {
     next(err);
   }
 }
+
 
 // POST /api/usuarios
 export async function crear(req, res, next) {
@@ -225,6 +307,7 @@ export async function crear(req, res, next) {
   }
 }
 
+
 // PUT /api/usuarios/:id
 export async function actualizar(req, res, next) {
   try {
@@ -233,6 +316,45 @@ export async function actualizar(req, res, next) {
     if (!id) {
       return res.status(422).json({
         message: 'El id del usuario debe ser un número entero válido',
+      });
+    }
+
+    const rolUsuario = req.user?.rol?.toUpperCase();
+    const idRestaurante = req.user?.id_restaurante;
+    const idUsuario = req.user?.id_usuario;
+
+    const usuarioObjetivo = await prisma.usuario.findUnique({
+      where: { id_usuario: id },
+    });
+
+    if (!usuarioObjetivo) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    if (rolUsuario === 'SUPERADMIN') {
+      if (usuarioObjetivo.id_rol !== 2) {
+        return res.status(403).json({
+          message: 'No tienes permisos para editar este usuario.',
+        });
+      }
+    } else if (rolUsuario === 'GERENTE') {
+      const puedeEditar =
+        usuarioObjetivo.id_usuario === idUsuario ||
+        (usuarioObjetivo.id_restaurante === idRestaurante &&
+          [3, 4, 5].includes(usuarioObjetivo.id_rol));
+
+      if (!puedeEditar) {
+        return res.status(403).json({
+          message: 'No tienes permisos para editar este usuario.',
+        });
+      }
+
+      if (usuarioObjetivo.id_usuario === idUsuario) {
+        delete (data.id_rol);
+      }
+    } else {
+      return res.status(403).json({
+        message: 'No tienes permisos para realizar esta acción.',
       });
     }
 
@@ -276,6 +398,7 @@ export async function actualizar(req, res, next) {
     next(err);
   }
 }
+
 
 // DELETE /api/usuarios/:id
 //
