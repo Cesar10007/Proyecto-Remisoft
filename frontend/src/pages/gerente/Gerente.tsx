@@ -700,6 +700,22 @@ function Gerente() {
             </div>
           </section>
         )}
+        {['Finanzas', 'Pedidos', 'Mesas', 'IA Insights', 'Historial', 'Turnos'].includes(seccionActiva) && (
+          <div className="mt-6 flex min-h-[50vh] flex-col items-center justify-center rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] text-[var(--texto-muted)] shadow-[var(--sombra)]">
+            <span className="material-symbols-outlined mb-4 text-[3rem] text-[var(--rojo)]">
+              {{
+                'Finanzas': 'payments',
+                'Pedidos': 'add_shopping_cart',
+                'Mesas': 'groups',
+                'IA Insights': 'auto_awesome',
+                'Historial': 'receipt_long',
+                'Turnos': 'schedule',
+              }[seccionActiva]}
+            </span>
+            <p className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--texto)]">{seccionActiva}</p>
+            <p className="mt-1.5 text-[0.875rem]">Sección en construcción</p>
+          </div>
+        )}
       </main>
 
       {/* MODAL PRODUCTOS */}
