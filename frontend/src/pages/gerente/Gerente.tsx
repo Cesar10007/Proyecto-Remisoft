@@ -53,6 +53,44 @@ const barras = [
   { dia: 'VIE', alto: 95 }, { dia: 'SAB', alto: 85 },
   { dia: 'DOM', alto: 70 },
 ]
+const finanzasStats = [
+  { icon: 'trending_up', label: 'Ingresos del mes', valor: '$84.250.000', badge: '+8.2%', badgeColor: 'verde' },
+  { icon: 'trending_down', label: 'Gastos del mes', valor: '$32.180.000', badge: '+3.1%', badgeColor: 'rojo' },
+  { icon: 'account_balance_wallet', label: 'Utilidad neta', valor: '$52.070.000', badge: '61.8%', badgeColor: 'muted' },
+]
+const transacciones = [
+  { fecha: '18 Ago', concepto: 'Ventas del día', categoria: 'Ingreso', monto: '$4.250.000', positivo: true },
+  { fecha: '17 Ago', concepto: 'Pago proveedor La Huerta S.A.', categoria: 'Gasto', monto: '$1.210.000', positivo: false },
+  { fecha: '17 Ago', concepto: 'Ventas del día', categoria: 'Ingreso', monto: '$3.980.000', positivo: true },
+  { fecha: '16 Ago', concepto: 'Nómina quincenal', categoria: 'Gasto', monto: '$8.500.000', positivo: false },
+  { fecha: '15 Ago', concepto: 'Ventas del día', categoria: 'Ingreso', monto: '$4.560.000', positivo: true },
+]
+const pedidosActivosMock = [
+  { id: '#1042', mesa: 'Mesa 3', items: 'Combo corriente ×2', estado: 'Preparando', tiempo: '5 min' },
+  { id: '#1043', mesa: 'Mesa 7', items: 'Hamburguesa BBQ', estado: 'Listo', tiempo: '12 min' },
+  { id: '#1044', mesa: 'Domicilio', items: 'Cra 5 #22, en camino', estado: 'En camino', tiempo: '18 min' },
+  { id: '#1045', mesa: 'Mesa 1', items: 'Desayuno ejecutivo ×3', estado: 'Preparando', tiempo: '3 min' },
+  { id: '#1046', mesa: 'Mesa 9', items: 'Ensalada César', estado: 'Entregado', tiempo: '25 min' },
+]
+const iaInsights = [
+  { icon: 'trending_up', titulo: 'Demanda proyectada al alza', detalle: 'Se espera un incremento del 15% en pedidos este viernes basado en patrones históricos.', tono: 'verde' },
+  { icon: 'inventory_2', titulo: 'Alerta de inventario', detalle: 'Las papas fritas alcanzarán el stock mínimo en 2 días al ritmo de consumo actual.', tono: 'amarillo' },
+  { icon: 'schedule', titulo: 'Optimización de turnos', detalle: 'Considera agregar un mesero adicional en el turno de la tarde de fin de semana.', tono: 'muted' },
+  { icon: 'local_offer', titulo: 'Oportunidad de promoción', detalle: 'El combo de hamburguesas tiene baja rotación los martes, considera una oferta.', tono: 'rojo' },
+]
+const historialEventos = [
+  { fecha: '18 Ago, 14:32', usuario: 'Laura Gómez', accion: 'Actualizó el producto "Pizza Margarita"' },
+  { fecha: '18 Ago, 11:05', usuario: 'Carlos Ruiz', accion: 'Creó un nuevo proveedor: "Distribuidora Andina"' },
+  { fecha: '17 Ago, 19:47', usuario: 'Laura Gómez', accion: 'Cerró la caja principal con un total de $2.840.000' },
+  { fecha: '17 Ago, 09:12', usuario: 'Sistema', accion: 'Se generó el reporte semanal de ventas' },
+  { fecha: '16 Ago, 16:20', usuario: 'Carlos Ruiz', accion: 'Desactivó el ingrediente "Salsa BBQ especial"' },
+]
+const turnosMock = [
+  { empleado: 'Sofía Ramírez', rol: 'Mesero', turno: '7:00 AM - 3:00 PM', estado: 'Activo' },
+  { empleado: 'Juan Torres', rol: 'Repartidor', turno: '11:00 AM - 7:00 PM', estado: 'Activo' },
+  { empleado: 'Ana Martínez', rol: 'Cajero', turno: '3:00 PM - 11:00 PM', estado: 'Pendiente' },
+  { empleado: 'Diego López', rol: 'Mesero', turno: '3:00 PM - 11:00 PM', estado: 'Pendiente' },
+]
 
 // Interfaces
 interface Producto {
@@ -700,21 +738,189 @@ function Gerente() {
             </div>
           </section>
         )}
-        {['Finanzas', 'Pedidos', 'Mesas', 'IA Insights', 'Historial', 'Turnos'].includes(seccionActiva) && (
-          <div className="mt-6 flex min-h-[50vh] flex-col items-center justify-center rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] text-[var(--texto-muted)] shadow-[var(--sombra)]">
-            <span className="material-symbols-outlined mb-4 text-[3rem] text-[var(--rojo)]">
-              {{
-                'Finanzas': 'payments',
-                'Pedidos': 'add_shopping_cart',
-                'Mesas': 'groups',
-                'IA Insights': 'auto_awesome',
-                'Historial': 'receipt_long',
-                'Turnos': 'schedule',
-              }[seccionActiva]}
-            </span>
-            <p className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--texto)]">{seccionActiva}</p>
-            <p className="mt-1.5 text-[0.875rem]">Sección en construcción</p>
-          </div>
+        {/* FINANZAS — vista con datos de ejemplo */}
+        {seccionActiva === 'Finanzas' && (
+          <>
+            <section className="grid grid-cols-3 gap-4">
+              {finanzasStats.map(m => (
+                <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
+                  <div className="flex items-start justify-between">
+                    <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
+                      m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
+                      m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
+                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                    }`}>{m.icon}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold ${
+                      m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
+                      m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
+                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                    }`}>{m.badge}</span>
+                  </div>
+                  <div>
+                    <p className="mb-1 text-[0.78rem] text-[var(--texto-muted)]">{m.label}</p>
+                    <p className="font-['Syne'] text-[1.6rem] font-bold text-[var(--texto)]">{m.valor}</p>
+                  </div>
+                </div>
+              ))}
+            </section>
+            <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+              <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Transacciones recientes</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Fecha</th>
+                      <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Concepto</th>
+                      <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Categoría</th>
+                      <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transacciones.map((t, i) => (
+                      <tr key={i}>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.fecha}</td>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{t.concepto}</td>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.categoria}</td>
+                        <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.positivo ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>
+                          {t.positivo ? '+' : '-'}{t.monto.replace('$', '$')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* PEDIDOS — vista con datos de ejemplo */}
+        {seccionActiva === 'Pedidos' && (
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Pedidos activos</h3>
+            <div className="flex flex-col gap-3">
+              {pedidosActivosMock.map(p => (
+                <div key={p.id} className="flex items-center justify-between rounded-xl border border-[var(--borde)] bg-[#f9f5f0] px-4 py-3">
+                  <div className="flex items-center gap-4">
+                    <span className="font-['Syne'] text-[0.9rem] font-bold text-[var(--texto-muted)]">{p.id}</span>
+                    <div>
+                      <p className="text-[0.85rem] font-semibold text-[var(--texto)]">{p.mesa}</p>
+                      <p className="text-[0.78rem] text-[var(--texto-muted)]">{p.items}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[0.75rem] text-[var(--texto-muted)]">{p.tiempo}</span>
+                    <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-semibold ${
+                      p.estado === 'Preparando' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
+                      p.estado === 'Listo' ? 'bg-[var(--verde-light)] text-[#0F6E56]' :
+                      p.estado === 'En camino' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
+                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                    }`}>{p.estado}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* MESAS — vista con datos de ejemplo (reutiliza array 'mesas') */}
+        {seccionActiva === 'Mesas' && (
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
+              <div className="flex gap-3">
+                <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
+                </span>
+                <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--amarillo)]">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Ocupada
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-6 gap-2.5">
+              {mesas.map(m => (
+                <div
+                  key={m.id}
+                  className={`flex flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 ${
+                    m.ocupada
+                      ? 'border-[rgba(239,159,39,0.3)] bg-[var(--amarillo-light)]'
+                      : 'border-[rgba(29,158,117,0.3)] bg-[var(--verde-light)]'
+                  }`}
+                >
+                  <span className="text-[0.65rem] font-bold text-[var(--texto-muted)]">{m.id}</span>
+                  <span className={`material-symbols-outlined text-[16px] ${m.ocupada ? 'text-[var(--amarillo)]' : 'text-[var(--verde)]'}`}>
+                    {m.ocupada ? 'person' : 'check_circle'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* IA INSIGHTS — vista con datos de ejemplo */}
+        {seccionActiva === 'IA Insights' && (
+          <section className="mt-6 grid grid-cols-2 gap-4">
+            {iaInsights.map((insight, i) => (
+              <div key={i} className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
+                    insight.tono === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
+                    insight.tono === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
+                    insight.tono === 'amarillo' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
+                    'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                  }`}>{insight.icon}</span>
+                  <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">{insight.titulo}</h4>
+                </div>
+                <p className="text-[0.85rem] leading-[1.6] text-[var(--texto-muted)]">{insight.detalle}</p>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {/* HISTORIAL — vista con datos de ejemplo */}
+        {seccionActiva === 'Historial' && (
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>
+            <div className="flex flex-col gap-4">
+              {historialEventos.map((h, i) => (
+                <div key={i} className="flex items-start gap-3 border-b border-[var(--borde)] pb-4 last:border-b-0 last:pb-0">
+                  <span className="material-symbols-outlined mt-0.5 text-[18px] text-[var(--texto-muted)]">history</span>
+                  <div>
+                    <p className="text-[0.85rem] text-[var(--texto)]">{h.accion}</p>
+                    <p className="mt-0.5 text-[0.75rem] text-[var(--texto-muted)]">{h.usuario} · {h.fecha}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* TURNOS — vista con datos de ejemplo */}
+        {seccionActiva === 'Turnos' && (
+          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos del personal</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Empleado</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Rol</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Turno</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {turnosMock.map((t, i) => (
+                    <tr key={i}>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{t.empleado}</strong></td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.rol}</td>
+                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.turno}</td>
+                      <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.estado === 'Activo' ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>{t.estado}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
       </main>
 
