@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { authRequired } from '../middleware/auth.js';
+import { requireRole } from '../middleware/requireRole.js';
 import * as usuariosController from '../controllers/usuarios.controller.js';
 
 const router = Router();
 
-router.use(authRequired);
+// Roles con acceso a /api/usuarios
+router.use(requireRole('SUPERADMIN', 'GERENTE'));
 
 router.get('/', usuariosController.index);
 router.get('/:id', usuariosController.show);
