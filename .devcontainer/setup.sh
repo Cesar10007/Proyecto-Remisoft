@@ -82,7 +82,14 @@ DB_PASSWORD=remisoft123
 DATABASE_URL="mysql://remisoft:remisoft123@127.0.0.1:3306/remisoft"
 JWT_SECRET=remisoft_dev_jwt_secret_cambiar_en_produccion
 JWT_EXPIRES_IN=8h
+MAILTRAP_HOST=smtp.mailtrap.io
+MAILTRAP_PORT=587
+MAILTRAP_USER=
+MAILTRAP_PASS=
+MAIL_FROM=noreply@remisoft.local
 ENV
+
+log "⚠️  MAILTRAP_USER y MAILTRAP_PASS quedaron vacíos en backend/.env — sin completarlos manualmente, la recuperación de contraseña fallará con 'Missing credentials for PLAIN'."
 
 cd "$BACKEND_DIR"
 CI=true corepack pnpm install --frozen-lockfile
