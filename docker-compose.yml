@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mariadb:11.4.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-remisoft_root}
+      MARIADB_DATABASE: remisoft
+      MARIADB_USER: remisoft
+      MARIADB_PASSWORD: remisoft123
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: remisoft
+      DB_USERNAME: remisoft
+      DB_PASSWORD: remisoft123
+      DATABASE_URL: "mysql://remisoft:remisoft123@db:3306/remisoft"
+      JWT_SECRET: ${JWT_SECRET:-remisoft_dev_jwt_secret_cambiar_en_produccion}
+      JWT_EXPIRES_IN: 8h
+      MAILTRAP_HOST: ${MAILTRAP_HOST}
+      MAILTRAP_PORT: ${MAILTRAP_PORT}
+      MAILTRAP_USER: ${MAILTRAP_USER}
+      MAILTRAP_PASS: ${MAILTRAP_PASS}
+      MAIL_FROM: ${MAIL_FROM:-noreply@remisoft.local}
+    volumes:
+      - ./database:/app/database:ro
+    ports:
+      - "3000:3000"
+    command: ["/app/database/init.sh"]
+
+volumes:
+  dbdata:
