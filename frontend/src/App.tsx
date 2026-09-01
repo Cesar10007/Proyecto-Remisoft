@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState } from 'react'
-
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import Landing from './pages/auth/Landing'
@@ -16,7 +15,6 @@ import Repartidor from './pages/repartidor/Repartidor'
 
 function App() {
   const [modal, setModal] = useState<string | null>(null)
-
   return (
     <BrowserRouter>
       <Routes>
@@ -25,13 +23,10 @@ function App() {
           element={
             <>
               <Navbar onLogin={() => setModal('login')} />
-
               <main>
                 <Landing onLogin={() => setModal('login')} />
               </main>
-
               <Footer />
-
               <Modal
                 isOpen={modal === 'login'}
                 onClose={() => setModal(null)}
@@ -41,17 +36,8 @@ function App() {
             </>
           }
         />
-
-        <Route
-          path="/reset-password"
-          element={<ResetPassword />}
-        />
-
-        <Route
-          path="/forgot-password"
-          element={<ForgotPassword />}
-        />
-
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/superadmin"
           element={
@@ -60,7 +46,6 @@ function App() {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/gerente"
           element={
@@ -69,7 +54,6 @@ function App() {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/mesero"
           element={
@@ -78,7 +62,6 @@ function App() {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/repartidor"
           element={
@@ -87,11 +70,7 @@ function App() {
             </PrivateRoute>
           }
         />
-
-        <Route
-          path="*"
-          element={<Navigate to="/" replace />}
-        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

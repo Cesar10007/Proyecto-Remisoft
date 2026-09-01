@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.example
+*.log
+src/generated
+tests
+docs
+README.md
+.git

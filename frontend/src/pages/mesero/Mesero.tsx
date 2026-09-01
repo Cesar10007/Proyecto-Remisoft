@@ -139,141 +139,249 @@ function Mesero() {
     if (!confirm('¿Deseas cancelar este pedido?')) return
     try { await api.delete(`/pedidos/${id}`); cargarPedidos() } catch { alert('Error al cancelar') }
   }
-
   return (
-    <div className="wa-wrapper">
-      <aside className="wa-sidebar">
-        <div className="wa-sidebar-brand">
-          <div className="wa-sidebar-logo">Remi<span className="wa-sidebar-logo-accent">Soft</span></div>
-          <div className="wa-sidebar-role">Mesero</div>
+
+    <div
+      className="flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
+      style={{
+        ['--wa-primary' as any]: '#a5360d',
+        ['--wa-primary-dark' as any]: '#852400',
+        ['--wa-primary-light' as any]: '#ffdbd0',
+        ['--wa-primary-container' as any]: '#c74d24',
+        ['--wa-secondary' as any]: '#855400',
+        ['--wa-secondary-light' as any]: '#ffddb7',
+        ['--wa-secondary-fixed-dim' as any]: '#ffb95d',
+        ['--wa-secondary-container' as any]: '#fcaa33',
+        ['--wa-tertiary' as any]: '#00694c',
+        ['--wa-tertiary-light' as any]: '#86f8c9',
+        ['--wa-bg' as any]: '#fcf9f8',
+        ['--wa-surface' as any]: '#ffffff',
+        ['--wa-surface-low' as any]: '#f6f3f2',
+        ['--wa-surface-mid' as any]: '#f0eded',
+        ['--wa-surface-high' as any]: '#e5e2e1',
+        ['--wa-text' as any]: '#1c1b1b',
+        ['--wa-text-muted' as any]: '#58423b',
+        ['--wa-border' as any]: 'rgba(224, 192, 182, 0.2)',
+        background: 'var(--wa-bg)',
+        color: 'var(--wa-text)',
+      }}
+    >
+      <aside className="flex h-screen w-64 min-w-64 shrink-0 flex-col bg-[var(--wa-bg)] p-6 px-4">
+        <div className="mb-10 px-2">
+          <span className="block text-[1.25rem] font-extrabold tracking-[-0.03em] text-[var(--wa-primary)]">
+            Remi<span className="text-[var(--wa-primary)]">Soft</span>
+          </span>
+          <div className="mt-1 text-[0.625rem] font-bold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">
+            Mesero
+          </div>
         </div>
-        <div className="wa-sidebar-nav">
+        <div className="flex flex-1 flex-col gap-2">
           {navItems.map((item) => (
-            <button key={item.label} onClick={() => setActiveItem(item.label)}
-              className={`wa-sidebar-nav-btn${activeItem === item.label ? ' wa-sidebar-nav-btn--active' : ''}`}>
-              <span className="material-symbols-outlined wa-sidebar-nav-icon">{item.icon}</span>
+            <button
+              key={item.label}
+              onClick={() => setActiveItem(item.label)}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-[0.95rem] font-bold transition-all duration-150 ease-in-out active:scale-[0.97] ${
+                activeItem === item.label
+                  ? 'bg-[var(--wa-surface)] text-[var(--wa-primary)] shadow-[0_2px_10px_rgba(28,27,27,0.05)]'
+                  : 'bg-transparent text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
-        <div className="wa-sidebar-footer">
-          <button className="wa-sidebar-primary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">add</span>
+        <div className="mt-auto flex flex-col gap-2">
+          <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] px-4 py-3.5 text-[0.9rem] font-extrabold text-white shadow-[0_16px_24px_rgba(165,54,13,0.22)]">
+            <span className="material-symbols-outlined text-[18px]">add</span>
             Acción Rápida
           </button>
-          <button className="wa-sidebar-secondary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">settings</span>
+          <button className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]">
+            <span className="material-symbols-outlined text-[18px]">settings</span>
             Configuraciones
           </button>
-          <button onClick={() => { logout(); navigate('/') }} className="wa-sidebar-secondary-btn">
-            <span className="material-symbols-outlined wa-sidebar-footer-icon">logout</span>
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      <main className="wa-main">
-        <header className="wa-topbar">
-          <div className="wa-topbar__left">
-            <span className="wa-topbar__brand">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
-            <div className="wa-topbar__tabs">
-              <button className="wa-topbar__tab wa-topbar__tab--active">Plano del Piso</button>
-              <button className="wa-topbar__tab">Pago Rápido</button>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)]">
+        <header className="flex items-center justify-between gap-6 border-b border-[var(--wa-border)] bg-[rgba(252,249,248,0.8)] px-6 py-3 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.06)] backdrop-blur-[12px]">
+          <div className="flex items-center gap-6">
+            <span className="text-[1.125rem] font-black text-[var(--wa-text)]">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
+            <div className="flex items-center gap-6">
+              <button className="border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-primary)]">Plano del Piso</button>
+              <button className="border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">Pago Rápido</button>
             </div>
           </div>
-          <div className="wa-topbar__right">
-            <div className="wa-search">
-              <span className="material-symbols-outlined wa-search__icon">search</span>
-              <input type="text" placeholder="Buscar mesas o artículos..." />
+          <div className="flex items-center gap-6">
+            <div className="relative w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-[var(--wa-text-muted)]">search</span>
+              <input
+                type="text"
+                placeholder="Buscar mesas o artículos..."
+                className="w-full rounded-full border border-[var(--wa-border)] bg-[var(--wa-surface)] py-2.5 pl-10 pr-4 text-[0.875rem] outline-none focus:border-[var(--wa-primary)]"
+              />
             </div>
-            <button className="wa-icon-btn">
+            <button className="flex items-center justify-center border-none bg-transparent text-[var(--wa-text-muted)]">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <div className="wa-profile">
-              <span className="wa-profile__name">{user?.nombre ?? 'Mesero'}</span>
-              <span className="material-symbols-outlined wa-profile__icon">account_circle</span>
+            <div className="flex items-center gap-2 border-l border-[var(--wa-border)] pl-4">
+              <span className="block text-[0.75rem] font-extrabold">{user?.nombre ?? 'Mesero'}</span>
+              <span className="material-symbols-outlined text-[var(--wa-primary)] [font-variation-settings:'FILL'_1]">account_circle</span>
             </div>
           </div>
         </header>
 
-        <div className="wa-content">
+        <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-6">
 
           {activeItem === 'Mesas' && (
             <>
-              <section className="wa-stats-grid">
+              <section className="grid grid-cols-4 gap-6">
                 {stats.map((stat) => (
-                  <div key={stat.label} className={`wa-stat-card${stat.accented ? ' wa-stat-card--attention' : ''}`}>
-                    <p className="wa-stat-card__label">{stat.label}</p>
-                    <div className="wa-stat-card__value-wrap">
-                      {stat.prefix && <span className="wa-stat-card__prefix">{stat.prefix}</span>}
-                      <span className={`wa-stat-card__value${stat.color === 'amber' ? ' wa-stat-card__value--amber' : ''}`}>{stat.value}</span>
-                      {stat.detail && stat.label === 'Mesas activas' && <span className="wa-stat-card__detail wa-stat-card__detail--green">{stat.detail}</span>}
-                      {stat.detail && stat.label === 'Mesas en espera' && <span className="wa-stat-card__detail">{stat.detail}</span>}
+                  <div
+                    key={stat.label}
+                    className={`flex min-h-[128px] flex-col justify-between rounded-[20px] bg-[var(--wa-surface)] p-6 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.03)] ${
+                      stat.accented ? 'border-l-4 border-[var(--wa-secondary)]' : ''
+                    }`}
+                  >
+                    <p className="text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">{stat.label}</p>
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      {stat.prefix && <span className="text-[1.125rem] font-extrabold text-[var(--wa-text-muted)]">{stat.prefix}</span>}
+                      <span className={`text-[2.25rem] font-black tracking-[-0.05em] ${stat.color === 'amber' ? 'text-[var(--wa-secondary)]' : ''}`}>{stat.value}</span>
+                      {stat.detail && stat.label === 'Mesas activas' && (
+                        <span className="text-[0.75rem] font-extrabold text-[var(--wa-tertiary)]">{stat.detail}</span>
+                      )}
+                      {stat.detail && stat.label === 'Mesas en espera' && (
+                        <span className="text-[0.75rem] font-extrabold text-[var(--wa-text-muted)]">{stat.detail}</span>
+                      )}
                     </div>
                   </div>
                 ))}
-                <button className="wa-sale-card">
-                  <span className="material-symbols-outlined">add_shopping_cart</span>
-                  <p>Registrar Venta</p>
+                <button className="flex min-h-[128px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-none bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] text-white shadow-[0_12px_32px_-4px_rgba(165,54,13,0.2)] transition-transform duration-150 ease-in-out active:scale-95">
+                  <span className="material-symbols-outlined text-[32px]">add_shopping_cart</span>
+                  <p className="text-[0.9rem] font-extrabold">Registrar Venta</p>
                 </button>
               </section>
-              <div className="wa-grid">
-                <section className="wa-floor-section">
-                  <div className="wa-floor-section__header">
+              <div className="grid grid-cols-[8fr_4fr] gap-8">
+                <section className="flex flex-col gap-6">
+                  <div className="flex items-end justify-between gap-4">
                     <div>
-                      <h2>Sala de Comedor Principal</h2>
-                      <p>Haz clic en una mesa para gestionar pedidos o generar facturas.</p>
+                      <h2 className="text-[1.75rem] font-black tracking-[-0.04em]">Sala de Comedor Principal</h2>
+                      <p className="text-[0.875rem] font-semibold text-[var(--wa-text-muted)]">Haz clic en una mesa para gestionar pedidos o generar facturas.</p>
                     </div>
-                    <div className="wa-floor-section__legend">
-                      <span className="wa-legend-pill wa-legend-pill--green"><span className="wa-legend-dot wa-legend-dot--green" />Disponible</span>
-                      <span className="wa-legend-pill wa-legend-pill--amber"><span className="wa-legend-dot wa-legend-dot--amber" />Ocupada</span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(0,105,76,0.1)] px-3 py-2 text-[0.625rem] font-extrabold uppercase tracking-[0.12em] text-[var(--wa-tertiary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--wa-tertiary)]" />Disponible
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(133,84,0,0.1)] px-3 py-2 text-[0.625rem] font-extrabold uppercase tracking-[0.12em] text-[var(--wa-secondary)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--wa-secondary)]" />Ocupada
+                      </span>
                     </div>
                   </div>
-                  <div className="wa-table-grid">
+                  <div className="grid grid-cols-4 gap-4">
                     {tables.map((table) => {
                       if (table.state === 'available') {
                         return (
-                          <div key={table.number} className="wa-table-card wa-table-card--available">
-                            <div className="wa-table-card__number wa-table-card__number--available">{table.number}</div>
-                            <p className="wa-table-card__empty-label">Disponible</p>
+                          <div
+                            key={table.number}
+                            className="flex min-h-[206px] cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed border-[rgba(140,113,105,0.3)] bg-[var(--wa-surface-low)] p-5 text-center opacity-60 transition-opacity duration-200 ease-in-out hover:opacity-100"
+                          >
+                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--wa-surface-high)] text-[1.25rem] font-black text-[var(--wa-text-muted)]">
+                              {table.number}
+                            </div>
+                            <p className="text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">Disponible</p>
                           </div>
                         )
                       }
                       return (
-                        <div key={table.number} className={`wa-table-card wa-table-card--${table.state}`}>
-                          <div className="wa-table-card__top">
-                            <div className={`wa-table-card__number${table.state === 'waiting' ? ' wa-table-card__number--warning' : ''}`}>{table.number}</div>
-                            <span className={`wa-table-card__badge${table.state === 'waiting' ? ' wa-table-card__badge--waiting' : ''}${table.state === 'done' ? ' wa-table-card__badge--done' : ''}`}>{table.badge}</span>
+                        <div
+                          key={table.number}
+                          className={`rounded-[20px] border-2 bg-[var(--wa-surface)] p-5 transition-all duration-200 ease-in-out ${
+                            table.state === 'waiting'
+                              ? 'border-[rgba(133,84,0,0.2)] shadow-[0_14px_26px_rgba(133,84,0,0.08)]'
+                              : table.state === 'done'
+                              ? 'border-[rgba(0,105,76,0.2)]'
+                              : 'border-transparent hover:border-[rgba(165,54,13,0.1)] hover:shadow-[0_18px_30px_rgba(28,27,27,0.08)]'
+                          }`}
+                        >
+                          <div className="mb-4 flex items-center justify-between">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-full text-[1.25rem] font-black ${
+                                table.state === 'waiting' ? 'bg-[var(--wa-secondary-container)] text-[#2a1700]' : 'bg-[var(--wa-secondary-fixed-dim)] text-[#2a1700]'
+                              }`}
+                            >
+                              {table.number}
+                            </div>
+                            <span
+                              className={`rounded-lg px-2 py-1.5 text-[0.625rem] font-extrabold ${
+                                table.state === 'waiting'
+                                  ? 'animate-pulse bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
+                                  : table.state === 'done'
+                                  ? 'bg-[var(--wa-tertiary-light)] text-[var(--wa-tertiary)]'
+                                  : 'bg-[var(--wa-surface-mid)] text-[var(--wa-text-muted)]'
+                              }`}
+                            >
+                              {table.badge}
+                            </span>
                           </div>
-                          <div className="wa-table-card__body">
-                            <h3>{table.name}</h3>
-                            <p>{table.meta}</p>
+                          <div>
+                            <h3 className="text-[1rem] font-extrabold text-[var(--wa-text)]">{table.name}</h3>
+                            <p className="mt-1 text-[0.75rem] text-[var(--wa-text-muted)]">{table.meta}</p>
                           </div>
-                          <div className="wa-table-card__footer">
-                            <span className="wa-table-card__price">{table.total}</span>
-                            {table.state === 'done'
-                              ? <button className="wa-table-card__invoice-btn">Factura</button>
-                              : <button className="wa-table-card__icon-btn"><span className="material-symbols-outlined">{table.state === 'waiting' ? 'add' : table.number === '12' ? 'arrow_forward' : 'more_horiz'}</span></button>}
+                          <div className="mt-4 flex items-center justify-between border-t border-[rgba(224,192,182,0.1)] pt-4">
+                            <span className="text-[1rem] font-black text-[var(--wa-primary)]">{table.total}</span>
+                            {table.state === 'done' ? (
+                              <button className="cursor-pointer rounded-full border-none bg-[var(--wa-tertiary)] px-3 py-2 text-[0.625rem] font-extrabold uppercase tracking-[0.06em] text-white">
+                                Factura
+                              </button>
+                            ) : (
+                              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[var(--wa-primary)] hover:bg-[var(--wa-primary-light)]">
+                                <span className="material-symbols-outlined">
+                                  {table.state === 'waiting' ? 'add' : table.number === '12' ? 'arrow_forward' : 'more_horiz'}
+                                </span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       )
                     })}
                   </div>
                 </section>
-                <aside className="wa-feed-panel">
-                  <div className="wa-feed-panel__header">
-                    <h2>Cocina</h2>
-                    <span className="material-symbols-outlined wa-feed-panel__icon">restaurant</span>
+                <aside className="flex h-[calc(100vh-12rem)] flex-col rounded-[20px] bg-[var(--wa-surface)] p-6 shadow-[0_2px_10px_rgba(28,27,27,0.04)]">
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-[1.125rem] font-black">Cocina</h2>
+                    <span className="material-symbols-outlined text-[var(--wa-secondary)] [font-variation-settings:'FILL'_1]">restaurant</span>
                   </div>
-                  <div className="wa-feed-list">
+                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto pr-2">
                     {feedItems.map((item) => (
-                      <div key={`${item.status}-${item.time}`} className={`wa-feed-item wa-feed-item--${item.tone}`}>
-                        <div className="wa-feed-item__top">
-                          <span className={`wa-feed-item__status wa-feed-item__status--${item.tone}`}>{item.status}</span>
-                          <span className="wa-feed-item__time">{item.time}</span>
+                      <div
+                        key={`${item.status}-${item.time}`}
+                        className={`rounded-2xl p-4 ${
+                          item.tone === 'ready'
+                            ? 'border-l-4 border-[var(--wa-tertiary)] bg-[rgba(0,105,76,0.05)]'
+                            : item.tone === 'warning'
+                            ? 'border-l-4 border-[var(--wa-secondary)] bg-[rgba(133,84,0,0.05)]'
+                            : 'bg-[var(--wa-surface-low)]'
+                        }`}
+                      >
+                        <div className="mb-1 flex justify-between gap-3">
+                          <span
+                            className={`text-[0.625rem] font-extrabold uppercase ${
+                              item.tone === 'ready' ? 'text-[var(--wa-tertiary)]' : item.tone === 'warning' ? 'text-[var(--wa-secondary)]' : 'text-[var(--wa-text-muted)]'
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                          <span className="text-[0.625rem] font-semibold text-[var(--wa-text-muted)]">{item.time}</span>
                         </div>
-                        <p className="wa-feed-item__title">{item.title}</p>
-                        <p className="wa-feed-item__detail">{item.detail}</p>
+                        <p className="text-[0.9rem] font-bold text-[var(--wa-text)]">{item.title}</p>
+                        <p className="text-[0.8rem] text-[var(--wa-text-muted)]">{item.detail}</p>
                       </div>
                     ))}
                   </div>
@@ -289,77 +397,119 @@ function Mesero() {
                             actualizando el estado del padre con los datos del pedido
           */}
           {activeItem === 'Pedidos' && (
-            <section style={{ margin: '1.5rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--borde)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Gestión de Pedidos</h3>
-                <button className="wa-sidebar-primary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={abrirCrearPedido}>
+            <section className="m-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="text-[1rem] font-bold">Gestión de Pedidos</h3>
+                <button
+                  className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+                  onClick={abrirCrearPedido}
+                >
                   + Nuevo Pedido
                 </button>
               </div>
-              {cargandoPedidos
-                ? <p style={{ color: 'var(--texto-muted)', fontSize: '0.85rem' }}>Cargando...</p>
-                : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid var(--borde)' }}>
-                          {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: 'var(--texto-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
+              {cargandoPedidos ? (
+                <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-[0.875rem]">
+                    <thead>
+                      <tr className="border-b border-[var(--borde)]">
+                        {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
+                          <th key={h} className="whitespace-nowrap px-3 py-2.5 text-left font-semibold text-[var(--texto-muted)]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pedidos.length === 0 ? (
+                        <tr><td colSpan={8} className="py-8 text-center text-[var(--texto-muted)]">Sin pedidos registrados</td></tr>
+                      ) : pedidos.map(p => (
+                        <tr key={p.id_pedido} className="border-b border-[var(--borde)]">
+                          <td className="px-3 py-2.5 font-semibold">{p.id_pedido}</td>
+                          <td className="px-3 py-2.5">{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
+                          <td className="px-3 py-2.5">{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
+                          <td className="px-3 py-2.5">{p.Tipo_pedido}</td>
+                          <td className="px-3 py-2.5">{p.Mesa_num ?? '—'}</td>
+                          <td className={`px-3 py-2.5 ${
+                            p.estado === 'ABIERTO' ? 'text-[var(--verde)]' : p.estado === 'CANCELADO' ? 'text-[var(--rojo)]' : 'text-[var(--texto-muted)]'
+                          }`}>{p.estado}</td>
+                          <td className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5">{p.notas || '—'}</td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex gap-2">
+                              <button
+                                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+                                onClick={() => abrirEditarPedido(p)}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
+                                onClick={() => cancelarPedido(p.id_pedido)}
+                                disabled={p.estado === 'CANCELADO'}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {pedidos.length === 0
-                          ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--texto-muted)' }}>Sin pedidos registrados</td></tr>
-                          : pedidos.map(p => (
-                            <tr key={p.id_pedido} style={{ borderBottom: '1px solid var(--borde)' }}>
-                              <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600 }}>{p.id_pedido}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.Tipo_pedido}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>{p.Mesa_num ?? '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem', color: p.estado === 'ABIERTO' ? 'var(--verde, #22c55e)' : p.estado === 'CANCELADO' ? 'var(--rojo, #ef4444)' : 'var(--texto-muted)' }}>{p.estado}</td>
-                              <td style={{ padding: '0.6rem 0.75rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.notas || '—'}</td>
-                              <td style={{ padding: '0.6rem 0.75rem' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.35rem 0.85rem', fontSize: '0.8rem' }} onClick={() => abrirEditarPedido(p)}>Editar</button>
-                                  <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.35rem 0.85rem', fontSize: '0.8rem', color: 'var(--rojo, #ef4444)', borderColor: 'var(--rojo, #ef4444)' }} onClick={() => cancelarPedido(p.id_pedido)} disabled={p.estado === 'CANCELADO'}>Cancelar</button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               <Modal isOpen={modalPedido} onClose={() => setModalPedido(false)}>
-                <div style={{ padding: '0 1.5rem 1.5rem' }}>
-                  <h3 style={{ marginBottom: '1.25rem', fontWeight: 700 }}>{modoEdicionPedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div className="px-6 pb-6">
+                  <h3 className="mb-5 font-bold">{modoEdicionPedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
+                  <div className="flex flex-col gap-3.5">
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>ID Cliente</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.id_cliente} onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.id_cliente}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>ID Mesero</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.id_mesero} onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Mesero</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.id_mesero}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Tipo de Pedido *</label>
-                      <select style={inputStyle} value={pedidoActual.Tipo_pedido} onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}>
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Tipo de Pedido *</label>
+                      <select
+                        value={pedidoActual.Tipo_pedido}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}
+                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      >
                         <option value="MESA">MESA</option>
                         <option value="DOMICILIO">DOMICILIO</option>
                         <option value="LLEVAR">LLEVAR</option>
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Número de Mesa</label>
-                      <input style={inputStyle} type="number" placeholder="Opcional" value={pedidoActual.Mesa_num} onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de Mesa</label>
+                      <input
+                        type="number"
+                        placeholder="Opcional"
+                        value={pedidoActual.Mesa_num}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))}
+                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Estado</label>
-                      <select style={inputStyle} value={pedidoActual.estado} onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}>
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Estado</label>
+                      <select
+                        value={pedidoActual.estado}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}
+                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      >
                         <option value="ABIERTO">ABIERTO</option>
                         <option value="EN_PROCESO">EN_PROCESO</option>
                         <option value="LISTO">LISTO</option>
@@ -368,23 +518,40 @@ function Mesero() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--texto-muted)', display: 'block', marginBottom: '0.3rem' }}>Notas</label>
-                      <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '80px' } as React.CSSProperties} placeholder="Indicaciones especiales..." value={pedidoActual.notas} onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))} />
+                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Notas</label>
+                      <textarea
+                        placeholder="Indicaciones especiales..."
+                        value={pedidoActual.notas}
+                        onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))}
+                        className="min-h-[80px] w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
+                      />
                     </div>
-                    {errorPedido && <p style={{ color: 'var(--rojo, #ef4444)', fontSize: '0.82rem', background: 'rgba(239,68,68,0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px' }}>{errorPedido}</p>}
-                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                      <button className="wa-sidebar-secondary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={() => setModalPedido(false)}>Cancelar</button>
-                      <button className="wa-sidebar-primary-btn" style={{ width: 'auto', padding: '0.5rem 1.25rem' }} onClick={guardarPedido} disabled={guardandoPedido}>{guardandoPedido ? 'Guardando...' : modoEdicionPedido ? 'Actualizar' : 'Crear Pedido'}</button>
+                    {errorPedido && (
+                      <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">{errorPedido}</p>
+                    )}
+                    <div className="mt-2 flex justify-end gap-3">
+                      <button
+                        className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                        onClick={() => setModalPedido(false)}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                        onClick={guardarPedido}
+                        disabled={guardandoPedido}
+                      >
+                        {guardandoPedido ? 'Guardando...' : modoEdicionPedido ? 'Actualizar' : 'Crear Pedido'}
+                      </button>
                     </div>
                   </div>
                 </div>
               </Modal>
             </section>
           )}
-
           {(activeItem === 'Caja' || activeItem === 'Facturas') && (
-            <div style={{ margin: '1.5rem', padding: '3rem', textAlign: 'center', color: 'var(--texto-muted)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '2rem', display: 'block', marginBottom: '0.75rem' }}>{activeItem === 'Caja' ? 'point_of_sale' : 'description'}</span>
+            <div className="m-6 p-12 text-center text-[var(--texto-muted)]">
+              <span className="material-symbols-outlined mb-3 block text-[2rem]">{activeItem === 'Caja' ? 'point_of_sale' : 'description'}</span>
               Sección <strong>{activeItem}</strong> en construcción
             </div>
           )}
@@ -393,5 +560,6 @@ function Mesero() {
     </div>
   )
 }
+
 
 export default Mesero
