@@ -15,6 +15,8 @@
 --   p_origen_id      INT    - ID del origen (id_orden_compra, etc.)
 -- ============================================================
 
+DROP PROCEDURE IF EXISTS sp_registrar_movimiento_inventario;
+
 DELIMITER //
 
 CREATE PROCEDURE sp_registrar_movimiento_inventario(

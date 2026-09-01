@@ -9,6 +9,8 @@
 --   p_notas         VARCHAR(500) - Observaciones del cierre
 -- ============================================================
 
+DROP PROCEDURE IF EXISTS sp_cerrar_turno_caja;
+
 DELIMITER //
 
 CREATE PROCEDURE sp_cerrar_turno_caja(
