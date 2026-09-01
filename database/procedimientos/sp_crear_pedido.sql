@@ -10,6 +10,8 @@
 --   OUT p_id_pedido INT   - Retorna el ID del pedido creado
 -- ============================================================
 
+DROP PROCEDURE IF EXISTS sp_crear_pedido;
+
 DELIMITER //
 
 CREATE PROCEDURE sp_crear_pedido(

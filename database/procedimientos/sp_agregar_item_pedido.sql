@@ -8,6 +8,8 @@
 --   p_cantidad     INT - Cantidad solicitada
 -- ============================================================
 
+DROP PROCEDURE IF EXISTS sp_agregar_item_pedido;
+
 DELIMITER //
 
 CREATE PROCEDURE sp_agregar_item_pedido(

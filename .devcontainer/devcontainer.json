@@ -5,19 +5,20 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "forwardPorts": [3000, 3306, 5173],
   "portsAttributes": {
     "3000": {
       "label": "Express API + Prisma",
       "onAutoForward": "silent",
-      "visibility": "public"
+      "visibility": "private"
     },
     "5173": {
       "label": "React/Vite",
       "onAutoForward": "silent",
-      "visibility": "public"
+      "visibility": "private"
     },
     "3306": {
       "label": "MariaDB",
@@ -25,9 +26,8 @@
       "visibility": "private"
     }
   },
-  "remoteUser": "root",
-  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.15.0 --activate && bash .devcontainer/setup.sh",
-  "postStartCommand": "bash .devcontainer/start.sh",
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.15.0 --activate && sudo apt-get update && sudo apt-get install -y mariadb-client && bash .devcontainer/setup.sh",
+  "postStartCommand": "docker compose up -d db",
   "customizations": {
     "vscode": {
       "extensions": [
