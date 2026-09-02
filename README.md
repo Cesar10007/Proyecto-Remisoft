@@ -298,6 +298,7 @@ Las variables `VITE_*` se incorporan al bundle durante `pnpm build`; cambiar una
 ---
 
 ## Integración continua
+> La auditoría de dependencias se ejecuta en CI con severidad alta. Actualmente no bloquea el resto del pipeline porque existen vulnerabilidades transitivas provenientes de Prisma (`deepmerge-ts`, `mariadb` y `mysql2`). La corrección de estas dependencias queda como una tarea independiente y debe hacerse con pruebas de compatibilidad.
 
 El proyecto utiliza GitHub Actions mediante el workflow `.github/workflows/ci.yml`.
 
@@ -309,7 +310,7 @@ El pipeline se ejecuta cuando:
 Las validaciones ejecutadas son:
 
 - Instalación reproducible de dependencias con `pnpm install --frozen-lockfile`.
-- Auditoría de dependencias backend y frontend.
+- Auditoría de dependencias backend y frontend, reportada sin bloquear temporalmente el resto del pipeline.
 - Lint del backend.
 - Tests automatizados del backend.
 - Lint del frontend.
