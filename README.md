@@ -26,10 +26,11 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 5. [Variables de entorno](#variables-de-entorno)
 6. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
 7. [Autenticación y roles](#autenticación-y-roles)
-8. [Endpoints del backend](#endpoints-del-backend)
-9. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-10. [Diseño y UI](#diseño-y-ui)
-11. [Notas técnicas importantes](#notas-técnicas-importantes)
+8. [Modelo multi-restaurante](#modelo-multi-restaurante)
+9. [Endpoints del backend](#endpoints-del-backend)
+10. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+11. [Diseño y UI](#diseño-y-ui)
+12. [Notas técnicas importantes](#notas-técnicas-importantes)
 
 ---
 
@@ -50,7 +51,7 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 | Frontend | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 | 5173 |
 | Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 |
 | Base de datos | MariaDB 11 | 3306 |
-| ORM y migraciones | Prisma 6.14.0 | — |
+| ORM y migraciones | Prisma 7.9.1 | — |
 | Entorno | GitHub Codespaces | — |
 | Auth | JWT | — |
 | Estado global | Redux Toolkit 2 | — |
@@ -77,7 +78,8 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 |----------|---------|-----|
 | Node.js | v20.19.4 | Runtime del backend |
 | Express | 5.1.0 | Framework backend y API REST |
-| Prisma | 6.14.0 | ORM, cliente tipado y migraciones |
+| Prisma | 7.9.1 | ORM, cliente tipado y migraciones |
+| ESLint | 9.39.5 | Linting del backend (`@eslint/js`, `globals`) |
 | mysql2 | 3.x | Conexión auxiliar con MariaDB |
 | jsonwebtoken | 9.x | Emisión y validación de JWT |
 | bcryptjs | 2.x | Hash y verificación de contraseñas |
@@ -237,6 +239,70 @@ El rol `CLIENTE` (`id_rol = 6`) ya no es un usuario autenticable. La entidad `Cl
 3. `axios.ts` adjunta el token automáticamente en cada request mediante interceptor.
 4. `PrivateRoute` valida el acceso antes de renderizar cada dashboard.
 5. Logout elimina el token y finaliza la sesión.
+
+---
+
+## Modelo multi-restaurante
+
+### Modelo restaurante
+
+El sistema soporta múltiples sedes mediante el modelo `restaurante`:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id_restaurante` | Int (PK) | Identificador único de la sede |
+| `nombre` | String | Nombre del restaurante |
+| `direccion` | String? | Dirección física |
+| `telefono` | String? | Teléfono de contacto |
+| `email` | String? | Correo de contacto |
+| `activo` | Boolean | Si la sede está operativa |
+| `fecha_creacion` | DateTime | Fecha de alta en el sistema |
+
+### Relación usuario.id_restaurante
+
+Cada usuario tiene un campo opcional `id_restaurante` (FK hacia `restaurante`) que determina a qué sede pertenece. Es nullable para permitir roles globales (como `SUPERADMIN`) que no están atados a una sede específica.
+
+El JWT y las sesiones vía Sanctum incluyen `id_restaurante` en el payload del usuario autenticado (`middleware/auth.js`), disponible en `req.user.id_restaurante` para cualquier controlador que necesite filtrar por sede.
+
+### Política jerárquica de acceso
+
+- **SUPERADMIN**: acceso a todas las sedes, sin restricción de `id_restaurante`.
+- **GERENTE, CAJERO, MESERO, REPARTIDOR**: operan dentro de la sede asignada en su `id_restaurante`.
+
+> ⚠️ **Nota de estado:** al momento de esta documentación, el filtrado por `id_restaurante` está disponible en el payload de autenticación, pero su aplicación consistente en todos los controladores (para restringir consultas por sede) debe verificarse módulo por módulo antes de considerarse completa.
+
+### Sedes de prueba
+
+Los datos semilla (`database/datos.sql`) incluyen dos sedes para pruebas:
+
+| id_restaurante | Nombre | Dirección |
+|----------------|--------|-----------|
+| 1 | Restaurante Principal | Calle 123 |
+| 2 | Restaurante Norte | Carrera 45 #10-20 |
+
+### Compatibilidad con Sanctum
+
+El middleware de autenticación (`backend/src/middleware/auth.js`) soporta dos formatos de token en el mismo header `Authorization: Bearer <token>`:
+
+- **JWT estándar**: verificado con `jsonwebtoken` y `JWT_SECRET`.
+- **Token estilo Sanctum** (`id|token`): validado contra la tabla `personal_access_tokens`, permitiendo compatibilidad con tokens emitidos por versiones anteriores del sistema basadas en Laravel Sanctum.
+
+### Migraciones y comandos de validación
+
+```bash
+# Generar el cliente de Prisma tras cambios en schema.prisma
+cd backend
+npx prisma generate
+
+# Aplicar migraciones pendientes
+npx prisma migrate deploy
+
+# Ver el estado de las migraciones
+npx prisma migrate status
+
+# Validar el linting del backend
+pnpm --dir backend run lint
+```
 
 ---
 
