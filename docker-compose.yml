@@ -27,9 +27,10 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       DB_HOST: db
       DB_PORT: 3306
-      DB_USER: remisoft
+      DB_USERNAME: remisoft
       DB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
-      DB_NAME: remisoft
+      DB_DATABASE: remisoft
+      DATABASE_URL: "mysql://remisoft:${DB_PASSWORD:-remisoft_pass}@db:3306/remisoft"
       JWT_SECRET: ${JWT_SECRET:-remisoft_jwt_secret}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       MAILTRAP_HOST: ${MAILTRAP_HOST:-smtp.mailtrap.io}
