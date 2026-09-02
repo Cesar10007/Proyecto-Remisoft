@@ -1,0 +1,142 @@
+.sa-users-panel {
+  width: 100%;
+}
+
+.sa-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sa-panel-title {
+  margin: 0;
+  color: var(--rojo);
+  font-size: 1.6rem;
+}
+
+.sa-panel-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--texto-muted);
+}
+
+.sa-table-card {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--bg-card);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.sa-table-scroll {
+  overflow-x: auto;
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sa-table th,
+.sa-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.sa-table th {
+  color: var(--texto-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sa-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sa-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sa-user-avatar-wrap {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--rojo);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.sa-user-name {
+  margin: 0;
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.sa-user-email {
+  margin: 0.2rem 0 0;
+  color: var(--texto-muted);
+  font-size: 0.82rem;
+}
+
+.sa-role-pill {
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #ebe9e7;
+  color: #625c58;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sa-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sa-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #aaa;
+}
+
+.sa-status-dot--active {
+  background: var(--verde);
+}
+
+.sa-status-text {
+  color: var(--texto-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sa-status-text--active {
+  color: var(--verde);
+}
+
+.sa-readonly-label {
+  color: var(--texto-muted);
+  font-size: 0.85rem;
+}
+
+.sa-table-message {
+  padding: 2rem !important;
+  color: var(--texto-muted);
+  text-align: center !important;
+}
+
+.sa-table-message--error {
+  color: var(--rojo);
+}
