@@ -22,6 +22,7 @@ import proveedorRoutes from './routes/proveedor.routes.js';
 import rolRoutes from './routes/rol.routes.js';
 import turnosRoutes from './routes/turnos.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
+import facturaRoutes from './routes/factura.routes.js';
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use('/api/categorias', categoriaProductosRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/detalle-pedido', detallePedidoRoutes);
 app.use('/api/domicilios', domiciliosRoutes);
+app.use('/api/facturas', facturaRoutes);
 app.use('/api/ingredientes', ingredientesRoutes);
 app.use('/api/inventario', inventarioRoutes);
 app.use('/api/pedidos', pedidosRoutes);
