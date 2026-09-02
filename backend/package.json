@@ -10,7 +10,8 @@
     "start": "node src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20.0.0"
