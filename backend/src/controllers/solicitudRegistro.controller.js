@@ -57,12 +57,14 @@ export async function crearSolicitud(req, res, next) {
 
     if (!emailNormalizado) {
       errores.email = ['El email es requerido.'];
-    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailNormalizado)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
       errores.email = ['El email no es válido.'];
     }
 
     if (typeof contrasena !== 'string' || contrasena.length < 8) {
-      errores.contrasena = ['La contraseña debe tener mínimo 8 caracteres.'];
+      errores.contrasena = [
+        'La contraseña debe tener mínimo 8 caracteres.',
+      ];
     }
 
     const idRol = Number(id_rol_solicitado);
@@ -86,7 +88,10 @@ export async function crearSolicitud(req, res, next) {
     }
 
     if (Object.keys(errores).length > 0) {
-      return res.status(422).json({ success: false, errors: errores });
+      return res.status(422).json({
+        success: false,
+        errors: errores,
+      });
     }
 
     const rol = await prisma.rol.findUnique({
@@ -202,6 +207,80 @@ export async function listarSolicitudes(req, res, next) {
   }
 }
 
+export async function historialSolicitudes(req, res, next) {
+  try {
+    const rolUsuario = obtenerRol(req);
+    const idRestaurante = Number(req.user?.id_restaurante);
+    const estado = texto(req.query.estado).toUpperCase();
+
+    const estadosPermitidos = ['APROBADA', 'RECHAZADA'];
+
+    if (!['SUPERADMIN', 'GERENTE'].includes(rolUsuario)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para consultar el historial.',
+      });
+    }
+
+    if (
+      rolUsuario === 'GERENTE' &&
+      (!Number.isInteger(idRestaurante) || idRestaurante <= 0)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tu usuario no tiene un restaurante asignado.',
+      });
+    }
+
+    const where = {
+      estado: estadosPermitidos.includes(estado)
+        ? estado
+        : { in: estadosPermitidos },
+      ...(rolUsuario === 'GERENTE'
+        ? { id_restaurante: idRestaurante }
+        : {}),
+    };
+
+    const solicitudes = await prisma.solicitud_registro.findMany({
+      where,
+      orderBy: { fecha_revision: 'desc' },
+      select: {
+        id_solicitud: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        telefono: true,
+        id_rol_solicitado: true,
+        id_restaurante: true,
+        estado: true,
+        motivo_rechazo: true,
+        fecha_solicitud: true,
+        fecha_revision: true,
+        revisado_por: true,
+        rol: {
+          select: {
+            nombre: true,
+          },
+        },
+        revisor: {
+          select: {
+            nombre: true,
+            apellido: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return res.json({
+      success: true,
+      data: solicitudes,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function aprobarSolicitud(req, res, next) {
   try {
     const idSolicitud = obtenerId(req);
@@ -292,7 +371,10 @@ export async function aprobarSolicitud(req, res, next) {
         },
       });
 
-      return { usuario, solicitud: solicitudActualizada };
+      return {
+        usuario,
+        solicitud: solicitudActualizada,
+      };
     });
 
     return res.json({

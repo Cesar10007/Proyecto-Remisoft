@@ -29,7 +29,8 @@ const app = express()
 
 app.set('trust proxy', 1)
 
-const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173'
+const allowedOrigin =
+  process.env.FRONTEND_URL || 'http://localhost:5173'
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -53,7 +54,9 @@ app.use(
 app.use(express.json({ limit: '1mb' }))
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'RemiSoft Express online' })
+  res.json({
+    status: 'RemiSoft Express online',
+  })
 })
 
 app.use('/api/auth/login', authLimiter)
