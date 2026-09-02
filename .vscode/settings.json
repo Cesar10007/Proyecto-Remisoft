@@ -13,7 +13,7 @@
             "name": "remisoft",
             "database": "remisoft",
             "username": "remisoft",
-            "password": "remisoft123"
+            "askForPassword": true
         }
     ]
 }
