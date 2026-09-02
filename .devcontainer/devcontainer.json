@@ -26,7 +26,7 @@
       "visibility": "private"
     }
   },
-  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.15.0 --activate && sudo apt-get update && sudo apt-get install -y mariadb-client && bash .devcontainer/setup.sh",
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@10.15.0 --activate && sudo apt-get update && sudo apt-get install -y mariadb-client && docker compose up -d db && bash .devcontainer/setup.sh",
   "postStartCommand": "docker compose up -d db",
   "customizations": {
     "vscode": {
