@@ -28,13 +28,14 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 4. [Levantar con Docker](#levantar-con-docker)
 5. [Desarrollo local sin Docker](#desarrollo-local-sin-docker)
 6. [Variables de entorno](#variables-de-entorno)
-7. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
-8. [Autenticación y roles](#autenticación-y-roles)
-9. [Modelo multi-restaurante](#modelo-multi-restaurante)
-10. [Endpoints del backend](#endpoints-del-backend)
-11. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-12. [Diseño y UI](#diseño-y-ui)
-13. [Notas técnicas y pendientes](#notas-técnicas-y-pendientes)
+7. [Integración continua](#integración-continua)
+8. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
+9. [Autenticación y roles](#autenticación-y-roles)
+10. [Modelo multi-restaurante](#modelo-multi-restaurante)
+11. [Endpoints del backend](#endpoints-del-backend)
+12. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+13. [Diseño y UI](#diseño-y-ui)
+14. [Notas técnicas y pendientes](#notas-técnicas-y-pendientes)
 
 ---
 
@@ -114,6 +115,9 @@ Proyecto-Remisoft/
 │   ├── devcontainer.json
 │   ├── setup.sh
 │   └── start.sh
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 ├── database/
 │   ├── datos.sql
 │   ├── init.sh
@@ -142,12 +146,15 @@ Proyecto-Remisoft/
 │   │   ├── migrations/
 │   │   └── schema.prisma
 │   ├── prisma.config.ts
-│   └── src/
-│       ├── config/
-│       ├── controllers/
-│       ├── middleware/
-│       ├── routes/
-│       └── server.js
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   └── server.js
+│   └── tests/
+│       └── health.test.js
 ├── docker-compose.yml
 └── README.md
 ```
@@ -180,9 +187,9 @@ docker compose ps
 Estado esperado:
 
 ```text
-db        Up (healthy)
-backend   Up
-frontend  Up
+db       Up (healthy)
+backend  Up
+frontend Up
 ```
 
 Abrir frontend:
@@ -220,13 +227,8 @@ Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera 
 ### Validaciones rápidas
 
 ```bash
-# Backend directo
 curl -i http://localhost:3000/health
-
-# Frontend servido por nginx
 curl -I http://localhost
-
-# Reverse proxy nginx -> backend
 curl -i http://localhost/api/health
 ```
 
@@ -277,7 +279,7 @@ Los archivos `.env` reales no deben subirse al repositorio. Usa los archivos `.e
 | `DB_DATABASE` | Base de datos `remisoft` |
 | `DB_USERNAME` | Usuario de MariaDB |
 | `DB_PASSWORD` | Contraseña de MariaDB |
-| `DATABASE_URL` | URL usada por Prisma CLI, por ejemplo `mysql://remisoft:...@db:3306/remisoft` |
+| `DATABASE_URL` | URL usada por Prisma CLI |
 | `JWT_SECRET` | Secreto para firmar tokens JWT |
 | `JWT_EXPIRES_IN` | Tiempo de expiración del JWT |
 | `FRONTEND_URL` | Origen permitido por CORS |
@@ -289,8 +291,57 @@ Los archivos `.env` reales no deben subirse al repositorio. Usa los archivos `.e
 |----------|-------------|
 | `VITE_API_URL` | URL base de la API; en Docker producción es `/api` |
 | `VITE_PROXY_TARGET` | Target del proxy de Vite en desarrollo; por defecto `http://localhost:3000` |
+| `VITE_PORT` | Puerto opcional del servidor de desarrollo de Vite; por defecto `5173` |
 
 Las variables `VITE_*` se incorporan al bundle durante `pnpm build`; cambiar una variable después de construir la imagen no modifica el JavaScript ya compilado.
+
+---
+
+## Integración continua
+> La auditoría de dependencias se ejecuta en CI con severidad alta. Actualmente no bloquea el resto del pipeline porque existen vulnerabilidades transitivas provenientes de Prisma (`deepmerge-ts`, `mariadb` y `mysql2`). La corrección de estas dependencias queda como una tarea independiente y debe hacerse con pruebas de compatibilidad.
+
+El proyecto utiliza GitHub Actions mediante el workflow `.github/workflows/ci.yml`.
+
+El pipeline se ejecuta cuando:
+
+- Se crea o actualiza un pull request hacia `develop` o `main`.
+- Se hace push a `develop` o `main`.
+
+Las validaciones ejecutadas son:
+
+- Instalación reproducible de dependencias con `pnpm install --frozen-lockfile`.
+- Auditoría de dependencias backend y frontend, reportada sin bloquear temporalmente el resto del pipeline.
+- Lint del backend.
+- Tests automatizados del backend.
+- Lint del frontend.
+- Build de producción del frontend.
+- Validación de la configuración de Docker Compose.
+- Construcción de las imágenes Docker.
+
+### Ejecutar las validaciones localmente
+
+Desde la raíz del proyecto:
+
+```bash
+pnpm --dir backend run test
+pnpm --dir backend run lint
+pnpm --dir frontend run lint
+pnpm --dir frontend run build
+docker compose config
+docker compose build
+```
+
+El test actual verifica que `GET /health` responda con:
+
+```json
+{
+  "status": "RemiSoft Express online"
+}
+```
+
+### Estado de cobertura
+
+Actualmente existe una prueba de humo para el endpoint `/health`. Las pruebas de integración para Docker, autenticación, autorización y persistencia siguen pendientes.
 
 ---
 
@@ -409,9 +460,9 @@ También existen endpoints para categorías, detalles, gastos, turnos, permisos,
 
 ```text
 main       ← código estable
-  ↑
+ ↑
 develop    ← integración
-  ↑
+ ↑
 feat/* / fix/* / docs/*
 ```
 
@@ -482,7 +533,11 @@ Reglas:
 - `database/init.sh` se ejecuta antes de iniciar Express.
 - `DATABASE_URL` está disponible para Prisma CLI dentro de Compose.
 - Una instalación limpia puede crear la base, ejecutar migraciones y cargar datos, vistas y procedimientos.
-- Se validaron `/health`, frontend nginx, reverse proxy y login.
+- El endpoint `/health` tiene una prueba automatizada ejecutada por Node Test Runner.
+- El lint de backend y frontend pasa correctamente.
+- El build de producción del frontend pasa correctamente.
+- La configuración de Docker Compose es válida.
+- Las imágenes Docker de backend y frontend se construyen correctamente.
 
 ### Pendientes reales
 
