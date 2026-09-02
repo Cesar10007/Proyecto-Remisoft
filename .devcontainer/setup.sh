@@ -77,8 +77,8 @@ for i in {1..60}; do
     log "Conexión a MariaDB exitosa en $DB_HOST:$DB_PORT"
     break
   fi
-  if [ $i -eq 30 ]; then
-    fail "No se pudo conectar a MariaDB en $DB_HOST:$DB_PORT después de 30 intentos. Verifica que el servicio 'db' de Compose esté corriendo (docker compose up -d db) y que el puerto 3306 esté expuesto."
+  if [ $i -eq 60 ]; then
+    fail "No se pudo conectar a MariaDB en $DB_HOST:$DB_PORT después de 60 intentos. Verifica que el servicio 'db' de Compose esté corriendo (docker compose up -d db) y que el puerto 3306 esté expuesto."
   fi
   log "Intento $i: esperando servicio db..."
   sleep 1

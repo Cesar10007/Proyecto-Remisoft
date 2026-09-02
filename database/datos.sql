@@ -44,13 +44,7 @@ INSERT INTO rol (id_rol, nombre, descripcion) VALUES
 
 -- 2. RESTAURANTE
 -- Registra las sedes activas desde las que opera el sistema.
-INSERT INTO restaurante (
-  id_restaurante,
-  nombre,
-  direccion,
-  telefono,
-  email,
-  activo
+INSERT INTO restaurante (id_restaurante,nombre,direccion,telefono,email,activo
 ) VALUES
   (1, 'Restaurante Principal', 'Calle 123', '3001234567', 'contacto@restaurante.com', 1),
   (2, 'Restaurante Norte', 'Carrera 45 #10-20', '3007654321', 'norte@restaurante.com', 1);
@@ -60,16 +54,7 @@ INSERT INTO restaurante (
 -- 3. USUARIO
 -- Todos los usuarios de prueba usan la contraseña: 123456
 INSERT INTO usuario (
-  id_usuario,
-  id_rol,
-  id_restaurante,
-  identificacion,
-  nombre,
-  apellido,
-  email,
-  telefono,
-  contrasena_hash,
-  activo
+  id_usuario,id_rol,id_restaurante,identificacion,nombre,apellido,email,telefono,contrasena_hash,activo
 ) VALUES
 (1, 1, NULL, '1001', 'Carlos', 'Ramírez', 'carlos.ramirez@resto.com', '3001234567', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (2, 2, 1, '1002', 'Laura', 'Gómez', 'laura.gomez@resto.com', '3009876543', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
@@ -84,9 +69,7 @@ INSERT INTO usuario (
 -- 4. CLIENTE
 -- Estas personas son clientes de pedidos, no usuarios con rol CLIENTE.
 -- Se incluyen datos de contacto y ubicación para pedidos a domicilio.
-INSERT INTO Cliente (
-    Nombre, Apellido, Email, Telefono, Direccion,
-    coordenadas_gps, tipo_documento, Num_documento
+INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion,coordenadas_gps, tipo_documento, Num_documento
 ) VALUES
 ('Pedro', 'Sánchez', 'pedro.sanchez@gmail.com', '3101234567', 'Calle 45 # 12-30', '4.6097,-74.0817', 'CC', '80123456'),
 ('Ana', 'Ruiz', 'ana.ruiz@gmail.com', '3209876543', 'Carrera 7 # 60-15', '4.6200,-74.0700', 'CC', '52654321'),
@@ -115,10 +98,7 @@ INSERT INTO caja (nombre, estado) VALUES
 
 -- 6. TURNO_CAJA
 -- Simula turnos cerrados con diferencias de caja y turnos actualmente abiertos.
-INSERT INTO turno_caja (
-    id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,
-    efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,
-    notas, estado
+INSERT INTO turno_caja (id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,notas, estado
 ) VALUES
 (1, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 200000.00, 850000.00, 845000.00, -5000.00, 'Turno mañana normal', 'CERRADA'),
 (2, 7, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 150000.00, 620000.00, 620000.00, 0.00, 'Sin novedades', 'CERRADA'),
