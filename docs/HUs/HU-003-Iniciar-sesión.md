@@ -10,7 +10,7 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 
 | Campo             | Valor                           |
 |-------------------|---------------------------------|
-| **ID**            | HU-002                          |
+| **ID**            | HU-003                          |
 | **Título**        | Iniciar sesión                  | 
 | **Módulo**        | Usuarios y Autenticación        |
 | **Prioridad**     | Alta                            |
