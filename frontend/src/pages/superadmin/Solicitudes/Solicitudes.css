@@ -140,3 +140,80 @@
     flex-direction: column;
   }
 }
+
+.sa-request-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sa-request-tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #6e625a;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 14px;
+}
+
+.sa-request-tab:hover {
+  color: #9c421f;
+}
+
+.sa-request-tab--active {
+  border-bottom-color: #e45b2b;
+  color: #9c421f;
+  font-weight: 700;
+}
+
+.sa-request-filter {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.sa-request-filter label {
+  color: #6e625a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sa-request-filter select {
+  background: #ffffff;
+  border: 1px solid #d9cbc2;
+  border-radius: 8px;
+  color: #4c4039;
+  padding: 8px 12px;
+}
+
+.sa-request-content {
+  flex: 1;
+}
+
+.sa-request-history {
+  margin-top: 8px;
+}
+
+.sa-request-status-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+}
+
+.sa-request-status-badge--aprobada {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sa-request-status-badge--rechazada {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sa-request-rejection-reason {
+  color: #991b1b;
+}
