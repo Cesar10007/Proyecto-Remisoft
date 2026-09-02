@@ -8,12 +8,15 @@
 ![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61dafb)
 ![Backend](https://img.shields.io/badge/backend-Express%20%2B%20Prisma-6c5ce7)
 ![Base de datos](https://img.shields.io/badge/base%20de%20datos-MariaDB-c0392b)
+![Docker](https://img.shields.io/badge/entorno-Docker%20Compose-2496ED)
 
 ---
 
 Sistema web para automatizar pedidos, inventario, facturación y domicilios del restaurante Familia Remi.
 
-> **Estado actual:** Frontend y backend completamente conectados. Backend Express + Prisma, autenticación JWT y módulos administrativos funcionando sobre datos de prueba de MariaDB. La carpeta activa del backend es `backend/`.
+> **Estado actual:** el stack se ejecuta con Docker Compose mediante tres servicios: MariaDB, backend Express + Prisma y frontend React compilado y servido por nginx. La autenticación JWT y los módulos administrativos funcionan sobre datos de desarrollo inicializados automáticamente.
+
+> **Alcance:** el proyecto es académico y se encuentra en migración/refactorización. Algunas reglas de autorización, flujos funcionales y filtros multi-restaurante todavía requieren verificación módulo por módulo.
 
 ---
 
@@ -22,15 +25,16 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 1. [Equipo de desarrollo](#equipo-de-desarrollo)
 2. [Stack y arquitectura](#stack-y-arquitectura)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [Levantar el entorno](#levantar-el-entorno)
-5. [Variables de entorno](#variables-de-entorno)
-6. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
-7. [Autenticación y roles](#autenticación-y-roles)
-8. [Modelo multi-restaurante](#modelo-multi-restaurante)
-9. [Endpoints del backend](#endpoints-del-backend)
-10. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-11. [Diseño y UI](#diseño-y-ui)
-12. [Notas técnicas importantes](#notas-técnicas-importantes)
+4. [Levantar con Docker](#levantar-con-docker)
+5. [Desarrollo local sin Docker](#desarrollo-local-sin-docker)
+6. [Variables de entorno](#variables-de-entorno)
+7. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
+8. [Autenticación y roles](#autenticación-y-roles)
+9. [Modelo multi-restaurante](#modelo-multi-restaurante)
+10. [Endpoints del backend](#endpoints-del-backend)
+11. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+12. [Diseño y UI](#diseño-y-ui)
+13. [Notas técnicas y pendientes](#notas-técnicas-y-pendientes)
 
 ---
 
@@ -46,17 +50,21 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 ## Stack y arquitectura
 
-| Capa | Tecnología | Puerto |
-|------|------------|--------|
-| Frontend | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 | 5173 |
-| Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 |
-| Base de datos | MariaDB 11 | 3306 |
-| ORM y migraciones | Prisma 7.9.1 | — |
-| Entorno | GitHub Codespaces | — |
-| Auth | JWT | — |
-| Estado global | Redux Toolkit 2 | — |
+| Capa | Tecnología | Puerto publicado | Puerto interno |
+|------|------------|------------------|----------------|
+| Frontend producción | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 + nginx | 80 | 80 |
+| Frontend desarrollo | Vite dev server | 5173 | 5173 |
+| Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 | 3000 |
+| Base de datos | MariaDB 11.4.4 | No publicado por defecto | 3306 |
+| ORM y migraciones | Prisma 7.9.1 | — | — |
+| Orquestación | Docker Compose | — | — |
+| Entorno recomendado | GitHub Codespaces | — | — |
+| Auth | JWT | — | — |
+| Estado global | Redux Toolkit 2 | — | — |
 
-React no se comunica directamente con MariaDB. Todo pasa por la API REST de Express en el puerto 3000.
+En el modo Docker, nginx es la entrada pública del frontend. El navegador consume la API mediante rutas relativas como `/api/auth/login`; nginx reenvía esas rutas al servicio interno `backend:3000`.
+
+React no se comunica directamente con MariaDB. Todas las operaciones pasan por la API REST de Express.
 
 ### Dependencias principales
 
@@ -69,7 +77,7 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 | TypeScript | 5.8.3 | Tipado estático |
 | react-router-dom | 7.x | Rutas y navegación por rol |
 | Axios | 1.x | Cliente HTTP para consumir la API |
-| Redux Toolkit | 2.x | Estado global (token, rol, usuario) |
+| Redux Toolkit | 2.x | Estado global |
 | react-redux | 9.x | Integración de Redux con React |
 
 #### Backend
@@ -79,7 +87,6 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 | Node.js | v20.19.4 | Runtime del backend |
 | Express | 5.1.0 | Framework backend y API REST |
 | Prisma | 7.9.1 | ORM, cliente tipado y migraciones |
-| ESLint | 9.39.5 | Linting del backend (`@eslint/js`, `globals`) |
 | mysql2 | 3.x | Conexión auxiliar con MariaDB |
 | jsonwebtoken | 9.x | Emisión y validación de JWT |
 | bcryptjs | 2.x | Hash y verificación de contraseñas |
@@ -89,111 +96,201 @@ React no se comunica directamente con MariaDB. Todo pasa por la API REST de Expr
 
 | Campo | Valor |
 |-------|-------|
-| Motor | MariaDB 11 |
+| Motor | MariaDB 11.4.4 |
 | Base de datos | `remisoft` |
-| Usuario | `remisoft` |
-| Contraseña | `remisoft123`|
-| Puerto | 3306 |
+| Usuario por defecto | `remisoft` |
+| Contraseña por defecto en Compose | `remisoft_pass` |
+| Puerto interno | 3306 |
+
+Los valores por defecto son únicamente para desarrollo. En un despliegue real deben reemplazarse mediante secretos o variables seguras.
 
 ---
 
 ## Estructura del proyecto
 
-```bash
+```text
 Proyecto-Remisoft/
 ├── .devcontainer/
-│   ├── devcontainer.json     # Imagen, puertos y extensiones
-│   ├── setup.sh              # Instalación inicial
-│   └── start.sh              # Arranque automático de servicios
+│   ├── devcontainer.json
+│   ├── setup.sh
+│   └── start.sh
 ├── database/
-│   ├── DBFAMILIAREMI.sql     # Estructura de la base de datos
-│   ├── datos.sql              # Datos semilla para desarrollo
-│   ├── vistas/                # Vistas SQL
-│   └── procedimientos/        # Procedimientos almacenados
+│   ├── datos.sql
+│   ├── init.sh
+│   ├── legacy/
+│   ├── vistas/
+│   └── procedimientos/
 ├── docs/
-│   ├── HUs/                  # Historias de usuario
-│   ├── RFs/                  # Requisitos funcionales
-│   ├── RNFs/                 # Requisitos no funcionales
-│   └── restricciones.md      # Restricciones y stack del proyecto
+│   ├── HUs/
+│   ├── RFs/
+│   ├── RNFs/
+│   └── restricciones.md
 ├── frontend/
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── vite.config.js
 │   └── src/
 │       ├── pages/
-│       │   ├── auth/         # Login, registro y recuperación
-│       │   ├── superadmin/   # Dashboard SuperAdmin
-│       │   ├── gerente/      # Dashboard Gerente
-│       │   ├── mesero/       # Dashboard Mesero
-│       │   └── repartidor/   # Dashboard Repartidor
-│       ├── components/       # Componentes reutilizables y layout
-│       ├── api/              # axios.ts y configuración de API
-│       ├── store/            # Redux store y authSlice
-│       └── context/          # AuthContext
-└── backend/
-    ├── prisma/
-    │   ├── migrations/       # Migraciones versionadas
-    │   └── schema.prisma     # Modelo de datos
-    └── src/
-        ├── config/           # Conexión a MariaDB
-        ├── controllers/      # Controladores
-        ├── middleware/       # Autenticación y validaciones
-        ├── routes/           # Rutas Express
-        └── server.js         # Montaje de la API
+│       ├── components/
+│       ├── api/
+│       ├── store/
+│       └── context/
+├── backend/
+│   ├── Dockerfile
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   └── schema.prisma
+│   ├── prisma.config.ts
+│   └── src/
+│       ├── config/
+│       ├── controllers/
+│       ├── middleware/
+│       ├── routes/
+│       └── server.js
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
-## Levantar el entorno
+## Levantar con Docker
 
-### Primera vez
+### Requisitos
 
-Al crear el Codespace, `setup.sh` deja listo el entorno automáticamente:
+- Docker Engine o Docker Desktop.
+- Docker Compose v2.
+- Git.
+- En GitHub Codespaces, Docker habilitado en el entorno.
 
-- Instala MariaDB.
-- Crea la base de datos `remisoft`.
-- Ejecuta `prisma migrate deploy`.
-- Ejecuta `prisma generate`.
-- Carga datos, vistas y procedimientos cuando corresponde.
-- Instala las dependencias del backend y frontend.
-- Genera los archivos `.env` desde los ejemplos.
-- No ejecuta Composer, `php artisan` ni Laravel.
+### Arranque normal
 
-### Cada vez que abres el Codespace
-
-`start.sh` arranca los servicios automáticamente. Si no se levantan solos:
+Desde la raíz del repositorio:
 
 ```bash
-# Terminal 1 — Backend Express
-pnpm --dir backend dev
+docker compose up -d --build
+```
 
-# Terminal 2 — Frontend
+Comprobar servicios:
+
+```bash
+docker compose ps
+```
+
+Estado esperado:
+
+```text
+db        Up (healthy)
+backend   Up
+frontend  Up
+```
+
+Abrir frontend:
+
+- Localmente: `http://localhost`.
+- En Codespaces: abrir el puerto 80 desde la pestaña **Ports** de VS Code.
+
+### Logs
+
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+Para detener servicios sin borrar datos:
+
+```bash
+docker compose down
+```
+
+### Instalación limpia
+
+Para comprobar que el proyecto puede inicializarse desde cero:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+> `-v` elimina el volumen `db_data` y borra los datos persistentes de MariaDB. Úsalo solo cuando quieras probar una instalación limpia.
+
+Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, carga datos iniciales si la base está vacía y luego carga vistas y procedimientos.
+
+### Validaciones rápidas
+
+```bash
+# Backend directo
+curl -i http://localhost:3000/health
+
+# Frontend servido por nginx
+curl -I http://localhost
+
+# Reverse proxy nginx -> backend
+curl -i http://localhost/api/health
+```
+
+Sin token, algunas rutas protegidas responderán `401 Unauthorized`. Esto indica que el backend recibió la petición y aplicó autenticación; no es un fallo del proxy.
+
+### Prueba de login
+
+```bash
+curl -i -X POST http://localhost/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"carlos.ramirez@resto.com","contrasena":"123456"}'
+```
+
+Las credenciales son datos de desarrollo. No deben reutilizarse en producción.
+
+---
+
+## Desarrollo local sin Docker
+
+Para ejecutar Vite directamente:
+
+```bash
 pnpm --dir frontend dev
 ```
 
-> **Importante:** Express escucha en el puerto 3000 y Vite en el 5173. El puerto 8000 ya no forma parte del entorno activo.
+El frontend estará en `http://localhost:5173` y usará `VITE_API_URL=/api`. El proxy de Vite apunta por defecto a `http://localhost:3000`.
+
+Para ejecutar el backend directamente:
+
+```bash
+pnpm --dir backend dev
+```
+
+Si el backend necesita MariaDB local, debes tener disponibles las variables de `backend/.env` y una instancia compatible de MariaDB.
 
 ---
 
 ## Variables de entorno
 
-Los archivos `.env` no están en el repositorio. `setup.sh` los genera automáticamente.
+Los archivos `.env` reales no deben subirse al repositorio. Usa los archivos `.env.example` como referencia.
 
-#### `backend/.env` — variables clave
+### Backend
 
 | Variable | Descripción |
 |----------|-------------|
-| `DB_HOST` | Host de MariaDB |
-| `DB_PORT` | Puerto de MariaDB |
+| `DB_HOST` | Host de MariaDB; en Compose es `db` |
+| `DB_PORT` | Puerto interno de MariaDB, normalmente `3306` |
 | `DB_DATABASE` | Base de datos `remisoft` |
 | `DB_USERNAME` | Usuario de MariaDB |
 | `DB_PASSWORD` | Contraseña de MariaDB |
+| `DATABASE_URL` | URL usada por Prisma CLI, por ejemplo `mysql://remisoft:...@db:3306/remisoft` |
 | `JWT_SECRET` | Secreto para firmar tokens JWT |
-| `FRONTEND_URL` | URL del frontend para CORS |
+| `JWT_EXPIRES_IN` | Tiempo de expiración del JWT |
+| `FRONTEND_URL` | Origen permitido por CORS |
 | Variables SMTP | Configuración de correo |
 
-#### `frontend/.env` — variables clave
+### Frontend
 
 | Variable | Descripción |
 |----------|-------------|
-| `VITE_API_URL` | URL base del backend, normalmente `/api` |
+| `VITE_API_URL` | URL base de la API; en Docker producción es `/api` |
+| `VITE_PROXY_TARGET` | Target del proxy de Vite en desarrollo; por defecto `http://localhost:3000` |
+
+Las variables `VITE_*` se incorporan al bundle durante `pnpm build`; cambiar una variable después de construir la imagen no modifica el JavaScript ya compilado.
 
 ---
 
@@ -201,108 +298,76 @@ Los archivos `.env` no están en el repositorio. `setup.sh` los genera automáti
 
 El proyecto usa Nodemailer/SMTP para enviar correos de recuperación en desarrollo.
 
-### Endpoints
-
 | Método | Endpoint | Descripción |
-|----------|----------|-------------|
-| `POST` | `/api/auth/forgot-password` | Envía enlace de recuperación al email |
+|--------|----------|-------------|
+| `POST` | `/api/auth/forgot-password` | Envía enlace de recuperación |
 | `POST` | `/api/auth/reset-password` | Restablece contraseña con token válido |
 
-### Flujo
+Flujo:
 
-1. Usuario ingresa email en `/forgot-password`.
+1. El usuario ingresa su email.
 2. Express genera un token temporal.
-3. Nodemailer envía el correo con el enlace.
-4. El enlace apunta a `/reset-password?token=...&email=...`.
-5. `ResetPassword` lee los parámetros y permite ingresar la nueva contraseña.
+3. Nodemailer envía el correo.
+4. El enlace apunta a la ruta de recuperación del frontend.
+5. El usuario registra la nueva contraseña.
+
+Las credenciales SMTP deben permanecer únicamente en archivos `.env` locales o en secretos del entorno.
 
 ---
 
 ## Autenticación y roles
 
+Todas las rutas protegidas requieren:
+
+```text
+Authorization: Bearer <token>
+```
+
 ### Catálogo de roles
 
-El rol `CLIENTE` (`id_rol = 6`) ya no es un usuario autenticable. La entidad `Cliente` se conserva para contacto, pedidos, domicilios y búsqueda por teléfono.
+El rol `CLIENTE` ya no es un usuario autenticable. La entidad `Cliente` se conserva para contacto, pedidos, domicilios y búsqueda por teléfono.
 
 | id_rol | Nombre | Ruta frontend | Descripción |
 |--------|--------|---------------|-------------|
-| 1 | `SUPERADMIN` | `/superadmin` | Acceso total al sistema |
-| 2 | `GERENTE` | `/gerente` | Administrador del restaurante |
+| 1 | `SUPERADMIN` | `/superadmin` | Acceso total esperado |
+| 2 | `GERENTE` | `/gerente` | Administración del restaurante |
 | 3 | `CAJERO` | — | Gestión de caja y pagos |
 | 4 | `MESERO` | `/mesero` | Toma y gestión de pedidos |
-| 5 | `REPARTIDOR` | `/repartidor` | Entrega de pedidos a domicilio |
+| 5 | `REPARTIDOR` | `/repartidor` | Entrega de pedidos |
+
+> El acceso efectivo por endpoint debe validarse con la matriz rol-permiso. No se debe asumir que la existencia de una ruta frontend equivale a autorización backend completa.
 
 ### Flujo de autenticación
 
-1. Login → Express valida credenciales → devuelve `{ token, rol, user }`.
-2. Frontend guarda token en `localStorage` y en Redux store.
-3. `axios.ts` adjunta el token automáticamente en cada request mediante interceptor.
-4. `PrivateRoute` valida el acceso antes de renderizar cada dashboard.
-5. Logout elimina el token y finaliza la sesión.
+1. Login: Express valida credenciales y devuelve token, rol y usuario.
+2. El frontend guarda el token en Redux/localStorage.
+3. `axios.ts` adjunta el token mediante interceptor.
+4. `PrivateRoute` controla el acceso visual a dashboards.
+5. El backend valida el token y, cuando está configurado, el rol requerido.
+6. Logout elimina la sesión local.
 
 ---
 
 ## Modelo multi-restaurante
 
-### Modelo restaurante
+El sistema soporta múltiples sedes mediante `restaurante`. Cada usuario puede tener un `id_restaurante` opcional.
 
-El sistema soporta múltiples sedes mediante el modelo `restaurante`:
+- `SUPERADMIN`: puede operar globalmente.
+- Roles operativos: deberían limitarse a su sede asignada.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id_restaurante` | Int (PK) | Identificador único de la sede |
-| `nombre` | String | Nombre del restaurante |
-| `direccion` | String? | Dirección física |
-| `telefono` | String? | Teléfono de contacto |
-| `email` | String? | Correo de contacto |
-| `activo` | Boolean | Si la sede está operativa |
-| `fecha_creacion` | DateTime | Fecha de alta en el sistema |
+> **Estado pendiente:** que `id_restaurante` exista en el JWT no garantiza aislamiento de datos. El filtrado debe verificarse en cada controlador y endpoint antes de considerarlo completo.
 
-### Relación usuario.id_restaurante
+El middleware de autenticación soporta JWT estándar y tokens estilo Sanctum heredados, cuando corresponda.
 
-Cada usuario tiene un campo opcional `id_restaurante` (FK hacia `restaurante`) que determina a qué sede pertenece. Es nullable para permitir roles globales (como `SUPERADMIN`) que no están atados a una sede específica.
-
-El JWT y las sesiones vía Sanctum incluyen `id_restaurante` en el payload del usuario autenticado (`middleware/auth.js`), disponible en `req.user.id_restaurante` para cualquier controlador que necesite filtrar por sede.
-
-### Política jerárquica de acceso
-
-- **SUPERADMIN**: acceso a todas las sedes, sin restricción de `id_restaurante`.
-- **GERENTE, CAJERO, MESERO, REPARTIDOR**: operan dentro de la sede asignada en su `id_restaurante`.
-
-> ⚠️ **Nota de estado:** al momento de esta documentación, el filtrado por `id_restaurante` está disponible en el payload de autenticación, pero su aplicación consistente en todos los controladores (para restringir consultas por sede) debe verificarse módulo por módulo antes de considerarse completa.
-
-### Sedes de prueba
-
-Los datos semilla (`database/datos.sql`) incluyen dos sedes para pruebas:
-
-| id_restaurante | Nombre | Dirección |
-|----------------|--------|-----------|
-| 1 | Restaurante Principal | Calle 123 |
-| 2 | Restaurante Norte | Carrera 45 #10-20 |
-
-### Compatibilidad con Sanctum
-
-El middleware de autenticación (`backend/src/middleware/auth.js`) soporta dos formatos de token en el mismo header `Authorization: Bearer <token>`:
-
-- **JWT estándar**: verificado con `jsonwebtoken` y `JWT_SECRET`.
-- **Token estilo Sanctum** (`id|token`): validado contra la tabla `personal_access_tokens`, permitiendo compatibilidad con tokens emitidos por versiones anteriores del sistema basadas en Laravel Sanctum.
-
-### Migraciones y comandos de validación
+### Comandos Prisma
 
 ```bash
-# Generar el cliente de Prisma tras cambios en schema.prisma
-cd backend
-npx prisma generate
-
-# Aplicar migraciones pendientes
-npx prisma migrate deploy
-
-# Ver el estado de las migraciones
-npx prisma migrate status
-
-# Validar el linting del backend
-pnpm --dir backend run lint
+pnpm --dir backend exec prisma generate
+pnpm --dir backend exec prisma migrate deploy
+pnpm --dir backend exec prisma migrate status
 ```
+
+En Docker, estos comandos se ejecutan desde `database/init.sh` durante el arranque del backend.
 
 ---
 
@@ -310,19 +375,19 @@ pnpm --dir backend run lint
 
 Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
 
-### Autenticación públicas
+### Autenticación
 
 | Método | Endpoint | Descripción |
-|----------|----------|-------------|
-| POST | `/api/auth/login` | Login con email y contraseña |
-| POST | `/api/auth/forgot-password` | Envía correo de recuperación |
-| POST | `/api/auth/reset-password` | Restablece contraseña con token |
-| GET | `/api/auth/me` | Consulta la sesión autenticada |
+|--------|----------|-------------|
+| `POST` | `/api/auth/login` | Login con email y contraseña |
+| `POST` | `/api/auth/forgot-password` | Solicita recuperación |
+| `POST` | `/api/auth/reset-password` | Restablece contraseña |
+| `GET` | `/api/auth/me` | Consulta sesión autenticada |
 
-### Protegidas
+### Módulos principales
 
 | Módulo | Endpoint base |
-|---------|---------------|
+|--------|---------------|
 | Usuarios | `/api/usuarios` |
 | Productos | `/api/productos` |
 | Clientes | `/api/clientes` |
@@ -336,27 +401,27 @@ Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
 | Facturas | `/api/facturas` |
 | Configuración | `/api/configuracion` |
 
-También existen rutas para categorías, detalles, gastos, turnos, permisos, notificaciones, estados, roles y tipos auxiliares.
+También existen endpoints para categorías, detalles, gastos, turnos, permisos, notificaciones, estados, roles y tipos auxiliares. La lista completa debe mantenerse sincronizada con `backend/src/server.js` y `backend/src/routes/`.
 
 ---
 
 ## Flujo de trabajo Git
 
-### Estructura de ramas
-
 ```text
-main        ← código estable y aprobado
-develop     ← rama de integración
-└── feat/testing / feat/ia-modulo / docs/finalizar-migracion
+main       ← código estable
+  ↑
+develop    ← integración
+  ↑
+feat/* / fix/* / docs/*
 ```
 
-### Flujo correcto
+Flujo correcto:
 
 ```text
-rama de trabajo → commit → push → Pull Request a develop → merge → Pull Request a main
+rama de trabajo → commit → push → PR a develop → merge → PR de develop a main
 ```
 
-### Convención de commits
+Convención de commits:
 
 | Prefijo | Uso |
 |---------|-----|
@@ -365,20 +430,21 @@ rama de trabajo → commit → push → Pull Request a develop → merge → Pul
 | `refactor:` | Reorganización sin cambiar comportamiento |
 | `chore:` | Configuración o mantenimiento |
 | `docs:` | Documentación |
-| `style:` | Formato / estilos sin cambiar lógica |
+| `style:` | Formato o estilos |
 
-### Reglas del equipo
+Reglas:
 
-- Nunca hacer push directo a `main` o `develop`.
-- Probar en la rama de trabajo antes de integrar.
-- Hacer `pull` antes de tocar archivos.
-- Revisar el diff antes del merge.
+- No hacer push directo a `main` o `develop`.
+- Actualizar la rama base antes de crear una rama de trabajo.
+- Verificar comandos reales antes de afirmar que algo funciona.
+- Revisar `git diff` antes del commit y del merge.
+- No subir `.env`, tokens, contraseñas ni credenciales SMTP.
 
 ---
 
 ## Diseño y UI
 
-### Paleta de colores (CSS variables globales)
+### Paleta de colores
 
 | Token | Valor | Uso |
 |-------|-------|-----|
@@ -389,7 +455,7 @@ rama de trabajo → commit → push → Pull Request a develop → merge → Pul
 | `--texto` | `#1A1A1A` | Tipografía principal |
 | `--texto-muted` | `#5F5E5A` | Texto secundario |
 | `--bg` | `#FDFAF7` | Fondo base |
-| `--bg-card` | `#ffffff` | Fondo de tarjetas |
+| `--bg-card` | `#ffffff` | Tarjetas |
 | `--borde` | `rgba(0,0,0,0.09)` | Bordes |
 
 ### Navegación por rol
@@ -404,14 +470,46 @@ rama de trabajo → commit → push → Pull Request a develop → merge → Pul
 
 ---
 
-## Notas técnicas importantes
+## Notas técnicas y pendientes
 
-- El frontend se comunica con MariaDB únicamente a través de la API REST de Express.
-- `backend/` es la ruta oficial del backend activo y contiene `src/`, `routes/`, `controllers/`, `middleware/` y `prisma/`.
-- Prisma gestiona el esquema y las migraciones mediante `prisma migrate deploy`; `prisma generate` regenera el cliente de Prisma.
-- JWT se utiliza para emitir y validar tokens de autenticación.
-- `axios.ts` adjunta automáticamente el token JWT mediante un interceptor.
-- Las URLs de Codespaces, contraseñas y secretos deben permanecer en los archivos `.env` locales.
-- MariaDB usa datos ficticios de desarrollo; la contraseña documentada es `remisoft123`.
-- Los puertos activos son 3000 para Express, 5173 para Vite y 3306 para MariaDB.
-- `setup.sh` y `start.sh` automatizan la preparación y el arranque del entorno.
+### Hecho y validado
+
+- Docker Compose ejecuta MariaDB, backend y frontend.
+- El frontend se compila en una etapa Node y se sirve con nginx.
+- nginx resuelve rutas de React Router mediante fallback a `index.html`.
+- nginx reenvía `/api/` al servicio interno `backend:3000`.
+- Prisma se genera dentro del build del backend y se copia al runtime.
+- `database/init.sh` se ejecuta antes de iniciar Express.
+- `DATABASE_URL` está disponible para Prisma CLI dentro de Compose.
+- Una instalación limpia puede crear la base, ejecutar migraciones y cargar datos, vistas y procedimientos.
+- Se validaron `/health`, frontend nginx, reverse proxy y login.
+
+### Pendientes reales
+
+- Formalizar la matriz rol → permiso.
+- Aplicar y probar `requireRole` en todos los routers que lo necesitan.
+- Implementar RF-002: pedidos transaccionales, máquina de estados y descuento de inventario.
+- Consumir `vista_pedidos_activos` mediante `/api/pedidos/activos`.
+- Revisar los procedimientos y vistas SQL todavía no utilizados.
+- Fijar CVEs y dependencias con rangos abiertos.
+- Añadir pruebas automatizadas de integración para Docker, autenticación y autorización.
+- Separar configuración Docker de desarrollo y producción si el despliegue real lo requiere.
+- Eliminar valores por defecto inseguros antes de cualquier despliegue público.
+
+### Limitaciones de producción
+
+La configuración actual es adecuada para reproducibilidad académica y validación del stack. Para producción real todavía faltaría, como mínimo:
+
+- TLS/HTTPS delante de nginx.
+- Secretos gestionados fuera de `docker-compose.yml`.
+- Backups y política de persistencia de MariaDB.
+- Observabilidad y logs centralizados.
+- Healthchecks explícitos para backend/frontend.
+- No publicar el puerto 3000 del backend si nginx es la única entrada pública.
+- Revisión de aislamiento por restaurante y autorización por endpoint.
+
+---
+
+## Licencia
+
+Proyecto académico desarrollado para la gestión del restaurante Familia Remi.
