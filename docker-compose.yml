@@ -5,42 +5,54 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-remisoft_root}
       MARIADB_DATABASE: remisoft
       MARIADB_USER: remisoft
-      MARIADB_PASSWORD: remisoft123
+      MARIADB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
     volumes:
-      - dbdata:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      retries: 20
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
     depends_on:
       db:
         condition: service_healthy
     environment:
+      NODE_ENV: ${NODE_ENV:-production}
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: remisoft
       DB_USERNAME: remisoft
-      DB_PASSWORD: remisoft123
-      DATABASE_URL: "mysql://remisoft:remisoft123@db:3306/remisoft"
-      JWT_SECRET: ${JWT_SECRET:-remisoft_dev_jwt_secret_cambiar_en_produccion}
-      JWT_EXPIRES_IN: 8h
-      MAILTRAP_HOST: ${MAILTRAP_HOST}
-      MAILTRAP_PORT: ${MAILTRAP_PORT}
-      MAILTRAP_USER: ${MAILTRAP_USER}
-      MAILTRAP_PASS: ${MAILTRAP_PASS}
-      MAIL_FROM: ${MAIL_FROM:-noreply@remisoft.local}
+      DB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
+      DB_DATABASE: remisoft
+      DATABASE_URL: "mysql://remisoft:${DB_PASSWORD:-remisoft_pass}@db:3306/remisoft"
+      JWT_SECRET: ${JWT_SECRET:-remisoft_jwt_secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      MAILTRAP_HOST: ${MAILTRAP_HOST:-smtp.mailtrap.io}
+      MAILTRAP_PORT: ${MAILTRAP_PORT:-2525}
+      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME:-}
+      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD:-}
+      MAILTRAP_FROM: ${MAILTRAP_FROM:-no-reply@remisoft.com}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
     volumes:
       - ./database:/app/database:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runtime
     ports:
-      - "3000:3000"
-    command: ["/app/database/init.sh"]
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
 
 volumes:
-  dbdata:
+  db_data:

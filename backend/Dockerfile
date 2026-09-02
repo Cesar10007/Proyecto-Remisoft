@@ -24,6 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client 
 COPY --from=generate /app/node_modules ./node_modules
 COPY --from=generate /app/prisma ./prisma
 COPY --from=generate /app/prisma.config.ts ./
+
+# Copia el código fuente. backend/.dockerignore excluye src/generated.
 COPY . .
+
+# Copia el cliente Prisma generado dentro de una etapa limpia.
+COPY --from=generate /app/src/generated ./src/generated
+
 EXPOSE 3000
-CMD ["node", "src/server.js"]
+CMD ["bash", "/app/database/init.sh"]
