@@ -23,6 +23,7 @@ import rolRoutes from './routes/rol.routes.js'
 import turnosRoutes from './routes/turnos.routes.js'
 import usuariosRoutes from './routes/usuarios.routes.js'
 import facturaRoutes from './routes/factura.routes.js'
+import solicitudRegistroRoutes from './routes/solicitudRegistro.routes.js'
 
 const app = express()
 
@@ -64,6 +65,7 @@ app.use('/api/auth', passwordResetRoutes)
 
 app.use(authMiddleware)
 
+app.use('/api/solicitudes', solicitudRegistroRoutes)
 app.use('/api/cajas', cajasRoutes)
 app.use('/api/categorias', categoriaProductosRoutes)
 app.use('/api/clientes', clienteRoutes)
