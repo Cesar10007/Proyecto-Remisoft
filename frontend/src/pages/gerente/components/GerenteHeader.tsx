@@ -1,0 +1,7 @@
+interface GerenteHeaderProps { seccionActiva: string; nombreUsuario?: string }
+
+function GerenteHeader({ seccionActiva, nombreUsuario = 'Gerente' }: GerenteHeaderProps) {
+  return <header className="flex items-center justify-between"><div><h1 className="font-['Syne'] text-[1.6rem] font-extrabold tracking-[-0.5px] text-[var(--texto)]">{seccionActiva}</h1><p className="mt-0.5 text-[0.85rem] text-[var(--texto-muted)]">Bienvenido de nuevo, {nombreUsuario}</p></div><div className="flex items-center gap-3"><button aria-label="Notificaciones" className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] text-[var(--texto-muted)]"><span className="material-symbols-outlined text-[20px]">notifications</span><span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-[var(--bg-card)] bg-[var(--rojo)]"></span></button><div className="flex items-center gap-2.5 rounded-full border border-[var(--borde)] bg-[var(--bg-card)] py-1.5 pl-1.5 pr-3.5"><div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--rojo-light)] text-[0.85rem] font-bold text-[var(--rojo-dark)]">G</div><span className="text-[0.85rem] font-medium text-[var(--texto)]">{nombreUsuario}</span></div></div></header>
+}
+
+export default GerenteHeader
