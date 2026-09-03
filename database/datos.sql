@@ -50,69 +50,17 @@ INSERT INTO restaurante (
 
 -- 3. SOLICITUD_REGISTRO
 INSERT INTO solicitud_registro (
-    nombre,
-    apellido,
-    email,
-    telefono,
-    contrasena_hash,
-    id_rol_solicitado,
-    id_restaurante,
-    estado
+    nombre,apellido,email,telefono,contrasena_hash,id_rol_solicitado,id_restaurante,estado
 ) VALUES
-(
-    'Prueba',
-    'Gerente',
-    'solicitud.gerente.prueba@example.com',
-    '3002001001',
-    '$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',
-    2,
-    1,
-    'PENDIENTE'
-),
-(
-    'Prueba',
-    'Cajero',
-    'solicitud.cajero.prueba@example.com',
-    '3002001002',
-    '$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',
-    3,
-    1,
-    'PENDIENTE'
-),
-(
-    'Prueba',
-    'Mesero',
-    'solicitud.mesero.prueba@example.com',
-    '3002001003',
-    '$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',
-    4,
-    2,
-    'PENDIENTE'
-),
-(
-    'Prueba',
-    'Repartidor',
-    'solicitud.repartidor.prueba@example.com',
-    '3002001004',
-    '$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',
-    5,
-    2,
-    'PENDIENTE'
-);
+('Prueba','Gerente','solicitud.gerente.prueba@example.com','3002001001','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',2,1,'PENDIENTE'),
+('Prueba','Cajero','solicitud.cajero.prueba@example.com','3002001002','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',3,1,'PENDIENTE'),
+('Prueba','Mesero','solicitud.mesero.prueba@example.com','3002001003','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',4,2,'PENDIENTE'),
+('Prueba','Repartidor','solicitud.repartidor.prueba@example.com','3002001004','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',5,2,'PENDIENTE');
 
 -- 4. USUARIO
 -- Todos los usuarios de prueba usan la contraseña: 123456.
 INSERT INTO usuario (
-    id_usuario,
-    id_rol,
-    id_restaurante,
-    identificacion,
-    nombre,
-    apellido,
-    email,
-    telefono,
-    contrasena_hash,
-    activo
+    id_usuario,id_rol,id_restaurante,identificacion,nombre,apellido,email,telefono,contrasena_hash,activo
 ) VALUES
 (1, 1, NULL, '1001', 'Carlos', 'Ramírez', 'carlos.ramirez@resto.com', '3001234567', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (2, 2, 1, '1002', 'Laura', 'Gómez', 'laura.gomez@resto.com', '3009876543', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
@@ -127,8 +75,7 @@ INSERT INTO usuario (
 
 -- 5. CLIENTE
 INSERT INTO Cliente (
-    Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps,
-    tipo_documento, Num_documento
+    Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps,tipo_documento, Num_documento
 ) VALUES
 ('Pedro', 'Sánchez', 'pedro.sanchez@gmail.com', '3101234567', 'Calle 45 # 12-30', '4.6097,-74.0817', 'CC', '80123456'),
 ('Ana', 'Ruiz', 'ana.ruiz@gmail.com', '3209876543', 'Carrera 7 # 60-15', '4.6200,-74.0700', 'CC', '52654321'),
@@ -155,10 +102,7 @@ INSERT INTO caja (nombre, estado) VALUES
 ('Caja Reserva 2', 'INACTIVA');
 
 -- 7. TURNO_CAJA
-INSERT INTO turno_caja (
-    id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,
-    efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,
-    notas, estado
+INSERT INTO turno_caja (id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,notas, estado
 ) VALUES
 (1, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 200000.00, 850000.00, 845000.00, -5000.00, 'Turno mañana normal', 'CERRADA'),
 (2, 7, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 150000.00, 620000.00, 620000.00, 0.00, 'Sin novedades', 'CERRADA'),
