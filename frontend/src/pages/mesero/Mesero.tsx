@@ -203,6 +203,375 @@ function Mesero() {
     }
   }
 
+  // ===========================================================
+  // UTILIDADES
+  // ===========================================================
+
+  const formatCOP = (valor: number) => {
+    const signo = valor < 0 ? '-' : ''
+    return `${signo}$${Math.abs(valor).toLocaleString('es-CO')}`
+  }
+
+  const nombreUsuario = user?.nombre ?? 'Mesero'
+
+  const ahora = () => {
+    const d = new Date()
+    return {
+      fecha: d.toLocaleDateString('es-CO'),
+      hora: d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+    }
+  }
+
+  // ===========================================================
+  // MODAL DETALLE GENÉRICO (usado por todos los botones "Ver")
+  // ===========================================================
+
+  const [modalDetalle, setModalDetalle] = useState<{
+    open: boolean
+    title: string
+    rows: { label: string; value: string }[]
+  }>({ open: false, title: '', rows: [] })
+
+  const abrirDetalle = (title: string, rows: { label: string; value: string }[]) => {
+    setModalDetalle({ open: true, title, rows })
+  }
+
+  // ===========================================================
+  // FILTROS (usados por todos los botones "Filtrar")
+  // ===========================================================
+
+  const [openFiltro, setOpenFiltro] = useState<string | null>(null)
+  const [filtros, setFiltros] = useState<Record<string, string>>({})
+
+  const toggleFiltro = (key: string) => {
+    setOpenFiltro(prev => (prev === key ? null : key))
+  }
+
+  const seleccionarFiltro = (key: string, valor: string) => {
+    setFiltros(prev => ({ ...prev, [key]: valor === 'Todos' ? '' : valor }))
+    setOpenFiltro(null)
+  }
+
+  // ===========================================================
+  // APERTURAS DE CAJA
+  // ===========================================================
+
+  interface Apertura {
+    id: number
+    fecha: string
+    hora: string
+    responsable: string
+    monto: number
+    estado: 'Abierta' | 'Cerrada'
+  }
+
+  const [aperturas, setAperturas] = useState<Apertura[]>([
+    { id: 1, fecha: '02/09/2026', hora: '08:02 AM', responsable: 'Juan Pérez', monto: 100000, estado: 'Abierta' },
+    { id: 2, fecha: '01/09/2026', hora: '07:58 AM', responsable: 'María Gómez', monto: 150000, estado: 'Cerrada' },
+    { id: 3, fecha: '31/08/2026', hora: '08:05 AM', responsable: 'Carlos Rodríguez', monto: 120000, estado: 'Cerrada' },
+  ])
+  const [modalApertura, setModalApertura] = useState(false)
+  const [nuevaApertura, setNuevaApertura] = useState({ monto: '' })
+  const [errorCaja, setErrorCaja] = useState<string | null>(null)
+
+  const aperturaActiva = aperturas.find(a => a.estado === 'Abierta') ?? aperturas[0]
+
+  const aperturasFiltradas = aperturas.filter(a =>
+    filtros.aperturas ? a.estado === filtros.aperturas : true
+  )
+
+  const abrirRegistrarApertura = () => {
+    setNuevaApertura({ monto: '' })
+    setErrorCaja(null)
+    setModalApertura(true)
+  }
+
+  const guardarApertura = () => {
+    if (!nuevaApertura.monto) {
+      setErrorCaja('El monto inicial es obligatorio')
+      return
+    }
+
+    const { fecha, hora } = ahora()
+
+    setAperturas(prev => [
+      {
+        id: Date.now(),
+        fecha,
+        hora,
+        responsable: nombreUsuario,
+        monto: Number(nuevaApertura.monto),
+        estado: 'Abierta',
+      },
+      ...prev.map(a => ({ ...a, estado: 'Cerrada' as const })),
+    ])
+
+    setModalApertura(false)
+  }
+
+  // ===========================================================
+  // CIERRES DE TURNO
+  // ===========================================================
+
+  interface Cierre {
+    id: number
+    fecha: string
+    turno: string
+    responsable: string
+    montoInicial: number
+    ventas: number
+    montoFinal: number
+    estado: string
+  }
+
+  const [cierres, setCierres] = useState<Cierre[]>([
+    { id: 1, fecha: '01/09/2026', turno: '08:00 AM - 06:00 PM', responsable: 'María Gómez', montoInicial: 150000, ventas: 850000, montoFinal: 980000, estado: 'Cerrado' },
+    { id: 2, fecha: '31/08/2026', turno: '08:05 AM - 05:45 PM', responsable: 'Carlos Rodríguez', montoInicial: 120000, ventas: 720000, montoFinal: 840000, estado: 'Cerrado' },
+    { id: 3, fecha: '30/08/2026', turno: '08:00 AM - 06:10 PM', responsable: 'Juan Pérez', montoInicial: 100000, ventas: 690000, montoFinal: 790000, estado: 'Cerrado' },
+  ])
+  const [modalCierre, setModalCierre] = useState(false)
+  const [nuevoCierre, setNuevoCierre] = useState({ ventas: '', montoFinal: '' })
+
+  const cierresFiltrados = cierres.filter(c =>
+    filtros.cierres ? c.responsable === filtros.cierres : true
+  )
+
+  const abrirRegistrarCierre = () => {
+    setNuevoCierre({ ventas: '', montoFinal: '' })
+    setErrorCaja(null)
+    setModalCierre(true)
+  }
+
+  const guardarCierre = () => {
+    if (!nuevoCierre.ventas || !nuevoCierre.montoFinal) {
+      setErrorCaja('Las ventas y el monto final son obligatorios')
+      return
+    }
+
+    const { fecha } = ahora()
+
+    setCierres(prev => [
+      {
+        id: Date.now(),
+        fecha,
+        turno: `${aperturaActiva?.hora ?? '—'} - ${ahora().hora}`,
+        responsable: nombreUsuario,
+        montoInicial: aperturaActiva?.monto ?? 0,
+        ventas: Number(nuevoCierre.ventas),
+        montoFinal: Number(nuevoCierre.montoFinal),
+        estado: 'Cerrado',
+      },
+      ...prev,
+    ])
+
+    setModalCierre(false)
+  }
+
+  // ===========================================================
+  // ARQUEOS DE CAJA
+  // ===========================================================
+
+  interface Arqueo {
+    id: number
+    fecha: string
+    hora: string
+    responsable: string
+    caja: string
+    esperado: number
+    contado: number
+    diferencia: number
+    estado: 'Cuadrado' | 'Sobrante' | 'Faltante'
+  }
+
+  const [arqueos, setArqueos] = useState<Arqueo[]>([
+    { id: 1, fecha: '02/09/2026', hora: '03:45 PM', responsable: 'Juan Pérez', caja: 'Caja principal', esperado: 1482500, contado: 1482500, diferencia: 0, estado: 'Cuadrado' },
+    { id: 2, fecha: '01/09/2026', hora: '05:50 PM', responsable: 'María Gómez', caja: 'Caja principal', esperado: 980000, contado: 990000, diferencia: 10000, estado: 'Sobrante' },
+    { id: 3, fecha: '31/08/2026', hora: '05:40 PM', responsable: 'Carlos Rodríguez', caja: 'Caja principal', esperado: 840000, contado: 830000, diferencia: -10000, estado: 'Faltante' },
+    { id: 4, fecha: '30/08/2026', hora: '05:35 PM', responsable: 'Juan Pérez', caja: 'Caja principal', esperado: 760000, contado: 760000, diferencia: 0, estado: 'Cuadrado' },
+  ])
+  const [modalArqueo, setModalArqueo] = useState(false)
+  const [nuevoArqueo, setNuevoArqueo] = useState({ contado: '' })
+
+  const arqueoActual = arqueos[0]
+
+  const arqueosFiltrados = arqueos.filter(a =>
+    filtros.arqueos ? a.estado === filtros.arqueos : true
+  )
+
+  const abrirRealizarArqueo = () => {
+    setNuevoArqueo({ contado: '' })
+    setErrorCaja(null)
+    setModalArqueo(true)
+  }
+
+  const guardarArqueo = () => {
+    if (!nuevoArqueo.contado) {
+      setErrorCaja('El monto contado es obligatorio')
+      return
+    }
+
+    const { fecha, hora } = ahora()
+    const esperado = 1482500
+    const contado = Number(nuevoArqueo.contado)
+    const diferencia = contado - esperado
+
+    setArqueos(prev => [
+      {
+        id: Date.now(),
+        fecha,
+        hora,
+        responsable: nombreUsuario,
+        caja: 'Caja principal',
+        esperado,
+        contado,
+        diferencia,
+        estado: diferencia === 0 ? 'Cuadrado' : diferencia > 0 ? 'Sobrante' : 'Faltante',
+      },
+      ...prev,
+    ])
+
+    setModalArqueo(false)
+  }
+
+  // ===========================================================
+  // GASTOS MENORES
+  // ===========================================================
+
+  interface Gasto {
+    id: number
+    fecha: string
+    hora: string
+    concepto: string
+    categoria: string
+    responsable: string
+    metodo: string
+    monto: number
+  }
+
+  const [gastos, setGastos] = useState<Gasto[]>([
+    { id: 1, fecha: '02/09/2026', hora: '10:15 AM', concepto: 'Compra de suministros', categoria: 'Suministros', responsable: 'Juan Pérez', metodo: 'Efectivo', monto: 25000 },
+    { id: 2, fecha: '02/09/2026', hora: '09:20 AM', concepto: 'Compra de hielo', categoria: 'Insumos', responsable: 'María Gómez', metodo: 'Efectivo', monto: 18000 },
+    { id: 3, fecha: '01/09/2026', hora: '03:40 PM', concepto: 'Transporte', categoria: 'Transporte', responsable: 'Carlos Rodríguez', metodo: 'Efectivo', monto: 15000 },
+    { id: 4, fecha: '01/09/2026', hora: '11:30 AM', concepto: 'Material de limpieza', categoria: 'Limpieza', responsable: 'Juan Pérez', metodo: 'Efectivo', monto: 12500 },
+    { id: 5, fecha: '31/08/2026', hora: '04:10 PM', concepto: 'Papelería', categoria: 'Oficina', responsable: 'María Gómez', metodo: 'Efectivo', monto: 17000 },
+  ])
+  const [modalGasto, setModalGasto] = useState(false)
+  const [nuevoGasto, setNuevoGasto] = useState({ concepto: '', categoria: '', metodo: 'Efectivo', monto: '' })
+
+  const totalGastosHoy = gastos
+    .filter(g => g.fecha === ahora().fecha)
+    .reduce((acc, g) => acc + g.monto, 0)
+
+  const gastosFiltrados = gastos.filter(g =>
+    filtros.gastos ? g.categoria === filtros.gastos : true
+  )
+
+  const abrirRegistrarGasto = () => {
+    setNuevoGasto({ concepto: '', categoria: '', metodo: 'Efectivo', monto: '' })
+    setErrorCaja(null)
+    setModalGasto(true)
+  }
+
+  const guardarGasto = () => {
+    if (!nuevoGasto.concepto.trim() || !nuevoGasto.categoria.trim() || !nuevoGasto.monto) {
+      setErrorCaja('Concepto, categoría y monto son obligatorios')
+      return
+    }
+
+    const { fecha, hora } = ahora()
+
+    setGastos(prev => [
+      {
+        id: Date.now(),
+        fecha,
+        hora,
+        concepto: nuevoGasto.concepto,
+        categoria: nuevoGasto.categoria,
+        responsable: nombreUsuario,
+        metodo: nuevoGasto.metodo,
+        monto: Number(nuevoGasto.monto),
+      },
+      ...prev,
+    ])
+
+    setModalGasto(false)
+  }
+
+  // ===========================================================
+  // REPORTES DE VENTAS DEL DÍA
+  // ===========================================================
+
+  const ventasDia = [
+    { hora: '12:45 PM', pedido: '#1048', mesa: 'Mesa 12', responsable: 'María Gómez', pago: 'Efectivo', total: 142500 },
+    { hora: '01:20 PM', pedido: '#1049', mesa: 'Mesa 04', responsable: 'Carlos Rodríguez', pago: 'Tarjeta', total: 86000 },
+    { hora: '02:05 PM', pedido: '#1050', mesa: 'Mesa 08', responsable: 'Juan Pérez', pago: 'Efectivo', total: 215000 },
+    { hora: '03:15 PM', pedido: '#1051', mesa: 'Mesa 15', responsable: 'María Gómez', pago: 'Tarjeta', total: 178500 },
+    { hora: '04:40 PM', pedido: '#1052', mesa: 'Mesa 22', responsable: 'Carlos Rodríguez', pago: 'Otros', total: 310000 },
+  ]
+
+  const ventasFiltradas = ventasDia.filter(v =>
+    filtros.reportes ? v.pago === filtros.reportes : true
+  )
+
+  // ===========================================================
+  // FACTURAS: crear / anular / filtrar
+  // ===========================================================
+
+  const facturaVacia = { id_cliente: '', Mesa_num: '', total: '' }
+
+  const [modalFactura, setModalFactura] = useState(false)
+  const [nuevaFactura, setNuevaFactura] = useState(facturaVacia)
+  const [errorFactura, setErrorFactura] = useState<string | null>(null)
+  const [guardandoFactura, setGuardandoFactura] = useState(false)
+
+  const facturasFiltradas = facturas.filter(f =>
+    filtros.facturas ? f.estado === filtros.facturas : true
+  )
+
+  const abrirCrearFactura = () => {
+    setNuevaFactura(facturaVacia)
+    setErrorFactura(null)
+    setModalFactura(true)
+  }
+
+  const guardarFactura = async () => {
+    if (!nuevaFactura.total) {
+      setErrorFactura('El total es obligatorio')
+      return
+    }
+
+    setGuardandoFactura(true)
+    setErrorFactura(null)
+
+    try {
+      const payload = {
+        id_cliente: nuevaFactura.id_cliente ? Number(nuevaFactura.id_cliente) : null,
+        Mesa_num: nuevaFactura.Mesa_num ? Number(nuevaFactura.Mesa_num) : null,
+        total: Number(nuevaFactura.total),
+        estado: 'PENDIENTE',
+      }
+
+      await api.post('/facturas', payload)
+      setModalFactura(false)
+      cargarFacturas()
+    } catch (err: any) {
+      setErrorFactura(err.response?.data?.message ?? 'Error al guardar la factura')
+    } finally {
+      setGuardandoFactura(false)
+    }
+  }
+
+  const anularFactura = async (f: Factura) => {
+    if (!confirm(`¿Deseas anular la factura ${f.numero}?`)) return
+
+    try {
+      await api.put(`/facturas/${f.id_factura}`, { ...f, estado: 'ANULADA' })
+      cargarFacturas()
+    } catch {
+      alert('Error al anular la factura')
+    }
+  }
+
   return (
     <div
       className="flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
@@ -1282,6 +1651,7 @@ function Mesero() {
 
                     <button
                       type="button"
+                      onClick={abrirRegistrarApertura}
                       className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
                     >
 
@@ -1318,7 +1688,7 @@ function Mesero() {
 
                         <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
 
-                        Abierta
+                        {aperturaActiva.estado}
 
                       </span>
 
@@ -1344,7 +1714,7 @@ function Mesero() {
                         </div>
 
                         <p className="text-[1.3rem] font-bold">
-                          $100.000
+                          {formatCOP(aperturaActiva.monto)}
                         </p>
 
                       </div>
@@ -1367,7 +1737,7 @@ function Mesero() {
                         </div>
 
                         <p className="font-bold">
-                          Juan Pérez
+                          {aperturaActiva.responsable}
                         </p>
 
                       </div>
@@ -1390,7 +1760,7 @@ function Mesero() {
                         </div>
 
                         <p className="font-bold">
-                          02/09/2026
+                          {aperturaActiva.fecha}
                         </p>
 
                       </div>
@@ -1413,7 +1783,7 @@ function Mesero() {
                         </div>
 
                         <p className="font-bold">
-                          08:02 AM
+                          {aperturaActiva.hora}
                         </p>
 
                       </div>
@@ -1442,18 +1812,40 @@ function Mesero() {
                       </div>
 
 
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-                      >
+                      <div className="relative">
 
-                        <span className="material-symbols-outlined text-[1.1rem]">
-                          filter_list
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleFiltro('aperturas')}
+                          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+                        >
 
-                        Filtrar
+                          <span className="material-symbols-outlined text-[1.1rem]">
+                            filter_list
+                          </span>
 
-                      </button>
+                          Filtrar
+
+                        </button>
+
+                        {openFiltro === 'aperturas' && (
+                          <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+                            {['Todos', 'Abierta', 'Cerrada'].map(op => (
+                              <button
+                                key={op}
+                                type="button"
+                                onClick={() => seleccionarFiltro('aperturas', op)}
+                                className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                                  (filtros.aperturas || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                                }`}
+                              >
+                                {op}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                      </div>
 
                     </div>
 
@@ -1497,139 +1889,66 @@ function Mesero() {
 
                         <tbody>
 
-                          <tr className="border-t border-[var(--wa-border)]">
+                          {aperturasFiltradas.map((a) => (
+                            <tr key={a.id} className="border-t border-[var(--wa-border)]">
 
-                            <td className="px-5 py-4 text-sm">
-                              02/09/2026
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {a.fecha}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              08:02 AM
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {a.hora}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-medium">
-                              Juan Pérez
-                            </td>
+                              <td className="px-5 py-4 text-sm font-medium">
+                                {a.responsable}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $100.000
-                            </td>
+                              <td className="px-5 py-4 text-sm font-semibold">
+                                {formatCOP(a.monto)}
+                              </td>
 
-                            <td className="px-5 py-4">
+                              <td className="px-5 py-4">
 
-                              <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-semibold text-[#166534]">
-                                Abierta
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver apertura"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
+                                <span
+                                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                    a.estado === 'Abierta'
+                                      ? 'bg-[#dcfce7] text-[#166534]'
+                                      : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
+                                  }`}
+                                >
+                                  {a.estado}
                                 </span>
 
-                              </button>
+                              </td>
 
-                            </td>
+                              <td className="px-5 py-4 text-right">
 
-                          </tr>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    abrirDetalle('Apertura de caja', [
+                                      { label: 'Fecha', value: a.fecha },
+                                      { label: 'Hora', value: a.hora },
+                                      { label: 'Responsable', value: a.responsable },
+                                      { label: 'Monto inicial', value: formatCOP(a.monto) },
+                                      { label: 'Estado', value: a.estado },
+                                    ])
+                                  }
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                                  title="Ver apertura"
+                                >
 
+                                  <span className="material-symbols-outlined text-[1.2rem]">
+                                    visibility
+                                  </span>
 
-                          <tr className="border-t border-[var(--wa-border)]">
+                                </button>
 
-                            <td className="px-5 py-4 text-sm">
-                              01/09/2026
-                            </td>
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              07:58 AM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              María Gómez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $150.000
-                            </td>
-
-                            <td className="px-5 py-4">
-
-                              <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
-                                Cerrada
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver apertura"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
-                                </span>
-
-                              </button>
-
-                            </td>
-
-                          </tr>
-
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              31/08/2026
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              08:05 AM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              Carlos Rodríguez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $120.000
-                            </td>
-
-                            <td className="px-5 py-4">
-
-                              <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
-                                Cerrada
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver apertura"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
-                                </span>
-
-                              </button>
-
-                            </td>
-
-                          </tr>
+                            </tr>
+                          ))}
 
                         </tbody>
 
@@ -1684,6 +2003,17 @@ function Mesero() {
 
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={abrirRegistrarCierre}
+                      className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
+                    >
+                      <span className="material-symbols-outlined text-[1.2rem]">
+                        add
+                      </span>
+                      Registrar cierre
+                    </button>
+
                   </div>
 
 
@@ -1721,7 +2051,7 @@ function Mesero() {
                         </div>
 
                         <p className="font-bold">
-                          María Gómez
+                          {cierres[0]?.responsable ?? '—'}
                         </p>
 
                       </div>
@@ -1742,7 +2072,7 @@ function Mesero() {
                         </div>
 
                         <p className="font-bold">
-                          01/09/2026
+                          {cierres[0]?.fecha ?? '—'}
                         </p>
 
                       </div>
@@ -1763,7 +2093,7 @@ function Mesero() {
                         </div>
 
                         <p className="text-[1.3rem] font-bold">
-                          $850.000
+                          {formatCOP(cierres[0]?.ventas ?? 0)}
                         </p>
 
                       </div>
@@ -1784,7 +2114,7 @@ function Mesero() {
                         </div>
 
                         <p className="text-[1.3rem] font-bold">
-                          $980.000
+                          {formatCOP(cierres[0]?.montoFinal ?? 0)}
                         </p>
 
                       </div>
@@ -1813,18 +2143,40 @@ function Mesero() {
                       </div>
 
 
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-                      >
+                      <div className="relative">
 
-                        <span className="material-symbols-outlined text-[1.1rem]">
-                          filter_list
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleFiltro('cierres')}
+                          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+                        >
 
-                        Filtrar
+                          <span className="material-symbols-outlined text-[1.1rem]">
+                            filter_list
+                          </span>
 
-                      </button>
+                          Filtrar
+
+                        </button>
+
+                        {openFiltro === 'cierres' && (
+                          <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+                            {['Todos', ...Array.from(new Set(cierres.map(c => c.responsable)))].map(op => (
+                              <button
+                                key={op}
+                                type="button"
+                                onClick={() => seleccionarFiltro('cierres', op)}
+                                className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                                  (filtros.cierres || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                                }`}
+                              >
+                                {op}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                      </div>
 
                     </div>
 
@@ -1876,163 +2228,70 @@ function Mesero() {
 
                         <tbody>
 
-                          <tr className="border-t border-[var(--wa-border)]">
+                          {cierresFiltrados.map((c) => (
+                            <tr key={c.id} className="border-t border-[var(--wa-border)]">
 
-                            <td className="px-5 py-4 text-sm">
-                              01/09/2026
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {c.fecha}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              08:00 AM - 06:00 PM
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {c.turno}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-medium">
-                              María Gómez
-                            </td>
+                              <td className="px-5 py-4 text-sm font-medium">
+                                {c.responsable}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $150.000
-                            </td>
+                              <td className="px-5 py-4 text-sm font-semibold">
+                                {formatCOP(c.montoInicial)}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $850.000
-                            </td>
+                              <td className="px-5 py-4 text-sm font-semibold">
+                                {formatCOP(c.ventas)}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $980.000
-                            </td>
+                              <td className="px-5 py-4 text-sm font-semibold">
+                                {formatCOP(c.montoFinal)}
+                              </td>
 
-                            <td className="px-5 py-4">
+                              <td className="px-5 py-4">
 
-                              <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
-                                Cerrado
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver cierre"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
+                                <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
+                                  {c.estado}
                                 </span>
 
-                              </button>
+                              </td>
 
-                            </td>
+                              <td className="px-5 py-4 text-right">
 
-                          </tr>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    abrirDetalle('Cierre de turno', [
+                                      { label: 'Fecha', value: c.fecha },
+                                      { label: 'Turno', value: c.turno },
+                                      { label: 'Responsable', value: c.responsable },
+                                      { label: 'Monto inicial', value: formatCOP(c.montoInicial) },
+                                      { label: 'Ventas', value: formatCOP(c.ventas) },
+                                      { label: 'Monto final', value: formatCOP(c.montoFinal) },
+                                      { label: 'Estado', value: c.estado },
+                                    ])
+                                  }
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                                  title="Ver cierre"
+                                >
 
+                                  <span className="material-symbols-outlined text-[1.2rem]">
+                                    visibility
+                                  </span>
 
-                          <tr className="border-t border-[var(--wa-border)]">
+                                </button>
 
-                            <td className="px-5 py-4 text-sm">
-                              31/08/2026
-                            </td>
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              08:05 AM - 05:45 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              Carlos Rodríguez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $120.000
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $720.000
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $840.000
-                            </td>
-
-                            <td className="px-5 py-4">
-
-                              <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
-                                Cerrado
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver cierre"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
-                                </span>
-
-                              </button>
-
-                            </td>
-
-                          </tr>
-
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              30/08/2026
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              08:00 AM - 06:10 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              Juan Pérez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $100.000
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $690.000
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-semibold">
-                              $790.000
-                            </td>
-
-                            <td className="px-5 py-4">
-
-                              <span className="rounded-full bg-[var(--wa-surface-high)] px-3 py-1 text-xs font-semibold text-[var(--wa-text-muted)]">
-                                Cerrado
-                              </span>
-
-                            </td>
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                                title="Ver cierre"
-                              >
-
-                                <span className="material-symbols-outlined text-[1.2rem]">
-                                  visibility
-                                </span>
-
-                              </button>
-
-                            </td>
-
-                          </tr>
+                            </tr>
+                          ))}
 
                         </tbody>
 
@@ -2407,18 +2666,40 @@ function Mesero() {
 
                       {/* FILTRO */}
 
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-                      >
+                      <div className="relative">
 
-                        <span className="material-symbols-outlined text-[1.1rem]">
-                          filter_list
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleFiltro('reportes')}
+                          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+                        >
 
-                        Filtrar
+                          <span className="material-symbols-outlined text-[1.1rem]">
+                            filter_list
+                          </span>
 
-                      </button>
+                          Filtrar
+
+                        </button>
+
+                        {openFiltro === 'reportes' && (
+                          <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+                            {['Todos', ...Array.from(new Set(ventasDia.map(v => v.pago)))].map(op => (
+                              <button
+                                key={op}
+                                type="button"
+                                onClick={() => seleccionarFiltro('reportes', op)}
+                                className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                                  (filtros.reportes || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                                }`}
+                              >
+                                {op}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                      </div>
 
                     </div>
 
@@ -2464,159 +2745,35 @@ function Mesero() {
 
                         <tbody>
 
-                          {/* VENTA 1 */}
+                          {ventasFiltradas.map((v) => (
+                            <tr key={v.pedido} className="border-t border-[var(--wa-border)]">
 
-                          <tr className="border-t border-[var(--wa-border)]">
+                              <td className="px-5 py-4 text-sm">
+                                {v.hora}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              12:45 PM
-                            </td>
+                              <td className="px-5 py-4 text-sm font-medium">
+                                {v.pedido}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm font-medium">
-                              #1048
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {v.mesa}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              Mesa 12
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {v.responsable}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              María Gómez
-                            </td>
+                              <td className="px-5 py-4 text-sm">
+                                {v.pago}
+                              </td>
 
-                            <td className="px-5 py-4 text-sm">
-                              Efectivo
-                            </td>
+                              <td className="px-5 py-4 text-right text-sm font-bold">
+                                {formatCOP(v.total)}
+                              </td>
 
-                            <td className="px-5 py-4 text-right text-sm font-bold">
-                              $142.500
-                            </td>
-
-                          </tr>
-
-
-                          {/* VENTA 2 */}
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              01:20 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              #1049
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Mesa 04
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Carlos Rodríguez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Tarjeta
-                            </td>
-
-                            <td className="px-5 py-4 text-right text-sm font-bold">
-                              $86.000
-                            </td>
-
-                          </tr>
-
-
-                          {/* VENTA 3 */}
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              02:05 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              #1050
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Mesa 08
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Juan Pérez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Efectivo
-                            </td>
-
-                            <td className="px-5 py-4 text-right text-sm font-bold">
-                              $215.000
-                            </td>
-
-                          </tr>
-
-
-                          {/* VENTA 4 */}
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              03:15 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              #1051
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Mesa 15
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              María Gómez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Tarjeta
-                            </td>
-
-                            <td className="px-5 py-4 text-right text-sm font-bold">
-                              $178.500
-                            </td>
-
-                          </tr>
-
-
-                          {/* VENTA 5 */}
-
-                          <tr className="border-t border-[var(--wa-border)]">
-
-                            <td className="px-5 py-4 text-sm">
-                              04:40 PM
-                            </td>
-
-                            <td className="px-5 py-4 text-sm font-medium">
-                              #1052
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Mesa 22
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Carlos Rodríguez
-                            </td>
-
-                            <td className="px-5 py-4 text-sm">
-                              Otros
-                            </td>
-
-                            <td className="px-5 py-4 text-right text-sm font-bold">
-                              $310.000
-                            </td>
-
-                          </tr>
+                            </tr>
+                          ))}
 
                         </tbody>
 
@@ -2667,6 +2824,7 @@ function Mesero() {
 
       <button
         type="button"
+        onClick={abrirRealizarArqueo}
         className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
       >
         <span className="material-symbols-outlined text-[1.2rem]">
@@ -2694,9 +2852,21 @@ function Mesero() {
           </p>
         </div>
 
-        <span className="flex w-fit items-center gap-2 rounded-full bg-[#dcfce7] px-3 py-1.5 text-sm font-semibold text-[#166534]">
-          <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
-          Cuadrado
+        <span
+          className={`flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
+            arqueoActual.estado === 'Cuadrado'
+              ? 'bg-[#dcfce7] text-[#166534]'
+              : arqueoActual.diferencia > 0
+              ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
+              : 'bg-[var(--wa-primary-light)] text-[var(--wa-primary)]'
+          }`}
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${
+              arqueoActual.estado === 'Cuadrado' ? 'bg-[#22c55e]' : 'bg-current'
+            }`}
+          />
+          {arqueoActual.estado}
         </span>
 
       </div>
@@ -2718,7 +2888,7 @@ function Mesero() {
           </div>
 
           <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">
-            $1.482.500
+            {formatCOP(arqueoActual.esperado)}
           </p>
 
         </div>
@@ -2738,7 +2908,7 @@ function Mesero() {
           </div>
 
           <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">
-            $1.482.500
+            {formatCOP(arqueoActual.contado)}
           </p>
 
         </div>
@@ -2757,8 +2927,16 @@ function Mesero() {
             </span>
           </div>
 
-          <p className="text-[1.3rem] font-bold text-[var(--wa-tertiary)]">
-            $0
+          <p
+            className={`text-[1.3rem] font-bold ${
+              arqueoActual.diferencia === 0
+                ? 'text-[var(--wa-tertiary)]'
+                : arqueoActual.diferencia > 0
+                ? 'text-[var(--wa-secondary)]'
+                : 'text-[var(--wa-primary)]'
+            }`}
+          >
+            {formatCOP(arqueoActual.diferencia)}
           </p>
 
         </div>
@@ -2778,7 +2956,7 @@ function Mesero() {
           </div>
 
           <p className="font-bold text-[var(--wa-text)]">
-            Juan Pérez
+            {arqueoActual.responsable}
           </p>
 
         </div>
@@ -2804,16 +2982,38 @@ function Mesero() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-        >
-          <span className="material-symbols-outlined text-[1.1rem]">
-            filter_list
-          </span>
+        <div className="relative">
 
-          Filtrar
-        </button>
+          <button
+            type="button"
+            onClick={() => toggleFiltro('arqueos')}
+            className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+          >
+            <span className="material-symbols-outlined text-[1.1rem]">
+              filter_list
+            </span>
+
+            Filtrar
+          </button>
+
+          {openFiltro === 'arqueos' && (
+            <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+              {['Todos', 'Cuadrado', 'Sobrante', 'Faltante'].map(op => (
+                <button
+                  key={op}
+                  type="button"
+                  onClick={() => seleccionarFiltro('arqueos', op)}
+                  className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                    (filtros.arqueos || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                  }`}
+                >
+                  {op}
+                </button>
+              ))}
+            </div>
+          )}
+
+        </div>
 
       </div>
 
@@ -2868,228 +3068,89 @@ function Mesero() {
 
           <tbody>
 
-            {/* ARQUEO 1 */}
-            <tr className="border-t border-[var(--wa-border)]">
+            {arqueosFiltrados.map((a) => (
+              <tr key={a.id} className="border-t border-[var(--wa-border)]">
 
-              <td className="px-5 py-4 text-sm">
-                02/09/2026
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {a.fecha}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                03:45 PM
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {a.hora}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-medium">
-                Juan Pérez
-              </td>
+                <td className="px-5 py-4 text-sm font-medium">
+                  {a.responsable}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                Caja principal
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {a.caja}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-semibold">
-                $1.482.500
-              </td>
+                <td className="px-5 py-4 text-sm font-semibold">
+                  {formatCOP(a.esperado)}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-semibold">
-                $1.482.500
-              </td>
+                <td className="px-5 py-4 text-sm font-semibold">
+                  {formatCOP(a.contado)}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-tertiary)]">
-                $0
-              </td>
-
-              <td className="px-5 py-4">
-
-                <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-semibold text-[#166534]">
-                  Cuadrado
-                </span>
-
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver arqueo"
+                <td
+                  className={`px-5 py-4 text-sm font-semibold ${
+                    a.diferencia === 0
+                      ? 'text-[var(--wa-tertiary)]'
+                      : a.diferencia > 0
+                      ? 'text-[var(--wa-secondary)]'
+                      : 'text-[var(--wa-primary)]'
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
+                  {formatCOP(a.diferencia)}
+                </td>
+
+                <td className="px-5 py-4">
+
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      a.estado === 'Cuadrado'
+                        ? 'bg-[#dcfce7] text-[#166534]'
+                        : a.estado === 'Sobrante'
+                        ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
+                        : 'bg-[var(--wa-primary-light)] text-[var(--wa-primary)]'
+                    }`}
+                  >
+                    {a.estado}
                   </span>
-                </button>
 
-              </td>
+                </td>
 
-            </tr>
+                <td className="px-5 py-4 text-right">
 
+                  <button
+                    type="button"
+                    onClick={() =>
+                      abrirDetalle('Arqueo de caja', [
+                        { label: 'Fecha', value: a.fecha },
+                        { label: 'Hora', value: a.hora },
+                        { label: 'Responsable', value: a.responsable },
+                        { label: 'Caja', value: a.caja },
+                        { label: 'Esperado', value: formatCOP(a.esperado) },
+                        { label: 'Contado', value: formatCOP(a.contado) },
+                        { label: 'Diferencia', value: formatCOP(a.diferencia) },
+                        { label: 'Estado', value: a.estado },
+                      ])
+                    }
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                    title="Ver arqueo"
+                  >
+                    <span className="material-symbols-outlined text-[1.1rem]">
+                      visibility
+                    </span>
+                  </button>
 
-            {/* ARQUEO 2 */}
-            <tr className="border-t border-[var(--wa-border)]">
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                01/09/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                05:50 PM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                María Gómez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Caja principal
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $980.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $990.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-secondary)]">
-                +$10.000
-              </td>
-
-              <td className="px-5 py-4">
-
-                <span className="rounded-full bg-[var(--wa-secondary-light)] px-3 py-1 text-xs font-semibold text-[var(--wa-secondary)]">
-                  Sobrante
-                </span>
-
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver arqueo"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
-
-
-            {/* ARQUEO 3 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                31/08/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                05:40 PM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Carlos Rodríguez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Caja principal
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $840.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $830.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-primary)]">
-                -$10.000
-              </td>
-
-              <td className="px-5 py-4">
-
-                <span className="rounded-full bg-[var(--wa-primary-light)] px-3 py-1 text-xs font-semibold text-[var(--wa-primary)]">
-                  Faltante
-                </span>
-
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver arqueo"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
-
-
-            {/* ARQUEO 4 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                30/08/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                05:35 PM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Juan Pérez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Caja principal
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $760.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold">
-                $760.000
-              </td>
-
-              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-tertiary)]">
-                $0
-              </td>
-
-              <td className="px-5 py-4">
-
-                <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-semibold text-[#166534]">
-                  Cuadrado
-                </span>
-
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver arqueo"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
+              </tr>
+            ))}
 
           </tbody>
 
@@ -3142,6 +3203,7 @@ function Mesero() {
       {/* BOTÓN REGISTRAR */}
       <button
         type="button"
+        onClick={abrirRegistrarGasto}
         className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
       >
         <span className="material-symbols-outlined text-[1.2rem]">
@@ -3173,11 +3235,11 @@ function Mesero() {
         </div>
 
         <p className="text-[1.5rem] font-black text-[var(--wa-text)]">
-          $87.500
+          {formatCOP(totalGastosHoy)}
         </p>
 
         <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
-          5 gastos registrados
+          {gastos.length} gastos registrados
         </p>
 
       </div>
@@ -3225,11 +3287,11 @@ function Mesero() {
         </div>
 
         <p className="text-[1.5rem] font-black text-[var(--wa-text)]">
-          $25.000
+          {formatCOP(gastos[0]?.monto ?? 0)}
         </p>
 
         <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
-          Compra de suministros
+          {gastos[0]?.concepto ?? '—'}
         </p>
 
       </div>
@@ -3251,7 +3313,7 @@ function Mesero() {
         </div>
 
         <p className="text-[1.5rem] font-black text-[var(--wa-tertiary)]">
-          $1.395.000
+          {formatCOP(1482500 - totalGastosHoy)}
         </p>
 
         <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
@@ -3280,16 +3342,38 @@ function Mesero() {
         </div>
 
 
-        <button
-          type="button"
-          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-        >
-          <span className="material-symbols-outlined text-[1.1rem]">
-            filter_list
-          </span>
+        <div className="relative">
 
-          Filtrar
-        </button>
+          <button
+            type="button"
+            onClick={() => toggleFiltro('gastos')}
+            className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+          >
+            <span className="material-symbols-outlined text-[1.1rem]">
+              filter_list
+            </span>
+
+            Filtrar
+          </button>
+
+          {openFiltro === 'gastos' && (
+            <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+              {['Todos', ...Array.from(new Set(gastos.map(g => g.categoria)))].map(op => (
+                <button
+                  key={op}
+                  type="button"
+                  onClick={() => seleccionarFiltro('gastos', op)}
+                  className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                    (filtros.gastos || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                  }`}
+                >
+                  {op}
+                </button>
+              ))}
+            </div>
+          )}
+
+        </div>
 
       </div>
 
@@ -3342,244 +3426,64 @@ function Mesero() {
 
           <tbody>
 
-            {/* GASTO 1 */}
-            <tr className="border-t border-[var(--wa-border)]">
+            {gastosFiltrados.map((g) => (
+              <tr key={g.id} className="border-t border-[var(--wa-border)]">
 
-              <td className="px-5 py-4 text-sm">
-                02/09/2026
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {g.fecha}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                10:15 AM
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {g.hora}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-medium">
-                Compra de suministros
-              </td>
+                <td className="px-5 py-4 text-sm font-medium">
+                  {g.concepto}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                Suministros
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {g.categoria}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                Juan Pérez
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {g.responsable}
+                </td>
 
-              <td className="px-5 py-4 text-sm">
-                Efectivo
-              </td>
+                <td className="px-5 py-4 text-sm">
+                  {g.metodo}
+                </td>
 
-              <td className="px-5 py-4 text-sm font-bold">
-                $25.000
-              </td>
+                <td className="px-5 py-4 text-sm font-bold">
+                  {formatCOP(g.monto)}
+                </td>
 
-              <td className="px-5 py-4 text-right">
+                <td className="px-5 py-4 text-right">
 
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      abrirDetalle('Gasto menor', [
+                        { label: 'Fecha', value: g.fecha },
+                        { label: 'Hora', value: g.hora },
+                        { label: 'Concepto', value: g.concepto },
+                        { label: 'Categoría', value: g.categoria },
+                        { label: 'Responsable', value: g.responsable },
+                        { label: 'Método', value: g.metodo },
+                        { label: 'Monto', value: formatCOP(g.monto) },
+                      ])
+                    }
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                    title="Ver gasto"
+                  >
+                    <span className="material-symbols-outlined text-[1.1rem]">
+                      visibility
+                    </span>
+                  </button>
 
-              </td>
+                </td>
 
-            </tr>
-
-
-            {/* GASTO 2 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                02/09/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                09:20 AM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Compra de hielo
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Insumos
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                María Gómez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Efectivo
-              </td>
-
-              <td className="px-5 py-4 text-sm font-bold">
-                $18.000
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
-
-
-            {/* GASTO 3 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                01/09/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                03:40 PM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Transporte
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Transporte
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Carlos Rodríguez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Efectivo
-              </td>
-
-              <td className="px-5 py-4 text-sm font-bold">
-                $15.000
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
-
-
-            {/* GASTO 4 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                01/09/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                11:30 AM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Material de limpieza
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Limpieza
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Juan Pérez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Efectivo
-              </td>
-
-              <td className="px-5 py-4 text-sm font-bold">
-                $12.500
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
-
-
-            {/* GASTO 5 */}
-            <tr className="border-t border-[var(--wa-border)]">
-
-              <td className="px-5 py-4 text-sm">
-                31/08/2026
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                04:10 PM
-              </td>
-
-              <td className="px-5 py-4 text-sm font-medium">
-                Papelería
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Oficina
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                María Gómez
-              </td>
-
-              <td className="px-5 py-4 text-sm">
-                Efectivo
-              </td>
-
-              <td className="px-5 py-4 text-sm font-bold">
-                $17.000
-              </td>
-
-              <td className="px-5 py-4 text-right">
-
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
-                >
-                  <span className="material-symbols-outlined text-[1.1rem]">
-                    visibility
-                  </span>
-                </button>
-
-              </td>
-
-            </tr>
+              </tr>
+            ))}
 
           </tbody>
 
@@ -3614,6 +3518,7 @@ function Mesero() {
 
                 <button
                   type="button"
+                  onClick={abrirCrearFactura}
                   className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
                 >
                   <span className="material-symbols-outlined text-[1.2rem]">add</span>
@@ -3637,7 +3542,9 @@ function Mesero() {
                     <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pagadas</span>
                     <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-tertiary)]">check_circle</span>
                   </div>
-                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">142</p>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+                    {facturas.filter(f => f.estado === 'PAGADA').length}
+                  </p>
                   <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Facturas cobradas</p>
                 </div>
 
@@ -3646,7 +3553,9 @@ function Mesero() {
                     <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pendientes</span>
                     <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-secondary)]">schedule</span>
                   </div>
-                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">6</p>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+                    {facturas.filter(f => f.estado === 'PENDIENTE').length}
+                  </p>
                   <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Por cobrar</p>
                 </div>
 
@@ -3655,7 +3564,9 @@ function Mesero() {
                     <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Anuladas</span>
                     <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-primary)]">cancel</span>
                   </div>
-                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">2</p>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+                    {facturas.filter(f => f.estado === 'ANULADA').length}
+                  </p>
                   <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Este mes</p>
                 </div>
               </div>
@@ -3667,13 +3578,33 @@ function Mesero() {
                     <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Facturas emitidas</h2>
                     <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Historial completo de facturación.</p>
                   </div>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
-                  >
-                    <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
-                    Filtrar
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => toggleFiltro('facturas')}
+                      className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+                    >
+                      <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+                      Filtrar
+                    </button>
+
+                    {openFiltro === 'facturas' && (
+                      <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
+                        {['Todos', 'PAGADA', 'PENDIENTE', 'ANULADA'].map(op => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => seleccionarFiltro('facturas', op)}
+                            className={`block w-full rounded-[8px] px-3 py-2 text-left text-sm hover:bg-[var(--wa-surface-low)] ${
+                              (filtros.facturas || 'Todos') === op ? 'font-bold text-[var(--wa-primary)]' : ''
+                            }`}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {cargandoFacturas ? (
@@ -3694,14 +3625,14 @@ function Mesero() {
                         </tr>
                       </thead>
                       <tbody>
-                        {facturas.length === 0 ? (
+                        {facturasFiltradas.length === 0 ? (
                           <tr>
                             <td colSpan={8} className="py-8 text-center text-[var(--wa-text-muted)]">
                               Sin facturas registradas
                             </td>
                           </tr>
                         ) : (
-                          facturas.map(f => (
+                          facturasFiltradas.map(f => (
                             <tr key={f.id_factura} className="border-t border-[var(--wa-border)]">
                               <td className="px-5 py-4 font-medium">{f.numero}</td>
                               <td className="px-5 py-4">{f.nombre_cliente ?? f.id_cliente ?? '—'}</td>
@@ -3728,12 +3659,23 @@ function Mesero() {
                                 <div className="flex justify-end gap-2">
                                   <button
                                     type="button"
+                                    onClick={() =>
+                                      abrirDetalle(`Factura ${f.numero}`, [
+                                        { label: 'Cliente', value: String(f.nombre_cliente ?? f.id_cliente ?? '—') },
+                                        { label: 'Mesero', value: String(f.nombre_mesero ?? f.id_mesero ?? '—') },
+                                        { label: 'Mesa', value: String(f.Mesa_num ?? '—') },
+                                        { label: 'Fecha', value: f.fecha },
+                                        { label: 'Total', value: `$${f.total.toLocaleString('es-CO')}` },
+                                        { label: 'Estado', value: f.estado },
+                                      ])
+                                    }
                                     className="rounded-[10px] border border-[var(--wa-border)] bg-[var(--wa-surface-low)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-text-muted)] transition hover:bg-[var(--wa-surface-high)]"
                                   >
                                     Ver
                                   </button>
                                   <button
                                     type="button"
+                                    onClick={() => anularFactura(f)}
                                     className="rounded-[10px] border border-[var(--wa-primary)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-primary)] disabled:opacity-50"
                                     disabled={f.estado === 'ANULADA'}
                                   >
@@ -3756,6 +3698,291 @@ function Mesero() {
         </div>
 
       </main>
+
+
+      {/* MODAL: DETALLE GENÉRICO (Ver) */}
+      <Modal isOpen={modalDetalle.open} onClose={() => setModalDetalle(d => ({ ...d, open: false }))}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">{modalDetalle.title}</h3>
+          <div className="flex flex-col gap-3">
+            {modalDetalle.rows.map((r, i) => (
+              <div key={i} className="flex items-center justify-between border-b border-[var(--borde)] pb-2">
+                <span className="text-[0.85rem] font-semibold text-[var(--texto-muted)]">{r.label}</span>
+                <span className="text-[0.9rem] font-bold text-[var(--texto)]">{r.value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button
+              className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              onClick={() => setModalDetalle(d => ({ ...d, open: false }))}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* MODAL: REGISTRAR APERTURA */}
+      <Modal isOpen={modalApertura} onClose={() => setModalApertura(false)}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">Registrar apertura</h3>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Monto inicial *</label>
+              <input
+                type="number"
+                placeholder="Ej: 100000"
+                value={nuevaApertura.monto}
+                onChange={e => setNuevaApertura({ monto: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+            {errorCaja && (
+              <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+                {errorCaja}
+              </p>
+            )}
+            <div className="mt-2 flex justify-end gap-3">
+              <button
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                onClick={() => setModalApertura(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                onClick={guardarApertura}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* MODAL: REGISTRAR CIERRE */}
+      <Modal isOpen={modalCierre} onClose={() => setModalCierre(false)}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">Registrar cierre de turno</h3>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Ventas del turno *</label>
+              <input
+                type="number"
+                placeholder="Ej: 850000"
+                value={nuevoCierre.ventas}
+                onChange={e => setNuevoCierre(prev => ({ ...prev, ventas: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Monto final *</label>
+              <input
+                type="number"
+                placeholder="Ej: 980000"
+                value={nuevoCierre.montoFinal}
+                onChange={e => setNuevoCierre(prev => ({ ...prev, montoFinal: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            {errorCaja && (
+              <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+                {errorCaja}
+              </p>
+            )}
+            <div className="mt-2 flex justify-end gap-3">
+              <button
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                onClick={() => setModalCierre(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                onClick={guardarCierre}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* MODAL: REALIZAR ARQUEO */}
+      <Modal isOpen={modalArqueo} onClose={() => setModalArqueo(false)}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">Realizar arqueo</h3>
+          <div className="flex flex-col gap-3.5">
+            <p className="text-[0.85rem] text-[var(--texto-muted)]">
+              Monto esperado: <strong>{formatCOP(arqueoActual.esperado)}</strong>
+            </p>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Monto contado *</label>
+              <input
+                type="number"
+                placeholder="Ej: 1482500"
+                value={nuevoArqueo.contado}
+                onChange={e => setNuevoArqueo({ contado: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+            {errorCaja && (
+              <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+                {errorCaja}
+              </p>
+            )}
+            <div className="mt-2 flex justify-end gap-3">
+              <button
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                onClick={() => setModalArqueo(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                onClick={guardarArqueo}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* MODAL: REGISTRAR GASTO */}
+      <Modal isOpen={modalGasto} onClose={() => setModalGasto(false)}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">Registrar gasto menor</h3>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Concepto *</label>
+              <input
+                type="text"
+                placeholder="Ej: Compra de suministros"
+                value={nuevoGasto.concepto}
+                onChange={e => setNuevoGasto(prev => ({ ...prev, concepto: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Categoría *</label>
+              <input
+                type="text"
+                placeholder="Ej: Suministros"
+                value={nuevoGasto.categoria}
+                onChange={e => setNuevoGasto(prev => ({ ...prev, categoria: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Método de pago</label>
+              <select
+                value={nuevoGasto.metodo}
+                onChange={e => setNuevoGasto(prev => ({ ...prev, metodo: e.target.value }))}
+                style={inputStyle}
+              >
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Monto *</label>
+              <input
+                type="number"
+                placeholder="Ej: 25000"
+                value={nuevoGasto.monto}
+                onChange={e => setNuevoGasto(prev => ({ ...prev, monto: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            {errorCaja && (
+              <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+                {errorCaja}
+              </p>
+            )}
+            <div className="mt-2 flex justify-end gap-3">
+              <button
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                onClick={() => setModalGasto(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                onClick={guardarGasto}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* MODAL: NUEVA FACTURA */}
+      <Modal isOpen={modalFactura} onClose={() => setModalFactura(false)}>
+        <div className="px-6 pb-6">
+          <h3 className="mb-5 font-bold">Nueva factura</h3>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
+              <input
+                type="number"
+                placeholder="Opcional"
+                value={nuevaFactura.id_cliente}
+                onChange={e => setNuevaFactura(prev => ({ ...prev, id_cliente: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de mesa</label>
+              <input
+                type="number"
+                placeholder="Opcional"
+                value={nuevaFactura.Mesa_num}
+                onChange={e => setNuevaFactura(prev => ({ ...prev, Mesa_num: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Total *</label>
+              <input
+                type="number"
+                placeholder="Ej: 142500"
+                value={nuevaFactura.total}
+                onChange={e => setNuevaFactura(prev => ({ ...prev, total: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            {errorFactura && (
+              <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+                {errorFactura}
+              </p>
+            )}
+            <div className="mt-2 flex justify-end gap-3">
+              <button
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                onClick={() => setModalFactura(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
+                onClick={guardarFactura}
+                disabled={guardandoFactura}
+              >
+                {guardandoFactura ? 'Guardando...' : 'Crear factura'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
     </div>
   )
