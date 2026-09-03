@@ -430,3 +430,45 @@
     justify-content: center;
   }
 }
+.sa-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.sa-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.sa-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sa-action-button--state {
+  color: #a94722;
+  background: #fff0e8;
+}
+
+.sa-action-button--state:hover:not(:disabled) {
+  background: #ffe0d1;
+}
+
+.sa-action-button--delete {
+  color: #a52626;
+  background: #fde8e8;
+}
+
+.sa-action-button--delete:hover:not(:disabled) {
+  background: #fbd0d0;
+}
