@@ -24,6 +24,7 @@ import turnosRoutes from './routes/turnos.routes.js'
 import usuariosRoutes from './routes/usuarios.routes.js'
 import facturaRoutes from './routes/factura.routes.js'
 import solicitudRegistroRoutes from './routes/solicitudRegistro.routes.js'
+import restaurantesRoutes from './routes/restaurantes.routes.js'
 
 const app = express()
 
@@ -83,6 +84,7 @@ app.use('/api/proveedores', proveedorRoutes)
 app.use('/api/roles', rolRoutes)
 app.use('/api/turnos', turnosRoutes)
 app.use('/api/usuarios', usuariosRoutes)
+app.use('/api/restaurantes', restaurantesRoutes)
 
 app.use((req, res) => {
   res.status(404).json({
