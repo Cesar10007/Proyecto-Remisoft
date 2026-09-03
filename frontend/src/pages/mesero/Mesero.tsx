@@ -50,6 +50,19 @@ interface Pedido {
   nombre_mesero?: string
 }
 
+interface Factura {
+  id_factura: number
+  numero: string
+  id_cliente: number | null
+  nombre_cliente?: string
+  id_mesero: number | null
+  nombre_mesero?: string
+  Mesa_num: number | null
+  fecha: string
+  total: number
+  estado: 'PAGADA' | 'PENDIENTE' | 'ANULADA'
+}
+
 const pedidoVacio = {
   id_cliente: '',
   id_mesero: '',
@@ -87,6 +100,9 @@ function Mesero() {
   const [guardandoPedido, setGuardandoPedido] = useState(false)
   const [errorPedido, setErrorPedido] = useState<string | null>(null)
 
+  const [facturas, setFacturas] = useState<Factura[]>([])
+  const [cargandoFacturas, setCargandoFacturas] = useState(false)
+
   const cargarPedidos = () => {
     setCargandoPedidos(true)
 
@@ -97,8 +113,22 @@ function Mesero() {
       .finally(() => setCargandoPedidos(false))
   }
 
+  const cargarFacturas = () => {
+    setCargandoFacturas(true)
+
+    api
+      .get('/facturas')
+      .then(r => setFacturas(r.data))
+      .catch(console.error)
+      .finally(() => setCargandoFacturas(false))
+  }
+
   useEffect(() => {
     if (activeItem === 'Pedidos') cargarPedidos()
+  }, [activeItem])
+
+  useEffect(() => {
+    if (activeItem === 'Facturas') cargarFacturas()
   }, [activeItem])
 
   const abrirCrearPedido = () => {
@@ -1088,158 +1118,121 @@ function Mesero() {
                   <div className="mt-6">
 
                     <div className="mb-4">
-
-                      <h2 className="text-[1.1rem] font-bold text-[var(--texto)]">
+                      <h2 className="text-[1.1rem] font-bold text-[var(--wa-text)]">
                         Acciones de caja
                       </h2>
-
-                      <p className="mt-1 text-[0.85rem] text-[var(--texto-muted)]">
+                      <p className="mt-1 text-[0.85rem] text-[var(--wa-text-muted)]">
                         Gestiona las operaciones principales de la caja
                       </p>
-
                     </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
 
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
                       {/* Aperturas de caja */}
-
                       <button
                         type="button"
                         onClick={() => setCajaVista('aperturas')}
-                        className="group rounded-[14px] border border-[var(--borde)] bg-[var(--surface)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="group rounded-[14px] border border-[var(--wa-border)] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
-
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--fondo)]">
-
-                          <span className="material-symbols-outlined text-[1.5rem]">
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--wa-tertiary-light)]">
+                          <span className="material-symbols-outlined text-[1.5rem] text-[var(--wa-tertiary)]">
                             lock_open
                           </span>
-
                         </div>
-
-                        <h3 className="text-[0.95rem] font-bold text-[var(--texto)]">
+                        <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">
                           Aperturas de caja
                         </h3>
-
-                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--texto-muted)]">
+                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
                           Registra y consulta las aperturas de caja.
                         </p>
-
                       </button>
 
 
                       {/* Cierres de turno */}
-
                       <button
                         type="button"
                         onClick={() => setCajaVista('cierres')}
-                        className="group rounded-[14px] border border-[var(--borde)] bg-[var(--surface)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="group rounded-[14px] border border-[var(--wa-border)] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
-
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--fondo)]">
-
-                          <span className="material-symbols-outlined text-[1.5rem]">
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--wa-secondary-light)]">
+                          <span className="material-symbols-outlined text-[1.5rem] text-[var(--wa-secondary)]">
                             lock
                           </span>
-
                         </div>
-
-                        <h3 className="text-[0.95rem] font-bold text-[var(--texto)]">
+                        <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">
                           Cierres de turno
                         </h3>
-
-                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--texto-muted)]">
+                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
                           Consulta los cierres realizados durante los turnos.
                         </p>
-
                       </button>
 
 
                       {/* Reportes de ventas */}
-
                       <button
                         type="button"
                         onClick={() => setCajaVista('reportes')}
-                        className="group rounded-[14px] border border-[var(--borde)] bg-[var(--surface)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="group rounded-[14px] border border-[var(--wa-border)] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
-
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--fondo)]">
-
-                          <span className="material-symbols-outlined text-[1.5rem]">
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--wa-primary-light)]">
+                          <span className="material-symbols-outlined text-[1.5rem] text-[var(--wa-primary)]">
                             bar_chart
                           </span>
-
                         </div>
-
-                        <h3 className="text-[0.95rem] font-bold text-[var(--texto)]">
+                        <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">
                           Reportes de ventas del día
                         </h3>
-
-                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--texto-muted)]">
+                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
                           Visualiza un resumen de las ventas realizadas.
                         </p>
-
                       </button>
 
 
-                      {/* Arqueos de caja */}
-
+                       {/* Arqueos de caja */}
                       <button
                         type="button"
                         onClick={() => setCajaVista('arqueos')}
-                        className="group rounded-[14px] border border-[var(--borde)] bg-[var(--surface)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="group rounded-[14px] border border-[var(--wa-border)] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
-
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--fondo)]">
-
-                          <span className="material-symbols-outlined text-[1.5rem]">
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--wa-tertiary-light)]">
+                          <span className="material-symbols-outlined text-[1.5rem] text-[var(--wa-tertiary)]">
                             calculate
                           </span>
-
                         </div>
-
-                        <h3 className="text-[0.95rem] font-bold text-[var(--texto)]">
+                        <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">
                           Arqueos de caja
                         </h3>
-
-                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--texto-muted)]">
+                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
                           Revisa y controla los arqueos de caja.
                         </p>
-
                       </button>
 
 
                       {/* Gastos menores */}
-
                       <button
                         type="button"
                         onClick={() => setCajaVista('gastos')}
-                        className="group rounded-[14px] border border-[var(--borde)] bg-[var(--surface)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="group rounded-[14px] border border-[var(--wa-border)] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
-
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--fondo)]">
-
-                          <span className="material-symbols-outlined text-[1.5rem]">
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--wa-primary-light)]">
+                          <span className="material-symbols-outlined text-[1.5rem] text-[var(--wa-primary)]">
                             payments
                           </span>
-
                         </div>
-
-                        <h3 className="text-[0.95rem] font-bold text-[var(--texto)]">
+                        <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">
                           Gastos menores
                         </h3>
-
-                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--texto-muted)]">
+                        <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
                           Registra y consulta los gastos menores de caja.
                         </p>
-
                       </button>
 
                     </div>
 
                   </div>
-
                 </section>
               )}
 
@@ -2638,41 +2631,1126 @@ function Mesero() {
 
 
               {/* =====================================================
-                  PLACEHOLDERS ARQUEOS Y GASTOS
-              ====================================================== */}
+    ARQUEOS DE CAJA
+====================================================== */}
 
-              {['arqueos', 'gastos'].includes(cajaVista) && (
-                <section className="m-6">
+{cajaVista === 'arqueos' && (
+  <section className="m-6">
 
-                  <div className="mb-6 flex items-center gap-3">
+    {/* ENCABEZADO */}
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                    <button
-                      type="button"
-                      onClick={() => setCajaVista('resumen')}
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-                      title="Volver"
-                    >
+      <div className="flex items-center gap-3">
 
-                      <span className="material-symbols-outlined">
-                        arrow_back
-                      </span>
+        <button
+          type="button"
+          onClick={() => setCajaVista('resumen')}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
+          title="Volver"
+        >
+          <span className="material-symbols-outlined">
+            arrow_back
+          </span>
+        </button>
 
-                    </button>
+        <div>
+          <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+            Arqueos de caja
+          </h1>
 
-                    <h1 className="text-[1.5rem] font-bold capitalize">
-                      {cajaVista}
-                    </h1>
+          <p className="mt-1 text-[0.9rem] text-[var(--wa-text-muted)]">
+            Revisa y controla los arqueos realizados.
+          </p>
+        </div>
 
-                  </div>
+      </div>
 
-                  <p className="text-[0.9rem] text-[var(--texto-muted)]">
-                    Vista en construcción.
-                  </p>
+      <button
+        type="button"
+        className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
+      >
+        <span className="material-symbols-outlined text-[1.2rem]">
+          calculate
+        </span>
 
-                </section>
-              )}
+        Realizar arqueo
+      </button>
+
+    </div>
+
+
+    {/* RESUMEN DEL ARQUEO ACTUAL */}
+    <div className="mb-6 rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+          <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">
+            Arqueo actual
+          </h2>
+
+          <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
+            Comparación entre el dinero esperado y el dinero contado.
+          </p>
+        </div>
+
+        <span className="flex w-fit items-center gap-2 rounded-full bg-[#dcfce7] px-3 py-1.5 text-sm font-semibold text-[#166534]">
+          <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
+          Cuadrado
+        </span>
+
+      </div>
+
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+        {/* MONTO ESPERADO */}
+        <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
+
+          <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
+            <span className="material-symbols-outlined text-[1.2rem]">
+              payments
+            </span>
+
+            <span className="text-sm">
+              Monto esperado
+            </span>
+          </div>
+
+          <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">
+            $1.482.500
+          </p>
+
+        </div>
+
+
+        {/* MONTO CONTADO */}
+        <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
+
+          <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
+            <span className="material-symbols-outlined text-[1.2rem]">
+              account_balance_wallet
+            </span>
+
+            <span className="text-sm">
+              Monto contado
+            </span>
+          </div>
+
+          <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">
+            $1.482.500
+          </p>
+
+        </div>
+
+
+        {/* DIFERENCIA */}
+        <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
+
+          <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
+            <span className="material-symbols-outlined text-[1.2rem]">
+              compare_arrows
+            </span>
+
+            <span className="text-sm">
+              Diferencia
+            </span>
+          </div>
+
+          <p className="text-[1.3rem] font-bold text-[var(--wa-tertiary)]">
+            $0
+          </p>
+
+        </div>
+
+
+        {/* RESPONSABLE */}
+        <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
+
+          <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
+            <span className="material-symbols-outlined text-[1.2rem]">
+              person
+            </span>
+
+            <span className="text-sm">
+              Responsable
+            </span>
+          </div>
+
+          <p className="font-bold text-[var(--wa-text)]">
+            Juan Pérez
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    {/* HISTORIAL DE ARQUEOS */}
+    <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
+
+      {/* CABECERA */}
+      <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+          <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">
+            Historial de arqueos
+          </h2>
+
+          <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
+            Consulta y verifica los arqueos realizados anteriormente.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+        >
+          <span className="material-symbols-outlined text-[1.1rem]">
+            filter_list
+          </span>
+
+          Filtrar
+        </button>
+
+      </div>
+
+
+      {/* TABLA */}
+      <div className="overflow-x-auto">
+
+        <table className="w-full min-w-[1100px]">
+
+          <thead>
+            <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
+
+              <th className="px-5 py-3 font-semibold">
+                Fecha
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Hora
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Responsable
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Caja
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Esperado
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Contado
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Diferencia
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Estado
+              </th>
+
+              <th className="px-5 py-3 text-right font-semibold">
+                Acción
+              </th>
+
+            </tr>
+          </thead>
+
+
+          <tbody>
+
+            {/* ARQUEO 1 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                02/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                03:45 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Juan Pérez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Caja principal
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $1.482.500
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $1.482.500
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-tertiary)]">
+                $0
+              </td>
+
+              <td className="px-5 py-4">
+
+                <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-semibold text-[#166534]">
+                  Cuadrado
+                </span>
+
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver arqueo"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* ARQUEO 2 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                01/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                05:50 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                María Gómez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Caja principal
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $980.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $990.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-secondary)]">
+                +$10.000
+              </td>
+
+              <td className="px-5 py-4">
+
+                <span className="rounded-full bg-[var(--wa-secondary-light)] px-3 py-1 text-xs font-semibold text-[var(--wa-secondary)]">
+                  Sobrante
+                </span>
+
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver arqueo"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* ARQUEO 3 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                31/08/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                05:40 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Carlos Rodríguez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Caja principal
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $840.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $830.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-primary)]">
+                -$10.000
+              </td>
+
+              <td className="px-5 py-4">
+
+                <span className="rounded-full bg-[var(--wa-primary-light)] px-3 py-1 text-xs font-semibold text-[var(--wa-primary)]">
+                  Faltante
+                </span>
+
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver arqueo"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* ARQUEO 4 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                30/08/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                05:35 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Juan Pérez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Caja principal
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $760.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold">
+                $760.000
+              </td>
+
+              <td className="px-5 py-4 text-sm font-semibold text-[var(--wa-tertiary)]">
+                $0
+              </td>
+
+              <td className="px-5 py-4">
+
+                <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-semibold text-[#166534]">
+                  Cuadrado
+                </span>
+
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver arqueo"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+)}
+
+
+{/* =====================================================
+    GASTOS MENORES DE CAJA
+====================================================== */}
+
+{cajaVista === 'gastos' && (
+  <section className="m-6">
+
+    {/* ENCABEZADO */}
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div className="flex items-center gap-3">
+
+        <button
+          type="button"
+          onClick={() => setCajaVista('resumen')}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
+          title="Volver"
+        >
+          <span className="material-symbols-outlined">
+            arrow_back
+          </span>
+        </button>
+
+        <div>
+          <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+            Gastos menores
+          </h1>
+
+          <p className="mt-1 text-[0.9rem] text-[var(--wa-text-muted)]">
+            Registra y consulta los gastos menores realizados desde caja.
+          </p>
+        </div>
+
+      </div>
+
+
+      {/* BOTÓN REGISTRAR */}
+      <button
+        type="button"
+        className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
+      >
+        <span className="material-symbols-outlined text-[1.2rem]">
+          add
+        </span>
+
+        Registrar gasto
+      </button>
+
+    </div>
+
+
+    {/* RESUMEN DE GASTOS */}
+    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+      {/* GASTOS DEL DÍA */}
+      <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+
+        <div className="mb-3 flex items-center justify-between">
+
+          <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">
+            Gastos de hoy
+          </span>
+
+          <span className="material-symbols-outlined text-[var(--wa-primary)]">
+            receipt_long
+          </span>
+
+        </div>
+
+        <p className="text-[1.5rem] font-black text-[var(--wa-text)]">
+          $87.500
+        </p>
+
+        <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
+          5 gastos registrados
+        </p>
+
+      </div>
+
+
+      {/* GASTOS DEL MES */}
+      <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+
+        <div className="mb-3 flex items-center justify-between">
+
+          <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">
+            Gastos del mes
+          </span>
+
+          <span className="material-symbols-outlined text-[var(--wa-secondary)]">
+            calendar_month
+          </span>
+
+        </div>
+
+        <p className="text-[1.5rem] font-black text-[var(--wa-text)]">
+          $425.000
+        </p>
+
+        <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
+          Agosto - Septiembre 2026
+        </p>
+
+      </div>
+
+
+      {/* ÚLTIMO GASTO */}
+      <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+
+        <div className="mb-3 flex items-center justify-between">
+
+          <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">
+            Último gasto
+          </span>
+
+          <span className="material-symbols-outlined text-[var(--wa-primary)]">
+            payments
+          </span>
+
+        </div>
+
+        <p className="text-[1.5rem] font-black text-[var(--wa-text)]">
+          $25.000
+        </p>
+
+        <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
+          Compra de suministros
+        </p>
+
+      </div>
+
+
+      {/* SALDO DISPONIBLE */}
+      <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+
+        <div className="mb-3 flex items-center justify-between">
+
+          <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">
+            Saldo disponible
+          </span>
+
+          <span className="material-symbols-outlined text-[var(--wa-tertiary)]">
+            account_balance_wallet
+          </span>
+
+        </div>
+
+        <p className="text-[1.5rem] font-black text-[var(--wa-tertiary)]">
+          $1.395.000
+        </p>
+
+        <p className="mt-1 text-xs text-[var(--wa-text-muted)]">
+          Disponible en caja
+        </p>
+
+      </div>
+
+    </div>
+
+
+    {/* HISTORIAL */}
+    <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
+
+      {/* CABECERA DEL HISTORIAL */}
+      <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+          <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">
+            Historial de gastos
+          </h2>
+
+          <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
+            Consulta los gastos menores registrados en caja.
+          </p>
+        </div>
+
+
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+        >
+          <span className="material-symbols-outlined text-[1.1rem]">
+            filter_list
+          </span>
+
+          Filtrar
+        </button>
+
+      </div>
+
+
+      {/* TABLA */}
+      <div className="overflow-x-auto">
+
+        <table className="w-full min-w-[1050px]">
+
+          <thead>
+
+            <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
+
+              <th className="px-5 py-3 font-semibold">
+                Fecha
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Hora
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Concepto
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Categoría
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Responsable
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Método
+              </th>
+
+              <th className="px-5 py-3 font-semibold">
+                Monto
+              </th>
+
+              <th className="px-5 py-3 text-right font-semibold">
+                Acción
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {/* GASTO 1 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                02/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                10:15 AM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Compra de suministros
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Suministros
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Juan Pérez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Efectivo
+              </td>
+
+              <td className="px-5 py-4 text-sm font-bold">
+                $25.000
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* GASTO 2 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                02/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                09:20 AM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Compra de hielo
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Insumos
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                María Gómez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Efectivo
+              </td>
+
+              <td className="px-5 py-4 text-sm font-bold">
+                $18.000
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* GASTO 3 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                01/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                03:40 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Transporte
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Transporte
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Carlos Rodríguez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Efectivo
+              </td>
+
+              <td className="px-5 py-4 text-sm font-bold">
+                $15.000
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* GASTO 4 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                01/09/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                11:30 AM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Material de limpieza
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Limpieza
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Juan Pérez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Efectivo
+              </td>
+
+              <td className="px-5 py-4 text-sm font-bold">
+                $12.500
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+
+            {/* GASTO 5 */}
+            <tr className="border-t border-[var(--wa-border)]">
+
+              <td className="px-5 py-4 text-sm">
+                31/08/2026
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                04:10 PM
+              </td>
+
+              <td className="px-5 py-4 text-sm font-medium">
+                Papelería
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Oficina
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                María Gómez
+              </td>
+
+              <td className="px-5 py-4 text-sm">
+                Efectivo
+              </td>
+
+              <td className="px-5 py-4 text-sm font-bold">
+                $17.000
+              </td>
+
+              <td className="px-5 py-4 text-right">
+
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--wa-border)] transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.1rem]">
+                    visibility
+                  </span>
+                </button>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+)}
 
             </>
+          )}
+
+
+          {/* =========================================================
+              FACTURAS
+          ========================================================== */}
+
+          {activeItem === 'Facturas' && (
+            <section className="m-6">
+
+              {/* ENCABEZADO */}
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">Facturas</h1>
+                  <p className="mt-1 text-[0.9rem] text-[var(--wa-text-muted)]">
+                    Consulta, emite y gestiona las facturas del restaurante.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 rounded-[10px] bg-[var(--wa-primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--wa-primary-dark)]"
+                >
+                  <span className="material-symbols-outlined text-[1.2rem]">add</span>
+                  Nueva factura
+                </button>
+              </div>
+
+              {/* RESUMEN */}
+              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Total facturado</span>
+                    <span className="material-symbols-outlined text-[1.4rem]">receipt_long</span>
+                  </div>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">$3.245.000</p>
+                  <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Este mes</p>
+                </div>
+
+                <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pagadas</span>
+                    <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-tertiary)]">check_circle</span>
+                  </div>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">142</p>
+                  <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Facturas cobradas</p>
+                </div>
+
+                <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pendientes</span>
+                    <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-secondary)]">schedule</span>
+                  </div>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">6</p>
+                  <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Por cobrar</p>
+                </div>
+
+                <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Anuladas</span>
+                    <span className="material-symbols-outlined text-[1.4rem] text-[var(--wa-primary)]">cancel</span>
+                  </div>
+                  <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">2</p>
+                  <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Este mes</p>
+                </div>
+              </div>
+
+              {/* TABLA */}
+              <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Facturas emitidas</h2>
+                    <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Historial completo de facturación.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
+                  >
+                    <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+                    Filtrar
+                  </button>
+                </div>
+
+                {cargandoFacturas ? (
+                  <p className="p-5 text-[0.85rem] text-[var(--wa-text-muted)]">Cargando...</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[900px] text-sm">
+                      <thead>
+                        <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
+                          <th className="px-5 py-3 font-semibold">#</th>
+                          <th className="px-5 py-3 font-semibold">Cliente</th>
+                          <th className="px-5 py-3 font-semibold">Mesero</th>
+                          <th className="px-5 py-3 font-semibold">Mesa</th>
+                          <th className="px-5 py-3 font-semibold">Fecha</th>
+                          <th className="px-5 py-3 font-semibold">Total</th>
+                          <th className="px-5 py-3 font-semibold">Estado</th>
+                          <th className="px-5 py-3 text-right font-semibold">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {facturas.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="py-8 text-center text-[var(--wa-text-muted)]">
+                              Sin facturas registradas
+                            </td>
+                          </tr>
+                        ) : (
+                          facturas.map(f => (
+                            <tr key={f.id_factura} className="border-t border-[var(--wa-border)]">
+                              <td className="px-5 py-4 font-medium">{f.numero}</td>
+                              <td className="px-5 py-4">{f.nombre_cliente ?? f.id_cliente ?? '—'}</td>
+                              <td className="px-5 py-4">{f.nombre_mesero ?? f.id_mesero ?? '—'}</td>
+                              <td className="px-5 py-4">{f.Mesa_num ?? '—'}</td>
+                              <td className="px-5 py-4">{f.fecha}</td>
+                              <td className="px-5 py-4 font-semibold">
+                                ${f.total.toLocaleString('es-CO')}
+                              </td>
+                              <td className="px-5 py-4">
+                                <span
+                                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                    f.estado === 'PAGADA'
+                                      ? 'bg-[#dcfce7] text-[#166534]'
+                                      : f.estado === 'PENDIENTE'
+                                      ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
+                                      : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
+                                  }`}
+                                >
+                                  {f.estado}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    className="rounded-[10px] border border-[var(--wa-border)] bg-[var(--wa-surface-low)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-text-muted)] transition hover:bg-[var(--wa-surface-high)]"
+                                  >
+                                    Ver
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded-[10px] border border-[var(--wa-primary)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-primary)] disabled:opacity-50"
+                                    disabled={f.estado === 'ANULADA'}
+                                  >
+                                    Anular
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+            </section>
           )}
 
         </div>
