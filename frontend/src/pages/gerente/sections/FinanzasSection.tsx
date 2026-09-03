@@ -1,0 +1,13 @@
+interface FinanzasSectionProps {
+  stats: { icon: string; label: string; valor: string; badge: string; badgeColor: string }[]
+  transacciones: { fecha: string; concepto: string; categoria: string; monto: string; positivo: boolean }[]
+}
+
+function FinanzasSection({ stats, transacciones }: FinanzasSectionProps) {
+  return <>
+    <section className="grid grid-cols-3 gap-4">{stats.map(m => <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]"><div className="flex items-start justify-between"><span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' : m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[#f0ebe5] text-[var(--texto-muted)]'}`}>{m.icon}</span><span className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold ${m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' : m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[#f0ebe5] text-[var(--texto-muted)]'}`}>{m.badge}</span></div><div><p className="mb-1 text-[0.78rem] text-[var(--texto-muted)]">{m.label}</p><p className="font-['Syne'] text-[1.6rem] font-bold text-[var(--texto)]">{m.valor}</p></div></div>)}</section>
+    <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]"><h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Transacciones recientes</h3><div className="overflow-x-auto"><table className="w-full border-collapse"><thead><tr>{['Fecha', 'Concepto', 'Categoría', 'Monto'].map(titulo => <th key={titulo} className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">{titulo}</th>)}</tr></thead><tbody>{transacciones.map((t, i) => <tr key={i}><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.fecha}</td><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{t.concepto}</td><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.categoria}</td><td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.positivo ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{t.positivo ? '+' : '-'}{t.monto}</td></tr>)}</tbody></table></div></section>
+  </>
+}
+
+export default FinanzasSection

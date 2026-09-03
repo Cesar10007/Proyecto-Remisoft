@@ -86,8 +86,7 @@ done
 
 # Crear base de datos y usuario
 log "Configurando base de datos 'remisoft'..."
-mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS remisoft CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -e "CREATE USER IF NOT EXISTS 'remisoft'@'%' IDENTIFIED BY 'remisoft123';"
+mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -e "CREATE USER IF NOT EXISTS 'remisoft'@'%' IDENTIFIED BY 'remisoft_pass';"
 mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON remisoft.* TO 'remisoft'@'%';"
 mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
 
@@ -103,8 +102,8 @@ DB_HOST=${DB_HOST}
 DB_PORT=${DB_PORT}
 DB_DATABASE=remisoft
 DB_USERNAME=remisoft
-DB_PASSWORD=remisoft123
-DATABASE_URL="mysql://remisoft:remisoft123@${DB_HOST}:${DB_PORT}/remisoft"
+DB_PASSWORD=remisoft_pass
+DATABASE_URL="mysql://remisoft:remisoft_pass@${DB_HOST}:${DB_PORT}/remisoft"
 JWT_SECRET=remisoft_dev_jwt_secret_cambiar_en_produccion
 JWT_EXPIRES_IN=8h
 MAILTRAP_HOST=smtp.mailtrap.io

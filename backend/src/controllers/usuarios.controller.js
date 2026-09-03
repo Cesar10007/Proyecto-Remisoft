@@ -392,6 +392,32 @@ export async function crear(req, res, next) {
   try {
     const rolUsuario = req.user?.rol?.toUpperCase();
 
+    if (rolUsuario === 'GERENTE') {
+      const { error, data, contrasena } = validarUsuario(req.body, {
+        requirePassword: true,
+        requireRestaurante: true,
+      });
+
+      if (error) return res.status(422).json({ message: error });
+      if (!ROLES_OPERATIVOS.includes(data.id_rol)) {
+        return res.status(403).json({ message: 'Solo puedes crear personal operativo.' });
+      }
+      if (data.id_restaurante !== req.user.id_restaurante) {
+        return res.status(403).json({ message: 'Solo puedes crear personal en tu restaurante.' });
+      }
+
+      const contrasena_hash = await bcrypt.hash(contrasena, 12);
+      const usuario = await prisma.usuario.create({
+        data: { ...data, contrasena_hash },
+        include: { rol: true, restaurante: true },
+      });
+
+      return res.status(201).json({
+        message: 'Personal creado correctamente.',
+        data: formatUsuario(usuario),
+      });
+    }
+
     if (rolUsuario !== 'SUPERADMIN') {
       return res.status(403).json({
         message: 'Solo el SUPERADMIN puede crear gerentes.',
