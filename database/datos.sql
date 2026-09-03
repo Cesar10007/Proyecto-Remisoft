@@ -28,12 +28,12 @@ TRUNCATE TABLE proveedor;
 TRUNCATE TABLE turno_caja;
 TRUNCATE TABLE caja;
 TRUNCATE TABLE Cliente;
+TRUNCATE TABLE solicitud_registro;
 TRUNCATE TABLE usuario;
+TRUNCATE TABLE restaurante;
 TRUNCATE TABLE rol;
 
 -- 1. ROL
--- CLIENTE no es un rol de usuario. Los clientes de pedidos se cargan
--- en la tabla Cliente más adelante.
 INSERT INTO rol (id_rol, nombre, descripcion) VALUES
 (1, 'SUPERADMIN', 'Acceso total al sistema'),
 (2, 'GERENTE', 'Administrador del restaurante'),
@@ -41,20 +41,26 @@ INSERT INTO rol (id_rol, nombre, descripcion) VALUES
 (4, 'MESERO', 'Toma y gestión de pedidos en mesa'),
 (5, 'REPARTIDOR', 'Entrega de pedidos a domicilio');
 
-
 -- 2. RESTAURANTE
--- Registra las sedes activas desde las que opera el sistema.
-INSERT INTO restaurante (id_restaurante,nombre,direccion,telefono,email,activo
+INSERT INTO restaurante (
+    id_restaurante, nombre, direccion, telefono, email, activo
 ) VALUES
-  (1, 'Restaurante Principal', 'Calle 123', '3001234567', 'contacto@restaurante.com', 1),
-  (2, 'Restaurante Norte', 'Carrera 45 #10-20', '3007654321', 'norte@restaurante.com', 1);
+(1, 'Restaurante Principal', 'Calle 123', '3001234567', 'contacto@restaurante.com', 1),
+(2, 'Restaurante Norte', 'Carrera 45 #10-20', '3007654321', 'norte@restaurante.com', 1);
 
--- 3. USUARIO
--- Carga usuarios internos con sus roles operativos y cuentas activas.
--- 3. USUARIO
--- Todos los usuarios de prueba usan la contraseña: 123456
+-- 3. SOLICITUD_REGISTRO
+INSERT INTO solicitud_registro (
+    nombre,apellido,email,telefono,contrasena_hash,id_rol_solicitado,id_restaurante,estado
+) VALUES
+('Prueba','Gerente','solicitud.gerente.prueba@example.com','3002001001','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',2,1,'PENDIENTE'),
+('Prueba','Cajero','solicitud.cajero.prueba@example.com','3002001002','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',3,1,'PENDIENTE'),
+('Prueba','Mesero','solicitud.mesero.prueba@example.com','3002001003','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',4,2,'PENDIENTE'),
+('Prueba','Repartidor','solicitud.repartidor.prueba@example.com','3002001004','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',5,2,'PENDIENTE');
+
+-- 4. USUARIO
+-- Todos los usuarios de prueba usan la contraseña: 123456.
 INSERT INTO usuario (
-  id_usuario,id_rol,id_restaurante,identificacion,nombre,apellido,email,telefono,contrasena_hash,activo
+    id_usuario,id_rol,id_restaurante,identificacion,nombre,apellido,email,telefono,contrasena_hash,activo
 ) VALUES
 (1, 1, NULL, '1001', 'Carlos', 'Ramírez', 'carlos.ramirez@resto.com', '3001234567', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (2, 2, 1, '1002', 'Laura', 'Gómez', 'laura.gomez@resto.com', '3009876543', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
@@ -66,10 +72,10 @@ INSERT INTO usuario (
 (8, 5, 2, '1008', 'Isabella', 'Vargas', 'isabella.vargas@resto.com', '3156667778', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (9, 2, 2, '1009', 'Sebastián', 'Díaz', 'sebastian.diaz@resto.com', '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
--- 4. CLIENTE
--- Estas personas son clientes de pedidos, no usuarios con rol CLIENTE.
--- Se incluyen datos de contacto y ubicación para pedidos a domicilio.
-INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion,coordenadas_gps, tipo_documento, Num_documento
+
+-- 5. CLIENTE
+INSERT INTO Cliente (
+    Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps,tipo_documento, Num_documento
 ) VALUES
 ('Pedro', 'Sánchez', 'pedro.sanchez@gmail.com', '3101234567', 'Calle 45 # 12-30', '4.6097,-74.0817', 'CC', '80123456'),
 ('Ana', 'Ruiz', 'ana.ruiz@gmail.com', '3209876543', 'Carrera 7 # 60-15', '4.6200,-74.0700', 'CC', '52654321'),
@@ -82,8 +88,7 @@ INSERT INTO Cliente (Nombre, Apellido, Email, Telefono, Direccion,coordenadas_gp
 ('Felipe', 'Aguilar', 'felipe.aguilar@gmail.com', '3158889990', 'Carrera 30 # 45-10', '4.6400,-74.0800', 'CC', '88345678'),
 ('Sandra', 'Vega', 'sandra.vega@gmail.com', '3002221113', 'Calle 53 # 20-35', '4.6480,-74.0720', 'CC', '64987654');
 
--- 5. CAJA
--- Define las cajas disponibles y sus estados iniciales de operación.
+-- 6. CAJA
 INSERT INTO caja (nombre, estado) VALUES
 ('Caja Principal', 'ACTIVA'),
 ('Caja Secundaria', 'ACTIVA'),
@@ -96,8 +101,7 @@ INSERT INTO caja (nombre, estado) VALUES
 ('Caja Reserva 1', 'INACTIVA'),
 ('Caja Reserva 2', 'INACTIVA');
 
--- 6. TURNO_CAJA
--- Simula turnos cerrados con diferencias de caja y turnos actualmente abiertos.
+-- 7. TURNO_CAJA
 INSERT INTO turno_caja (id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,notas, estado
 ) VALUES
 (1, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 200000.00, 850000.00, 845000.00, -5000.00, 'Turno mañana normal', 'CERRADA'),
@@ -111,8 +115,7 @@ INSERT INTO turno_caja (id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre
 (2, 3, '2025-01-13 16:00:00', '2025-01-13 23:59:00', 150000.00, 540000.00, 540000.00, 0.00, 'Todo cuadrado', 'CERRADA'),
 (7, 7, '2025-01-16 10:00:00', NULL, 80000.00, NULL, NULL, NULL, 'Turno express activo', 'ABIERTA');
 
--- 7. PROVEEDOR
--- Registra proveedores activos clasificados por el tipo de insumo que suministran.
+-- 8. PROVEEDOR
 INSERT INTO proveedor (nombre, nombre_contacto, telefono, email, direccion, nit, tipo_proveedor, estado) VALUES
 ('Frigorífico Central S.A.', 'Roberto Muñoz', '6012345678', 'ventas@frigocentral.com', 'Zona Industrial Km 5', '900123456-1', 'CARNES', 'ACTIVO'),
 ('Distribuidora Lácteos del Valle', 'Carmen Pedraza', '6029876543', 'pedidos@lacteosvalle.com', 'Carrera 80 # 20-15', '800234567-2', 'LACTEOS', 'ACTIVO'),
@@ -125,8 +128,7 @@ INSERT INTO proveedor (nombre, nombre_contacto, telefono, email, direccion, nit,
 ('Mariscos del Pacífico', 'Armando Pino', '3111118000', 'pedidos@mariscospac.com', 'Central Mayorista B-20', '100901234-9', 'MARISCOS', 'ACTIVO'),
 ('Frutas Tropicales S.A.', 'Esperanza Luna', '3206660000', 'frutas@tropicales.com', 'Carrera 50 # 12-88', '900012345-0', 'FRUTAS', 'ACTIVO');
 
--- 8. PRODUCTO
--- Carga el menú con descripción, precio, categoría, tiempo de preparación y estado.
+-- 9. PRODUCTO
 INSERT INTO Producto (Nombre, Descripcion, precio_venta, Categoria, Tiempo_preparacion, Estado) VALUES
 ('Hamburguesa Clásica', 'Carne de res, lechuga, tomate, queso cheddar', 18000.00, 'HAMBURGUESAS', '00:12:00', 1),
 ('Pizza Margherita', 'Salsa de tomate, mozzarella, albahaca fresca', 32000.00, 'PIZZAS', '00:20:00', 1),
@@ -139,8 +141,7 @@ INSERT INTO Producto (Nombre, Descripcion, precio_venta, Categoria, Tiempo_prepa
 ('Sopa del Día', 'Varía según disponibilidad', 9000.00, 'SOPAS', '00:10:00', 1),
 ('Jugo Natural', 'Frutas de temporada', 7000.00, 'BEBIDAS', '00:04:00', 1);
 
--- 9. INGREDIENTE
--- Define los ingredientes, unidades de medida, costos de referencia y stocks mínimos.
+-- 10. INGREDIENTE
 INSERT INTO Ingrediente (nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo) VALUES
 ('Carne de Res Molida', 'Carne molida especial para hamburguesas', 'KG', 18000.00, 5.00),
 ('Harina de Trigo', 'Harina especial para masas', 'KG', 2500.00, 10.00),
@@ -153,8 +154,7 @@ INSERT INTO Ingrediente (nombre, descripcion, unidad_medida, costo_unitario_ref,
 ('Limón Tahití', 'Limón para bebidas y aderezos', 'KG', 3500.00, 2.00),
 ('Papa Pastusa', 'Papa para freír y preparaciones', 'KG', 1800.00, 8.00);
 
--- 10. LOTE_INGREDIENTE
--- Registra lotes de ingredientes con fechas de vencimiento y existencias actuales.
+-- 11. LOTE_INGREDIENTE
 INSERT INTO lote_ingrediente (id_ingrediente, numero_lote, fecha_ingreso, fecha_vencimiento, stock_inicial, stock_actual, costo_promedio, observaciones) VALUES
 (1, 'LOTE-CARNE-001', '2025-01-10', '2025-01-17', 20.000, 15.500, 18000.00, 'Lote fresco frigorífico central'),
 (2, 'LOTE-HARINA-001', '2025-01-05', '2025-04-05', 50.000, 42.000, 2500.00, 'Harina de primera calidad'),
@@ -167,8 +167,7 @@ INSERT INTO lote_ingrediente (id_ingrediente, numero_lote, fecha_ingreso, fecha_
 (9, 'LOTE-LIMON-001', '2025-01-14', '2025-01-21', 6.000, 5.200, 3500.00, 'Limón verde fresco'),
 (10, 'LOTE-PAPA-001', '2025-01-10', '2025-01-24', 25.000, 20.000, 1800.00, 'Papa pastusa cosecha nueva');
 
--- 11. RECETA
--- Relaciona productos con sus ingredientes y las cantidades necesarias por preparación.
+-- 12. RECETA
 INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VALUES
 (1, 1, 0.200, 'KG'),
 (1, 4, 0.050, 'KG'),
@@ -181,8 +180,7 @@ INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VAL
 (7, 7, 0.200, 'KG'),
 (7, 8, 2.000, 'UNIDAD');
 
--- 12. PEDIDO
--- Carga pedidos de mesa y domicilio en distintos estados del flujo operativo.
+-- 13. PEDIDO
 INSERT INTO pedido (id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
 (1, 4, 'CERRADO', 'MESA', 3, 'Sin cebolla por favor'),
 (2, 6, 'CERRADO', 'MESA', 7, NULL),
@@ -195,8 +193,7 @@ INSERT INTO pedido (id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas)
 (9, 4, 'CERRADO', 'DOMICILIO', NULL, NULL),
 (10, 6, 'ABIERTO', 'MESA', 8, 'Mesa de cumpleaños');
 
--- 13. DETALLE_PEDIDO
--- Detalla los productos solicitados en cada pedido, sus cantidades, precios y estados.
+-- 14. DETALLE_PEDIDO
 INSERT INTO Detalle_pedido (id_pedido, id_producto, Cantidad, Precio_unitario, estado_item) VALUES
 (1, 1, 2, 18000.00, 'ENTREGADO'),
 (1, 5, 2, 7000.00, 'ENTREGADO'),
@@ -209,8 +206,7 @@ INSERT INTO Detalle_pedido (id_pedido, id_producto, Cantidad, Precio_unitario, e
 (5, 3, 1, 14000.00, 'PENDIENTE'),
 (6, 1, 3, 18000.00, 'ENTREGADO');
 
--- 14. FACTURA
--- Genera facturas asociadas a pedidos con impuestos, descuentos, propinas y estados.
+-- 15. FACTURA
 INSERT INTO Factura (id_pedido, consecutivo, CUFE, IVA, Descuento, Propina, total, estado) VALUES
 (1, 'FAC-2025-0001', 'CUFE001abc', 8360.00, 0.00, 5000.00, 59360.00, 'PAGADA'),
 (2, 'FAC-2025-0002', 'CUFE002abc', 8360.00, 5000.00, 0.00, 47360.00, 'PAGADA'),
@@ -223,8 +219,7 @@ INSERT INTO Factura (id_pedido, consecutivo, CUFE, IVA, Descuento, Propina, tota
 (5, 'FAC-2025-0009', 'CUFE009abc', 3420.00, 0.00, 0.00, 21420.00, 'ANULADA'),
 (10, 'FAC-2025-0010', 'CUFE010abc', 2000.00, 0.00, 0.00, 14000.00, 'EMITIDA');
 
--- 15. PAGO
--- Registra pagos aprobados y rechazados mediante distintos métodos y turnos de caja.
+-- 16. PAGO
 INSERT INTO pago (id_factura, id_usuario_cajero, metodo, monto, referencia, estado, id_turno) VALUES
 (1, 3, 'EFECTIVO', 59360.00, NULL, 'APROBADO', 1),
 (2, 3, 'TARJETA_CREDITO', 47360.00, 'REF-TC-00234', 'APROBADO', 1),
@@ -237,8 +232,7 @@ INSERT INTO pago (id_factura, id_usuario_cajero, metodo, monto, referencia, esta
 (9, 7, 'EFECTIVO', 21420.00, NULL, 'RECHAZADO', 2),
 (10, 3, 'PSE', 14000.00, 'PSE-441231', 'APROBADO', 3);
 
--- 16. FLUJO_CAJA
--- Representa aperturas, ingresos por facturas y egresos operativos de los turnos.
+-- 17. FLUJO_CAJA
 INSERT INTO flujo_caja (id_turno, concepto, ingresos, egresos, saldo, metodo, referencia, id_pago) VALUES
 (1, 'Apertura de caja', 200000.00, 0.00, 200000.00, 'EFECTIVO', NULL, NULL),
 (1, 'Pago factura FAC-2025-0001', 59360.00, 0.00, 259360.00, 'EFECTIVO', NULL, 1),
@@ -251,8 +245,7 @@ INSERT INTO flujo_caja (id_turno, concepto, ingresos, egresos, saldo, metodo, re
 (3, 'Pago factura FAC-2025-0004', 64240.00, 0.00, 264240.00, 'EFECTIVO', NULL, 4),
 (3, 'Gasto insumos limpieza', 0.00, 15000.00, 249240.00, 'EFECTIVO', 'COMP-001', NULL);
 
--- 17. FACTURA_ITEM
--- Vincula cada factura con los detalles de pedido que fueron facturados.
+-- 18. FACTURA_ITEM
 INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VALUES
 (1, 1, 2),
 (1, 2, 2),
@@ -265,15 +258,13 @@ INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VAL
 (8, 8, 1),
 (8, 9, 1);
 
--- 18. DOMICILIO
--- Registra direcciones, coordenadas, repartidores y entregas de pedidos a domicilio.
+-- 19. DOMICILIO
 INSERT INTO domicilio (id_pedido, direccion, coordenadas_gps, estado, fecha_entrega, id_repartidor) VALUES
 (3, 'Av. 68 # 22-10', '4.6300,-74.0900', 'ENTREGADO', '2025-01-15 13:45:00', 5),
 (6, 'Calle 72 # 9-40', '4.6550,-74.0650', 'ENTREGADO', '2025-01-15 20:30:00', 8),
 (9, 'Carrera 30 # 45-10', '4.6400,-74.0800', 'ENTREGADO', '2025-01-14 19:00:00', 5);
 
--- 19. ORDEN_COMPRA
--- Carga órdenes de compra recibidas, pendientes y aprobadas para abastecimiento.
+-- 20. ORDEN_COMPRA
 INSERT INTO orden_compra (id_proveedor, id_usuario, fecha_entrega_esperada, fecha_entrega_real, estado, observaciones) VALUES
 (1, 9, '2025-01-17', '2025-01-17', 'RECIBIDA', 'Pedido urgente de carnes'),
 (2, 9, '2025-01-18', NULL, 'PENDIENTE', 'Reposición lácteos'),
@@ -286,8 +277,7 @@ INSERT INTO orden_compra (id_proveedor, id_usuario, fecha_entrega_esperada, fech
 (9, 2, '2025-01-15', '2025-01-15', 'RECIBIDA', 'Mariscos frescos'),
 (10, 9, '2025-01-18', NULL, 'APROBADA', 'Frutas tropicales');
 
--- 20. DETALLE_ORDEN_COMPRA
--- Detalla los ingredientes solicitados y recibidos en cada orden, con sus costos.
+-- 21. DETALLE_ORDEN_COMPRA
 INSERT INTO detalle_orden_compra (id_orden_compra, id_ingrediente, cantidad_solicitada, cantidad_recibida, precio_unitario) VALUES
 (1, 1, 20.00, 20.00, 18000.00),
 (2, 3, 10.00, 0.00, 22000.00),
@@ -300,8 +290,7 @@ INSERT INTO detalle_orden_compra (id_orden_compra, id_ingrediente, cantidad_soli
 (8, 8, 60.00, 0.00, 450.00),
 (9, 10, 20.00, 20.00, 1800.00);
 
--- 21. PROVEEDOR_INGREDIENTE
--- Define acuerdos de suministro, tiempos de entrega, calidad y proveedor principal.
+-- 22. PROVEEDOR_INGREDIENTE
 INSERT INTO proveedor_ingrediente (id_proveedor, id_ingrediente, precio_acordado, tiempo_entrega_dias, calidad_rating, es_proveedor_principal, fecha_ultima_compra) VALUES
 (1, 1, 18000.00, 1, 4.8, 1, '2025-01-14 09:00:00'),
 (2, 3, 22000.00, 2, 4.5, 1, '2025-01-12 10:00:00'),
@@ -314,8 +303,7 @@ INSERT INTO proveedor_ingrediente (id_proveedor, id_ingrediente, precio_acordado
 (10, 9, 3500.00, 1, 4.5, 1, '2025-01-11 10:00:00'),
 (10, 10, 1800.00, 1, 4.4, 1, '2025-01-10 10:00:00');
 
--- 22. INVENTARIO_MOV
--- Registra entradas por compras y salidas por pedidos, asociadas a lotes y usuarios.
+-- 23. INVENTARIO_MOV
 INSERT INTO inventario_mov (id_ingrediente, id_usuario, tipo_movimiento, cantidad, costo_unitario, observaciones, origen_tipo, origen_id, id_lote) VALUES
 (1, 9, 'ENTRADA', 20.000, 18000.00, 'Compra orden #1', 'ORDEN_COMPRA', 1, 1),
 (4, 9, 'ENTRADA', 5.000, 4000.00, 'Compra orden #3', 'ORDEN_COMPRA', 3, 4),
@@ -328,8 +316,7 @@ INSERT INTO inventario_mov (id_ingrediente, id_usuario, tipo_movimiento, cantida
 (3, 9, 'ENTRADA', 10.000, 22000.00, 'Compra orden #2 (parcial)', 'ORDEN_COMPRA', 2, 3),
 (10, 9, 'ENTRADA', 20.000, 1800.00, 'Compra orden #9', 'ORDEN_COMPRA', 9, 10);
 
--- 23. IA
--- Carga predicciones de demanda, stock, ingresos, tendencias y desperdicio.
+-- 24. IA
 INSERT INTO IA (Tipo_prediccion, Resultado_generado, Recomendaciones_generales, Nivel_confianza, periodo_inicio, periodo_fin) VALUES
 ('DEMANDA_SEMANAL', 'Alta demanda proyectada para hamburguesas y pizzas', 'Aumentar stock de carne y mozzarella', 0.872, '2025-01-20', '2025-01-26'),
 ('DEMANDA_MENSUAL', 'Incremento esperado del 15% en ventas de bebidas', 'Revisar stock de limones y jugos', 0.831, '2025-02-01', '2025-02-28'),
@@ -342,8 +329,7 @@ INSERT INTO IA (Tipo_prediccion, Resultado_generado, Recomendaciones_generales, 
 ('TENDENCIA_CLIENTES', 'Fidelización alta en clientes 1, 5 y 8', 'Ofrecer descuento especial a clientes frecuentes', 0.720, '2025-01-01', '2025-01-15'),
 ('DESPERDICIO', 'Merma elevada en lechuga y tomate', 'Ajustar porciones o renegociar cantidad con proveedor', 0.810, '2025-01-01', '2025-01-15');
 
--- 24. IA_INGREDIENTE
--- Asocia predicciones de IA con ingredientes y marca los que requieren atención.
+-- 25. IA_INGREDIENTE
 INSERT INTO IA_INGREDIENTE (id_IA, id_ingrediente, Demanda_predicha_ingrediente, Nivel_confianza, Ingrediente_critico) VALUES
 (1, 1, 45.50, 0.870, 0),
 (1, 3, 22.00, 0.860, 0),
@@ -356,8 +342,7 @@ INSERT INTO IA_INGREDIENTE (id_IA, id_ingrediente, Demanda_predicha_ingrediente,
 (10, 4, 7.50, 0.812, 1),
 (8, 1, 38.00, 0.850, 0);
 
--- 25. IA_PRODUCTO
--- Asocia predicciones de IA con productos e incluye demanda y recomendaciones.
+-- 26. IA_PRODUCTO
 INSERT INTO IA_PRODUCTO (id_IA, id_producto, demanda_predicho_producto, nivel_confianza_producto, Producto_critico, Recomendacion_producto) VALUES
 (1, 1, 120.00, 0.875, 0, 'Mantener stock suficiente de ingredientes para hamburguesa'),
 (1, 2, 85.00, 0.860, 0, 'Verificar harina y mozzarella disponibles'),
@@ -383,5 +368,9 @@ WHERE id_rol = 6
        FROM rol
        WHERE nombre = 'CLIENTE'
    );
+
+SELECT COUNT(*) AS solicitudes_pendientes
+FROM solicitud_registro
+WHERE estado = 'PENDIENTE';
 
 SET FOREIGN_KEY_CHECKS = 1;

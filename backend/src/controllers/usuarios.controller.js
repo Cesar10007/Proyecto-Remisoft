@@ -3,14 +3,23 @@ import prisma from '../config/prisma.js';
 
 const ROL_SUPERADMIN = 1;
 const ROL_GERENTE = 2;
+
 const ROLES_OPERATIVOS = [3, 4, 5];
+
 const ROLES_GESTIONABLES_POR_GERENTE = [
   ROL_GERENTE,
   ...ROLES_OPERATIVOS,
 ];
 
+const ESTADOS_USUARIO = {
+  ACTIVO: 'ACTIVO',
+  INACTIVO: 'INACTIVO',
+  ELIMINADO: 'ELIMINADO',
+};
+
 function parseId(id) {
   const parsed = Number(id);
+
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
@@ -131,18 +140,23 @@ function validatePassword(value, required = false) {
 }
 
 function parseActivo(value, defaultValue = true) {
-  if (isEmpty(value)) return defaultValue;
+  if (isEmpty(value)) {
+    return defaultValue;
+  }
 
-  if (typeof value === 'boolean') return value;
+  if (typeof value === 'boolean') {
+    return value;
+  }
 
-  if (value === 1 || value === '1' || value === 'true') return true;
-  if (value === 0 || value === '0' || value === 'false') return false;
+  if (value === 1 || value === '1' || value === 'true') {
+    return true;
+  }
+
+  if (value === 0 || value === '0' || value === 'false') {
+    return false;
+  }
 
   return defaultValue;
-}
-
-function esRolOperativo(idRol) {
-  return ROLES_OPERATIVOS.includes(idRol);
 }
 
 function esRolGestionablePorGerente(idRol) {
@@ -154,12 +168,18 @@ function formatUsuario(usuario) {
     id_usuario: usuario.id_usuario,
     id_rol: usuario.id_rol,
     id_restaurante: usuario.id_restaurante ?? null,
+    restaurante: usuario.restaurante?.nombre ?? null,
     identificacion: usuario.identificacion ?? '',
     nombre: usuario.nombre ?? '',
     apellido: usuario.apellido ?? '',
     email: usuario.email ?? '',
     telefono: usuario.telefono ?? '',
     activo: usuario.activo ? 1 : 0,
+    estado: usuario.estado ?? (
+      usuario.activo
+        ? ESTADOS_USUARIO.ACTIVO
+        : ESTADOS_USUARIO.INACTIVO
+    ),
     fecha_registro: usuario.fecha_registro,
     rol: usuario.rol?.nombre ?? null,
   };
@@ -167,7 +187,10 @@ function formatUsuario(usuario) {
 
 function validarUsuario(
   body,
-  { requirePassword = false, requireRestaurante = false } = {},
+  {
+    requirePassword = false,
+    requireRestaurante = false,
+  } = {},
 ) {
   const validations = [
     validateIdRol(body.id_rol),
@@ -186,6 +209,8 @@ function validarUsuario(
     return { error };
   }
 
+  const activo = parseActivo(body.activo, true);
+
   return {
     data: {
       id_rol: Number(body.id_rol),
@@ -195,9 +220,12 @@ function validarUsuario(
       identificacion: cleanString(body.identificacion) || null,
       nombre: cleanString(body.nombre),
       apellido: cleanString(body.apellido) || null,
-      email: cleanString(body.email),
+      email: cleanString(body.email).toLowerCase(),
       telefono: cleanString(body.telefono) || null,
-      activo: parseActivo(body.activo, true),
+      activo,
+      estado: activo
+        ? ESTADOS_USUARIO.ACTIVO
+        : ESTADOS_USUARIO.INACTIVO,
     },
     contrasena: body.contrasena,
   };
@@ -209,8 +237,12 @@ async function restauranteExiste(idRestaurante) {
   }
 
   const restaurante = await prisma.restaurante.findUnique({
-    where: { id_restaurante: idRestaurante },
-    select: { id_restaurante: true },
+    where: {
+      id_restaurante: idRestaurante,
+    },
+    select: {
+      id_restaurante: true,
+    },
   });
 
   return Boolean(restaurante);
@@ -220,15 +252,21 @@ function puedeVerUsuario(actor, usuario) {
   const rolActor = actor?.rol?.toUpperCase();
 
   if (rolActor === 'SUPERADMIN') {
-    return usuario.id_rol === ROL_GERENTE;
+    return (
+      usuario.id_rol === ROL_GERENTE &&
+      usuario.estado !== ESTADOS_USUARIO.ELIMINADO
+    );
   }
 
   if (rolActor === 'GERENTE') {
     return (
-      usuario.id_usuario === actor.id_usuario ||
+      usuario.estado !== ESTADOS_USUARIO.ELIMINADO &&
       (
-        usuario.id_restaurante === actor.id_restaurante &&
-        esRolGestionablePorGerente(usuario.id_rol)
+        usuario.id_usuario === actor.id_usuario ||
+        (
+          usuario.id_restaurante === actor.id_restaurante &&
+          esRolGestionablePorGerente(usuario.id_rol)
+        )
       )
     );
   }
@@ -240,11 +278,15 @@ function puedeGestionarUsuario(actor, usuario) {
   const rolActor = actor?.rol?.toUpperCase();
 
   if (rolActor === 'SUPERADMIN') {
-    return usuario.id_rol === ROL_GERENTE;
+    return (
+      usuario.id_rol === ROL_GERENTE &&
+      usuario.estado !== ESTADOS_USUARIO.ELIMINADO
+    );
   }
 
   if (rolActor === 'GERENTE') {
     return (
+      usuario.estado !== ESTADOS_USUARIO.ELIMINADO &&
       usuario.id_restaurante === actor.id_restaurante &&
       esRolGestionablePorGerente(usuario.id_rol)
     );
@@ -253,17 +295,23 @@ function puedeGestionarUsuario(actor, usuario) {
   return false;
 }
 
-// GET /api/usuarios
 export async function index(req, res, next) {
   try {
     const rolUsuario = req.user?.rol?.toUpperCase();
     const idRestaurante = req.user?.id_restaurante;
     const idUsuario = req.user?.id_usuario;
 
-    let where = {};
+    let where = {
+      estado: {
+        not: ESTADOS_USUARIO.ELIMINADO,
+      },
+    };
 
     if (rolUsuario === 'SUPERADMIN') {
-      where = { id_rol: ROL_GERENTE };
+      where = {
+        ...where,
+        id_rol: ROL_GERENTE,
+      };
     } else if (rolUsuario === 'GERENTE') {
       if (!idRestaurante) {
         return res.status(403).json({
@@ -272,10 +320,17 @@ export async function index(req, res, next) {
       }
 
       where = {
+        ...where,
         id_restaurante: idRestaurante,
         OR: [
-          { id_rol: { in: ROLES_GESTIONABLES_POR_GERENTE } },
-          { id_usuario: idUsuario },
+          {
+            id_rol: {
+              in: ROLES_GESTIONABLES_POR_GERENTE,
+            },
+          },
+          {
+            id_usuario: idUsuario,
+          },
         ],
       };
     } else {
@@ -286,17 +341,21 @@ export async function index(req, res, next) {
 
     const usuarios = await prisma.usuario.findMany({
       where,
-      include: { rol: true },
-      orderBy: { id_usuario: 'asc' },
+      include: {
+        rol: true,
+        restaurante: true,
+      },
+      orderBy: {
+        id_usuario: 'asc',
+      },
     });
 
-    res.json(usuarios.map(formatUsuario));
+    return res.json(usuarios.map(formatUsuario));
   } catch (err) {
     next(err);
   }
 }
 
-// GET /api/usuarios/:id
 export async function show(req, res, next) {
   try {
     const id = parseId(req.params.id);
@@ -308,87 +367,127 @@ export async function show(req, res, next) {
     }
 
     const usuario = await prisma.usuario.findUnique({
-      where: { id_usuario: id },
-      include: { rol: true },
+      where: {
+        id_usuario: id,
+      },
+      include: {
+        rol: true,
+        restaurante: true,
+      },
     });
 
     if (!usuario || !puedeVerUsuario(req.user, usuario)) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
     }
 
-    res.json(formatUsuario(usuario));
+    return res.json(formatUsuario(usuario));
   } catch (err) {
     next(err);
   }
 }
 
-// POST /api/usuarios
 export async function crear(req, res, next) {
   try {
     const rolUsuario = req.user?.rol?.toUpperCase();
-    const idRestauranteActor = req.user?.id_restaurante;
 
-    const { error, data, contrasena } = validarUsuario(req.body, {
-      requirePassword: true,
-      requireRestaurante: rolUsuario === 'SUPERADMIN',
-    });
-
-    if (error) {
-      return res.status(422).json({ message: error });
-    }
-
-    if (rolUsuario === 'SUPERADMIN') {
-      if (data.id_rol !== ROL_GERENTE) {
-        return res.status(403).json({
-          message: 'Solo puedes crear usuarios con rol GERENTE.',
-        });
-      }
-    } else if (rolUsuario === 'GERENTE') {
-      if (!idRestauranteActor) {
-        return res.status(403).json({
-          message: 'Tu usuario no tiene un restaurante asignado.',
-        });
-      }
-
-      if (!esRolGestionablePorGerente(data.id_rol)) {
-        return res.status(403).json({
-          message: 'Solo puedes crear usuarios con roles permitidos para tu restaurante.',
-        });
-      }
-
-      data.id_restaurante = idRestauranteActor;
-    } else {
+    if (rolUsuario !== 'SUPERADMIN') {
       return res.status(403).json({
-        message: 'No tienes permisos para crear usuarios.',
+        message: 'Solo el SUPERADMIN puede crear gerentes.',
       });
     }
 
-    if (!(await restauranteExiste(data.id_restaurante))) {
+    const nombreEstablecimiento = cleanString(
+      req.body?.nombre_establecimiento,
+    );
+
+    const errorNombreEstablecimiento = validateString(
+      nombreEstablecimiento,
+      'nombre_establecimiento',
+      100,
+      true,
+    );
+
+    if (errorNombreEstablecimiento) {
       return res.status(422).json({
-        message: 'El restaurante indicado no existe.',
+        message: errorNombreEstablecimiento,
+      });
+    }
+
+    const {
+      error,
+      data,
+      contrasena,
+    } = validarUsuario(req.body, {
+      requirePassword: true,
+      requireRestaurante: false,
+    });
+
+    if (error) {
+      return res.status(422).json({
+        message: error,
+      });
+    }
+
+    if (data.id_rol !== ROL_GERENTE) {
+      return res.status(403).json({
+        message: 'Solo puedes crear usuarios con rol GERENTE.',
       });
     }
 
     const contrasena_hash = await bcrypt.hash(contrasena, 12);
 
-    await prisma.usuario.create({
-      data: {
-        ...data,
-        contrasena_hash,
-      },
+    const resultado = await prisma.$transaction(async (tx) => {
+      const restaurante = await tx.restaurante.create({
+        data: {
+          nombre: nombreEstablecimiento,
+          activo: true,
+        },
+        select: {
+          id_restaurante: true,
+          nombre: true,
+        },
+      });
+
+      const usuario = await tx.usuario.create({
+        data: {
+          ...data,
+          id_restaurante: restaurante.id_restaurante,
+          contrasena_hash,
+          estado: ESTADOS_USUARIO.ACTIVO,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          apellido: true,
+          email: true,
+          id_restaurante: true,
+          activo: true,
+          estado: true,
+        },
+      });
+
+      return {
+        restaurante,
+        usuario,
+      };
     });
 
-    res.status(201).json({ message: 'Usuario creado' });
+    return res.status(201).json({
+      message: 'Gerente y establecimiento creados correctamente.',
+      data: resultado,
+    });
   } catch (err) {
     if (err.code === 'P2002') {
       return res.status(409).json({
-        message: 'El email del usuario ya está registrado',
+        message: 'El email del usuario ya está registrado.',
       });
     }
 
     if (err.code === 'P2003') {
       return res.status(422).json({
-        message: 'El rol o restaurante indicado no existe',
+        message: 'No fue posible asociar el gerente al establecimiento.',
       });
     }
 
@@ -396,7 +495,6 @@ export async function crear(req, res, next) {
   }
 }
 
-// PUT /api/usuarios/:id
 export async function actualizar(req, res, next) {
   try {
     const id = parseId(req.params.id);
@@ -408,23 +506,36 @@ export async function actualizar(req, res, next) {
     }
 
     const usuarioObjetivo = await prisma.usuario.findUnique({
-      where: { id_usuario: id },
+      where: {
+        id_usuario: id,
+      },
     });
 
-    if (!usuarioObjetivo) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (
+      !usuarioObjetivo ||
+      usuarioObjetivo.estado === ESTADOS_USUARIO.ELIMINADO
+    ) {
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
     }
 
     const rolUsuario = req.user?.rol?.toUpperCase();
     const esPropio = usuarioObjetivo.id_usuario === req.user?.id_usuario;
 
-    const { error, data, contrasena } = validarUsuario(req.body, {
+    const {
+      error,
+      data,
+      contrasena,
+    } = validarUsuario(req.body, {
       requirePassword: false,
       requireRestaurante: rolUsuario === 'SUPERADMIN',
     });
 
     if (error) {
-      return res.status(422).json({ message: error });
+      return res.status(422).json({
+        message: error,
+      });
     }
 
     if (rolUsuario === 'SUPERADMIN') {
@@ -440,6 +551,8 @@ export async function actualizar(req, res, next) {
       if (esPropio) {
         data.id_rol = usuarioObjetivo.id_rol;
         data.id_restaurante = usuarioObjetivo.id_restaurante;
+        data.activo = usuarioObjetivo.activo;
+        data.estado = usuarioObjetivo.estado;
       } else {
         if (!puedeGestionarUsuario(req.user, usuarioObjetivo)) {
           return res.status(403).json({
@@ -449,7 +562,8 @@ export async function actualizar(req, res, next) {
 
         if (!esRolGestionablePorGerente(data.id_rol)) {
           return res.status(403).json({
-            message: 'Solo puedes asignar roles permitidos para tu restaurante.',
+            message:
+              'Solo puedes asignar roles permitidos para tu restaurante.',
           });
         }
 
@@ -467,18 +581,24 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    const updateData = { ...data };
+    const updateData = {
+      ...data,
+    };
 
     if (!isEmpty(contrasena)) {
       updateData.contrasena_hash = await bcrypt.hash(contrasena, 12);
     }
 
     await prisma.usuario.update({
-      where: { id_usuario: id },
+      where: {
+        id_usuario: id,
+      },
       data: updateData,
     });
 
-    res.json({ message: 'Usuario actualizado' });
+    return res.json({
+      message: 'Usuario actualizado',
+    });
   } catch (err) {
     if (err.code === 'P2002') {
       return res.status(409).json({
@@ -493,15 +613,15 @@ export async function actualizar(req, res, next) {
     }
 
     if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
     }
 
     next(err);
   }
 }
 
-// DELETE /api/usuarios/:id
-// No se elimina físicamente: alterna el estado activo/inactivo.
 export async function eliminar(req, res, next) {
   try {
     const id = parseId(req.params.id);
@@ -513,11 +633,18 @@ export async function eliminar(req, res, next) {
     }
 
     const usuario = await prisma.usuario.findUnique({
-      where: { id_usuario: id },
+      where: {
+        id_usuario: id,
+      },
     });
 
-    if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (
+      !usuario ||
+      usuario.estado === ESTADOS_USUARIO.ELIMINADO
+    ) {
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
     }
 
     const rolUsuario = req.user?.rol?.toUpperCase();
@@ -540,23 +667,99 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    const nuevoEstado = !usuario.activo;
+    if (req.user?.id_usuario === id) {
+      return res.status(409).json({
+        message: 'No puedes eliminar tu propio usuario autenticado',
+      });
+    }
 
-    if (req.user?.id_usuario === id && nuevoEstado === false) {
+    await prisma.usuario.update({
+      where: {
+        id_usuario: id,
+      },
+      data: {
+        activo: false,
+        estado: ESTADOS_USUARIO.ELIMINADO,
+      },
+    });
+
+    return res.json({
+      message: 'Usuario eliminado correctamente',
+    });
+  } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
+    }
+
+    next(err);
+  }
+}
+
+export async function cambiarEstado(req, res, next) {
+  try {
+    const id = parseId(req.params.id);
+
+    if (!id) {
+      return res.status(422).json({
+        message: 'El id del usuario debe ser un número entero válido',
+      });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: {
+        id_usuario: id,
+      },
+    });
+
+    if (
+      !usuario ||
+      usuario.estado === ESTADOS_USUARIO.ELIMINADO
+    ) {
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
+    }
+
+    if (!puedeGestionarUsuario(req.user, usuario)) {
+      return res.status(403).json({
+        message: 'No tienes permisos para modificar este usuario.',
+      });
+    }
+
+    if (req.user?.id_usuario === id && usuario.activo) {
       return res.status(409).json({
         message: 'No puedes desactivar tu propio usuario autenticado',
       });
     }
 
+    const activar = !usuario.activo;
+
     await prisma.usuario.update({
-      where: { id_usuario: id },
-      data: { activo: nuevoEstado },
+      where: {
+        id_usuario: id,
+      },
+      data: {
+        activo: activar,
+        estado: activar
+          ? ESTADOS_USUARIO.ACTIVO
+          : ESTADOS_USUARIO.INACTIVO,
+      },
     });
 
-    res.json({
-      message: nuevoEstado ? 'Usuario activado' : 'Usuario desactivado',
+    return res.json({
+      message: activar
+        ? 'Usuario activado'
+        : 'Usuario desactivado',
     });
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({
+        message: 'Usuario no encontrado',
+      });
+    }
+
     next(err);
   }
 }
