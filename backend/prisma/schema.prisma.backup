@@ -8,21 +8,14 @@ datasource db {
 }
 
 model restaurante {
-  id_restaurante   Int                @id @default(autoincrement())
-  nombre           String             @db.VarChar(100)
-  direccion        String?            @db.VarChar(200)
-  telefono         String?            @db.VarChar(20)
-  email            String?            @db.VarChar(100)
-  activo           Boolean            @default(true)
-  fecha_creacion   DateTime           @default(now())
-  usuario          usuario[]
-  caja             caja[]
-  turno_caja       turno_caja[]
-  pedido           pedido[]
-  inventario_mov   inventario_mov[]
-  orden_compra     orden_compra[]
-  proveedor        proveedor[]
-  lote_ingrediente lote_ingrediente[]
+  id_restaurante Int       @id @default(autoincrement())
+  nombre         String    @db.VarChar(100)
+  direccion      String?   @db.VarChar(200)
+  telefono       String?   @db.VarChar(20)
+  email          String?   @db.VarChar(100)
+  activo         Boolean   @default(true)
+  fecha_creacion DateTime  @default(now())
+  usuario        usuario[]
 }
 
 model Cliente {
@@ -99,9 +92,9 @@ model IA_INGREDIENTE {
   id_IA                        Int
   id_ingrediente               Int
   Demanda_predicha_ingrediente Decimal?    @db.Decimal(10, 2)
-  Nivel_confianza              Decimal?    @db.Decimal(4, 3)
+  Nivel_confianza              Decimal?    @db.Decimal(4,3)
   Ingrediente_critico          Boolean?    @default(false)
-  IA                           IA          @relation(fields: [id_IA], references: [id_IA], onUpdate: Restrict, map: "IA_INGREDIENTE_ibfk_1")
+  IA                           IA          @relation(fields: [id_IA], references: [id_IA], onUpdate: Restrict, map:"IA_INGREDIENTE_ibfk_1")
   Ingrediente                  Ingrediente @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "IA_INGREDIENTE_ibfk_2")
 
   @@index([id_IA], map: "id_IA")
@@ -139,17 +132,22 @@ model Ingrediente {
 }
 
 model Producto {
-  id_producto        Int                  @id @default(autoincrement())
-  Nombre             String?              @db.VarChar(50)
-  Descripcion        String?              @db.VarChar(500)
-  precio_venta       Decimal?             @db.Decimal(10, 2)
-  Categoria          String?              @db.VarChar(30)
-  Tiempo_preparacion DateTime?            @db.Time(0)
-  Estado             Int?                 @default(1)
-  id_categoria       Int?
+  id_producto  Int      @id @default(autoincrement())
+  Nombre       String?  @db.VarChar(50)
+  Descripcion  String?  @db.VarChar(500)
+  precio_venta Decimal? @db.Decimal(10, 2)
+
+  // Se conserva durante la migración para compatibilidad.
+  Categoria String? @db.VarChar(30)
+
+  // Nueva relación normalizada.
+  id_categoria Int?
+  categoria    categoria_productos? @relation(fields: [id_categoria], references: [id_categoria], onUpdate: Restrict, onDelete: Restrict, map: "Producto_ibfk_categoria")
+
+  Tiempo_preparacion DateTime?        @db.Time(0)
+  Estado             Int?             @default(1)
   Detalle_pedido     Detalle_pedido[]
   IA_PRODUCTO        IA_PRODUCTO[]
-  categoria          categoria_productos? @relation(fields: [id_categoria], references: [id_categoria], onDelete: Restrict, onUpdate: Restrict, map: "Producto_ibfk_categoria")
   Receta             Receta[]
 
   @@index([id_categoria], map: "id_categoria")
@@ -195,14 +193,10 @@ model cache_locks {
 
 model caja {
   id_caja        Int          @id @default(autoincrement())
-  id_restaurante Int?
   nombre         String?      @db.VarChar(40)
   estado         String?      @default("ACTIVA") @db.VarChar(20)
   fecha_registro DateTime?    @default(now()) @db.DateTime(0)
   turno_caja     turno_caja[]
-  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
-
-  @@index([id_restaurante], map: "idx_caja_restaurante")
 }
 
 model detalle_orden_compra {
@@ -256,7 +250,7 @@ model flujo_caja {
   referencia String?    @db.VarChar(80)
   id_pago    Int?
   turno_caja turno_caja @relation(fields: [id_turno], references: [id_turno], onUpdate: Restrict, map: "flujo_caja_ibfk_1")
-  pago       pago?      @relation(fields: [id_pago], references: [id_pago], onDelete: Restrict, onUpdate: Restrict, map: "flujo_caja_ibfk_2")
+  pago       pago?      @relation(fields: [id_pago], references: [id_pago], onDelete: Restrict, onUpdate: Restrict,map: "flujo_caja_ibfk_2")
 
   @@index([id_pago], map: "id_pago")
   @@index([id_turno], map: "id_turno")
@@ -264,7 +258,6 @@ model flujo_caja {
 
 model inventario_mov {
   id_movimiento    Int               @id @default(autoincrement())
-  id_restaurante   Int?
   id_ingrediente   Int
   id_usuario       Int?
   fecha_hora       DateTime?         @default(now()) @db.DateTime(0)
@@ -275,12 +268,10 @@ model inventario_mov {
   origen_tipo      String?           @db.VarChar(30)
   origen_id        Int?
   id_lote          Int?
-  restaurante      restaurante?      @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   Ingrediente      Ingrediente       @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "inventario_mov_ibfk_1")
   usuario          usuario?          @relation(fields: [id_usuario], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_2")
   lote_ingrediente lote_ingrediente? @relation(fields: [id_lote], references: [id_lote], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_3")
 
-  @@index([id_restaurante], map: "idx_inventario_mov_restaurante")
   @@index([id_ingrediente], map: "id_ingrediente")
   @@index([id_lote], map: "id_lote")
   @@index([id_usuario], map: "id_usuario")
@@ -313,7 +304,6 @@ model jobs {
 
 model lote_ingrediente {
   id_lote           Int              @id @default(autoincrement())
-  id_restaurante    Int?
   id_ingrediente    Int
   numero_lote       String?          @unique(map: "numero_lote") @db.VarChar(40)
   fecha_ingreso     DateTime?        @db.Date
@@ -323,11 +313,9 @@ model lote_ingrediente {
   costo_promedio    Decimal?         @db.Decimal(10, 2)
   observaciones     String?          @db.VarChar(500)
   fecha_registro    DateTime?        @default(now()) @db.DateTime(0)
-  restaurante       restaurante?     @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   inventario_mov    inventario_mov[]
   Ingrediente       Ingrediente      @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "lote_ingrediente_ibfk_1")
 
-  @@index([id_restaurante], map: "idx_lote_ingrediente_restaurante")
   @@index([id_ingrediente], map: "id_ingrediente")
 }
 
@@ -339,7 +327,6 @@ model migrations {
 
 model orden_compra {
   id_orden_compra        Int                    @id @default(autoincrement())
-  id_restaurante         Int?
   id_proveedor           Int
   id_usuario             Int
   fecha_orden            DateTime?              @default(now()) @db.DateTime(0)
@@ -347,12 +334,10 @@ model orden_compra {
   fecha_entrega_real     DateTime?              @db.Date
   estado                 String?                @default("PENDIENTE") @db.VarChar(30)
   observaciones          String?                @db.VarChar(500)
-  restaurante            restaurante?           @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   detalle_orden_compra   detalle_orden_compra[]
   proveedor              proveedor              @relation(fields: [id_proveedor], references: [id_proveedor], onUpdate: Restrict, map: "orden_compra_ibfk_1")
-  usuario                usuario                @relation(fields: [id_usuario], references: [id_usuario], onUpdate: Restrict, map: "orden_compra_ibfk_2")
+  usuario                usuario                @relation(fields: [id_usuario], references: [id_usuario], onUpdate:Restrict, map: "orden_compra_ibfk_2")
 
-  @@index([id_restaurante], map: "idx_orden_compra_restaurante")
   @@index([id_proveedor], map: "id_proveedor")
   @@index([id_usuario], map: "id_usuario")
 }
@@ -368,7 +353,7 @@ model pago {
   estado            String?      @default("APROBADO") @db.VarChar(20)
   id_turno          Int?
   flujo_caja        flujo_caja[]
-  Factura           Factura      @relation(fields: [id_factura], references: [id_factura], onUpdate: Restrict, map: "pago_ibfk_1")
+  Factura           Factura      @relation(fields: [id_factura], references: [id_factura], onUpdate: Restrict, map:"pago_ibfk_1")
   usuario           usuario      @relation(fields: [id_usuario_cajero], references: [id_usuario], onUpdate: Restrict, map: "pago_ibfk_2")
   turno_caja        turno_caja?  @relation(fields: [id_turno], references: [id_turno], onDelete: Restrict, onUpdate: Restrict, map: "pago_ibfk_3")
 
@@ -385,7 +370,6 @@ model password_reset_tokens {
 
 model pedido {
   id_pedido      Int              @id @default(autoincrement())
-  id_restaurante Int?
   id_cliente     Int?
   id_mesero      Int?
   Fecha_hora     DateTime?        @default(now()) @db.DateTime(0)
@@ -393,14 +377,12 @@ model pedido {
   Tipo_pedido    String?          @db.VarChar(20)
   Mesa_num       Int?
   notas          String?          @db.VarChar(500)
-  restaurante    restaurante?     @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   Detalle_pedido Detalle_pedido[]
   Factura        Factura?
   domicilio      domicilio?
   Cliente        Cliente?         @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Restrict, map: "pedido_ibfk_1")
   usuario        usuario?         @relation(fields: [id_mesero], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "pedido_ibfk_2")
 
-  @@index([id_restaurante], map: "idx_pedido_restaurante")
   @@index([id_cliente], map: "id_cliente")
   @@index([id_mesero], map: "id_mesero")
 }
@@ -423,7 +405,6 @@ model personal_access_tokens {
 
 model proveedor {
   id_proveedor          Int                     @id @default(autoincrement())
-  id_restaurante        Int?
   nombre                String?                 @db.VarChar(100)
   nombre_contacto       String?                 @db.VarChar(100)
   telefono              String?                 @db.VarChar(20)
@@ -433,11 +414,8 @@ model proveedor {
   tipo_proveedor        String?                 @db.VarChar(50)
   estado                String?                 @default("ACTIVO") @db.VarChar(20)
   fecha_registro        DateTime?               @default(now()) @db.DateTime(0)
-  restaurante           restaurante?            @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   orden_compra          orden_compra[]
   proveedor_ingrediente proveedor_ingrediente[]
-
-  @@index([id_restaurante], map: "idx_proveedor_restaurante")
 }
 
 model proveedor_ingrediente {
@@ -456,11 +434,10 @@ model proveedor_ingrediente {
 }
 
 model rol {
-  id_rol               Int                  @id @default(autoincrement())
-  nombre               String?              @unique(map: "nombre") @db.VarChar(30)
-  descripcion          String?              @db.VarChar(200)
-  solicitudes_registro solicitud_registro[]
-  usuario              usuario[]
+  id_rol      Int       @id @default(autoincrement())
+  nombre      String?   @unique(map: "nombre") @db.VarChar(30)
+  descripcion String?   @db.VarChar(200)
+  usuario     usuario[]
 }
 
 model sessions {
@@ -477,7 +454,6 @@ model sessions {
 
 model turno_caja {
   id_turno          Int          @id @default(autoincrement())
-  id_restaurante    Int?
   id_caja           Int
   id_usuario_cajero Int
   fecha_apertura    DateTime?    @db.DateTime(0)
@@ -488,13 +464,11 @@ model turno_caja {
   diferencia        Decimal?     @db.Decimal(10, 2)
   notas             String?      @db.VarChar(500)
   estado            String?      @default("ABIERTA") @db.VarChar(20)
-  restaurante       restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   flujo_caja        flujo_caja[]
   pago              pago[]
   caja              caja         @relation(fields: [id_caja], references: [id_caja], onUpdate: Restrict, map: "turno_caja_ibfk_1")
   usuario           usuario      @relation(fields: [id_usuario_cajero], references: [id_usuario], onUpdate: Restrict, map: "turno_caja_ibfk_2")
 
-  @@index([id_restaurante], map: "idx_turno_caja_restaurante")
   @@index([id_caja], map: "id_caja")
   @@index([id_usuario_cajero], map: "id_usuario_cajero")
 }
@@ -511,55 +485,26 @@ model users {
 }
 
 model usuario {
-  id_usuario      Int     @id @default(autoincrement())
+  id_usuario      Int              @id @default(autoincrement())
   id_rol          Int
-  identificacion  String? @db.VarChar(20)
-  nombre          String? @db.VarChar(60)
-  apellido        String? @db.VarChar(60)
-  email           String? @unique(map: "email") @db.VarChar(100)
-  telefono        String? @db.VarChar(20)
-  contrasena_hash String? @db.VarChar(255)
-
-  activo Boolean? @default(true)
-  estado String?  @default("ACTIVO") @db.VarChar(20)
-
-  fecha_registro DateTime? @default(now()) @db.DateTime(0)
-  id_restaurante Int?
-
-  domicilio             domicilio[]
-  inventario_mov        inventario_mov[]
-  orden_compra          orden_compra[]
-  pago                  pago[]
-  pedido                pedido[]
-  solicitudes_revisadas solicitud_registro[] @relation("solicitudes_revisadas")
-  turno_caja            turno_caja[]
-
-  rol         rol          @relation(fields: [id_rol], references: [id_rol], onUpdate: Restrict, map: "usuario_ibfk_1")
-  restaurante restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict, map: "usuario_ibfk_restaurante")
+  id_restaurante  Int?
+  identificacion  String?          @db.VarChar(20)
+  nombre          String?          @db.VarChar(60)
+  apellido        String?          @db.VarChar(60)
+  email           String?          @unique(map: "email") @db.VarChar(100)
+  telefono        String?          @db.VarChar(20)
+  contrasena_hash String?          @db.VarChar(255)
+  activo          Boolean?         @default(true)
+  fecha_registro  DateTime?        @default(now()) @db.DateTime(0)
+  domicilio       domicilio[]
+  inventario_mov  inventario_mov[]
+  orden_compra    orden_compra[]
+  pago            pago[]
+  pedido          pedido[]
+  turno_caja      turno_caja[]
+  rol             rol              @relation(fields: [id_rol], references: [id_rol], onUpdate: Restrict, map: "usuario_ibfk_1")
+  restaurante     restaurante?     @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict, map: "usuario_ibfk_restaurante")
 
   @@index([id_rol], map: "id_rol")
   @@index([id_restaurante], map: "id_restaurante")
-}
-
-model solicitud_registro {
-  id_solicitud      Int       @id @default(autoincrement())
-  nombre            String    @db.VarChar(60)
-  apellido          String    @db.VarChar(60)
-  email             String    @unique(map: "solicitud_registro_email_unique") @db.VarChar(100)
-  telefono          String?   @db.VarChar(20)
-  contrasena_hash   String    @db.VarChar(255)
-  id_rol_solicitado Int
-  id_restaurante    Int?
-  estado            String    @default("PENDIENTE") @db.VarChar(20)
-  motivo_rechazo    String?   @db.VarChar(500)
-  fecha_solicitud   DateTime  @default(now()) @db.DateTime(0)
-  fecha_revision    DateTime? @db.DateTime(0)
-  revisado_por      Int?
-  revisor           usuario?  @relation("solicitudes_revisadas", fields: [revisado_por], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "solicitud_registro_ibfk_revisor")
-  rol               rol       @relation(fields: [id_rol_solicitado], references: [id_rol], onUpdate: Restrict, map: "solicitud_registro_ibfk_rol")
-
-  @@index([id_rol_solicitado], map: "id_rol_solicitado")
-  @@index([id_restaurante], map: "id_restaurante")
-  @@index([revisado_por], map: "revisado_por")
-  @@index([estado], map: "estado")
 }
