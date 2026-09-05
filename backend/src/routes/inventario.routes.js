@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { requireRole } from '../middleware/requireRole.js';
 import {
   index,
   show,
@@ -6,6 +7,8 @@ import {
 } from '../controllers/inventario.controller.js';
 
 const router = Router();
+
+router.use(requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO'));
 
 // GET /api/inventario
 router.get('/', index);
