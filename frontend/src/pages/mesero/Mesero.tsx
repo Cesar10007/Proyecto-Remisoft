@@ -130,16 +130,6 @@ function Mesero() {
           </button>
 
           <button
-            title={sidebarColapsado ? 'Configuraciones' : undefined}
-            className={`flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)] ${
-              sidebarColapsado ? 'justify-center px-0' : ''
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            {!sidebarColapsado && 'Configuraciones'}
-          </button>
-
-          <button
             onClick={() => {
               logout()
               navigate('/')
