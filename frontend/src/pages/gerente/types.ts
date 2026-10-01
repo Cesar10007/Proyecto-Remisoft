@@ -1,11 +1,12 @@
 export interface Producto {
   id_producto: number
-  Nombre: string
-  Descripcion: string
-  precio_venta: string
-  Categoria: string
-  Tiempo_preparacion: string
-  Estado: number
+  nombre: string
+  descripcion: string
+  precio_venta: number
+  id_categoria: number
+  categoria?: string
+  tiempo_preparacion?: string
+  estado: number
 }
 
 export interface Ingrediente {
@@ -35,13 +36,6 @@ export interface Caja {
   estado: string
 }
 
-export interface Personal {
-  id_usuario: number
-  id_rol: number
-  nombre: string
-  apellido: string
-  email: string
-  rol: string | null
-  estado: string
-  activo: number
-}
+export type CrearIngrediente = Omit<Ingrediente, 'id_ingrediente'>
+export type CrearProveedor = Omit<Proveedor, 'id_proveedor'>
+export type CrearCaja = Omit<Caja, 'id_caja'>
