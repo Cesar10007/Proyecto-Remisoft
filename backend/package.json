@@ -27,7 +27,7 @@
     "express-rate-limit": "8.6.2",
     "helmet": "8.3.0",
     "jsonwebtoken": "9.0.3",
-    "nodemailer": "9.0.5"
+    "nodemailer": "9.1.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
@@ -39,6 +39,14 @@
     "onlyBuiltDependencies": [
       "@prisma/engines",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "deepmerge-ts": ">=8.0.0",
+      "mariadb": ">=3.4.6",
+      "mysql2": ">=3.22.0",
+      "fast-uri": ">=3.1.7",
+      "js-yaml": ">=4.3.2",
+      "brace-expansion": ">=1.1.20"
+    }
   }
 }
