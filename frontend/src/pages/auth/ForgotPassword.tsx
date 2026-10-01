@@ -16,11 +16,8 @@ export default function ForgotPassword() {
       const { data } = await api.post('/auth/forgot-password', { email })
       setMensaje(data?.message ?? 'Si el correo existe, recibirás instrucciones.')
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 422) {
-        setMensaje('Ingresa un correo válido.')
-      } else {
-        setMensaje('No fue posible procesar la solicitud.')
-      }
+      if (axios.isAxiosError(err) && err.response?.status === 422) setMensaje('Ingresa un correo válido.')
+      else setMensaje('No fue posible procesar la solicitud.')
     } finally {
       setCargando(false)
     }

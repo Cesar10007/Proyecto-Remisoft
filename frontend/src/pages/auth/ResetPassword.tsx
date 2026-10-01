@@ -16,18 +16,12 @@ export default function ResetPassword() {
       setMensaje('Contraseña actualizada.')
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 400) {
-          setMensaje('El enlace de recuperación no es válido.')
-        } else if (err.response?.status === 422) {
+        if (err.response?.status === 400) setMensaje('El enlace de recuperación no es válido.')
+        else if (err.response?.status === 422) {
           const errores = err.response.data?.errors as Record<string, string[]> | undefined
-          const primero = errores ? Object.values(errores)[0]?.[0] : undefined
-          setMensaje(primero ?? 'Revisa los datos enviados.')
-        } else {
-          setMensaje('No fue posible restablecer la contraseña.')
-        }
-      } else {
-        setMensaje('No fue posible restablecer la contraseña.')
-      }
+          setMensaje(errores ? Object.values(errores)[0]?.[0] ?? 'Revisa los datos enviados.' : 'Revisa los datos enviados.')
+        } else setMensaje('No fue posible restablecer la contraseña.')
+      } else setMensaje('No fue posible restablecer la contraseña.')
     } finally {
       setCargando(false)
     }
