@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import axios from 'axios'
-import { api } from '../../api/axios'
+import api from '../../api/axios'
 import './Auth.css'
 
 export default function ResetPassword() {
