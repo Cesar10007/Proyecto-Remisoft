@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
+import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
@@ -50,11 +51,6 @@ const METODOS: { id: MetodoPago; label: string; icon: string }[] = [
 
 const formatoCOP = (valor: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(valor)
-
-function minutosDesde(fecha: string) {
-  const diff = Date.now() - new Date(fecha).getTime()
-  return Math.max(0, Math.floor(diff / 60000))
-}
 
 function mensajeError(err: unknown, fallback: string) {
   const respuesta = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -191,7 +187,7 @@ export default function Cajero() {
             >
               <div className="cajero__cuenta-top">
                 <strong>{c.mesa ? `Mesa ${c.mesa}` : c.tipo_pedido || 'Pedido'}</strong>
-                <span className="cajero__tiempo">{minutosDesde(c.fecha_hora)} min</span>
+                <span className="cajero__tiempo">{tiempoTranscurrido(c.fecha_hora)}</span>
               </div>
               <div className="cajero__cuenta-sub">
                 Pedido #{c.id_pedido} · {c.items.length} ítem{c.items.length === 1 ? '' : 's'}

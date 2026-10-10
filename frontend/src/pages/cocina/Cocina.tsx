@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
+import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
 
 type EstadoItem = 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO'
@@ -36,11 +37,6 @@ const COLUMNAS: { estado: EstadoItem; titulo: string; accion: string | null; sig
 ]
 
 const INTERVALO_ACTUALIZACION_MS = 8000
-
-function minutosDesde(fecha: string) {
-  const diff = Date.now() - new Date(fecha).getTime()
-  return Math.max(0, Math.floor(diff / 60000))
-}
 
 function mensajeError(err: unknown, fallback: string) {
   const respuesta = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -143,7 +139,7 @@ export default function Cocina() {
                   >
                     <div className="cocina__tarjeta-top">
                       <strong>{comanda.mesa ? `Mesa ${comanda.mesa}` : comanda.tipo_pedido || 'Pedido'}</strong>
-                      <span className="cocina__tiempo">{minutosDesde(comanda.fecha_hora)} min</span>
+                      <span className="cocina__tiempo">{tiempoTranscurrido(comanda.fecha_hora)}</span>
                     </div>
                     <div className="cocina__item">
                       <span className="cocina__cantidad">{item.cantidad}×</span> {item.nombre}
