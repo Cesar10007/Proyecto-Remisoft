@@ -16,6 +16,7 @@ import Gerente from './pages/gerente/Gerente'
 import Mesero from './pages/mesero/Mesero'
 import Repartidor from './pages/repartidor/Repartidor'
 import Cajero from './pages/cajero/Cajero'
+import Cocina from './pages/cocina/Cocina'
 
 function App() {
   const [modal, setModal] = useState<string | null>(null)
@@ -50,6 +51,15 @@ function App() {
           element={
             <PrivateRoute rolesPermitidos={['CAJERO', 'GERENTE', 'SUPERADMIN']}>
               <Cajero />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/cocina"
+          element={
+            <PrivateRoute rolesPermitidos={['MESERO', 'GERENTE', 'SUPERADMIN']}>
+              <Cocina />
             </PrivateRoute>
           }
         />
