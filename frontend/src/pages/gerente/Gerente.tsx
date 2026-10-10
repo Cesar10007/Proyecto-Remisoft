@@ -14,7 +14,7 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, pedidosActivosMock, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, transacciones, turnosMock } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
@@ -29,6 +29,27 @@ interface ResumenDashboard {
   ingresosHoy: number
   pedidosActivos: number
   tendencia: { dia: string; alto: number }[]
+}
+
+interface PedidoEnCurso {
+  id_pedido: number
+  Mesa_num: number | null
+  Tipo_pedido: string
+  estado: string
+  Fecha_hora: string
+  nombre_mesero: string | null
+}
+
+const etiquetaEstadoPedido: Record<string, string> = {
+  ABIERTO: 'Abierto',
+  EN_PREPARACION: 'Preparando',
+  EN_PROCESO: 'Preparando',
+  LISTO: 'Listo',
+}
+
+function tiempoDesde(fecha: string): string {
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))
+  return minutos < 60 ? `${minutos} min` : `${Math.floor(minutos / 60)} h ${minutos % 60} min`
 }
 
 const productoVacio: Omit<Producto, 'id_producto'> = {
@@ -144,6 +165,20 @@ function Gerente() {
   ]
 
   const tendenciaSemanal = resumenDashboard?.tendencia ?? []
+
+  const [pedidosEnCurso, setPedidosEnCurso] = useState<PedidoEnCurso[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Pedidos') return
+    api.get('/pedidos')
+      .then(({ data }: { data: PedidoEnCurso[] }) =>
+        setPedidosEnCurso(data.filter(p => p.estado !== 'CERRADO' && p.estado !== 'CANCELADO')))
+      .catch(console.error)
+  }, [seccionActiva])
+
+  const etiquetaDemo = (
+    <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
+  )
 
   const cargarProductos = () => {
     const endpoint = fuenteProductos === 'vista' ? '/productos/vista' : '/productos/sp'
@@ -432,7 +467,7 @@ function Gerente() {
             <section className="grid grid-cols-[1fr_360px] gap-4">
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
+                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>{etiquetaDemo}
                   <div className="flex gap-3">
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
@@ -462,7 +497,7 @@ function Gerente() {
               </div>
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>
+                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>{etiquetaDemo}
                   <button className="border-none bg-transparent text-[0.75rem] font-semibold text-[var(--rojo)]">Ver todo</button>
                 </div>
                 <div className="flex flex-col gap-4">
@@ -502,33 +537,46 @@ function Gerente() {
         {seccionActiva === 'Flujo de Caja' && <CajasSection cajas={cajas} onCreate={abrirCrearCaja} onEdit={abrirEditarCaja} onToggle={toggleCaja} />}
         {/* FINANZAS — vista con datos de ejemplo */}
         {seccionActiva === 'Finanzas' && (
-          <FinanzasSection stats={finanzasStats} transacciones={transacciones} />
+          <>
+            <div className="mb-4 flex justify-end">{etiquetaDemo}</div>
+            <FinanzasSection stats={finanzasStats} transacciones={transacciones} />
+          </>
         )}
         {/* PEDIDOS — vista con datos de ejemplo */}
+        {/* PEDIDOS — pedidos en curso desde la base */}
         {seccionActiva === 'Pedidos' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Pedidos activos</h3>
             <div className="flex flex-col gap-3">
-              {pedidosActivosMock.map(p => (
-                <div key={p.id} className="flex items-center justify-between rounded-xl border border-[var(--borde)] bg-[#f9f5f0] px-4 py-3">
-                  <div className="flex items-center gap-4">
-                    <span className="font-['Syne'] text-[0.9rem] font-bold text-[var(--texto-muted)]">{p.id}</span>
-                    <div>
-                      <p className="text-[0.85rem] font-semibold text-[var(--texto)]">{p.mesa}</p>
-                      <p className="text-[0.78rem] text-[var(--texto-muted)]">{p.items}</p>
+              {pedidosEnCurso.length === 0 && (
+                <p className="text-[0.85rem] text-[var(--texto-muted)]">No hay pedidos en curso.</p>
+              )}
+              {pedidosEnCurso.map(p => {
+                const estado = etiquetaEstadoPedido[p.estado] ?? p.estado
+                return (
+                  <div key={p.id_pedido} className="flex items-center justify-between rounded-xl border border-[var(--borde)] bg-[#f9f5f0] px-4 py-3">
+                    <div className="flex items-center gap-4">
+                      <span className="font-['Syne'] text-[0.9rem] font-bold text-[var(--texto-muted)]">#{p.id_pedido}</span>
+                      <div>
+                        <p className="text-[0.85rem] font-semibold text-[var(--texto)]">
+                          {p.Mesa_num ? `Mesa ${p.Mesa_num}` : (p.Tipo_pedido || 'Pedido')}
+                        </p>
+                        <p className="text-[0.78rem] text-[var(--texto-muted)]">
+                          {p.nombre_mesero ? `Atendió: ${p.nombre_mesero}` : 'Sin mesero asignado'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[0.75rem] text-[var(--texto-muted)]">{tiempoDesde(p.Fecha_hora)}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-semibold ${
+                        estado === 'Preparando' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
+                        estado === 'Listo' ? 'bg-[var(--verde-light)] text-[#0F6E56]' :
+                        'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                      }`}>{estado}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[0.75rem] text-[var(--texto-muted)]">{p.tiempo}</span>
-                    <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-semibold ${
-                      p.estado === 'Preparando' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
-                      p.estado === 'Listo' ? 'bg-[var(--verde-light)] text-[#0F6E56]' :
-                      p.estado === 'En camino' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
-                    }`}>{p.estado}</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
@@ -536,7 +584,7 @@ function Gerente() {
         {seccionActiva === 'Mesas' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>{etiquetaDemo}
               <div className="flex gap-3">
                 <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
                   <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
@@ -568,6 +616,7 @@ function Gerente() {
         {/* IA INSIGHTS — vista con datos de ejemplo */}
         {seccionActiva === 'IA Insights' && (
           <section className="mt-6 grid grid-cols-2 gap-4">
+            <div className="col-span-2 flex justify-end">{etiquetaDemo}</div>
             {iaInsights.map((insight, i) => (
               <div key={i} className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
                 <div className="mb-3 flex items-center gap-3">
@@ -587,7 +636,7 @@ function Gerente() {
         {/* HISTORIAL — vista con datos de ejemplo */}
         {seccionActiva === 'Historial' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>{etiquetaDemo}
             <div className="flex flex-col gap-4">
               {historialEventos.map((h, i) => (
                 <div key={i} className="flex items-start gap-3 border-b border-[var(--borde)] pb-4 last:border-b-0 last:pb-0">
@@ -621,7 +670,7 @@ function Gerente() {
         {/* TURNOS — vista con datos de ejemplo */}
         {seccionActiva === 'Turnos' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos del personal</h3>
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos del personal</h3>{etiquetaDemo}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
