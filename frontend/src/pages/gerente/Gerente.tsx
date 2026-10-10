@@ -14,7 +14,23 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { barras, finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, pedidosActivosMock, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, pedidosActivosMock, transacciones, turnosMock } from './data'
+const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+
+// Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
+function fechaBogota(desplazamientoDias = 0): string {
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
+  const fecha = new Date(`${hoy}T00:00:00Z`)
+  fecha.setUTCDate(fecha.getUTCDate() + desplazamientoDias)
+  return fecha.toISOString().slice(0, 10)
+}
+
+interface ResumenDashboard {
+  ingresosHoy: number
+  pedidosActivos: number
+  tendencia: { dia: string; alto: number }[]
+}
+
 const productoVacio: Omit<Producto, 'id_producto'> = {
   Nombre: '', Descripcion: '', precio_venta: '', Categoria: '', Tiempo_preparacion: '00:00:00', Estado: 1,
 }
@@ -73,6 +89,62 @@ function Gerente() {
   const [guardandoPersonal, setGuardandoPersonal] = useState(false)
   const [cargandoPersonal, setCargandoPersonal] = useState(false)
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
+  const [resumenDashboard, setResumenDashboard] = useState<ResumenDashboard | null>(null)
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú') return
+    const hasta = fechaBogota(0)
+    const desde = fechaBogota(-6)
+    Promise.all([
+      api.get('/reportes/ventas-diarias', { params: { desde, hasta } }),
+      api.get('/reportes/pedidos-activos'),
+    ])
+      .then(([ventas, pedidos]) => {
+        const dias: { fecha: string; ingresos_brutos: number }[] = ventas.data.data.dias
+        const ingresosPorDia = new Map<string, number>(
+          dias.map(d => [d.fecha, Number(d.ingresos_brutos)] as [string, number]),
+        )
+        const serie = Array.from({ length: 7 }, (_, i) => {
+          const fecha = fechaBogota(i - 6)
+          return { fecha, valor: ingresosPorDia.get(fecha) ?? 0 }
+        })
+        const maximo = Math.max(...serie.map(s => s.valor), 1)
+        setResumenDashboard({
+          ingresosHoy: ingresosPorDia.get(hasta) ?? 0,
+          pedidosActivos: Number(pedidos.data.data.pedidos_activos),
+          tendencia: serie.map(s => ({
+            dia: new Date(`${s.fecha}T12:00:00Z`)
+              .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'UTC' })
+              .replace('.', '')
+              .slice(0, 3)
+              .toUpperCase(),
+            alto: Math.max(Math.round((s.valor / maximo) * 100), 2),
+          })),
+        })
+      })
+      .catch(console.error)
+  }, [seccionActiva])
+
+  const metricasDashboard = [
+    {
+      icon: 'monetization_on',
+      label: 'Ingresos del día',
+      valor: resumenDashboard ? formatoCOP.format(resumenDashboard.ingresosHoy) : '...',
+      badge: 'Hoy',
+      badgeColor: 'muted',
+    },
+    { ...metricas[1], badge: 'Demo' },
+    {
+      icon: 'shopping_bag',
+      label: 'Pedidos activos',
+      valor: resumenDashboard ? String(resumenDashboard.pedidosActivos) : '...',
+      badge: resumenDashboard && resumenDashboard.pedidosActivos > 0 ? 'En curso' : 'Sin pedidos',
+      badgeColor: resumenDashboard && resumenDashboard.pedidosActivos > 0 ? 'rojo' : 'muted',
+    },
+  ]
+
+  const tendenciaSemanal = resumenDashboard?.tendencia ?? []
+
   const cargarProductos = () => {
     const endpoint = fuenteProductos === 'vista' ? '/productos/vista' : '/productos/sp'
     setCargandoProductos(true)
@@ -192,7 +264,7 @@ function Gerente() {
           <>
             <DashboardOperativo />
             <section className="grid grid-cols-3 gap-4">
-              {metricas.map(m => (
+              {metricasDashboard.map(m => (
                 <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
                   <div className="flex items-start justify-between">
                     <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
@@ -218,19 +290,16 @@ function Gerente() {
                 <div className="mb-7 flex items-end justify-between">
                   <div>
                     <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia semanal</h3>
-                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Predicción de demanda basada en historial</p>
+                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Ingresos de los últimos 7 días</p>
                   </div>
                   <div className="flex gap-3">
-                    <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--rojo)]">
-                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Proyectado
-                    </span>
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--amarillo)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Real
                     </span>
                   </div>
                 </div>
                 <div className="flex h-40 items-end justify-between gap-2">
-                  {barras.map(b => (
+                  {tendenciaSemanal.map(b => (
                     <div key={b.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                       <div
                         className="w-full rounded-t-[6px] bg-[var(--rojo)] opacity-85 transition-[height] duration-300 ease-in-out"
@@ -258,7 +327,7 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Estado inventario</h4>
-                    <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">En vivo</span>
+                    <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
                   </div>
                   <div className="flex flex-col gap-3.5">
                     {inventario.map(i => (

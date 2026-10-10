@@ -118,3 +118,21 @@ export async function ventasDiarias(req, res, next) {
     next(error);
   }
 }
+
+/**
+ * GET /api/reportes/pedidos-activos
+ * Cuenta los pedidos que siguen en curso: todo estado distinto de
+ * CERRADO o CANCELADO (ABIERTO, EN_PREPARACION, LISTO, etc.).
+ */
+export async function pedidosActivos(req, res, next) {
+  try {
+    const [fila] = await prisma.$queryRaw`SELECT COUNT(*) AS total FROM pedido WHERE estado NOT IN ('CERRADO', 'CANCELADO') OR estado IS NULL`;
+
+    return res.status(200).json({
+      success: true,
+      data: { pedidos_activos: numero(fila?.total) },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
