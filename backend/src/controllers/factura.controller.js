@@ -73,7 +73,7 @@ export async function store(req, res, next) {
     }
 
     // Verificar que el pedido existe
-    const pedido = await prisma.pedidos.findUnique({
+    const pedido = await prisma.pedido.findUnique({
       where: { id_pedido: parseInt(id_pedido) }
     });
 
@@ -105,7 +105,7 @@ export async function store(req, res, next) {
         Fecha_emision: Fecha_emision ? new Date(Fecha_emision) : new Date()
       },
       include: {
-        pedidos: true
+        pedido: true
       }
     });
 
