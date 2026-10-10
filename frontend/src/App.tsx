@@ -15,6 +15,7 @@ import Solicitudes from './pages/superadmin/Solicitudes/Solicitudes'
 import Gerente from './pages/gerente/Gerente'
 import Mesero from './pages/mesero/Mesero'
 import Repartidor from './pages/repartidor/Repartidor'
+import Cajero from './pages/cajero/Cajero'
 
 function App() {
   const [modal, setModal] = useState<string | null>(null)
@@ -43,6 +44,15 @@ function App() {
 
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route
+          path="/cajero"
+          element={
+            <PrivateRoute rolesPermitidos={['CAJERO', 'GERENTE', 'SUPERADMIN']}>
+              <Cajero />
+            </PrivateRoute>
+          }
+        />
 
         <Route
           path="/superadmin"

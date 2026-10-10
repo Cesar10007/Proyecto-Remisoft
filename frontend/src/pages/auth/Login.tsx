@@ -51,6 +51,8 @@ function Login({ onClose }: LoginProps) {
         navigate('/superadmin')
       } else if (rolNormalizado === 'GERENTE') {
         navigate('/gerente')
+      } else if (rolNormalizado === 'CAJERO') {
+        navigate('/cajero')
       } else if (rolNormalizado === 'MESERO') {
         navigate('/mesero')
       } else if (rolNormalizado === 'REPARTIDOR') {

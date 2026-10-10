@@ -4,11 +4,12 @@ import { useAuth } from '../../context/AuthContext'
  * Protege una ruta verificando que exista un token en localStorage.
  * Si no hay token, redirige a "/" (landing con modal de login).
  */
-function PrivateRoute({ children, rolRequerido }) {
+function PrivateRoute({ children, rolRequerido, rolesPermitidos }) {
   const { token, rol } = useAuth()
 
   if (!token) return <Navigate to="/" replace />
   if (rolRequerido && rol !== rolRequerido) return <Navigate to="/" replace />
+  if (rolesPermitidos && !rolesPermitidos.includes(rol)) return <Navigate to="/" replace />
 
   return children
 }
