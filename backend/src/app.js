@@ -28,6 +28,7 @@ import restaurantesRoutes from './routes/restaurantes.routes.js'
 import cobroRoutes from './routes/cobro.routes.js'
 import cocinaRoutes from './routes/cocina.routes.js'
 import reportesRoutes from './routes/reportes.routes.js'
+import mesasRoutes from './routes/mesas.routes.js'
 
 const app = express()
 
@@ -77,6 +78,7 @@ app.use('/api/cajas', cajasRoutes)
 app.use('/api/cobro', cobroRoutes)
 app.use('/api/cocina', cocinaRoutes)
 app.use('/api/reportes', reportesRoutes)
+app.use('/api/mesas', mesasRoutes)
 app.use('/api/categorias', categoriaProductosRoutes)
 app.use('/api/clientes', clienteRoutes)
 app.use('/api/detalle-pedido', detallePedidoRoutes)

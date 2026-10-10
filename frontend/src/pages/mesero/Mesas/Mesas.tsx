@@ -1,22 +1,32 @@
+import { useEffect, useState } from 'react'
+import api from '../../../api/axios'
 import './Mesas.css'
  
-const stats = [
-  { label: 'Mesas activas', value: '12', detail: '/ 24 total', color: 'green' },
-  { label: 'Mesas en espera', value: '04', detail: 'Mesas esperando', color: 'amber', accented: true },
-  { label: 'Ingresos', value: '2,482', prefix: '$', color: 'default' },
-]
- 
-const tables = [
-  { number: '12', name: 'The Smiths', meta: '4 Invitados • 6 Artículos', total: '$142.50', badge: '24m', state: 'occupied' },
-  { number: '08', state: 'available' },
-  { number: '04', name: 'Mesa 04', meta: '2 Invitados • Ordenando', total: '$0.00', badge: 'Esperando', state: 'waiting' },
-  { number: '15', name: 'Alex & Co.', meta: '3 Invitados • Cuenta Lista', total: '$89.20', badge: 'Hecho', state: 'done' },
-  { number: '22', name: 'Mesa 22', meta: '5 Invitados • Platos Principales Servidos', total: '$310.00', badge: '45m', state: 'occupied' },
-  { number: '01', name: 'Mesa 01', meta: '2 Invitados • Entrantes', total: '$45.00', badge: '12m', state: 'occupied' },
-  { number: '03', state: 'available' },
-  { number: '09', state: 'available' },
-]
- 
+interface MesaApi {
+  numero: number
+  capacidad: number | null
+  estado: 'available' | 'occupied'
+  pedidos: number
+  articulos: number
+  total: number
+  id_pedido: number | null
+  mesero: string | null
+  fecha_hora: string | null
+}
+
+interface MesaVista {
+  number: string
+  name?: string
+  meta?: string
+  total?: string
+  badge?: string
+  state: 'available' | 'occupied'
+}
+
+const formatoPesos = (valor: number) => Number(valor).toLocaleString('es-CO', { maximumFractionDigits: 0 })
+
+const minutosDesde = (fecha: string) => `${Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))}m`
+
 const feedItems = [
   { status: 'Mesa 12 • Lista', time: 'Ahora mismo', title: '2x Lubina a la Parrilla', detail: 'Plato Principal • Paso A', tone: 'ready' },
   { status: 'Mesa 04 • Nueva Orden', time: 'hace 3m', title: '1x Risotto de Trufa', detail: 'Cocinando • Estación 2', tone: 'default' },
@@ -26,6 +36,39 @@ const feedItems = [
 ]
  
 function Mesas() {
+  const [mesas, setMesas] = useState<MesaApi[]>([])
+
+  useEffect(() => {
+    const cargar = () => api.get('/mesas').then(({ data }) => setMesas(data.data)).catch(console.error)
+    cargar()
+    const intervalo = setInterval(cargar, 15000)
+    return () => clearInterval(intervalo)
+  }, [])
+
+  const ocupadas = mesas.filter(m => m.estado === 'occupied')
+  const pedidosEnCurso = mesas.reduce((acc, m) => acc + m.pedidos, 0)
+  const totalEnMesas = mesas.reduce((acc, m) => acc + m.total, 0)
+
+  const stats = [
+    { label: 'Mesas activas', value: String(ocupadas.length).padStart(2, '0'), detail: `/ ${mesas.length} total`, color: 'green' },
+    { label: 'Pedidos en curso', value: String(pedidosEnCurso), color: 'amber', accented: true },
+    { label: 'En mesas', value: formatoPesos(totalEnMesas), prefix: '$', color: 'default' },
+  ]
+
+  const tables: MesaVista[] = mesas.map(m => {
+    if (m.estado === 'available' || m.id_pedido === null) {
+      return { number: String(m.numero).padStart(2, '0'), state: 'available' }
+    }
+    return {
+      number: String(m.numero).padStart(2, '0'),
+      name: `Pedido #${m.id_pedido}`,
+      meta: `${m.articulos} artículos • ${m.mesero ?? 'Sin mesero'}`,
+      total: `$${formatoPesos(m.total)}`,
+      badge: m.fecha_hora ? minutosDesde(m.fecha_hora) : '',
+      state: 'occupied',
+    }
+  })
+
   return (
     <>
       <section className="grid grid-cols-4 gap-6">
@@ -151,6 +194,7 @@ function Mesas() {
         <aside className="flex h-[calc(100vh-12rem)] flex-col rounded-[20px] bg-[var(--wa-surface)] p-6 shadow-[0_2px_10px_rgba(28,27,27,0.04)]">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-[1.125rem] font-black">Cocina</h2>
+            <span className="rounded-full bg-[var(--wa-surface-mid)] px-2 py-0.5 text-[0.625rem] font-extrabold text-[var(--wa-text-muted)]">Demo</span>
             <span className="material-symbols-outlined text-[var(--wa-secondary)] [font-variation-settings:'FILL'_1]">restaurant</span>
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto pr-2">
