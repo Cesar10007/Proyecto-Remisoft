@@ -141,27 +141,25 @@ export async function show(req, res, next) {
 
 /**
  * GET /api/inventario/alertas/stock-bajo
- * Lista ingredientes cuyo stock calculado está en o bajo su mínimo.
+ * Lista ingredientes con stock en lotes activos menor o igual a su mínimo.
+ * Lee de vista_inventario_bajo_minimo (fuente: lote_ingrediente).
  */
 export async function stockBajo(req, res, next) {
   try {
-    const ingredientes = await prisma.ingrediente.findMany({
-      include: {
-        inventario_mov: {
-          select: {
-            tipo_movimiento: true,
-            cantidad: true,
-          },
-        },
-      },
-      orderBy: {
-        id_ingrediente: 'asc',
-      },
-    });
+    const filas = await prisma.$queryRaw`
+      SELECT id_ingrediente, ingrediente, unidad_medida, stock_minimo,
+             stock_total_actual, alerta
+      FROM vista_inventario_bajo_minimo
+    `;
 
-    const data = ingredientes
-      .map(serializarIngrediente)
-      .filter((item) => item.stock_bajo);
+    const data = filas.map((fila) => ({
+      id_ingrediente: fila.id_ingrediente,
+      nombre: fila.ingrediente,
+      unidad_medida: fila.unidad_medida,
+      stock_minimo: Number(fila.stock_minimo ?? 0),
+      stock_actual: Number(fila.stock_total_actual ?? 0),
+      alerta: fila.alerta,
+    }));
 
     return res.status(200).json({
       success: true,

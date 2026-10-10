@@ -1,6 +1,6 @@
 -- ============================================================
 -- VISTA: vista_resumen_ventas_diarias
--- Descripción: Agrupa las facturas emitidas por día,
+-- Descripción: Agrupa las facturas pagadas por día (estado PAGADA),
 -- mostrando total de pedidos, ingresos brutos, IVA total
 -- y total de descuentos aplicados.
 -- ============================================================
@@ -15,6 +15,6 @@ SELECT
     SUM(f.Propina)             AS total_propinas,
     SUM(f.total - f.Descuento) AS ingresos_netos
 FROM Factura f
-WHERE f.estado = 'EMITIDA'
+WHERE f.estado = 'PAGADA'
 GROUP BY DATE(f.Fecha_emision)
 ORDER BY fecha DESC;

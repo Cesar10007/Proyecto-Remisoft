@@ -161,9 +161,9 @@ INSERT INTO lote_ingrediente (id_ingrediente, numero_lote, fecha_ingreso, fecha_
 (3, 'LOTE-MOZZ-001', '2025-01-12', '2025-01-26', 10.000, 8.200, 22000.00, 'Mozzarella bloque'),
 (4, 'LOTE-LECHUGA-001', '2025-01-14', '2025-01-19', 5.000, 4.100, 4000.00, 'Lechuga fresca del día'),
 (5, 'LOTE-TOMATE-001', '2025-01-13', '2025-01-20', 8.000, 6.500, 3000.00, 'Tomate maduro selecto'),
-(6, 'LOTE-POLLO-001', '2025-01-12', '2025-01-16', 15.000, 11.000, 14000.00, 'Pollo refrigerado'),
-(7, 'LOTE-ESPAG-001', '2025-01-01', '2026-01-01', 20.000, 18.500, 5500.00, 'Pasta seca larga vida'),
-(8, 'LOTE-HUEVO-001', '2025-01-13', '2025-01-27', 120.000, 98.000, 450.00, 'Huevos AA bandeja'),
+(6, 'LOTE-POLLO-001', '2025-01-12', '2025-01-16', 15.000, 3.500, 14000.00, 'Pollo refrigerado'),
+(7, 'LOTE-ESPAG-001', '2025-01-01', '2026-01-01', 20.000, 0.000, 5500.00, 'Pasta seca larga vida'),
+(8, 'LOTE-HUEVO-001', '2025-01-13', '2025-01-27', 120.000, 25.000, 450.00, 'Huevos AA bandeja'),
 (9, 'LOTE-LIMON-001', '2025-01-14', '2025-01-21', 6.000, 5.200, 3500.00, 'Limón verde fresco'),
 (10, 'LOTE-PAPA-001', '2025-01-10', '2025-01-24', 25.000, 20.000, 1800.00, 'Papa pastusa cosecha nueva');
 

@@ -12,6 +12,7 @@ import CajasSection from './sections/CajasSection'
 import GerenteHeader from './components/GerenteHeader'
 import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
+import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
 import { barras, finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, pedidosActivosMock, transacciones, turnosMock } from './data'
 const productoVacio: Omit<Producto, 'id_producto'> = {
@@ -189,6 +190,7 @@ function Gerente() {
         {/* MENÚ — Dashboard principal */}
         {seccionActiva === 'Menú' && (
           <>
+            <DashboardOperativo />
             <section className="grid grid-cols-3 gap-4">
               {metricas.map(m => (
                 <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
