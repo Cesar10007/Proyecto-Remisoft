@@ -278,3 +278,67 @@ export async function destroy(req, res, next) {
     next(error);
   }
 }
+
+// POST /api/turnos/:id/cerrar
+// Cierra el turno con el procedimiento de la base sp_cerrar_turno_caja, que calcula
+// el efectivo esperado (inicial + ingresos - egresos de flujo_caja) y la diferencia.
+export async function cerrar(req, res, next) {
+  try {
+    const idTurno = parseId(req.params.id);
+
+    if (idTurno === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de turno inválido',
+        code: 'INVALID_ID',
+      });
+    }
+
+    const { efectivo_real, notas } = req.body ?? {};
+    const efectivoReal = Number(efectivo_real);
+
+    if (efectivo_real === undefined || efectivo_real === null || efectivo_real === '' || Number.isNaN(efectivoReal) || efectivoReal < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El efectivo contado es requerido y no puede ser negativo',
+        code: 'INVALID_EFECTIVO',
+      });
+    }
+
+    const notasCierre = notas ? String(notas).trim().slice(0, 500) || null : null;
+
+    try {
+      await prisma.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre})`;
+    } catch (error) {
+      const mensaje = String(error?.message ?? '');
+      if (mensaje.includes('no existe')) {
+        return res.status(404).json({
+          success: false,
+          message: 'No encontrado',
+          code: 'NOT_FOUND',
+        });
+      }
+      if (mensaje.includes('ya fue cerrado')) {
+        return res.status(409).json({
+          success: false,
+          message: 'El turno ya fue cerrado',
+          code: 'TURNO_CERRADO',
+        });
+      }
+      throw error;
+    }
+
+    const turno = await prisma.turno_caja.findUnique({
+      where: { id_turno: idTurno },
+      include: turnoInclude,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Turno cerrado',
+      data: turno,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
