@@ -84,6 +84,7 @@ const cajaVacia = { nombre: '', estado: 'ACTIVA' }
 const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as number | '' , contrasena: '' }
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
+  const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const vistaActual = seccionActiva.toLowerCase()
   const setVistaActual = (vista: string) => {
     const itemSeleccionado = menuItems.find(item => item.label.toLowerCase() === vista)
@@ -220,7 +221,6 @@ function Gerente() {
 
   // Movimientos recientes (pagos aprobados) y Estado inventario (stock actual): datos de la base.
   const [movimientosRecientes, setMovimientosRecientes] = useState<{ icon: string; titulo: string; sub: string; monto: string; positivo: boolean }[]>([])
-  const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
 
   useEffect(() => {
