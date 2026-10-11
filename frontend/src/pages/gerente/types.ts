@@ -45,3 +45,7 @@ export interface Personal {
   estado: string
   activo: number
 }
+
+export type CrearIngrediente = Omit<Ingrediente, 'id_ingrediente'>
+export type CrearProveedor = Omit<Proveedor, 'id_proveedor'>
+export type CrearCaja = Omit<Caja, 'id_caja'>

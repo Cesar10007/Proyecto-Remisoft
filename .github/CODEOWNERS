@@ -1,0 +1,14 @@
+# Revisores por defecto del repositorio
+* @Cesar10007
+
+# Backend y base de datos
+/backend/ @Cesar10007
+/database/ @Cesar10007
+
+# Frontend
+/frontend/ @Cesar10007
+
+# Infraestructura y CI
+/.github/ @Cesar10007
+/.devcontainer/ @Cesar10007
+/docker-compose.yml @Cesar10007
