@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import Mesas from './Mesas/Mesas'
 import Pedidos from './Pedidos/Pedidos'
 import Caja from './Caja/Caja'

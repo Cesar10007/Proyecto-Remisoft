@@ -2,7 +2,7 @@
 import './Gerente.css'
 import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import PersonalSection from './sections/PersonalSection'
 import IngredientesSection from './sections/IngredientesSection'

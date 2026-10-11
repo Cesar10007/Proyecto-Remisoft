@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import api from '../../api/axios'
 import { setCredentials } from '../../store/authSlice'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import Button from '../../components/common/Button'
 
 interface LoginProps {

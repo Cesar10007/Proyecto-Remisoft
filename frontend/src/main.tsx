@@ -3,16 +3,13 @@ import { createRoot } from 'react-dom/client'
 import './styles/global.css'
 import './index.css'
 import App from './App.tsx'
-import { AuthProvider } from './context/AuthContext'
 import { Provider } from 'react-redux'
 import { store } from './store/store'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </Provider>
   </StrictMode>
 )

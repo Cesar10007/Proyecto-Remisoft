@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 /**
- * Protege una ruta verificando que exista un token en localStorage.
+ * Protege una ruta verificando que exista un token en el store de Redux.
  * Si no hay token, redirige a "/" (landing con modal de login).
  */
 function PrivateRoute({ children, rolRequerido, rolesPermitidos }) {

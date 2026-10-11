@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
 import './Repartidor.css'
