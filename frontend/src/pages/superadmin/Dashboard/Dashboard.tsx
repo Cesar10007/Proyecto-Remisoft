@@ -13,30 +13,37 @@ interface Usuario {
   id_rol?: number
 }
 
+// Uptime y latencia no existen en la base: se muestran como dato de ejemplo y etiquetados Demo.
 const metricasBase = [
   {
     label: 'Gerentes activos',
     detail: 'Datos obtenidos del sistema',
     icon: 'group',
     color: 'green',
+    demo: false,
   },
   {
     label: 'Solicitudes pendientes',
     detail: 'Pendientes de revisión',
     icon: null,
     color: 'amber',
+    demo: false,
   },
   {
     label: 'Tiempo de actividad del sistema',
-    detail: 'Estado del servicio',
+    detail: 'Estado del servicio (Demo)',
     icon: 'check_circle',
     color: 'green',
+    demo: true,
+    valorDemo: '99,9 %',
   },
   {
     label: 'Respuesta de API',
-    detail: 'Latencia no disponible',
+    detail: 'Latencia de ejemplo (Demo)',
     icon: null,
     color: 'default',
+    demo: true,
+    valorDemo: '142 ms',
   },
 ]
 
@@ -44,6 +51,7 @@ function Dashboard() {
   const [gerentes, setGerentes] = useState<Usuario[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState<number | null>(null)
 
   useEffect(() => {
     const cargarGerentes = async () => {
@@ -69,12 +77,30 @@ function Dashboard() {
       }
     }
 
+    const cargarSolicitudes = async () => {
+      try {
+        const response = await api.get('/solicitudes')
+        const data = Array.isArray(response.data?.data) ? response.data.data : []
+        setSolicitudesPendientes(data.length)
+      } catch (requestError) {
+        console.error(requestError)
+        setSolicitudesPendientes(null)
+      }
+    }
+
     cargarGerentes()
+    cargarSolicitudes()
   }, [])
+
+  const valorPorIndice = (index: number) => {
+    if (index === 0) return cargando ? '—' : gerentes.length
+    if (index === 1) return solicitudesPendientes ?? '—'
+    return '—'
+  }
 
   const metricas = metricasBase.map((metrica, index) => ({
     ...metrica,
-    value: index === 0 ? (cargando ? '—' : gerentes.length) : '—',
+    value: metrica.demo ? metrica.valorDemo : valorPorIndice(index),
   }))
 
   return (
@@ -82,7 +108,14 @@ function Dashboard() {
       <div className="sa-metrics-grid">
         {metricas.map((metric) => (
           <article key={metric.label} className="sa-metric-card">
-            <p className="sa-metric-card__label">{metric.label}</p>
+            <p className="sa-metric-card__label">
+              {metric.label}
+              {metric.demo && (
+                <span style={{ marginLeft: '0.5rem', padding: '0.1rem 0.45rem', borderRadius: 999, background: 'rgba(127,127,127,0.18)', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', verticalAlign: 'middle' }}>
+                  Demo
+                </span>
+              )}
+            </p>
             <h2 className={`sa-metric-card__value sa-metric-card__value--${metric.color}`}>
               {metric.value}
             </h2>
