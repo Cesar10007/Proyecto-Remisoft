@@ -132,7 +132,7 @@ function Repartidor() {
 
   const abrirCrearDomicilio = () => {
     setModoEdicionDomicilio(false)
-    setDomicilioActual(domicilioVacio)
+    setDomicilioActual({ ...domicilioVacio, id_repartidor: user?.id_usuario?.toString() ?? '' })
     setIdEditandoDomicilio(null)
     setErrorDomicilio(null)
     setModalDomicilio(true)
@@ -593,7 +593,7 @@ function Repartidor() {
                   <span className="material-symbols-outlined mb-2 block text-[2rem]">sync</span>
                   Cargando domicilios...
                 </div>
-              ) : domicilios.length === 0 ? (
+              ) : misDomicilios.length === 0 ? (
                 <div className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-16 text-center text-[var(--rd-text-muted)]">
                   <span className="material-symbols-outlined mb-3 block text-[2.5rem] text-[var(--rd-primary)]">local_shipping</span>
                   <p className="text-[1rem] font-bold text-[var(--rd-text)]">Sin domicilios registrados</p>
@@ -601,7 +601,7 @@ function Repartidor() {
                 </div>
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4.5">
-                  {domicilios.map(d => (
+                  {misDomicilios.map(d => (
                     <div key={d.id_domicilio} className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                       <div className="mb-3.5 flex items-start justify-between">
                         <div className="flex items-center gap-3">
