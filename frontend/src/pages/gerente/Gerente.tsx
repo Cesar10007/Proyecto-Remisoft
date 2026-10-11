@@ -14,12 +14,20 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, menuItems, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, menuItems } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
 interface PagoApi { id_factura?: number; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
 interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
+interface TurnoApi {
+  id_turno: number
+  fecha_apertura: string | null
+  fecha_cierre: string | null
+  estado: string | null
+  caja?: { nombre: string | null } | null
+  usuario?: { nombre: string | null; apellido: string | null } | null
+}
 interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
 
 const etiquetaMetodo = (metodo: string | null) => {
@@ -86,6 +94,7 @@ function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
+  const [turnos, setTurnos] = useState<TurnoApi[]>([])
   const vistaActual = seccionActiva.toLowerCase()
   const setVistaActual = (vista: string) => {
     const itemSeleccionado = menuItems.find(item => item.label.toLowerCase() === vista)
@@ -264,6 +273,13 @@ function Gerente() {
           etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim(),
         }
       })))
+      .catch(console.error)
+  }, [seccionActiva])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Turnos') return
+    api.get('/turnos')
+      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
       .catch(console.error)
   }, [seccionActiva])
 
@@ -781,7 +797,7 @@ function Gerente() {
         {/* TURNOS — vista con datos de ejemplo */}
         {seccionActiva === 'Turnos' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos del personal</h3>{etiquetaDemo}
+            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -793,14 +809,24 @@ function Gerente() {
                   </tr>
                 </thead>
                 <tbody>
-                  {turnosMock.map((t, i) => (
-                    <tr key={i}>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{t.empleado}</strong></td>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.rol}</td>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.turno}</td>
-                      <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.estado === 'Activo' ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>{t.estado}</td>
-                    </tr>
-                  ))}
+                  {turnos.length === 0 && (
+                    <tr><td colSpan={4} className="px-3 py-4 text-[0.85rem] text-[var(--texto-muted)]">No hay turnos registrados.</td></tr>
+                  )}
+                  {turnos.map(t => {
+                    const hora = (fecha: string | null) => fecha
+                      ? new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+                      : '—'
+                    const abierto = t.estado === 'ABIERTA'
+                    const empleado = `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—'
+                    return (
+                      <tr key={t.id_turno}>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{empleado}</strong></td>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</td>
+                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{hora(t.fecha_apertura)} - {t.fecha_cierre ? hora(t.fecha_cierre) : 'En curso'}</td>
+                        <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>{abierto ? 'Activo' : (t.estado ?? '—')}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
