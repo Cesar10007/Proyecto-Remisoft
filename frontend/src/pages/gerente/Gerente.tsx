@@ -14,7 +14,7 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, menuItems, metricas, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, menuItems, transacciones, turnosMock } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
@@ -172,7 +172,13 @@ function Gerente() {
       badge: 'Hoy',
       badgeColor: 'muted',
     },
-    { ...metricas[1], badge: 'Demo' },
+    {
+      icon: 'account_balance_wallet',
+      label: 'Ingresos del mes',
+      valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
+      badge: 'Pagos aprobados',
+      badgeColor: 'muted',
+    },
     {
       icon: 'shopping_bag',
       label: 'Pedidos activos',
@@ -214,15 +220,24 @@ function Gerente() {
 
   // Movimientos recientes (pagos aprobados) y Estado inventario (stock actual): datos de la base.
   const [movimientosRecientes, setMovimientosRecientes] = useState<{ icon: string; titulo: string; sub: string; monto: string; positivo: boolean }[]>([])
+  const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
 
   useEffect(() => {
     if (seccionActiva !== 'Menú') return
     api.get('/facturas')
       .then(({ data }: { data: { data: FacturaApi[] } }) => {
-        const pagos = data.data
+        const aprobados = data.data
           .flatMap(f => (f.pago ?? []).map(p => ({ ...p, mesa: f.pedido?.Mesa_num ?? null })))
           .filter(p => p.estado === 'APROBADO')
+        const ahora = new Date()
+        setIngresosDelMes(aprobados
+          .filter(p => {
+            const fecha = new Date(p.fecha_pago ?? '')
+            return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear()
+          })
+          .reduce((acc, p) => acc + Number(p.monto ?? 0), 0))
+        const pagos = [...aprobados]
           .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
           .slice(0, 4)
         setMovimientosRecientes(pagos.map(p => ({
