@@ -14,11 +14,11 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, menuItems } from './data'
+import { finanzasStats, iaInsights, menuItems } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
-interface PagoApi { id_factura?: number; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
+interface PagoApi { id_factura?: number; id_turno?: number | null; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
 interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
 interface TurnoApi {
   id_turno: number
@@ -34,6 +34,14 @@ interface TurnoApi {
   caja?: { nombre: string | null } | null
   usuario?: { nombre: string | null; apellido: string | null } | null
 }
+interface PedidoApi {
+  id_pedido: number
+  Mesa_num: number | null
+  Tipo_pedido: string | null
+  Fecha_hora: string | null
+  nombre_mesero: string | null
+}
+interface EventoHistorial { fecha: string | null; usuario: string; accion: string }
 interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
 
 const etiquetaMetodo = (metodo: string | null) => {
@@ -101,6 +109,7 @@ function Gerente() {
   const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
   const [turnos, setTurnos] = useState<TurnoApi[]>([])
+  const [historial, setHistorial] = useState<EventoHistorial[]>([])
   const [cajeros, setCajeros] = useState<Personal[]>([])
   const [mostrarAbrirTurno, setMostrarAbrirTurno] = useState(false)
   const [formAbrir, setFormAbrir] = useState({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
@@ -286,6 +295,44 @@ function Gerente() {
           etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim(),
         }
       })))
+      .catch(console.error)
+  }, [seccionActiva])
+
+  // Historial: pedidos, pagos y turnos registrados en la base (no hay tabla de auditoria).
+  useEffect(() => {
+    if (seccionActiva !== 'Historial') return
+    Promise.all([api.get('/pedidos'), api.get('/turnos'), api.get('/facturas')])
+      .then(([pedidosRes, turnosRes, facturasRes]) => {
+        const pedidos: PedidoApi[] = pedidosRes.data
+        const turnosLista: TurnoApi[] = turnosRes.data.data
+        const facturasLista: FacturaApi[] = facturasRes.data.data
+        const cajeroDeTurno = new Map<number, string>(turnosLista.map(t => [
+          t.id_turno,
+          `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—',
+        ]))
+        const eventos: EventoHistorial[] = [
+          ...pedidos.map(p => ({
+            fecha: p.Fecha_hora,
+            usuario: p.nombre_mesero ?? '—',
+            accion: `Creó el pedido #${p.id_pedido} · ${p.Mesa_num ? `Mesa ${p.Mesa_num}` : (p.Tipo_pedido ?? 'Sin mesa')}`,
+          })),
+          ...turnosLista.flatMap(t => {
+            const caja = t.caja?.nombre ?? `caja ${t.id_caja}`
+            const cajero = cajeroDeTurno.get(t.id_turno) ?? '—'
+            const movimientos: EventoHistorial[] = [{ fecha: t.fecha_apertura, usuario: cajero, accion: `Abrió turno en ${caja}` }]
+            if (t.fecha_cierre) movimientos.push({ fecha: t.fecha_cierre, usuario: cajero, accion: `Cerró turno en ${caja}` })
+            return movimientos
+          }),
+          ...facturasLista.flatMap(f => (f.pago ?? []).map(p => ({
+            fecha: p.fecha_pago,
+            usuario: p.id_turno != null ? (cajeroDeTurno.get(p.id_turno) ?? '—') : '—',
+            accion: `Registró pago de ${formatoCOP.format(Number(p.monto ?? 0))} (${etiquetaMetodo(p.metodo)}) · factura #${p.id_factura ?? '—'}`,
+          }))),
+        ]
+        setHistorial(eventos
+          .sort((a, b) => new Date(b.fecha ?? 0).getTime() - new Date(a.fecha ?? 0).getTime())
+          .slice(0, 50))
+      })
       .catch(console.error)
   }, [seccionActiva])
 
@@ -829,17 +876,23 @@ function Gerente() {
             ))}
           </section>
         )}
-        {/* HISTORIAL — vista con datos de ejemplo */}
+        {/* HISTORIAL — pedidos, pagos y turnos de la base */}
         {seccionActiva === 'Historial' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>{etiquetaDemo}
+            <h3 className="mb-2 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>
+            <p className="mb-5 text-[0.78rem] text-[var(--texto-muted)]">Pedidos, pagos y turnos registrados en la base. No incluye ediciones ni borrados.</p>
             <div className="flex flex-col gap-4">
-              {historialEventos.map((h, i) => (
+              {historial.length === 0 && (
+                <p className="text-[0.85rem] text-[var(--texto-muted)]">No hay actividad registrada.</p>
+              )}
+              {historial.map((h, i) => (
                 <div key={i} className="flex items-start gap-3 border-b border-[var(--borde)] pb-4 last:border-b-0 last:pb-0">
                   <span className="material-symbols-outlined mt-0.5 text-[18px] text-[var(--texto-muted)]">history</span>
                   <div>
                     <p className="text-[0.85rem] text-[var(--texto)]">{h.accion}</p>
-                    <p className="mt-0.5 text-[0.75rem] text-[var(--texto-muted)]">{h.usuario} · {h.fecha}</p>
+                    <p className="mt-0.5 text-[0.75rem] text-[var(--texto-muted)]">
+                      {h.usuario} · {h.fecha ? new Date(h.fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                    </p>
                   </div>
                 </div>
               ))}
