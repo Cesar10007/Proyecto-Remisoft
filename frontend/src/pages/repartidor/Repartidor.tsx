@@ -5,6 +5,7 @@ import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
 import './Repartidor.css'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen' },
@@ -33,17 +34,17 @@ const domicilioVacio = {
 }
 
 const estadoColor: Record<string, string> = {
-  ASIGNADO: '#9a5e10',
-  EN_CAMINO: '#1d9e75',
-  ENTREGADO: '#1d9e75',
-  CANCELADO: '#c24732',
+  ASIGNADO: 'var(--t-txt-9a5e10, #9a5e10)',
+  EN_CAMINO: 'var(--t-txt-1d9e75, #1d9e75)',
+  ENTREGADO: 'var(--t-txt-1d9e75, #1d9e75)',
+  CANCELADO: 'var(--t-txt-c24732, #c24732)',
 }
 
 const estadoBg: Record<string, string> = {
-  ASIGNADO: '#faeeda',
-  EN_CAMINO: '#e1f5ee',
-  ENTREGADO: '#e1f5ee',
-  CANCELADO: '#fdecea',
+  ASIGNADO: 'var(--t-bg-faeeda, #faeeda)',
+  EN_CAMINO: 'var(--t-bg-e1f5ee, #e1f5ee)',
+  ENTREGADO: 'var(--t-bg-e1f5ee, #e1f5ee)',
+  CANCELADO: 'var(--t-bg-fdecea, #fdecea)',
 }
 
 // ===========================================================
@@ -300,27 +301,15 @@ function Repartidor() {
 
   return (
     <div
-      className="flex min-h-screen font-['DM_Sans']"
+      className="rd-wrapper flex min-h-screen font-['DM_Sans']"
       style={{
-        ['--rd-primary' as any]: '#d85a30',
-        ['--rd-primary-dark' as any]: '#993c1d',
-        ['--rd-primary-soft' as any]: '#faece7',
-        ['--rd-secondary' as any]: '#ef9f27',
-        ['--rd-secondary-soft' as any]: '#faeeda',
-        ['--rd-success' as any]: '#1d9e75',
-        ['--rd-success-soft' as any]: '#e1f5ee',
-        ['--rd-danger' as any]: '#c24732',
-        ['--rd-bg' as any]: '#fdfaf7',
-        ['--rd-card' as any]: '#ffffff',
-        ['--rd-border' as any]: 'rgba(0,0,0,0.08)',
-        ['--rd-text' as any]: '#1a1a1a',
-        ['--rd-text-muted' as any]: '#5f5e5a',
         background: 'var(--rd-bg)',
         color: 'var(--rd-text)',
       }}
     >
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside className="fixed left-0 top-0 z-20 flex min-h-screen w-60 flex-col border-r border-[var(--rd-border)] bg-[var(--rd-card)] p-4">
+        <div className="mb-4 px-2"><ThemeToggle /></div>
         <div className="mb-8 px-2">
           <span className="block font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rd-primary-dark)]">
             Remi<span className="text-[var(--rd-secondary)]">Soft</span>
@@ -338,7 +327,7 @@ function Repartidor() {
               className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[0.92rem] font-medium ${
                 activeItem === item.label
                   ? 'bg-[var(--rd-primary-soft)] font-bold text-[var(--rd-primary-dark)]'
-                  : 'bg-transparent text-[var(--rd-text-muted)] hover:bg-[#f8f4f1] hover:text-[var(--rd-text)]'
+                  : 'bg-transparent text-[var(--rd-text-muted)] hover:bg-[var(--t-bg-f8f4f1,#f8f4f1)] hover:text-[var(--rd-text)]'
               }`}
             >
               <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -359,7 +348,7 @@ function Repartidor() {
           </button>
           <button
             onClick={() => { logout(); navigate('/') }}
-            className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[#b64646] hover:bg-[#f8f4f1]"
+            className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[var(--t-txt-b64646,#b64646)] hover:bg-[var(--t-bg-f8f4f1,#f8f4f1)]"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             Cerrar sesión
@@ -370,7 +359,7 @@ function Repartidor() {
       <main className="ml-60 min-w-0 flex-1">
         {activeItem === 'Resumen' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
                 <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
               </div>
@@ -390,7 +379,7 @@ function Repartidor() {
                 <button className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-white text-[var(--rd-text-muted)]">
                   <span className="material-symbols-outlined text-[20px]">notifications</span>
                 </button>
-                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#f2ece8] text-[0.9rem] font-bold text-[var(--rd-primary-dark)]">
+                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--t-bg-f2ece8,#f2ece8)] text-[0.9rem] font-bold text-[var(--rd-primary-dark)]">
                   {(user?.nombre ?? 'R')[0].toUpperCase()}
                 </div>
               </div>
@@ -454,34 +443,34 @@ function Repartidor() {
                           onTouchEnd={cancelarPresion}
                           title="Mantén presionado para reportar un problema con este domicilio"
                           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-none text-[var(--rd-danger)] transition-transform ${
-                            pressingKey === 'resumen-8845' ? 'scale-90 bg-[#fdecea]' : 'bg-[#fdecea]/60'
+                            pressingKey === 'resumen-8845' ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/60'
                           }`}
                         >
                           <span className="material-symbols-outlined">report</span>
                         </button>
-                        <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-none bg-[#f8f4f1] text-[var(--rd-primary-dark)]">
+                        <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-none bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-primary-dark)]">
                           <span className="material-symbols-outlined">call</span>
                         </button>
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4.5">
+                    <div className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4.5">
                       <ul className="flex flex-col gap-3">
                         <li className="flex justify-between gap-3 font-bold"><span>1x Truffle Risotto</span><span>$32.000</span></li>
                         <li className="flex justify-between gap-3 font-bold"><span>2x Vintage Negroni</span><span>$28.000</span></li>
-                        <li className="mt-1.5 flex justify-between gap-3 border-t border-[#ebe4df] pt-3.5 text-[1rem] font-bold">
+                        <li className="mt-1.5 flex justify-between gap-3 border-t border-[var(--t-brd-ebe4df,#ebe4df)] pt-3.5 text-[1rem] font-bold">
                           <span>Total</span><span className="text-[var(--rd-primary-dark)]">$60.000</span>
                         </li>
                       </ul>
                     </div>
                     <div className="flex flex-col gap-3.5">
                       <div className="grid grid-cols-3 gap-3">
-                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#eee5df] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
+                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">payments</span>Efectivo
                         </button>
                         <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--rd-primary)] bg-[var(--rd-primary-soft)] px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-primary-dark)]">
                           <span className="material-symbols-outlined">credit_card</span>Tarjeta
                         </button>
-                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#eee5df] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
+                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">qr_code_2</span>App Pay
                         </button>
                       </div>
@@ -507,10 +496,10 @@ function Repartidor() {
                         { id: '#8845', restaurant: 'The Bistro Main', address: '42 West Side Apts', eta: '12 min', distance: '2.4 km', icon: 'restaurant' },
                         { id: '#8848', restaurant: "Mamma's Kitchen", address: 'Central Plaza Hotel', eta: '22 min', distance: '4.1 km', icon: 'local_pizza' },
                       ].map(q => (
-                        <div key={q.id} className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4">
+                        <div key={q.id} className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4">
                           <div className="mb-3.5 flex items-start justify-between gap-3">
                             <div className="flex gap-3">
-                              <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[#f7f2ee] text-[var(--rd-primary)]">
+                              <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[var(--t-bg-f7f2ee,#f7f2ee)] text-[var(--rd-primary)]">
                                 <span className="material-symbols-outlined">{q.icon}</span>
                               </div>
                               <div>
@@ -518,7 +507,7 @@ function Repartidor() {
                                 <p className="mt-0.5 text-[0.8rem] text-[var(--rd-text-muted)]">{q.restaurant}</p>
                               </div>
                             </div>
-                            <span className="inline-flex items-center rounded-full bg-[var(--rd-secondary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[#9a5e10]">{q.eta}</span>
+                            <span className="inline-flex items-center rounded-full bg-[var(--rd-secondary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[var(--t-txt-9a5e10,#9a5e10)]">{q.eta}</span>
                           </div>
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex justify-between gap-3 text-[0.78rem] text-[var(--rd-text-muted)]">
@@ -534,7 +523,7 @@ function Repartidor() {
                               onTouchEnd={cancelarPresion}
                               title="Mantén presionado para reportar un problema"
                               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-none text-[var(--rd-danger)] transition-transform ${
-                                pressingKey === `cola-${q.id}` ? 'scale-90 bg-[#fdecea]' : 'bg-[#fdecea]/50'
+                                pressingKey === `cola-${q.id}` ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/50'
                               }`}
                             >
                               <span className="material-symbols-outlined text-[16px]">report</span>
@@ -554,7 +543,7 @@ function Repartidor() {
                       {['Carlos M.', 'Diana R.', 'Luis P.'].map((name, i) => (
                         <div key={name} className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#f2ece8] text-[0.8rem] font-bold text-[var(--rd-primary-dark)]">
+                            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[var(--t-bg-f2ece8,#f2ece8)] text-[0.8rem] font-bold text-[var(--rd-primary-dark)]">
                               {name[0]}
                             </div>
                             <span className="text-[0.88rem] font-semibold">{name}</span>
@@ -571,7 +560,7 @@ function Repartidor() {
         )}
         {activeItem === 'Entregas' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
                 <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Gestión de Entregas</h1>
                 <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
@@ -605,7 +594,7 @@ function Repartidor() {
                     <div key={d.id_domicilio} className="rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                       <div className="mb-3.5 flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[#f7f2ee] text-[var(--rd-primary)]">
+                          <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-[var(--t-bg-f7f2ee,#f7f2ee)] text-[var(--rd-primary)]">
                             <span className="material-symbols-outlined">local_shipping</span>
                           </div>
                           <div>
@@ -615,7 +604,7 @@ function Repartidor() {
                         </div>
                         <span
                           className="rounded-full px-3 py-1 text-[0.72rem] font-bold"
-                          style={{ background: estadoBg[d.estado] ?? '#f0ebe7', color: estadoColor[d.estado] ?? 'var(--rd-text-muted)' }}
+                          style={{ background: estadoBg[d.estado] ?? 'var(--t-bg-f0ebe7, #f0ebe7)', color: estadoColor[d.estado] ?? 'var(--rd-text-muted)' }}
                         >
                           {d.estado}
                         </span>
@@ -645,9 +634,9 @@ function Repartidor() {
                         <button
                           onClick={() => cancelarDomicilio(d.id_domicilio)}
                           disabled={d.estado === 'CANCELADO'}
-                          className={`flex-1 rounded-xl border-[1.5px] border-[#f0ebe7] px-3 py-2.5 text-[0.82rem] font-bold ${
+                          className={`flex-1 rounded-xl border-[1.5px] border-[var(--t-brd-f0ebe7,#f0ebe7)] px-3 py-2.5 text-[0.82rem] font-bold ${
                             d.estado === 'CANCELADO'
-                              ? 'cursor-not-allowed bg-[#f8f4f1] text-[var(--rd-text-muted)] opacity-50'
+                              ? 'cursor-not-allowed bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-text-muted)] opacity-50'
                               : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--rd-danger)]'
                           }`}
                         >
@@ -661,8 +650,8 @@ function Repartidor() {
                           onTouchStart={() => iniciarPresion(`entrega-${d.id_domicilio}`, `#${d.id_pedido}`)}
                           onTouchEnd={cancelarPresion}
                           title="Mantén presionado para reportar un problema con este domicilio"
-                          className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[#f0ebe7] text-[var(--rd-danger)] transition-transform ${
-                            pressingKey === `entrega-${d.id_domicilio}` ? 'scale-90 bg-[#fdecea]' : 'bg-white'
+                          className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[var(--t-brd-f0ebe7,#f0ebe7)] text-[var(--rd-danger)] transition-transform ${
+                            pressingKey === `entrega-${d.id_domicilio}` ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-white'
                           }`}
                         >
                           <span className="material-symbols-outlined text-[18px]">report</span>
@@ -688,7 +677,7 @@ function Repartidor() {
                       value={domicilioActual.id_pedido}
                       onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))}
                       disabled={modoEdicionDomicilio}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                     />
                   </div>
                   <div>
@@ -698,7 +687,7 @@ function Repartidor() {
                       placeholder="Ej: Calle 45 # 12-34, Bogotá"
                       value={domicilioActual.direccion}
                       onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                     />
                   </div>
                   <div>
@@ -706,7 +695,7 @@ function Repartidor() {
                     <select
                       value={domicilioActual.estado}
                       onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}
-                      className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                      className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                     >
                       <option value="ASIGNADO">ASIGNADO</option>
                       <option value="EN_CAMINO">EN_CAMINO</option>
@@ -721,11 +710,11 @@ function Repartidor() {
                       placeholder="Opcional"
                       value={domicilioActual.id_repartidor}
                       onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                     />
                   </div>
                   {errorDomicilio && (
-                    <p className="rounded-[10px] bg-[#fdecea] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                    <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
                       {errorDomicilio}
                     </p>
                   )}
@@ -755,7 +744,7 @@ function Repartidor() {
         ========================================================== */}
         {activeItem === 'Historial' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
                 <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Historial de entregas</h1>
                 <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Consulta tus entregas anteriores</p>
@@ -789,7 +778,7 @@ function Repartidor() {
                     <div
                       key={h.id}
                       className={`flex items-center justify-between gap-4 px-5.5 py-4 ${
-                        i !== historial.length - 1 ? 'border-b border-[#f0ebe7]' : ''
+                        i !== historial.length - 1 ? 'border-b border-[var(--t-brd-f0ebe7,#f0ebe7)]' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3.5">
@@ -841,7 +830,7 @@ function Repartidor() {
         ========================================================== */}
         {activeItem === 'Soporte' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
                 <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Soporte</h1>
             <span className="rounded-full bg-[var(--rd-card)] px-2 py-0.5 text-[0.65rem] text-[var(--rd-text-muted)]">Demo</span>
@@ -853,7 +842,7 @@ function Repartidor() {
 
             <div className="flex flex-col gap-6 p-7">
               <div className="rounded-[18px] border border-[var(--rd-secondary-soft)] bg-[var(--rd-secondary-soft)]/40 p-4.5 text-[0.85rem] text-[var(--rd-text-muted)]">
-                <span className="material-symbols-outlined mr-1.5 align-middle text-[18px] text-[#9a5e10]">info</span>
+                <span className="material-symbols-outlined mr-1.5 align-middle text-[18px] text-[var(--t-txt-9a5e10,#9a5e10)]">info</span>
                 Tip: en cualquier domicilio, mantén presionado el ícono <strong>⚠ Reportar</strong> por un segundo para abrir un reporte de problema.
               </div>
 
@@ -924,12 +913,12 @@ function Repartidor() {
                   </p>
 
                   <div className="flex flex-col gap-3">
-                    <div className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4">
+                    <div className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4">
                       <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Categoría</p>
                       <p className="text-[0.9rem] font-semibold">{modalSuceso.caso.categoria}</p>
                     </div>
 
-                    <div className="rounded-2xl border border-[#f0ebe7] bg-[#fcfaf8] p-4">
+                    <div className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4">
                       <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Suceso</p>
                       <p className="text-[0.9rem] leading-relaxed text-[var(--rd-text)]">{modalSuceso.caso.descripcion}</p>
                     </div>
@@ -971,7 +960,7 @@ function Repartidor() {
                 <select
                   value={nuevoReporte.categoria}
                   onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
-                  className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                  className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                 >
                   <option value="">Selecciona una opción</option>
                   {categoriasReporte.map(cat => (
@@ -988,12 +977,12 @@ function Repartidor() {
                   placeholder="Ej: El cliente no contesta el teléfono ni la puerta."
                   value={nuevoReporte.descripcion}
                   onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))}
-                  className="min-h-[100px] w-full resize-y rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
+                  className="min-h-[100px] w-full resize-y rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
                 />
               </div>
 
               {errorReporte && (
-                <p className="rounded-[10px] bg-[#fdecea] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
                   {errorReporte}
                 </p>
               )}

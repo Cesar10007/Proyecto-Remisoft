@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import Footer from '../../components/layout/Footer'
 import './SuperAdmin.css'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen', path: '/superadmin' },
@@ -21,6 +22,7 @@ function SuperAdmin() {
   return (
     <div className="sa-wrapper">
       <aside className="ge-sidebar">
+        <div className="px-2 pt-2"><ThemeToggle /></div>
         <div className="ge-sidebar-brand">
           <div className="ge-logo">
             Remi<span className="ge-logo-accent">Soft</span>

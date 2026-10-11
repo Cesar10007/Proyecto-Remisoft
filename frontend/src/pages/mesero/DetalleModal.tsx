@@ -22,7 +22,7 @@ function DetalleModal({ open, title, rows, onClose }: DetalleModalProps) {
         </div>
         <div className="mt-5 flex justify-end">
           <button
-            className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+            className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
             onClick={onClose}
           >
             Cerrar

@@ -1,0 +1,25 @@
+.tema-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  border: 1.5px solid var(--borde);
+  background: var(--bg-card);
+  color: var(--texto-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.tema-toggle:hover { color: var(--texto); border-color: var(--rojo); }
+.tema-toggle:focus-visible { outline: 2px solid var(--rojo); outline-offset: 2px; }
+.tema-toggle__icono { font-size: 18px; line-height: 1; }
+.tema-toggle--flotante {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 200;
+  box-shadow: var(--sombra);
+}

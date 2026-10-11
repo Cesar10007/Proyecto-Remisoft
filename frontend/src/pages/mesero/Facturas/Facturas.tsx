@@ -291,7 +291,7 @@ function Facturas({ nombreUsuario }: FacturasProps) {
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${
                             f.estado === 'PAGADA'
-                              ? 'bg-[#dcfce7] text-[#166534]'
+                              ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]'
                               : f.estado === 'PENDIENTE'
                               ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
                               : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
@@ -351,7 +351,7 @@ function Facturas({ nombreUsuario }: FacturasProps) {
           </div>
           <div className="mt-5 flex justify-end">
             <button
-              className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+              className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
               onClick={() => setModalDetalle(d => ({ ...d, open: false }))}
             >
               Cerrar
@@ -402,7 +402,7 @@ function Facturas({ nombreUsuario }: FacturasProps) {
             )}
             <div className="mt-2 flex justify-end gap-3">
               <button
-                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                 onClick={() => setModalFactura(false)}
               >
                 Cancelar

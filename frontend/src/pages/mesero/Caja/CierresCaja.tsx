@@ -275,7 +275,7 @@ function CierresCaja({ nombreUsuario, onBack }: CierresCajaProps) {
             )}
             <div className="mt-2 flex justify-end gap-3">
               <button
-                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                 onClick={() => setModalCierre(false)}
               >
                 Cancelar

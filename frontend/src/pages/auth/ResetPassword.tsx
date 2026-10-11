@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -51,6 +52,7 @@ function ResetPassword() {
   if (!token || !email) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-5">
+        <ThemeToggle flotante />
         <div className="flex w-full max-w-[420px] flex-col gap-2 rounded-[20px] border border-[var(--borde)] bg-[var(--bg-card)] p-9 shadow-[26px_26px_26px_rgba(0,0,0,0.1)]">
           <div className="mb-2">
             <h3 className="mb-1 font-['Syne'] text-[1.4rem] font-bold tracking-[-0.4px] text-[var(--texto)]">
@@ -67,6 +69,7 @@ function ResetPassword() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-5">
+      <ThemeToggle flotante />
       <div className="flex w-full max-w-[420px] flex-col gap-2 rounded-[20px] border border-[var(--borde)] bg-[var(--bg-card)] p-9 shadow-[26px_26px_26px_rgba(0,0,0,0.1)]">
         <p className="mb-6 text-center font-['Syne'] text-[1.8rem] font-extrabold tracking-[-0.5px] text-[var(--rojo-dark)]">
           Remi<span className="text-[var(--amarillo)]">Soft</span>
@@ -87,7 +90,7 @@ function ResetPassword() {
           </label>
           <div className="relative">
             <input
-              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
               type={showPassword ? 'text' : 'password'}
               placeholder="Mínimo 8 caracteres"
               value={password}
@@ -111,7 +114,7 @@ function ResetPassword() {
           </label>
           <div className="relative">
             <input
-              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
               type={showConfirm ? 'text' : 'password'}
               placeholder="Repite la contraseña"
               value={passwordConfirmation}

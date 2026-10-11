@@ -5,6 +5,7 @@ import api from '../../api/axios'
 import type { RootState } from '../../store/store'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 type EstadoItem = 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO'
 
@@ -90,6 +91,7 @@ export default function Cocina() {
 
   return (
     <div className="cocina">
+      <ThemeToggle flotante />
       <header className="cocina__header">
         <div>
           <h1>Tablero Cocina</h1>

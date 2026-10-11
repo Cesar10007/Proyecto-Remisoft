@@ -69,7 +69,7 @@
 .cajero__cuenta {
   text-align: left;
   border: 1px solid var(--borde);
-  background: #f9f5f0;
+  background: var(--t-bg-f9f5f0, #f9f5f0);
   border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
@@ -203,7 +203,7 @@
   padding: 12px 8px;
   border: 2px solid var(--borde);
   border-radius: 12px;
-  background: #fff;
+  background: var(--t-bg-ffffff, #fff);
   cursor: pointer;
   font: inherit;
   font-weight: 600;
@@ -277,7 +277,7 @@
   text-decoration: none;
   cursor: pointer;
   border: 1px solid var(--borde);
-  background: #fff;
+  background: var(--t-bg-ffffff, #fff);
   color: var(--texto);
 }
 
@@ -327,7 +327,7 @@
   .cajero__layout,
   .cajero__detalle {
     display: block;
-    background: #fff;
+    background: var(--t-bg-ffffff, #fff);
     box-shadow: none;
     border: none;
     padding: 0;

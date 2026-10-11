@@ -5,6 +5,7 @@ import api from '../../api/axios'
 import type { RootState } from '../../store/store'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
 
@@ -144,6 +145,7 @@ export default function Cajero() {
 
   return (
     <div className="cajero">
+      <ThemeToggle flotante />
       <header className="cajero__header">
         <div>
           <h1>Tablero Cajero</h1>

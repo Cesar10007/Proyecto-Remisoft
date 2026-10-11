@@ -400,7 +400,7 @@ function Gerente() {
     valor === null || valor === undefined ? '—' : formatoCOP.format(Number(valor))
 
   const etiquetaDemo = (
-    <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
+    <span className="rounded-full bg-[var(--t-bg-f0ebe5,#f0ebe5)] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
   )
 
   const cargarProductos = () => {
@@ -528,12 +528,12 @@ function Gerente() {
                     <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
                       m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
                       m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                      'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
                     }`}>{m.icon}</span>
                     <span className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold ${
                       m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
                       m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                      'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                      'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
                     }`}>{m.badge}</span>
                   </div>
                   <div>
@@ -576,7 +576,7 @@ function Gerente() {
                       Nuevo Pedido
                       <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </button>
-                    <button className="flex items-center justify-between rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]">
+                    <button className="flex items-center justify-between rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]">
                       Control de Menú
                       <span className="material-symbols-outlined text-[18px]">edit_note</span>
                     </button>
@@ -593,10 +593,10 @@ function Gerente() {
                           <span className="text-[0.75rem] font-medium text-[var(--texto-muted)]">{i.nombre}</span>
                           <span className={`text-[0.75rem] font-bold ${
                             i.color === 'verde' ? 'text-[var(--verde)]' :
-                            i.color === 'rojo' ? 'text-[var(--rojo)]' : 'text-[#BA7517]'
+                            i.color === 'rojo' ? 'text-[var(--rojo)]' : 'text-[var(--t-txt-ba7517,#BA7517)]'
                           }`}>{i.etiqueta}</span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-[#f0ebe5]">
+                        <div className="h-1.5 w-full rounded-full bg-[var(--t-bg-f0ebe5,#f0ebe5)]">
                           <div
                             className={`h-full rounded-full ${
                               i.color === 'verde' ? 'bg-[var(--verde)]' :
@@ -617,7 +617,7 @@ function Gerente() {
                 <div className="flex items-center gap-3">
                   <button
                     className={`rounded-[10px] border border-[var(--borde)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold ${
-                      fuenteProductos === 'vista' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[#f9f5f0] text-[var(--texto-muted)]'
+                      fuenteProductos === 'vista' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f9f5f0,#f9f5f0)] text-[var(--texto-muted)]'
                     }`}
                     onClick={() => setFuenteProductos('vista')}
                   >
@@ -625,7 +625,7 @@ function Gerente() {
                   </button>
                   <button
                     className={`rounded-[10px] border border-[var(--borde)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold ${
-                      fuenteProductos === 'sp' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[#f9f5f0] text-[var(--texto-muted)]'
+                      fuenteProductos === 'sp' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f9f5f0,#f9f5f0)] text-[var(--texto-muted)]'
                     }`}
                     onClick={() => setFuenteProductos('sp')}
                   >
@@ -668,7 +668,7 @@ function Gerente() {
                           <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] ${p.Estado ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{p.Estado ? 'Activo' : 'Inactivo'}</td>
                           <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
                             <div className="flex gap-2">
-                              <button className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
+                              <button className="rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
                               <button
                                 className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
                                   p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
@@ -797,7 +797,7 @@ function Gerente() {
               {pedidosEnCurso.map(p => {
                 const estado = etiquetaEstadoPedido[p.estado] ?? p.estado
                 return (
-                  <div key={p.id_pedido} className="flex items-center justify-between rounded-xl border border-[var(--borde)] bg-[#f9f5f0] px-4 py-3">
+                  <div key={p.id_pedido} className="flex items-center justify-between rounded-xl border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-4 py-3">
                     <div className="flex items-center gap-4">
                       <span className="font-['Syne'] text-[0.9rem] font-bold text-[var(--texto-muted)]">#{p.id_pedido}</span>
                       <div>
@@ -812,9 +812,9 @@ function Gerente() {
                     <div className="flex items-center gap-3">
                       <span className="text-[0.75rem] text-[var(--texto-muted)]">{tiempoDesde(p.Fecha_hora)}</span>
                       <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-semibold ${
-                        estado === 'Preparando' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
-                        estado === 'Listo' ? 'bg-[var(--verde-light)] text-[#0F6E56]' :
-                        'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                        estado === 'Preparando' ? 'bg-[var(--amarillo-light)] text-[var(--t-txt-854f0b,#854F0B)]' :
+                        estado === 'Listo' ? 'bg-[var(--verde-light)] text-[var(--t-txt-0f6e56,#0F6E56)]' :
+                        'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
                       }`}>{estado}</span>
                     </div>
                   </div>
@@ -866,8 +866,8 @@ function Gerente() {
                   <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
                     insight.tono === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
                     insight.tono === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                    insight.tono === 'amarillo' ? 'bg-[var(--amarillo-light)] text-[#854F0B]' :
-                    'bg-[#f0ebe5] text-[var(--texto-muted)]'
+                    insight.tono === 'amarillo' ? 'bg-[var(--amarillo-light)] text-[var(--t-txt-854f0b,#854F0B)]' :
+                    'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
                   }`}>{insight.icon}</span>
                   <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">{insight.titulo}</h4>
                 </div>
@@ -993,7 +993,7 @@ function Gerente() {
                           <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]"><strong>{empleado}</strong></td>
                           <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</td>
                           <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{hora(t.fecha_apertura)} - {t.fecha_cierre ? hora(t.fecha_cierre) : 'En curso'}</td>
-                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>
+                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[var(--t-txt-854f0b,#854F0B)]'}`}>
                             {abierto ? 'Activo' : 'Cerrado'}
                             {!abierto && (
                               <span className="block text-[0.75rem] font-normal text-[var(--texto-muted)]">

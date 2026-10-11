@@ -120,7 +120,7 @@ function ArqueosCaja({ nombreUsuario, onBack }: ArqueosCajaProps) {
           <span
             className={`flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
               arqueoActual.estado === 'Cuadrado'
-                ? 'bg-[#dcfce7] text-[#166534]'
+                ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]'
                 : arqueoActual.diferencia > 0
                 ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
                 : 'bg-[var(--wa-primary-light)] text-[var(--wa-primary)]'
@@ -251,7 +251,7 @@ function ArqueosCaja({ nombreUsuario, onBack }: ArqueosCajaProps) {
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         a.estado === 'Cuadrado'
-                          ? 'bg-[#dcfce7] text-[#166534]'
+                          ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]'
                           : a.estado === 'Sobrante'
                           ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
                           : 'bg-[var(--wa-primary-light)] text-[var(--wa-primary)]'
@@ -315,7 +315,7 @@ function ArqueosCaja({ nombreUsuario, onBack }: ArqueosCajaProps) {
             )}
             <div className="mt-2 flex justify-end gap-3">
               <button
-                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                 onClick={() => setModalArqueo(false)}
               >
                 Cancelar

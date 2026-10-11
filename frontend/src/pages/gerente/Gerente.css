@@ -108,7 +108,7 @@
 }
 
 .ge-secondary-btn {
-  background: #f9f5f0;
+  background: var(--t-bg-f9f5f0, #f9f5f0);
   color: var(--texto-muted);
   border: 1px solid var(--borde);
   border-radius: 10px;
@@ -286,7 +286,7 @@
 }
 
 .ge-tone-muted {
-  background: #f0ebe5;
+  background: var(--t-bg-f0ebe5, #f0ebe5);
   color: var(--texto-muted);
 }
 
@@ -442,7 +442,7 @@
 .ge-live-badge {
   font-size: 0.65rem;
   color: var(--texto-muted);
-  background: #f0ebe5;
+  background: var(--t-bg-f0ebe5, #f0ebe5);
   padding: 2px 8px;
   border-radius: 100px;
 }
@@ -481,12 +481,12 @@
 }
 
 .ge-text-amarillo {
-  color: #BA7517;
+  color: var(--t-txt-ba7517, #BA7517);
 }
 
 .ge-progress-track {
   width: 100%;
-  background: #f0ebe5;
+  background: var(--t-bg-f0ebe5, #f0ebe5);
   border-radius: 100px;
   height: 6px;
 }

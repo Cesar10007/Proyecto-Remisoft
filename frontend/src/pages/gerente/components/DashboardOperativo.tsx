@@ -80,7 +80,7 @@ function DashboardOperativo() {
         {alertas && alertas.length > 0 && (
           <ul className="flex flex-col gap-2">
             {alertas.map(a => (
-              <li key={a.id_ingrediente} className="flex items-center justify-between rounded-xl bg-[#f0ebe5] px-4 py-2.5">
+              <li key={a.id_ingrediente} className="flex items-center justify-between rounded-xl bg-[var(--t-bg-f0ebe5,#f0ebe5)] px-4 py-2.5">
                 <div>
                   <p className="text-[0.88rem] font-semibold text-[var(--texto)]">{a.nombre}</p>
                   <p className="text-[0.75rem] text-[var(--texto-muted)]">

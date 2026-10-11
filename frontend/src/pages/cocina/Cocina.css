@@ -40,7 +40,7 @@
 }
 
 .cocina__columna {
-  background: #f9f5f0;
+  background: var(--t-bg-f9f5f0, #f9f5f0);
   border: 1px solid var(--borde);
   border-radius: 16px;
   padding: 14px;
@@ -164,7 +164,7 @@
   text-decoration: none;
   cursor: pointer;
   border: 1px solid var(--borde);
-  background: #fff;
+  background: var(--t-bg-ffffff, #fff);
   color: var(--texto);
 }
 

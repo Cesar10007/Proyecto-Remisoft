@@ -7,6 +7,7 @@ import Pedidos from './Pedidos/Pedidos'
 import Caja from './Caja/Caja'
 import Facturas from './Facturas/Facturas'
 import './Mesero.css'
+import ThemeToggle from '../../components/common/ThemeToggle'
 
 const navItems = [
   { key: 'Mesas', icon: 'table_restaurant', label: 'Mesas' },
@@ -31,26 +32,8 @@ function Mesero() {
 
   return (
     <div
-      className="flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
+      className="wa-wrapper flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
       style={{
-        ['--wa-primary' as any]: '#a5360d',
-        ['--wa-primary-dark' as any]: '#852400',
-        ['--wa-primary-light' as any]: '#ffdbd0',
-        ['--wa-primary-container' as any]: '#c74d24',
-        ['--wa-secondary' as any]: '#855400',
-        ['--wa-secondary-light' as any]: '#ffddb7',
-        ['--wa-secondary-fixed-dim' as any]: '#ffb95d',
-        ['--wa-secondary-container' as any]: '#fcaa33',
-        ['--wa-tertiary' as any]: '#00694c',
-        ['--wa-tertiary-light' as any]: '#86f8c9',
-        ['--wa-bg' as any]: '#fcf9f8',
-        ['--wa-surface' as any]: '#ffffff',
-        ['--wa-surface-low' as any]: '#f6f3f2',
-        ['--wa-surface-mid' as any]: '#f0eded',
-        ['--wa-surface-high' as any]: '#e5e2e1',
-        ['--wa-text' as any]: '#1c1b1b',
-        ['--wa-text-muted' as any]: '#58423b',
-        ['--wa-border' as any]: 'rgba(224, 192, 182, 0.2)',
         background: 'var(--wa-bg)',
         color: 'var(--wa-text)',
       }}
@@ -77,6 +60,8 @@ function Mesero() {
             chevron_left
           </span>
         </button>
+
+        <div className="mb-4"><ThemeToggle /></div>
 
         <div className={`mb-10 px-2 ${sidebarColapsado ? 'text-center' : ''}`}>
           {sidebarColapsado ? (
@@ -150,7 +135,7 @@ function Mesero() {
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)]">
 
         {/* HEADER */}
-        <header className="flex items-center justify-between gap-6 border-b border-[var(--wa-border)] bg-[rgba(252,249,248,0.8)] px-6 py-3 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.06)] backdrop-blur-[12px]">
+        <header className="flex items-center justify-between gap-6 border-b border-[var(--wa-border)] bg-[var(--t-bg-rgba_252_249_248_0_8,rgba(252,249,248,0.8))] px-6 py-3 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.06)] backdrop-blur-[12px]">
           <div className="flex items-center gap-6">
             <span className="text-[1.125rem] font-black text-[var(--wa-text)]">
               Bienvenido de nuevo, {nombreUsuario}

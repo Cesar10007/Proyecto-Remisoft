@@ -102,7 +102,7 @@ function AperturasCaja({ nombreUsuario, onBack }: AperturasCajaProps) {
             <h2 className="text-[1.05rem] font-bold">Estado actual de la caja</h2>
             <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Información de la apertura activa</p>
           </div>
-          <span className="flex items-center gap-2 rounded-full bg-[#dcfce7] px-3 py-1.5 text-sm font-semibold text-[#166534]">
+          <span className="flex items-center gap-2 rounded-full bg-[var(--t-bg-dcfce7,#dcfce7)] px-3 py-1.5 text-sm font-semibold text-[var(--t-txt-166534,#166534)]">
             <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
             {aperturaActiva.estado}
           </span>
@@ -205,7 +205,7 @@ function AperturasCaja({ nombreUsuario, onBack }: AperturasCajaProps) {
                   <td className="px-5 py-4">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        a.estado === 'Abierta' ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
+                        a.estado === 'Abierta' ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]' : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
                       }`}
                     >
                       {a.estado}
@@ -260,7 +260,7 @@ function AperturasCaja({ nombreUsuario, onBack }: AperturasCajaProps) {
             )}
             <div className="mt-2 flex justify-end gap-3">
               <button
-                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                 onClick={() => setModalApertura(false)}
               >
                 Cancelar

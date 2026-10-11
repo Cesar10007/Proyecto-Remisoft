@@ -177,7 +177,7 @@ function Mesas() {
                   <div className="mb-4 flex items-center justify-between">
                     <div
                       className={`flex h-12 w-12 items-center justify-center rounded-full text-[1.25rem] font-black ${
-                        table.state === 'waiting' ? 'bg-[var(--wa-secondary-container)] text-[#2a1700]' : 'bg-[var(--wa-secondary-fixed-dim)] text-[#2a1700]'
+                        table.state === 'waiting' ? 'bg-[var(--wa-secondary-container)] text-[var(--t-txt-2a1700,#2a1700)]' : 'bg-[var(--wa-secondary-fixed-dim)] text-[var(--t-txt-2a1700,#2a1700)]'
                       }`}
                     >
                       {table.number}

@@ -162,7 +162,7 @@ function Pedidos() {
                     <td className="px-3 py-2.5">
                       <div className="flex gap-2">
                         <button
-                          className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+                          className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
                           onClick={() => abrirEditar(p)}
                         >
                           Editar
@@ -265,7 +265,7 @@ function Pedidos() {
  
             <div className="mt-2 flex justify-end gap-3">
               <button
-                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                 onClick={() => setModal(false)}
               >
                 Cancelar
