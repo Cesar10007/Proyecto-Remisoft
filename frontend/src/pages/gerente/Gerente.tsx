@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import './Gerente.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -22,8 +22,14 @@ interface PagoApi { id_factura?: number; metodo: string | null; monto: string | 
 interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
 interface TurnoApi {
   id_turno: number
+  id_caja: number
+  id_usuario_cajero: number
   fecha_apertura: string | null
   fecha_cierre: string | null
+  efectivo_inicial: string | number | null
+  efectivo_esperado: string | number | null
+  efectivo_real: string | number | null
+  diferencia: string | number | null
   estado: string | null
   caja?: { nombre: string | null } | null
   usuario?: { nombre: string | null; apellido: string | null } | null
@@ -95,6 +101,13 @@ function Gerente() {
   const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
   const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
   const [turnos, setTurnos] = useState<TurnoApi[]>([])
+  const [cajeros, setCajeros] = useState<Personal[]>([])
+  const [mostrarAbrirTurno, setMostrarAbrirTurno] = useState(false)
+  const [formAbrir, setFormAbrir] = useState({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
+  const [turnoCerrando, setTurnoCerrando] = useState<number | null>(null)
+  const [efectivoContado, setEfectivoContado] = useState('')
+  const [notasCierre, setNotasCierre] = useState('')
+  const [errorTurno, setErrorTurno] = useState('')
   const vistaActual = seccionActiva.toLowerCase()
   const setVistaActual = (vista: string) => {
     const itemSeleccionado = menuItems.find(item => item.label.toLowerCase() === vista)
@@ -276,12 +289,68 @@ function Gerente() {
       .catch(console.error)
   }, [seccionActiva])
 
+  const recargarTurnos = () => {
+    api.get('/turnos')
+      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
+      .catch(console.error)
+  }
+
   useEffect(() => {
     if (seccionActiva !== 'Turnos') return
     api.get('/turnos')
       .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
       .catch(console.error)
+    api.get('/cajas').then(r => setCajas(r.data)).catch(console.error)
+    api.get('/usuarios')
+      .then(({ data }: { data: Personal[] }) => setCajeros(data.filter(u => u.rol === 'CAJERO' && u.activo === 1)))
+      .catch(console.error)
   }, [seccionActiva])
+
+  const abrirTurno = async () => {
+    const efectivo = Number(formAbrir.efectivo_inicial)
+    if (!formAbrir.id_caja || !formAbrir.id_usuario_cajero || formAbrir.efectivo_inicial === '' || Number.isNaN(efectivo) || efectivo < 0) {
+      setErrorTurno('Completa caja, cajero y efectivo inicial (0 o más)')
+      return
+    }
+    const idCaja = Number(formAbrir.id_caja)
+    const idCajero = Number(formAbrir.id_usuario_cajero)
+    if (turnos.some(t => t.estado === 'ABIERTA' && (t.id_caja === idCaja || t.id_usuario_cajero === idCajero))) {
+      setErrorTurno('La caja o el cajero ya tiene un turno abierto')
+      return
+    }
+    try {
+      await api.post('/turnos', { id_caja: idCaja, id_usuario_cajero: idCajero, efectivo_inicial: efectivo, estado: 'ABIERTA' })
+      setMostrarAbrirTurno(false)
+      setFormAbrir({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
+      setErrorTurno('')
+      recargarTurnos()
+    } catch {
+      setErrorTurno('No se pudo abrir el turno')
+    }
+  }
+
+  const cerrarTurno = async (t: TurnoApi) => {
+    const contado = Number(efectivoContado)
+    if (efectivoContado === '' || Number.isNaN(contado) || contado < 0) {
+      setErrorTurno('Ingresa el efectivo contado (0 o más)')
+      return
+    }
+    try {
+      await api.post(`/turnos/${t.id_turno}/cerrar`, { efectivo_real: contado, notas: notasCierre || null })
+      setTurnoCerrando(null)
+      setEfectivoContado('')
+      setNotasCierre('')
+      setErrorTurno('')
+      recargarTurnos()
+    } catch (error) {
+      const mensaje = (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      setErrorTurno(mensaje ?? 'No se pudo cerrar el turno')
+      recargarTurnos()
+    }
+  }
+
+  const monedaTurno = (valor: string | number | null) =>
+    valor === null || valor === undefined ? '—' : formatoCOP.format(Number(valor))
 
   const etiquetaDemo = (
     <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
@@ -794,10 +863,55 @@ function Gerente() {
             onTogglePassword={() => setMostrarContrasena(current => !current)}
           />
         )}
-        {/* TURNOS — vista con datos de ejemplo */}
+        {/* TURNOS — apertura y cierre de caja con datos de la base */}
         {seccionActiva === 'Turnos' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
+              <button
+                type="button"
+                onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}
+                className="rounded-xl bg-[var(--texto)] px-4 py-2 text-[0.85rem] font-semibold text-white"
+              >
+                {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
+              </button>
+            </div>
+            {mostrarAbrirTurno && (
+              <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-[var(--borde)] p-4 md:grid-cols-4">
+                <select
+                  value={formAbrir.id_caja}
+                  onChange={e => setFormAbrir({ ...formAbrir, id_caja: e.target.value })}
+                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                >
+                  <option value="">Caja</option>
+                  {cajas.filter(c => c.estado === 'ACTIVA').map(c => (
+                    <option key={c.id_caja} value={c.id_caja}>{c.nombre}</option>
+                  ))}
+                </select>
+                <select
+                  value={formAbrir.id_usuario_cajero}
+                  onChange={e => setFormAbrir({ ...formAbrir, id_usuario_cajero: e.target.value })}
+                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                >
+                  <option value="">Cajero</option>
+                  {cajeros.map(u => (
+                    <option key={u.id_usuario} value={u.id_usuario}>{u.nombre} {u.apellido}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Efectivo inicial"
+                  value={formAbrir.efectivo_inicial}
+                  onChange={e => setFormAbrir({ ...formAbrir, efectivo_inicial: e.target.value })}
+                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                />
+                <button type="button" onClick={abrirTurno} className="rounded-lg bg-[var(--verde)] px-4 py-2 text-[0.85rem] font-semibold text-white">
+                  Confirmar apertura
+                </button>
+              </div>
+            )}
+            {errorTurno && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -806,11 +920,12 @@ function Gerente() {
                     <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Rol</th>
                     <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Turno</th>
                     <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
+                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {turnos.length === 0 && (
-                    <tr><td colSpan={4} className="px-3 py-4 text-[0.85rem] text-[var(--texto-muted)]">No hay turnos registrados.</td></tr>
+                    <tr><td colSpan={5} className="px-3 py-4 text-[0.85rem] text-[var(--texto-muted)]">No hay turnos registrados.</td></tr>
                   )}
                   {turnos.map(t => {
                     const hora = (fecha: string | null) => fecha
@@ -818,13 +933,65 @@ function Gerente() {
                       : '—'
                     const abierto = t.estado === 'ABIERTA'
                     const empleado = `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—'
+                    const cerrandoEste = turnoCerrando === t.id_turno
                     return (
-                      <tr key={t.id_turno}>
-                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{empleado}</strong></td>
-                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</td>
-                        <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{hora(t.fecha_apertura)} - {t.fecha_cierre ? hora(t.fecha_cierre) : 'En curso'}</td>
-                        <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>{abierto ? 'Activo' : (t.estado ?? '—')}</td>
-                      </tr>
+                      <Fragment key={t.id_turno}>
+                        <tr>
+                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]"><strong>{empleado}</strong></td>
+                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</td>
+                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{hora(t.fecha_apertura)} - {t.fecha_cierre ? hora(t.fecha_cierre) : 'En curso'}</td>
+                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>
+                            {abierto ? 'Activo' : 'Cerrado'}
+                            {!abierto && (
+                              <span className="block text-[0.75rem] font-normal text-[var(--texto-muted)]">
+                                Esperado {monedaTurno(t.efectivo_esperado)} · Diferencia {monedaTurno(t.diferencia)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
+                            {abierto ? (
+                              <button
+                                type="button"
+                                onClick={() => { setTurnoCerrando(cerrandoEste ? null : t.id_turno); setEfectivoContado(''); setNotasCierre(''); setErrorTurno('') }}
+                                className="rounded-lg border border-[var(--borde)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto)]"
+                              >
+                                {cerrandoEste ? 'Cancelar' : 'Cerrar turno'}
+                              </button>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                        {cerrandoEste && (
+                          <tr>
+                            <td colSpan={5} className="border-b border-[var(--borde)] px-3 py-3">
+                              <div className="flex flex-wrap items-end gap-3">
+                                <label className="flex flex-col text-[0.78rem] text-[var(--texto-muted)]">
+                                  Efectivo contado
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={efectivoContado}
+                                    onChange={e => setEfectivoContado(e.target.value)}
+                                    className="mt-1 w-44 rounded-lg border border-[var(--borde)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                                  />
+                                </label>
+                                <label className="flex flex-col text-[0.78rem] text-[var(--texto-muted)]">
+                                  Notas
+                                  <input
+                                    type="text"
+                                    maxLength={500}
+                                    value={notasCierre}
+                                    onChange={e => setNotasCierre(e.target.value)}
+                                    className="mt-1 w-64 rounded-lg border border-[var(--borde)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                                  />
+                                </label>
+                                <button type="button" onClick={() => cerrarTurno(t)} className="rounded-lg bg-[var(--rojo-dark)] px-4 py-2 text-[0.85rem] font-semibold text-white">
+                                  Confirmar cierre
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     )
                   })}
                 </tbody>
