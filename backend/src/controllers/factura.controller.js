@@ -9,7 +9,8 @@ export async function index(req, res, next) {
     const facturas = await prisma.Factura.findMany({
       orderBy: { id_factura: 'desc' },
       include: {
-        pedidos: true // Relacin con pedidos
+        pedido: true, // Relación con el pedido (Mesa_num, mesero)
+        pago: true,   // Pagos registrados (método, monto, fecha)
       }
     });
 
@@ -34,7 +35,7 @@ export async function show(req, res, next) {
     const factura = await prisma.Factura.findUnique({
       where: { id_factura: parseInt(id) },
       include: {
-        pedidos: true
+        pedido: true
       }
     });
 
@@ -148,7 +149,7 @@ export async function update(req, res, next) {
         Fecha_emision: Fecha_emision ? new Date(Fecha_emision) : undefined
       },
       include: {
-        pedidos: true
+        pedido: true
       }
     });
 
