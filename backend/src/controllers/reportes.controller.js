@@ -136,3 +136,41 @@ export async function pedidosActivos(req, res, next) {
     next(error);
   }
 }
+
+/**
+ * GET /api/reportes/gastos-del-mes
+ * Gastos del mes en curso (hora de Bogota): cantidad recibida x precio unitario
+ * de las ordenes de compra del mes. Las ordenes canceladas no cuentan.
+ */
+export async function gastosDelMes(req, res, next) {
+  try {
+    const [anio, mes] = fechaHoyBogota().split('-').map(Number);
+    // 00:00 en Bogota (UTC-5) del primer dia del mes y del mes siguiente.
+    const desde = new Date(Date.UTC(anio, mes - 1, 1, 5));
+    const hasta = new Date(Date.UTC(anio, mes, 1, 5));
+
+    const ordenes = await prisma.orden_compra.findMany({
+      where: {
+        fecha_orden: { gte: desde, lt: hasta },
+        OR: [{ estado: null }, { estado: { not: 'CANCELADA' } }],
+      },
+      select: {
+        detalle_orden_compra: { select: { cantidad_recibida: true, precio_unitario: true } },
+      },
+    });
+
+    let gastos = 0;
+    for (const orden of ordenes) {
+      for (const d of orden.detalle_orden_compra) {
+        gastos += Number(d.cantidad_recibida ?? 0) * Number(d.precio_unitario ?? 0);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: { gastos_mes: Math.round(gastos), ordenes: ordenes.length },
+    });
+  } catch (error) {
+    next(error);
+  }
+}

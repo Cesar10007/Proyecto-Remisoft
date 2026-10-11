@@ -107,6 +107,14 @@ const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as numbe
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
+  const [gastosMes, setGastosMes] = useState<number | null>(null)
+  // Gastos del mes: compras a proveedores de la base (orden_compra).
+  useEffect(() => {
+    if (seccionActiva !== 'Finanzas') return
+    api.get('/reportes/gastos-del-mes')
+      .then(({ data }: { data: { data: { gastos_mes: number } } }) => setGastosMes(Number(data.data.gastos_mes)))
+      .catch(console.error)
+  }, [seccionActiva])
   const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
   const [turnos, setTurnos] = useState<TurnoApi[]>([])
   const [historial, setHistorial] = useState<EventoHistorial[]>([])
@@ -207,7 +215,7 @@ function Gerente() {
     },
     {
       icon: 'account_balance_wallet',
-      label: 'Ingresos del mes',
+      label: 'Ventas del mes',
       valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
       badge: 'Pagos aprobados',
       badgeColor: 'muted',
@@ -763,13 +771,23 @@ function Gerente() {
             stats={[
               {
                 icon: 'trending_up',
-                label: 'Ingresos del mes',
+                label: 'Ventas del mes',
                 valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
                 badge: 'Pagos aprobados',
                 badgeColor: 'verde',
               },
-              { ...finanzasStats[1], badge: 'Demo', badgeColor: 'muted' },
-              { ...finanzasStats[2], badge: 'Demo', badgeColor: 'muted' },
+              {
+                ...finanzasStats[1],
+                valor: gastosMes === null ? '...' : formatoCOP.format(gastosMes),
+                badge: 'Compras del mes',
+                badgeColor: 'rojo',
+              },
+              {
+                ...finanzasStats[2],
+                valor: ingresosDelMes === null || gastosMes === null ? '...' : formatoCOP.format(ingresosDelMes - gastosMes),
+                badge: 'Ingresos − gastos',
+                badgeColor: 'muted',
+              },
             ]}
             transacciones={[...pagosAprobados]
               .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
