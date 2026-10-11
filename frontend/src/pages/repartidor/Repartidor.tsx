@@ -110,6 +110,27 @@ const categoriasReporte = [
 
 const LONG_PRESS_MS = 600
 
+type ResumenRepartidor = {
+  ganancias_hoy: number
+  entregas_hoy: number
+  cola: { id_domicilio: number; id_pedido: number; estado: string; direccion: string | null; cliente: string | null; items: number }[]
+  actual: {
+    id_domicilio: number
+    id_pedido: number
+    cliente: string | null
+    telefono: string | null
+    direccion: string | null
+    items: { nombre: string; cantidad: number; subtotal: number }[]
+    total: number
+  } | null
+  top: { id_usuario: number; nombre: string; entregas: number }[]
+}
+
+const formatoPesos = (valor: number) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(valor)
+
+const etiquetaEstadoCola: Record<string, string> = { ASIGNADO: 'Asignado', EN_CAMINO: 'En camino' }
+
 function Repartidor() {
   const [activeItem, setActiveItem] = useState('Resumen')
   const navigate = useNavigate()
@@ -123,6 +144,7 @@ function Repartidor() {
   const [idEditandoDomicilio, setIdEditandoDomicilio] = useState<number | null>(null)
   const [guardandoDomicilio, setGuardandoDomicilio] = useState(false)
   const [errorDomicilio, setErrorDomicilio] = useState<string | null>(null)
+  const [resumen, setResumen] = useState<ResumenRepartidor | null>(null)
 
   const cargarDomicilios = () => {
     setCargandoDomicilios(true)
@@ -130,6 +152,21 @@ function Repartidor() {
   }
 
   useEffect(() => { if (['Resumen', 'Entregas', 'Historial'].includes(activeItem)) cargarDomicilios() }, [activeItem])
+
+  useEffect(() => {
+    if (activeItem !== 'Resumen') return
+    api.get('/domicilios/resumen').then(r => setResumen(r.data.data)).catch(console.error)
+  }, [activeItem])
+
+  // Vista de la cola de pedidos a partir del resumen (datos reales).
+  const colaVista = (resumen?.cola ?? []).map(c => ({
+    id: `#${c.id_pedido}`,
+    restaurant: c.cliente ?? 'Cliente',
+    address: c.direccion ?? '—',
+    eta: etiquetaEstadoCola[c.estado] ?? c.estado,
+    distance: `${c.items} ítems`,
+    icon: 'restaurant',
+  }))
 
   const abrirCrearDomicilio = () => {
     setModoEdicionDomicilio(false)
@@ -389,9 +426,8 @@ function Repartidor() {
               <div className="grid grid-cols-3 gap-4.5">
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold">$142.500</span>
-                  <span className="text-[0.65rem] font-bold uppercase text-white/82">Demo</span>
-                  <span className="text-[0.8rem] font-semibold text-white/82">Dato de ejemplo</span>
+                  <span className="font-['Syne'] text-[2rem] font-extrabold">{formatoPesos(resumen?.ganancias_hoy ?? 0)}</span>
+                  <span className="text-[0.8rem] font-semibold text-white/82">Facturas de tus entregas de hoy</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregas completadas</span>
@@ -418,8 +454,8 @@ function Repartidor() {
                         <span className="material-symbols-outlined text-[20px]">navigation</span>
                       </div>
                       <div>
-                        <p className="text-[0.72rem] opacity-82">Optimizando ruta</p>
-                        <h4 className="text-[1rem] font-extrabold">Bogotá · Entrega óptima</h4>
+                        <p className="text-[0.72rem] opacity-82">Siguiente entrega</p>
+                        <h4 className="text-[1rem] font-extrabold">{resumen?.actual?.direccion ?? 'Sin entrega asignada'}</h4>
                       </div>
                     </div>
                   </div>
@@ -427,23 +463,23 @@ function Repartidor() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="mb-1.5 text-[0.7rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Cliente actual</p>
-                        <p className="font-['Syne'] text-[1.5rem] font-extrabold">Carlos Méndez</p>
+                        <p className="font-['Syne'] text-[1.5rem] font-extrabold">{resumen?.actual?.cliente ?? 'Sin entrega asignada'}</p>
                         <div className="mt-2 flex items-center gap-1.5 text-[var(--rd-text-muted)]">
                           <span className="material-symbols-outlined text-[18px] text-[var(--rd-primary)]">location_on</span>
-                          <span>Calle 72 # 14-25, Bogotá</span>
+                          <span>{resumen?.actual?.direccion ?? '—'}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2.5">
                         {/* BOTÓN DE SOPORTE: mantener presionado para reportar problema */}
                         <button
-                          onMouseDown={() => iniciarPresion('resumen-8845', '#8845')}
+                          onMouseDown={() => iniciarPresion('resumen-actual', `#${resumen?.actual?.id_pedido ?? ''}`)}
                           onMouseUp={cancelarPresion}
                           onMouseLeave={cancelarPresion}
-                          onTouchStart={() => iniciarPresion('resumen-8845', '#8845')}
+                          onTouchStart={() => iniciarPresion('resumen-actual', `#${resumen?.actual?.id_pedido ?? ''}`)}
                           onTouchEnd={cancelarPresion}
                           title="Mantén presionado para reportar un problema con este domicilio"
                           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-none text-[var(--rd-danger)] transition-transform ${
-                            pressingKey === 'resumen-8845' ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/60'
+                            pressingKey === 'resumen-actual' ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/60'
                           }`}
                         >
                           <span className="material-symbols-outlined">report</span>
@@ -455,10 +491,11 @@ function Repartidor() {
                     </div>
                     <div className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4.5">
                       <ul className="flex flex-col gap-3">
-                        <li className="flex justify-between gap-3 font-bold"><span>1x Truffle Risotto</span><span>$32.000</span></li>
-                        <li className="flex justify-between gap-3 font-bold"><span>2x Vintage Negroni</span><span>$28.000</span></li>
+                        {(resumen?.actual?.items ?? []).map((it, idx) => (
+                          <li key={idx} className="flex justify-between gap-3 font-bold"><span>{it.cantidad}x {it.nombre}</span><span>{formatoPesos(it.subtotal)}</span></li>
+                        ))}
                         <li className="mt-1.5 flex justify-between gap-3 border-t border-[var(--t-brd-ebe4df,#ebe4df)] pt-3.5 text-[1rem] font-bold">
-                          <span>Total</span><span className="text-[var(--rd-primary-dark)]">$60.000</span>
+                          <span>Total</span><span className="text-[var(--rd-primary-dark)]">{formatoPesos(resumen?.actual?.total ?? 0)}</span>
                         </li>
                       </ul>
                     </div>
@@ -489,13 +526,10 @@ function Repartidor() {
                         <h3 className="font-['Syne'] text-[1.25rem] font-extrabold">Cola de Pedidos</h3>
                         <p className="mt-1 text-[0.85rem] text-[var(--rd-text-muted)]">Próximas entregas asignadas</p>
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-[var(--rd-primary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[var(--rd-primary-dark)]">2 órdenes</span>
+                      <span className="inline-flex items-center rounded-full bg-[var(--rd-primary-soft)] px-2.5 py-1.5 text-[0.7rem] font-bold text-[var(--rd-primary-dark)]">{colaVista.length} órdenes</span>
                     </div>
                     <div className="flex flex-col gap-3.5">
-                      {[
-                        { id: '#8845', restaurant: 'The Bistro Main', address: '42 West Side Apts', eta: '12 min', distance: '2.4 km', icon: 'restaurant' },
-                        { id: '#8848', restaurant: "Mamma's Kitchen", address: 'Central Plaza Hotel', eta: '22 min', distance: '4.1 km', icon: 'local_pizza' },
-                      ].map(q => (
+                      {colaVista.map(q => (
                         <div key={q.id} className="rounded-2xl border border-[var(--t-brd-f0ebe7,#f0ebe7)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] p-4">
                           <div className="mb-3.5 flex items-start justify-between gap-3">
                             <div className="flex gap-3">
@@ -540,15 +574,15 @@ function Repartidor() {
                       <p className="mt-1 text-[0.85rem] text-[var(--rd-text-muted)]">Top Repartidores hoy</p>
                     </div>
                     <div className="flex flex-col gap-3">
-                      {['Carlos M.', 'Diana R.', 'Luis P.'].map((name, i) => (
-                        <div key={name} className="flex items-center justify-between">
+                      {(resumen?.top ?? []).map((t) => (
+                        <div key={t.id_usuario} className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
                             <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[var(--t-bg-f2ece8,#f2ece8)] text-[0.8rem] font-bold text-[var(--rd-primary-dark)]">
-                              {name[0]}
+                              {t.nombre[0]}
                             </div>
-                            <span className="text-[0.88rem] font-semibold">{name}</span>
+                            <span className="text-[0.88rem] font-semibold">{t.nombre}</span>
                           </div>
-                          <span className="text-[0.78rem] text-[var(--rd-text-muted)]">{18 - i * 2} entregas</span>
+                          <span className="text-[0.78rem] text-[var(--rd-text-muted)]">{t.entregas} entregas</span>
                         </div>
                       ))}
                     </div>
