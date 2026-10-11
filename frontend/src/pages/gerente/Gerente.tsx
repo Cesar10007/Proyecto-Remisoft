@@ -14,8 +14,26 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, metricas, movimientos, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, menuItems, metricas, transacciones, turnosMock } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+
+// Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
+interface PagoApi { metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
+interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
+interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
+
+const etiquetaMetodo = (metodo: string | null) => {
+  const etiquetas: Record<string, string> = { EFECTIVO: 'Efectivo', TARJETA_CREDITO: 'Tarjeta crédito', TARJETA_DEBITO: 'Tarjeta débito', PSE: 'PSE' }
+  return metodo ? (etiquetas[metodo] ?? metodo) : 'Sin método'
+}
+
+const haceTiempo = (fecha: string | null) => {
+  if (!fecha) return '—'
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))
+  if (minutos < 60) return `Hace ${minutos} min`
+  if (minutos < 1440) return `Hace ${Math.round(minutos / 60)} h`
+  return `Hace ${Math.round(minutos / 1440)} d`
+}
 
 // Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
 function fechaBogota(desplazamientoDias = 0): string {
@@ -192,6 +210,43 @@ function Gerente() {
     cargarMesas()
     const intervalo = setInterval(cargarMesas, 15000)
     return () => clearInterval(intervalo)
+  }, [seccionActiva])
+
+  // Movimientos recientes (pagos aprobados) y Estado inventario (stock actual): datos de la base.
+  const [movimientosRecientes, setMovimientosRecientes] = useState<{ icon: string; titulo: string; sub: string; monto: string; positivo: boolean }[]>([])
+  const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú') return
+    api.get('/facturas')
+      .then(({ data }: { data: { data: FacturaApi[] } }) => {
+        const pagos = data.data
+          .flatMap(f => (f.pago ?? []).map(p => ({ ...p, mesa: f.pedido?.Mesa_num ?? null })))
+          .filter(p => p.estado === 'APROBADO')
+          .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
+          .slice(0, 4)
+        setMovimientosRecientes(pagos.map(p => ({
+          icon: 'shopping_cart',
+          titulo: p.mesa ? `Mesa ${String(p.mesa).padStart(2, '0')} - Pago recibido` : 'Pago recibido (domicilio)',
+          sub: `${haceTiempo(p.fecha_pago)} • ${etiquetaMetodo(p.metodo)}`,
+          monto: `+${formatoCOP.format(Number(p.monto ?? 0))}`,
+          positivo: true,
+        })))
+      })
+      .catch(console.error)
+
+    api.get('/inventario')
+      .then(({ data }: { data: { data: InventarioApi[] } }) => setEstadoInventario(data.data.map(i => {
+        const minimo = Number(i.stock_minimo ?? 0)
+        const actual = Number(i.stock_actual ?? 0)
+        return {
+          nombre: i.nombre,
+          porcentaje: minimo > 0 ? Math.min(100, Math.round((actual / minimo) * 100)) : 100,
+          color: i.stock_bajo ? 'rojo' : 'verde',
+          etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim(),
+        }
+      })))
+      .catch(console.error)
   }, [seccionActiva])
 
   const etiquetaDemo = (
@@ -380,17 +435,16 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Estado inventario</h4>
-                    <span className="rounded-full bg-[#f0ebe5] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
                   </div>
                   <div className="flex flex-col gap-3.5">
-                    {inventario.map(i => (
+                    {estadoInventario.map(i => (
                       <div key={i.nombre}>
                         <div className="mb-1 flex justify-between">
                           <span className="text-[0.75rem] font-medium text-[var(--texto-muted)]">{i.nombre}</span>
                           <span className={`text-[0.75rem] font-bold ${
                             i.color === 'verde' ? 'text-[var(--verde)]' :
                             i.color === 'rojo' ? 'text-[var(--rojo)]' : 'text-[#BA7517]'
-                          }`}>{i.porcentaje}%</span>
+                          }`}>{i.etiqueta}</span>
                         </div>
                         <div className="h-1.5 w-full rounded-full bg-[#f0ebe5]">
                           <div
@@ -515,11 +569,11 @@ function Gerente() {
               </div>
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>{etiquetaDemo}
+                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>
                   <button className="border-none bg-transparent text-[0.75rem] font-semibold text-[var(--rojo)]">Ver todo</button>
                 </div>
                 <div className="flex flex-col gap-4">
-                  {movimientos.map((mov, i) => (
+                  {movimientosRecientes.map((mov, i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full ${
