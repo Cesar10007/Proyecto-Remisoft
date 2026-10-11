@@ -14,11 +14,11 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, menuItems, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, menuItems, turnosMock } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
-interface PagoApi { metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
+interface PagoApi { id_factura?: number; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
 interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
 interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
 
@@ -85,6 +85,7 @@ const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as numbe
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
+  const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
   const vistaActual = seccionActiva.toLowerCase()
   const setVistaActual = (vista: string) => {
     const itemSeleccionado = menuItems.find(item => item.label.toLowerCase() === vista)
@@ -224,7 +225,7 @@ function Gerente() {
   const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
 
   useEffect(() => {
-    if (seccionActiva !== 'Menú') return
+    if (seccionActiva !== 'Menú' && seccionActiva !== 'Finanzas') return
     api.get('/facturas')
       .then(({ data }: { data: { data: FacturaApi[] } }) => {
         const aprobados = data.data
@@ -237,6 +238,7 @@ function Gerente() {
             return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear()
           })
           .reduce((acc, p) => acc + Number(p.monto ?? 0), 0))
+        setPagosAprobados(aprobados)
         const pagos = [...aprobados]
           .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
           .slice(0, 4)
@@ -250,6 +252,7 @@ function Gerente() {
       })
       .catch(console.error)
 
+    if (seccionActiva !== 'Menú') return
     api.get('/inventario')
       .then(({ data }: { data: { data: InventarioApi[] } }) => setEstadoInventario(data.data.map(i => {
         const minimo = Number(i.stock_minimo ?? 0)
@@ -624,10 +627,31 @@ function Gerente() {
         {seccionActiva === 'Flujo de Caja' && <CajasSection cajas={cajas} onCreate={abrirCrearCaja} onEdit={abrirEditarCaja} onToggle={toggleCaja} />}
         {/* FINANZAS — vista con datos de ejemplo */}
         {seccionActiva === 'Finanzas' && (
-          <>
-            <div className="mb-4 flex justify-end">{etiquetaDemo}</div>
-            <FinanzasSection stats={finanzasStats} transacciones={transacciones} />
-          </>
+          <FinanzasSection
+            stats={[
+              {
+                icon: 'trending_up',
+                label: 'Ingresos del mes',
+                valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
+                badge: 'Pagos aprobados',
+                badgeColor: 'verde',
+              },
+              { ...finanzasStats[1], badge: 'Demo', badgeColor: 'muted' },
+              { ...finanzasStats[2], badge: 'Demo', badgeColor: 'muted' },
+            ]}
+            transacciones={[...pagosAprobados]
+              .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
+              .slice(0, 10)
+              .map(p => ({
+                fecha: p.fecha_pago
+                  ? new Date(p.fecha_pago).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+                  : '—',
+                concepto: `Pago ${etiquetaMetodo(p.metodo)} · factura ${p.id_factura ?? '—'}`,
+                categoria: 'Ingreso',
+                monto: `+${formatoCOP.format(Number(p.monto ?? 0))}`,
+                positivo: true,
+              }))}
+          />
         )}
         {/* PEDIDOS — vista con datos de ejemplo */}
         {/* PEDIDOS — pedidos en curso desde la base */}
