@@ -30,6 +30,32 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
  
+// Forma que devuelve GET /api/facturas (con pedido y pagos incluidos).
+interface FacturaApi {
+  id_factura: number
+  consecutivo: string | null
+  Fecha_emision: string | null
+  total: string | number | null
+  estado: string | null
+  pedido?: { Mesa_num: number | null; id_cliente: number | null; id_mesero: number | null } | null
+}
+
+// Convierte una factura de la API a la forma que usa esta pantalla.
+// La base no trae nombres de cliente ni de mesero en este endpoint: se muestra el id o '—'.
+// La base usa EMITIDA para facturas sin pagar; la pantalla lo muestra como PENDIENTE.
+const mapearFactura = (f: FacturaApi): Factura => ({
+  id_factura: f.id_factura,
+  numero: f.consecutivo ?? `F-${f.id_factura}`,
+  id_cliente: f.pedido?.id_cliente ?? null,
+  id_mesero: f.pedido?.id_mesero ?? null,
+  Mesa_num: f.pedido?.Mesa_num ?? null,
+  fecha: f.Fecha_emision
+    ? new Date(f.Fecha_emision).toLocaleString('es-CO', { timeZone: 'America/Bogota' })
+    : '—',
+  total: Number(f.total ?? 0),
+  estado: f.estado === 'PAGADA' ? 'PAGADA' : f.estado === 'ANULADA' ? 'ANULADA' : 'PENDIENTE',
+})
+
 interface FacturasProps {
   nombreUsuario: string
 }
@@ -56,7 +82,7 @@ function Facturas({ nombreUsuario }: FacturasProps) {
     setCargando(true)
     api
       .get('/facturas')
-      .then(r => setFacturas(r.data))
+      .then(r => setFacturas((r.data?.data ?? []).map(mapearFactura)))
       .catch(console.error)
       .finally(() => setCargando(false))
   }
