@@ -27,19 +27,46 @@ const formatoPesos = (valor: number) => Number(valor).toLocaleString('es-CO', { 
 
 const minutosDesde = (fecha: string) => `${Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))}m`
 
-const feedItems = [
-  { status: 'Mesa 12 • Lista', time: 'Ahora mismo', title: '2x Lubina a la Parrilla', detail: 'Plato Principal • Paso A', tone: 'ready' },
-  { status: 'Mesa 04 • Nueva Orden', time: 'hace 3m', title: '1x Risotto de Trufa', detail: 'Cocinando • Estación 2', tone: 'default' },
-  { status: 'Mesa 01 • Retrasado', time: 'hace 8m', title: '1x Ribeye Poco Hecho', detail: 'Esperando guarnición • Estación 1', tone: 'warning' },
-  { status: 'Mesa 15 • Lista', time: 'hace 12m', title: 'Botella de Chablis', detail: 'Lista en Barra', tone: 'ready' },
-  { status: 'Mesa 22 • Enviado', time: 'hace 15m', title: 'Selección de Postres', detail: 'Preparando • Pastelería', tone: 'default' },
-]
+// Forma de GET /api/cocina/comandas (solo los campos que usamos).
+interface ComandaApi {
+  id_pedido: number
+  mesa: number | null
+  tipo_pedido: string
+  fecha_hora: string | null
+  items: { id_detalle: number; nombre: string; cantidad: number; estado: string }[]
+}
+
+interface FeedItem {
+  key: string
+  status: string
+  time: string
+  title: string
+  detail: string
+  tone: 'ready' | 'warning' | 'default'
+}
+
+const etiquetaEstadoItem: Record<string, string> = { PENDIENTE: 'Nueva orden', PREPARANDO: 'Preparando', LISTO: 'Lista' }
+
+// Una fila por ítem de comanda activo en cocina.
+const feedDesdeComandas = (comandas: ComandaApi[]): FeedItem[] =>
+  comandas.flatMap(p => p.items.map(i => ({
+    key: `${p.id_pedido}-${i.id_detalle}`,
+    status: `${p.mesa ? `Mesa ${String(p.mesa).padStart(2, '0')}` : (p.tipo_pedido || 'Pedido')} • ${etiquetaEstadoItem[i.estado] ?? i.estado}`,
+    time: p.fecha_hora ? `hace ${minutosDesde(p.fecha_hora)}` : '—',
+    title: `${i.cantidad}x ${i.nombre}`,
+    detail: `Pedido #${p.id_pedido}`,
+    tone: i.estado === 'LISTO' ? 'ready' : 'default',
+  })))
  
 function Mesas() {
   const [mesas, setMesas] = useState<MesaApi[]>([])
+  const [feed, setFeed] = useState<FeedItem[]>([])
 
   useEffect(() => {
-    const cargar = () => api.get('/mesas').then(({ data }) => setMesas(data.data)).catch(console.error)
+    const cargar = () => {
+      api.get('/mesas').then(({ data }) => setMesas(data.data)).catch(console.error)
+      api.get('/cocina/comandas').then(({ data }: { data: ComandaApi[] }) => setFeed(feedDesdeComandas(data))).catch(console.error)
+    }
     cargar()
     const intervalo = setInterval(cargar, 15000)
     return () => clearInterval(intervalo)
@@ -194,13 +221,12 @@ function Mesas() {
         <aside className="flex h-[calc(100vh-12rem)] flex-col rounded-[20px] bg-[var(--wa-surface)] p-6 shadow-[0_2px_10px_rgba(28,27,27,0.04)]">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-[1.125rem] font-black">Cocina</h2>
-            <span className="rounded-full bg-[var(--wa-surface-mid)] px-2 py-0.5 text-[0.625rem] font-extrabold text-[var(--wa-text-muted)]">Demo</span>
             <span className="material-symbols-outlined text-[var(--wa-secondary)] [font-variation-settings:'FILL'_1]">restaurant</span>
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto pr-2">
-            {feedItems.map((item) => (
+            {feed.map((item) => (
               <div
-                key={`${item.status}-${item.time}`}
+                key={item.key}
                 className={`rounded-2xl p-4 ${
                   item.tone === 'ready'
                     ? 'border-l-4 border-[var(--wa-tertiary)] bg-[rgba(0,105,76,0.05)]'
