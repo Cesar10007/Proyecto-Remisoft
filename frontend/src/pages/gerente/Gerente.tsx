@@ -14,7 +14,7 @@ import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, transacciones, turnosMock } from './data'
+import { finanzasStats, historialEventos, iaInsights, inventario, menuItems, metricas, movimientos, transacciones, turnosMock } from './data'
 const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
 // Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
@@ -174,6 +174,24 @@ function Gerente() {
       .then(({ data }: { data: PedidoEnCurso[] }) =>
         setPedidosEnCurso(data.filter(p => p.estado !== 'CERRADO' && p.estado !== 'CANCELADO')))
       .catch(console.error)
+  }, [seccionActiva])
+
+  // Estado de mesas: mesas reales de la base (GET /api/mesas), actualizadas cada 15 s.
+  const [mesas, setMesas] = useState<{ id: string; ocupada: boolean }[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú' && seccionActiva !== 'Mesas') return
+    const cargarMesas = () =>
+      api.get('/mesas')
+        .then(({ data }: { data: { data: { numero: number; estado: string }[] } }) =>
+          setMesas(data.data.map(m => ({
+            id: `T-${String(m.numero).padStart(2, '0')}`,
+            ocupada: m.estado === 'occupied',
+          }))))
+        .catch(console.error)
+    cargarMesas()
+    const intervalo = setInterval(cargarMesas, 15000)
+    return () => clearInterval(intervalo)
   }, [seccionActiva])
 
   const etiquetaDemo = (
@@ -467,7 +485,7 @@ function Gerente() {
             <section className="grid grid-cols-[1fr_360px] gap-4">
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>{etiquetaDemo}
+                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
                   <div className="flex gap-3">
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
@@ -584,7 +602,7 @@ function Gerente() {
         {seccionActiva === 'Mesas' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>{etiquetaDemo}
+              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
               <div className="flex gap-3">
                 <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
                   <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
