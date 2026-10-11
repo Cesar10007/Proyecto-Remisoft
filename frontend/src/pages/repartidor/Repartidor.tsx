@@ -18,6 +18,8 @@ interface Domicilio {
   id_pedido: number
   direccion: string
   estado: string
+  Fecha_asignacion?: string | null
+  fecha_entrega?: string | null
   id_repartidor: number | null
   estado_pedido?: string
   nombre_cliente?: string
@@ -126,7 +128,7 @@ function Repartidor() {
     api.get('/domicilios').then(r => setDomicilios(r.data)).catch(console.error).finally(() => setCargandoDomicilios(false))
   }
 
-  useEffect(() => { if (activeItem === 'Entregas') cargarDomicilios() }, [activeItem])
+  useEffect(() => { if (['Resumen', 'Entregas', 'Historial'].includes(activeItem)) cargarDomicilios() }, [activeItem])
 
   const abrirCrearDomicilio = () => {
     setModoEdicionDomicilio(false)
@@ -259,20 +261,40 @@ function Repartidor() {
     hora: string
     cliente: string
     direccion: string
-    ganancia: number
+    ganancia: number | null
     distancia: string
     estado: 'Entregado' | 'Cancelado'
   }
 
-  const historial: EntregaHistorial[] = [
-    { id: '#8845', fecha: '02/09/2026', hora: '01:45 PM', cliente: 'Carlos Méndez', direccion: '42 West Side Apts', ganancia: 8500, distancia: '2.4 km', estado: 'Entregado' },
-    { id: '#8840', fecha: '02/09/2026', hora: '01:10 PM', cliente: 'Ana Torres', direccion: 'Carrera 15 # 88-42', ganancia: 7200, distancia: '1.9 km', estado: 'Entregado' },
-    { id: '#8836', fecha: '02/09/2026', hora: '12:30 PM', cliente: 'Felipe Duarte', direccion: 'Calle 90 # 11-20', ganancia: 6800, distancia: '3.1 km', estado: 'Entregado' },
-    { id: '#8829', fecha: '01/09/2026', hora: '08:15 PM', cliente: 'Laura Prieto', direccion: 'Av. Suba # 120-30', ganancia: 0, distancia: '1.2 km', estado: 'Cancelado' },
-    { id: '#8821', fecha: '01/09/2026', hora: '06:50 PM', cliente: 'Marcela Ortiz', direccion: 'Transversal 8 # 45-12', ganancia: 9100, distancia: '4.0 km', estado: 'Entregado' },
-  ]
+  const formatoHoraBogota = (fecha: Date, opciones: Intl.DateTimeFormatOptions) =>
+    fecha.toLocaleString('es-CO', { timeZone: 'America/Bogota', ...opciones })
+  const hoyBogota = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
+  const misDomicilios = domicilios.filter(d => d.id_repartidor === user?.id_usuario)
 
-  const totalGananciaHistorial = historial.filter(h => h.estado === 'Entregado').reduce((acc, h) => acc + h.ganancia, 0)
+  const entregadasHoy = misDomicilios.filter(d =>
+    d.estado === 'ENTREGADO' && d.fecha_entrega &&
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date(d.fecha_entrega)) === hoyBogota,
+  ).length
+  const pendientesCola = misDomicilios.filter(d => d.estado === 'ASIGNADO').length
+
+  // Ganancia y distancia no existen en la base: quedan en '—'.
+  const historial: EntregaHistorial[] = misDomicilios
+    .filter(d => d.estado === 'ENTREGADO' || d.estado === 'CANCELADO')
+    .map(d => {
+      const referencia = d.fecha_entrega ?? d.Fecha_asignacion
+      const fecha = referencia ? new Date(referencia) : null
+      return {
+        id: `#${d.id_pedido}`,
+        fecha: fecha ? formatoHoraBogota(fecha, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
+        hora: fecha ? formatoHoraBogota(fecha, { hour: '2-digit', minute: '2-digit' }) : '—',
+        cliente: d.nombre_cliente ?? '—',
+        direccion: d.direccion ?? '—',
+        ganancia: null,
+        distancia: '—',
+        estado: d.estado === 'ENTREGADO' ? 'Entregado' : 'Cancelado',
+      }
+    })
+
   const totalEntregadas = historial.filter(h => h.estado === 'Entregado').length
   const totalCanceladas = historial.filter(h => h.estado === 'Cancelado').length
 
@@ -379,31 +401,28 @@ function Repartidor() {
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
                   <span className="font-['Syne'] text-[2rem] font-extrabold">$142.500</span>
-                  <span className="text-[0.8rem] font-semibold text-white/82">+12% vs ayer</span>
+                  <span className="text-[0.65rem] font-bold uppercase text-white/82">Demo</span>
+                  <span className="text-[0.8rem] font-semibold text-white/82">Dato de ejemplo</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregas completadas</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold text-[var(--rd-success)]">18</span>
-                  <span className="text-[0.8rem] font-semibold text-[var(--rd-success)]">2 pendientes en cola</span>
+                  <span className="font-['Syne'] text-[2rem] font-extrabold text-[var(--rd-success)]">{entregadasHoy}</span>
+                  <span className="text-[0.8rem] font-semibold text-[var(--rd-success)]">{pendientesCola} pendientes en cola</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Tiempo de turno</span>
                   <span className="font-['Syne'] text-[2rem] font-extrabold">6h 14m</span>
-                  <span className="text-[0.8rem] font-semibold text-[var(--rd-text-muted)]">Inicio: 11:30 AM</span>
+                  <span className="text-[0.65rem] font-bold uppercase text-[var(--rd-text-muted)]">Demo</span>
+                  <span className="text-[0.8rem] font-semibold text-[var(--rd-text-muted)]">Inicio: 11:30 AM (Demo)</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-[2fr_1fr] gap-6">
                 <div className="overflow-hidden rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)]">
                   <div className="relative h-[260px]">
-                    <img
-                      src="https://picsum.photos/seed/bogota-map/800/260"
-                      alt="Mapa de entregas"
-                      width={800}
-                      height={260}
-                      loading="lazy"
-                      className="block h-full w-full object-cover"
-                    />
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--rd-card)] px-6 text-center text-[0.85rem] text-[var(--rd-text-muted)]">
+                      Mapa no disponible: la base no tiene un mapa para esta entrega.
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/38 to-transparent" />
                     <div className="absolute bottom-5 left-5 z-[2] flex items-center gap-3 text-white">
                       <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-white text-[var(--rd-primary)]">
@@ -748,7 +767,7 @@ function Repartidor() {
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Ganado (entregadas)</span>
                   <span className="font-['Syne'] text-[1.7rem] font-extrabold text-[var(--rd-success)]">
-                    ${totalGananciaHistorial.toLocaleString('es-CO')}
+                    —
                   </span>
                 </div>
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
@@ -788,7 +807,7 @@ function Repartidor() {
                         <div>
                           <p className="text-[0.92rem] font-bold">Pedido {h.id} · {h.cliente}</p>
                           <p className="text-[0.78rem] text-[var(--rd-text-muted)]">
-                            {h.direccion} · {h.distancia} · {h.fecha} {h.hora}
+                            {h.direccion} · {h.fecha} {h.hora}
                           </p>
                         </div>
                       </div>
@@ -797,7 +816,7 @@ function Repartidor() {
                           className="text-[0.95rem] font-extrabold"
                           style={{ color: h.estado === 'Entregado' ? 'var(--rd-text)' : 'var(--rd-text-muted)' }}
                         >
-                          {h.estado === 'Entregado' ? `$${h.ganancia.toLocaleString('es-CO')}` : '—'}
+                          {h.estado === 'Entregado' && h.ganancia !== null ? `$${h.ganancia.toLocaleString('es-CO')}` : '—'}
                         </p>
                         <span
                           className="rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold"
@@ -825,6 +844,7 @@ function Repartidor() {
             <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
                 <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Soporte</h1>
+            <span className="rounded-full bg-[var(--rd-card)] px-2 py-0.5 text-[0.65rem] text-[var(--rd-text-muted)]">Demo</span>
                 <p className="text-[0.88rem] text-[var(--rd-text-muted)]">
                   Reclamos de clientes y reportes que has enviado
                 </p>
