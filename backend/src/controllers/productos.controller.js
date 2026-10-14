@@ -1,28 +1,8 @@
 import prisma from '../config/prisma.js';
-
-function parseId(id) {
-  const parsed = Number(id);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
+import { parseId, validateString } from '../utils/validation.js';
 
 function isEmpty(value) {
   return value === undefined || value === null || value === '';
-}
-
-function validateString(value, field, max, required = false) {
-  if (required && isEmpty(value)) {
-    return `El campo ${field} es requerido`;
-  }
-
-  if (!isEmpty(value) && typeof value !== 'string') {
-    return `El campo ${field} debe ser texto`;
-  }
-
-  if (!isEmpty(value) && value.length > max) {
-    return `El campo ${field} no puede superar ${max} caracteres`;
-  }
-
-  return null;
 }
 
 function validatePrecio(value) {

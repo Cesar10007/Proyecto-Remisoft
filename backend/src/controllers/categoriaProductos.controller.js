@@ -1,9 +1,5 @@
 import prisma from '../config/prisma.js';
-
-function parseId(value) {
-  const id = Number(value);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
+import { parseId } from '../utils/validation.js';
 
 // GET /api/categorias
 export async function index(_req, res, next) {

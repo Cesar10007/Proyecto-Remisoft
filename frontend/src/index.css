@@ -106,9 +106,9 @@
     border-top: 1px solid var(--borde);
 }
 .stat-num {
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-numeros);
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--texto);
 }
 .stat-label { font-size: 0.78rem; color: var(--texto-muted); margin-top: 2px; }
@@ -155,9 +155,9 @@
 }
 .dash-card-label { font-size: 0.65rem; color: var(--texto-muted); margin-bottom: 4px; }
 .dash-card-val {
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-numeros);
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 400;
 }
 .dash-card-val.rojo { color: var(--rojo-dark); }
 .dash-card-val.verde { color: var(--verde); }

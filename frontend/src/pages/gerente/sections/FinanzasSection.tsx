@@ -1,13 +1,73 @@
+import { MetricCard } from '../../../components/common/MetricCard'
+import { DataTable, Column } from '../../../components/common/DataTable'
+
+interface Transaccion {
+  fecha: string
+  concepto: string
+  categoria: string
+  monto: string
+  positivo: boolean
+}
+
 interface FinanzasSectionProps {
   stats: { icon: string; label: string; valor: string; badge: string; badgeColor: string }[]
-  transacciones: { fecha: string; concepto: string; categoria: string; monto: string; positivo: boolean }[]
+  transacciones: Transaccion[]
 }
 
 function FinanzasSection({ stats, transacciones }: FinanzasSectionProps) {
-  return <>
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-3">{stats.map(m => <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]"><div className="flex items-start justify-between"><span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' : m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'}`}>{m.icon}</span><span className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold ${m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' : m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'}`}>{m.badge}</span></div><div><p className="mb-1 text-[0.78rem] text-[var(--texto-muted)]">{m.label}</p><p className="font-['Syne'] text-[1.6rem] font-bold text-[var(--texto)]">{m.valor}</p></div></div>)}</section>
-    <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]"><h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Transacciones recientes</h3><div className="overflow-x-auto"><table className="w-full border-collapse"><thead><tr>{['Fecha', 'Concepto', 'Categoría', 'Monto'].map(titulo => <th key={titulo} className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">{titulo}</th>)}</tr></thead><tbody>{transacciones.map((t, i) => <tr key={i}><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.fecha}</td><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{t.concepto}</td><td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.categoria}</td><td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.positivo ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{t.positivo ? '+' : '-'}{t.monto}</td></tr>)}</tbody></table></div></section>
-  </>
+  const columns: Column<Transaccion>[] = [
+    {
+      header: 'Fecha',
+      render: (t) => <span className="text-[var(--texto-muted)]">{t.fecha}</span>,
+    },
+    {
+      header: 'Concepto',
+      accessor: 'concepto',
+    },
+    {
+      header: 'Categoría',
+      render: (t) => <span className="text-[var(--texto-muted)]">{t.categoria}</span>,
+    },
+    {
+      header: 'Monto',
+      render: (t) => (
+        <span className={`font-semibold ${t.positivo ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>
+          {t.positivo ? '+' : '-'}{t.monto}
+        </span>
+      ),
+    },
+  ]
+
+  const colorMap: Record<string, 'green' | 'red' | 'default'> = {
+    verde: 'green',
+    rojo: 'red',
+  }
+
+  return (
+    <>
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {stats.map((m) => (
+          <MetricCard
+            key={m.label}
+            label={m.label}
+            value={m.valor}
+            detail={m.badge}
+            icon={m.icon}
+            color={colorMap[m.badgeColor] || 'default'}
+          />
+        ))}
+      </section>
+
+      <div className="mt-6">
+        <DataTable
+          title="Transacciones recientes"
+          columns={columns}
+          data={transacciones}
+          emptyMessage="No hay transacciones recientes"
+        />
+      </div>
+    </>
+  )
 }
 
 export default FinanzasSection

@@ -20,7 +20,7 @@ interface MesaVista {
   meta?: string
   total?: string
   badge?: string
-  state: 'available' | 'occupied'
+  state: 'available' | 'occupied' | 'waiting' | 'done'
 }
 
 const formatoPesos = (valor: number) => Number(valor).toLocaleString('es-CO', { maximumFractionDigits: 0 })

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
 import ThemeToggle from '../../components/common/ThemeToggle'
+import { InputField } from '../../components/common/InputField'
 
 function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -84,63 +85,71 @@ function ResetPassword() {
           </p>
         </div>
 
-        <div className="mb-3.5">
-          <label className="mb-1.5 block text-[0.78rem] font-medium text-[var(--texto-muted)]">
-            Nueva contraseña
-          </label>
-          <div className="relative">
-            <input
-              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Mínimo 8 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute inset-y-0 right-3 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
-            >
-              <span className="material-symbols-outlined block text-[20px]">
-                {showPassword ? 'visibility_off' : 'visibility'}
-              </span>
-            </button>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleReset()
+          }}
+        >
+          <div className="mb-3.5">
+            <div className="relative">
+              <InputField
+                label="Nueva contraseña"
+                className="bg-[#fdfaf7] py-2.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Mínimo 8 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                <span className="material-symbols-outlined block text-[20px]">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-3.5">
-          <label className="mb-1.5 block text-[0.78rem] font-medium text-[var(--texto-muted)]">
-            Confirmar contraseña
-          </label>
-          <div className="relative">
-            <input
-              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
-              type={showConfirm ? 'text' : 'password'}
-              placeholder="Repite la contraseña"
-              value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm((p) => !p)}
-              className="absolute inset-y-0 right-3 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
-            >
-              <span className="material-symbols-outlined block text-[20px]">
-                {showConfirm ? 'visibility_off' : 'visibility'}
-              </span>
-            </button>
+          <div className="mb-3.5">
+            <div className="relative">
+              <InputField
+                label="Confirmar contraseña"
+                className="bg-[#fdfaf7] py-2.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+                type={showConfirm ? 'text' : 'password'}
+                placeholder="Repite la contraseña"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((p) => !p)}
+                className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+                aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                <span className="material-symbols-outlined block text-[20px]">
+                  {showConfirm ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        {error && (
-          <p className="mb-1 rounded-lg border border-[var(--rojo-mid)] bg-[var(--rojo-light)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="mb-1 rounded-lg border border-[var(--rojo-mid)] bg-[var(--rojo-light)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
+              {error}
+            </p>
+          )}
 
-        <Button onClick={handleReset} disabled={loading} fullWidth className="mt-1">
-          {loading ? 'Actualizando...' : 'Actualizar contraseña'}
-        </Button>
+          <Button type="submit" disabled={loading} fullWidth className="mt-1">
+            {loading ? 'Actualizando...' : 'Actualizar contraseña'}
+          </Button>
+        </form>
       </div>
     </div>
   )

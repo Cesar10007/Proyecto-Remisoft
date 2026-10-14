@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
 import ThemeToggle from '../../components/common/ThemeToggle'
+import { InputField } from '../../components/common/InputField'
 
 function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -49,32 +50,28 @@ function ForgotPassword() {
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="mb-3.5">
-                <label className="mb-1.5 block text-[0.78rem] font-medium text-[var(--texto-muted)]">
-                  Correo electrónico
-                </label>
-                <div className="relative">
-                  <input
-                    className={`w-full rounded-[10px] border-[1.5px] bg-[var(--t-bg-fdfaf7,#fdfaf7)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)] ${
-                      error
-                        ? 'border-[var(--amarillo)] shadow-[0_0_0_3px_rgba(239,159,39,0.15)]'
-                        : 'border-[var(--borde)]'
-                    }`}
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      setError('')
-                    }}
-                    required
-                  />
+              <div className="relative mb-3.5">
+                <InputField
+                  label="Correo electrónico"
+                  className={`bg-[#fdfaf7] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)] ${
+                    error
+                      ? 'border-[var(--amarillo)] shadow-[0_0_0_3px_rgba(239,159,39,0.15)]'
+                      : ''
+                  }`}
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setError('')
+                  }}
+                  required
+                />
                   {error && (
                     <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-[var(--amarillo)]">
                       warning
                     </span>
                   )}
-                </div>
                 {error && (
                   <p className="mt-1.5 text-[0.8rem] text-[var(--amarillo)]">{error}</p>
                 )}
