@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
 
@@ -193,87 +194,70 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
-            <thead>
-              <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                <th className="px-5 py-3 font-semibold">Fecha</th>
-                <th className="px-5 py-3 font-semibold">Hora</th>
-                <th className="px-5 py-3 font-semibold">Caja</th>
-                <th className="px-5 py-3 font-semibold">Responsable</th>
-                <th className="px-5 py-3 font-semibold">Esperado</th>
-                <th className="px-5 py-3 font-semibold">Contado</th>
-                <th className="px-5 py-3 font-semibold">Diferencia</th>
-                <th className="px-5 py-3 font-semibold">Estado</th>
-                <th className="px-5 py-3 text-right font-semibold">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={9} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">Cargando arqueos…</td>
-                </tr>
-              )}
-
-              {!cargando && arqueosFiltrados.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">No hay arqueos para mostrar.</td>
-                </tr>
-              )}
-
-              {arqueosFiltrados.map((a) => {
-                const estado = estadoDe(a)
-                return (
-                  <tr key={a.id_turno} className="border-t border-[var(--wa-border)]">
-                    <td className="px-5 py-4 text-sm">{fecha(a.fecha_apertura)}</td>
-                    <td className="px-5 py-4 text-sm">{hora(a.fecha_apertura)}</td>
-                    <td className="px-5 py-4 text-sm">{a.caja?.nombre ?? '—'}</td>
-                    <td className="px-5 py-4 text-sm font-medium">{responsable(a.usuario)}</td>
-                    <td className="px-5 py-4 text-sm">{dinero(a.esperado)}</td>
-                    <td className="px-5 py-4 text-sm">{estaAbierto(a) ? 'Pendiente' : dinero(a.efectivo_real)}</td>
-                    <td
-                      className={`px-5 py-4 text-sm font-semibold ${
-                        a.diferencia !== null && a.diferencia < 0 ? 'text-[var(--rojo)]' : ''
-                      }`}
-                    >
-                      {estaAbierto(a) ? '—' : dinero(a.diferencia)}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${COLOR_ESTADO[estado]}`}>{estado}</span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setDetalle({
-                            open: true,
-                            title: 'Arqueo de caja',
-                            rows: [
-                              { label: 'Apertura', value: `${fecha(a.fecha_apertura)} ${hora(a.fecha_apertura)}` },
-                              { label: 'Caja', value: a.caja?.nombre ?? '—' },
-                              { label: 'Responsable', value: responsable(a.usuario) },
-                              { label: 'Efectivo inicial', value: dinero(a.efectivo_inicial) },
-                              { label: 'Ingresos', value: formatCOP(a.ingresos) },
-                              { label: 'Egresos', value: formatCOP(a.egresos) },
-                              { label: 'Esperado', value: dinero(a.esperado) },
-                              { label: 'Contado', value: estaAbierto(a) ? 'Pendiente' : dinero(a.efectivo_real) },
-                              { label: 'Diferencia', value: estaAbierto(a) ? '—' : dinero(a.diferencia) },
-                              { label: 'Estado', value: estado },
-                            ],
-                          })
-                        }
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                        title="Ver arqueo"
-                      >
-                        <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: 'Fecha', render: (a) => <span className="text-sm">{fecha(a.fecha_apertura)}</span> },
+            { header: 'Hora', render: (a) => <span className="text-sm">{hora(a.fecha_apertura)}</span> },
+            { header: 'Caja', render: (a) => <span className="text-sm">{a.caja?.nombre ?? '—'}</span> },
+            { header: 'Responsable', render: (a) => <span className="text-sm font-medium">{responsable(a.usuario)}</span> },
+            { header: 'Esperado', render: (a) => <span className="text-sm">{dinero(a.esperado)}</span> },
+            { header: 'Contado', render: (a) => <span className="text-sm">{estaAbierto(a) ? 'Pendiente' : dinero(a.efectivo_real)}</span> },
+            {
+              header: 'Diferencia',
+              render: (a) => (
+                <span
+                  className={`text-sm font-semibold ${
+                    a.diferencia !== null && a.diferencia < 0 ? 'text-[var(--rojo)]' : ''
+                  }`}
+                >
+                  {estaAbierto(a) ? '—' : dinero(a.diferencia)}
+                </span>
+              ),
+            },
+            {
+              header: 'Estado',
+              render: (a) => (
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${COLOR_ESTADO[estadoDe(a)]}`}>{estadoDe(a)}</span>
+              ),
+            },
+            {
+              header: 'Acción',
+              render: (a) => (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDetalle({
+                        open: true,
+                        title: 'Arqueo de caja',
+                        rows: [
+                          { label: 'Apertura', value: `${fecha(a.fecha_apertura)} ${hora(a.fecha_apertura)}` },
+                          { label: 'Caja', value: a.caja?.nombre ?? '—' },
+                          { label: 'Responsable', value: responsable(a.usuario) },
+                          { label: 'Efectivo inicial', value: dinero(a.efectivo_inicial) },
+                          { label: 'Ingresos', value: formatCOP(a.ingresos) },
+                          { label: 'Egresos', value: formatCOP(a.egresos) },
+                          { label: 'Esperado', value: dinero(a.esperado) },
+                          { label: 'Contado', value: estaAbierto(a) ? 'Pendiente' : dinero(a.efectivo_real) },
+                          { label: 'Diferencia', value: estaAbierto(a) ? '—' : dinero(a.diferencia) },
+                          { label: 'Estado', value: estadoDe(a) },
+                        ],
+                      })
+                    }
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                    title="Ver arqueo"
+                  >
+                    <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                  </button>
+                </div>
+              ),
+            },
+          ]}
+          data={arqueosFiltrados}
+          isLoading={cargando}
+          emptyMessage="No hay arqueos para mostrar."
+          keyExtractor={(a) => a.id_turno}
+        />
       </div>
 
       <DetalleModal
