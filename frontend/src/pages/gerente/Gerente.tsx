@@ -528,7 +528,7 @@ function Gerente() {
         vistaActual={vistaActual}
         onNavigate={setVistaActual}
         onLogout={() => { logout(); navigate('/') }}
-        footer={<button className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">Cerrar Caja</button>}
+        footer={<button type="button" onClick={() => setVistaActual('turnos')} className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">Cerrar Caja</button>}
       />
       <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 pt-20 md:p-8">
         <Header seccionActiva={seccionActiva} nombreUsuario={[user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Gerente'} />
