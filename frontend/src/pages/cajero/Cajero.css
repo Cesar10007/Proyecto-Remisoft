@@ -1,9 +1,22 @@
 .cajero {
+  display: flex;
   min-height: 100vh;
-  padding: 24px;
   background: var(--bg);
   color: var(--texto);
   font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Contenido a la derecha del menú compartido. En celular deja espacio para la barra superior fija. */
+.cajero__main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+}
+
+@media (max-width: 767px) {
+  .cajero__main {
+    padding-top: 72px;
+  }
 }
 
 .cajero__header {
@@ -317,8 +330,8 @@
 }
 
 @media print {
+  .cajero > :not(.cajero__main),
   .no-print,
-  .cajero__header,
   .cajero__lista {
     display: none !important;
   }

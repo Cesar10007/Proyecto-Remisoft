@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
+import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
-import ThemeToggle from '../../components/common/ThemeToggle'
+import Sidebar from '../../components/layout/Sidebar'
+import Header from '../../components/layout/Header'
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
 
@@ -59,8 +61,10 @@ function mensajeError(err: unknown, fallback: string) {
 }
 
 export default function Cajero() {
-  const usuario = useSelector((state: RootState) => state.auth.user)
+  const { logout, user } = useAuth()
+  const navigate = useNavigate()
   const rol = useSelector((state: RootState) => state.auth.rol)
+  const nombreCompleto = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Cajero'
 
   const [cuentas, setCuentas] = useState<Cuenta[]>([])
   const [cargando, setCargando] = useState(true)
@@ -145,24 +149,37 @@ export default function Cajero() {
 
   return (
     <div className="cajero">
-      <ThemeToggle flotante />
-      <header className="cajero__header">
-        <div>
-          <h1>Tablero Cajero</h1>
-          <p>
-            {usuario ? `${usuario.nombre} · ` : ''}
-            {rol ?? ''} · {cuentas.length} cuenta{cuentas.length === 1 ? '' : 's'} abierta{cuentas.length === 1 ? '' : 's'}
-          </p>
+      <Sidebar
+        subtitulo="Cajero"
+        menuItems={[{ icon: 'point_of_sale', label: 'Cobro' }]}
+        vistaActual="cobro"
+        onNavigate={() => {}}
+        onLogout={() => {
+          logout()
+          navigate('/')
+        }}
+        footer={
+          rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
+            <Link className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to="/gerente">
+              Volver al panel
+            </Link>
+          ) : undefined
+        }
+      />
+
+      <main className="cajero__main">
+        <div className="no-print">
+          <Header
+            seccionActiva="Tablero Cajero"
+            nombreUsuario={nombreCompleto}
+            subtitulo={`${rol ?? ''} · ${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} abierta${cuentas.length === 1 ? '' : 's'}`}
+            acciones={
+              <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
+                <span className="material-symbols-outlined">refresh</span> Actualizar
+              </button>
+            }
+          />
         </div>
-        <div className="cajero__header-acciones">
-          <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
-            <span className="material-symbols-outlined">refresh</span> Actualizar
-          </button>
-          {(rol === 'GERENTE' || rol === 'SUPERADMIN') && (
-            <Link className="cajero__btn cajero__btn--ghost" to="/gerente">Volver al panel</Link>
-          )}
-        </div>
-      </header>
 
       {error && <div className="cajero__alerta cajero__alerta--error">{error}</div>}
 
@@ -361,6 +378,7 @@ export default function Cajero() {
           )}
         </section>
       </div>
+      </main>
     </div>
   )
 }

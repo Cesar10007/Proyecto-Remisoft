@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
+import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
-import ThemeToggle from '../../components/common/ThemeToggle'
+import Sidebar from '../../components/layout/Sidebar'
+import Header from '../../components/layout/Header'
 
 type EstadoItem = 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO'
 
@@ -45,7 +47,10 @@ function mensajeError(err: unknown, fallback: string) {
 }
 
 export default function Cocina() {
+  const { logout, user } = useAuth()
+  const navigate = useNavigate()
   const rol = useSelector((state: RootState) => state.auth.rol)
+  const nombreCompleto = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Cocina'
 
   const [comandas, setComandas] = useState<Comanda[]>([])
   const [cargando, setCargando] = useState(true)
@@ -91,25 +96,39 @@ export default function Cocina() {
 
   return (
     <div className="cocina">
-      <ThemeToggle flotante />
-      <header className="cocina__header">
-        <div>
-          <h1>Tablero Cocina</h1>
-          <p>
-            {tarjetas.length} ítem{tarjetas.length === 1 ? '' : 's'} en curso
-            {ultimaActualizacion &&
-              ` · actualizado ${ultimaActualizacion.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
-          </p>
-        </div>
-        <div className="cocina__header-acciones">
-          <button type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
-            <span className="material-symbols-outlined">refresh</span> Actualizar
-          </button>
-          {(rol === 'GERENTE' || rol === 'SUPERADMIN') && (
-            <Link className="cocina__btn cocina__btn--ghost" to="/gerente">Volver al panel</Link>
-          )}
-        </div>
-      </header>
+      <Sidebar
+        subtitulo="Cocina"
+        menuItems={[{ icon: 'soup_kitchen', label: 'Comandas' }]}
+        vistaActual="comandas"
+        onNavigate={() => {}}
+        onLogout={() => {
+          logout()
+          navigate('/')
+        }}
+        footer={
+          rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
+            <Link className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to="/gerente">
+              Volver al panel
+            </Link>
+          ) : undefined
+        }
+      />
+
+      <main className="cocina__main">
+        <Header
+          seccionActiva="Tablero Cocina"
+          nombreUsuario={nombreCompleto}
+          subtitulo={`${tarjetas.length} ítem${tarjetas.length === 1 ? '' : 's'} en curso${
+            ultimaActualizacion
+              ? ` · actualizado ${ultimaActualizacion.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+              : ''
+          }`}
+          acciones={
+            <button type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
+              <span className="material-symbols-outlined">refresh</span> Actualizar
+            </button>
+          }
+        />
 
       {error && <div className="cocina__alerta">{error}</div>}
 
@@ -168,6 +187,7 @@ export default function Cocina() {
           })}
         </div>
       )}
+      </main>
     </div>
   )
 }
