@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
 import { formatCOP } from '../utils'
 
 // Forma de GET /api/reportes/ventas-diarias (sin parámetros = hoy, hora de Bogotá).
@@ -142,38 +143,17 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
           <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Top 5 por unidades vendidas en el día.</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px]">
-            <thead>
-              <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                <th className="px-5 py-3 font-semibold">Producto</th>
-                <th className="px-5 py-3 font-semibold">Unidades</th>
-                <th className="px-5 py-3 font-semibold">Ingresos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={3} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">Cargando…</td>
-                </tr>
-              )}
-
-              {!cargando && productos.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">No hay ventas facturadas hoy.</td>
-                </tr>
-              )}
-
-              {productos.map((p) => (
-                <tr key={p.id_producto} className="border-t border-[var(--wa-border)]">
-                  <td className="px-5 py-4 text-sm font-medium">{p.producto}</td>
-                  <td className="px-5 py-4 text-sm">{p.unidades}</td>
-                  <td className="px-5 py-4 text-sm font-semibold">{formatCOP(p.ingresos)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: 'Producto', render: (p) => <span className="font-medium">{p.producto}</span> },
+            { header: 'Unidades', render: (p) => p.unidades },
+            { header: 'Ingresos', render: (p) => <span className="font-semibold">{formatCOP(p.ingresos)}</span> },
+          ]}
+          data={productos}
+          isLoading={cargando}
+          emptyMessage="No hay ventas facturadas hoy."
+          keyExtractor={(p) => p.id_producto}
+        />
       </div>
 
     </section>
