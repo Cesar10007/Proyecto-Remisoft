@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
 import Modal from '../../../components/common/Modal'
 import './Pedidos.css'
  
@@ -125,63 +126,54 @@ function Pedidos() {
       {cargando ? (
         <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[0.875rem]">
-            <thead>
-              <tr className="border-b border-[var(--borde)]">
-                {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
-                  <th key={h} className="whitespace-nowrap px-3 py-2.5 text-left font-semibold text-[var(--texto-muted)]">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pedidos.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-[var(--texto-muted)]">
-                    Sin pedidos registrados
-                  </td>
-                </tr>
-              ) : (
-                pedidos.map(p => (
-                  <tr key={p.id_pedido} className="border-b border-[var(--borde)]">
-                    <td className="px-3 py-2.5 font-semibold">{p.id_pedido}</td>
-                    <td className="px-3 py-2.5">{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
-                    <td className="px-3 py-2.5">{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
-                    <td className="px-3 py-2.5">{p.Tipo_pedido}</td>
-                    <td className="px-3 py-2.5">{p.Mesa_num ?? '—'}</td>
-                    <td
-                      className={`px-3 py-2.5 ${
-                        p.estado === 'ABIERTO' ? 'text-[var(--verde)]' : p.estado === 'CANCELADO' ? 'text-[var(--rojo)]' : 'text-[var(--texto-muted)]'
-                      }`}
-                    >
-                      {p.estado}
-                    </td>
-                    <td className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5">{p.notas || '—'}</td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex gap-2">
-                        <button
-                          className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
-                          onClick={() => abrirEditar(p)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
-                          onClick={() => cancelar(p.id_pedido)}
-                          disabled={p.estado === 'CANCELADO'}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: '#', render: (p) => <span className="font-semibold">{p.id_pedido}</span> },
+            { header: 'Cliente', render: (p) => p.nombre_cliente ?? p.id_cliente ?? '—' },
+            { header: 'Mesero', render: (p) => p.nombre_mesero ?? p.id_mesero ?? '—' },
+            { header: 'Tipo', render: (p) => p.Tipo_pedido },
+            { header: 'Mesa', render: (p) => p.Mesa_num ?? '—' },
+            {
+              header: 'Estado',
+              render: (p) => (
+                <span
+                  className={
+                    p.estado === 'ABIERTO' ? 'text-[var(--verde)]' : p.estado === 'CANCELADO' ? 'text-[var(--rojo)]' : 'text-[var(--texto-muted)]'
+                  }
+                >
+                  {p.estado}
+                </span>
+              ),
+            },
+            {
+              header: 'Notas',
+              render: (p) => <span className="block max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap">{p.notas || '—'}</span>,
+            },
+            {
+              header: 'Acciones',
+              render: (p) => (
+                <div className="flex gap-2">
+                  <button
+                    className="w-auto rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+                    onClick={() => abrirEditar(p)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
+                    onClick={() => cancelar(p.id_pedido)}
+                    disabled={p.estado === 'CANCELADO'}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ),
+            },
+          ]}
+          data={pedidos}
+          emptyMessage="Sin pedidos registrados"
+          keyExtractor={(p) => p.id_pedido}
+        />
       )}
  
       <Modal isOpen={modal} onClose={() => setModal(false)}>
