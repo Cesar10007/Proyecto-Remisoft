@@ -343,7 +343,7 @@ export async function cerrar(req, res, next) {
   }
 }
 
-// Aperturas para Mesero > Caja. Solo expone datos de la apertura y el nombre del responsable.
+// Turnos para Mesero > Caja (aperturas y cierres). Solo expone datos del turno y el nombre del responsable.
 export async function aperturas(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
@@ -352,6 +352,10 @@ export async function aperturas(req, res, next) {
         fecha_apertura: true,
         fecha_cierre: true,
         efectivo_inicial: true,
+        efectivo_esperado: true,
+        efectivo_real: true,
+        diferencia: true,
+        notas: true,
         estado: true,
         caja: { select: { nombre: true } },
         usuario: { select: { nombre: true, apellido: true } },
