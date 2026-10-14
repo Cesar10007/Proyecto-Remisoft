@@ -23,3 +23,17 @@
   z-index: 200;
   box-shadow: var(--sombra);
 }
+
+/* Menu lateral plegado (solo escritorio): icono centrado, sin texto */
+@media (min-width: 768px) {
+  .tema-toggle--compacto {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .tema-toggle--compacto .tema-toggle__texto {
+    display: none;
+  }
+}
+

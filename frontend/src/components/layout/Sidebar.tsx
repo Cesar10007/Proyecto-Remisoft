@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import ThemeToggle from '../common/ThemeToggle'
 
 export interface SidebarMenuItem {
@@ -15,16 +15,24 @@ interface SidebarProps {
   onLogout: () => void
   // Botones propios de cada panel (por ejemplo "Cerrar Caja" en Gerente).
   footer?: ReactNode
-  // Permite contraer el menú a iconos (escritorio).
+  // Permite plegar el menú a iconos (escritorio). Por defecto está activo en todos los paneles.
   colapsable?: boolean
 }
 
 // Menú lateral compartido por los paneles.
 // Escritorio: columna fija a la izquierda del contenido (puede contraerse si es colapsable).
 // Celular: barra superior con modo oscuro y menú, que abre un cajón.
-function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer, colapsable = false }: SidebarProps) {
+const CLAVE_PLEGADO = 'remisoft-sidebar'
+
+function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer, colapsable = true }: SidebarProps) {
   const [abierto, setAbierto] = useState(false)
-  const [colapsado, setColapsado] = useState(false)
+  const [colapsado, setColapsado] = useState<boolean>(
+    () => colapsable && localStorage.getItem(CLAVE_PLEGADO) === 'plegado',
+  )
+
+  useEffect(() => {
+    if (colapsable) localStorage.setItem(CLAVE_PLEGADO, colapsado ? 'plegado' : 'desplegado')
+  }, [colapsado, colapsable])
   const compacto = colapsable && colapsado
 
   const navegar = (vista: string) => {
@@ -52,7 +60,7 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
       {abierto && <div className="fixed inset-0 z-[99] bg-black/40 md:hidden" onClick={() => setAbierto(false)} />}
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-all duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-all duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
           compacto ? 'md:w-20 md:px-2' : 'md:w-[240px]'
         } ${abierto ? 'translate-x-0' : '-translate-x-full'}`}
       >
@@ -60,8 +68,8 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
           <button
             type="button"
             onClick={() => setColapsado((v) => !v)}
-            title={colapsado ? 'Expandir menú' : 'Contraer menú'}
-            className="absolute -right-3 top-8 z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
+            title={colapsado ? 'Desplegar menú' : 'Plegar menú'}
+            className="absolute -right-3 top-[88px] z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
           >
             <span className={`material-symbols-outlined text-[16px] text-[var(--texto-muted)] transition-transform duration-300 ${compacto ? 'rotate-180' : ''}`}>
               chevron_left
@@ -70,7 +78,7 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
         )}
 
         <div className="mb-4 flex items-center justify-between px-2">
-          <ThemeToggle />
+          <ThemeToggle compacto={compacto} />
           <button
             type="button"
             aria-label="Cerrar menú"
@@ -93,7 +101,7 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
           {menuItems.map((item) => {
             const activo = vistaActual === item.label.toLowerCase()
             return (

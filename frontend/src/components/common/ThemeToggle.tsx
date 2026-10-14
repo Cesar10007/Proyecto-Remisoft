@@ -5,9 +5,11 @@ import './ThemeToggle.css'
 interface ThemeToggleProps {
   // flotante: se fija arriba a la izquierda (paginas sin barra lateral)
   flotante?: boolean
+  // compacto: solo icono en escritorio (menu lateral plegado)
+  compacto?: boolean
 }
 
-function ThemeToggle({ flotante = false }: ThemeToggleProps) {
+function ThemeToggle({ flotante = false, compacto = false }: ThemeToggleProps) {
   const [tema, setTema] = useState<Tema>(temaGuardado)
 
   useEffect(() => escucharTema(setTema), [])
@@ -18,7 +20,7 @@ function ThemeToggle({ flotante = false }: ThemeToggleProps) {
   return (
     <button
       type="button"
-      className={`tema-toggle${flotante ? ' tema-toggle--flotante' : ''}`}
+      className={`tema-toggle${flotante ? ' tema-toggle--flotante' : ''}${compacto ? ' tema-toggle--compacto' : ''}`}
       onClick={() => cambiarTema(oscuro ? 'light' : 'dark')}
       aria-pressed={oscuro}
       aria-label={etiqueta}
