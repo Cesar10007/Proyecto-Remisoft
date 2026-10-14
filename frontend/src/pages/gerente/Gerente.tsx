@@ -12,6 +12,7 @@ import CajasSection from './sections/CajasSection'
 import Header from '../../components/layout/Header'
 import Sidebar from '../../components/layout/Sidebar'
 import { DataTable } from '../../components/common/DataTable'
+import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
@@ -539,24 +540,14 @@ function Gerente() {
             <DashboardOperativo />
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {metricasDashboard.map(m => (
-                <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
-                  <div className="flex items-start justify-between">
-                    <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
-                      m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
-                      m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                      'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
-                    }`}>{m.icon}</span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold ${
-                      m.badgeColor === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
-                      m.badgeColor === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                      'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
-                    }`}>{m.badge}</span>
-                  </div>
-                  <div>
-                    <p className="mb-1 text-[0.78rem] text-[var(--texto-muted)]">{m.label}</p>
-                    <p className="font-['Syne'] text-[1.6rem] font-bold text-[var(--texto)]">{m.valor}</p>
-                  </div>
-                </div>
+                <MetricCard
+                  key={m.label}
+                  label={m.label}
+                  value={m.valor}
+                  detail={m.badge}
+                  icon={m.icon}
+                  color={m.badgeColor === 'verde' ? 'green' : m.badgeColor === 'rojo' ? 'red' : 'default'}
+                />
               ))}
             </section>
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
