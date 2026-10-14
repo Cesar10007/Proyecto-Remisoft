@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
 
@@ -178,71 +179,48 @@ function GastosCaja({ onBack }: GastosCajaProps) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead>
-              <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                <th className="px-5 py-3 font-semibold">Fecha</th>
-                <th className="px-5 py-3 font-semibold">Hora</th>
-                <th className="px-5 py-3 font-semibold">Concepto</th>
-                <th className="px-5 py-3 font-semibold">Caja</th>
-                <th className="px-5 py-3 font-semibold">Responsable</th>
-                <th className="px-5 py-3 font-semibold">Método</th>
-                <th className="px-5 py-3 font-semibold">Monto</th>
-                <th className="px-5 py-3 text-right font-semibold">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">Cargando gastos…</td>
-                </tr>
-              )}
-
-              {!cargando && gastosFiltrados.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">No hay gastos para mostrar.</td>
-                </tr>
-              )}
-
-              {gastosFiltrados.map((g) => (
-                <tr key={g.id_flujo} className="border-t border-[var(--wa-border)]">
-                  <td className="px-5 py-4 text-sm">{fecha(g.fecha)}</td>
-                  <td className="px-5 py-4 text-sm">{hora(g.fecha)}</td>
-                  <td className="px-5 py-4 text-sm font-medium">{g.concepto ?? '—'}</td>
-                  <td className="px-5 py-4 text-sm">{g.turno_caja?.caja?.nombre ?? '—'}</td>
-                  <td className="px-5 py-4 text-sm">{responsable(g)}</td>
-                  <td className="px-5 py-4 text-sm">{g.metodo ?? '—'}</td>
-                  <td className="px-5 py-4 text-sm font-semibold">{formatCOP(monto(g))}</td>
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDetalle({
-                          open: true,
-                          title: 'Gasto',
-                          rows: [
-                            { label: 'Fecha', value: `${fecha(g.fecha)} ${hora(g.fecha)}` },
-                            { label: 'Concepto', value: g.concepto ?? '—' },
-                            { label: 'Caja', value: g.turno_caja?.caja?.nombre ?? '—' },
-                            { label: 'Responsable', value: responsable(g) },
-                            { label: 'Método', value: g.metodo ?? '—' },
-                            { label: 'Referencia', value: g.referencia || '—' },
-                            { label: 'Monto', value: formatCOP(monto(g)) },
-                          ],
-                        })
-                      }
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                      title="Ver gasto"
-                    >
-                      <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: 'Fecha', render: (g) => fecha(g.fecha) },
+            { header: 'Hora', render: (g) => hora(g.fecha) },
+            { header: 'Concepto', render: (g) => <span className="font-medium">{g.concepto ?? '—'}</span> },
+            { header: 'Caja', render: (g) => g.turno_caja?.caja?.nombre ?? '—' },
+            { header: 'Responsable', render: (g) => responsable(g) },
+            { header: 'Método', render: (g) => g.metodo ?? '—' },
+            { header: 'Monto', render: (g) => <span className="font-semibold">{formatCOP(monto(g))}</span> },
+            {
+              header: 'Acción',
+              render: (g) => (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetalle({
+                      open: true,
+                      title: 'Gasto',
+                      rows: [
+                        { label: 'Fecha', value: `${fecha(g.fecha)} ${hora(g.fecha)}` },
+                        { label: 'Concepto', value: g.concepto ?? '—' },
+                        { label: 'Caja', value: g.turno_caja?.caja?.nombre ?? '—' },
+                        { label: 'Responsable', value: responsable(g) },
+                        { label: 'Método', value: g.metodo ?? '—' },
+                        { label: 'Referencia', value: g.referencia || '—' },
+                        { label: 'Monto', value: formatCOP(monto(g)) },
+                      ],
+                    })
+                  }
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver gasto"
+                >
+                  <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                </button>
+              ),
+            },
+          ]}
+          data={gastosFiltrados}
+          isLoading={cargando}
+          emptyMessage="No hay gastos para mostrar."
+          keyExtractor={(g) => g.id_flujo}
+        />
       </div>
 
       <DetalleModal
