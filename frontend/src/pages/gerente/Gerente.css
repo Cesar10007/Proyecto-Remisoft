@@ -297,9 +297,9 @@
 }
 
 .ge-metric-value {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-numeros);
   font-size: 1.6rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--texto);
 }
 

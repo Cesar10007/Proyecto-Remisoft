@@ -5,6 +5,7 @@ import api from '../../api/axios'
 import { setCredentials } from '../../store/authSlice'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../../components/common/Button'
+import { InputField } from '../../components/common/InputField'
 
 interface LoginProps {
   onClose?: () => void
@@ -86,14 +87,8 @@ function Login({ onClose }: LoginProps) {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3.5">
-          <label
-            className="mb-1.5 block text-[0.78rem] font-medium text-[var(--texto-muted)]"
-            htmlFor="login-email"
-          >
-            Correo electrónico
-          </label>
-
-          <input
+          <InputField
+            label="Correo electrónico"
             id="login-email"
             className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
             type="email"
@@ -105,15 +100,9 @@ function Login({ onClose }: LoginProps) {
         </div>
 
         <div className="mb-3.5">
-          <label
-            className="mb-1.5 block text-[0.78rem] font-medium text-[var(--texto-muted)]"
-            htmlFor="login-password"
-          >
-            Contraseña
-          </label>
-
           <div className="relative">
-            <input
+            <InputField
+              label="Contraseña"
               id="login-password"
               className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
               type={showPassword ? 'text' : 'password'}
@@ -126,7 +115,7 @@ function Login({ onClose }: LoginProps) {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-3 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+              className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
               aria-label={
                 showPassword
                   ? 'Ocultar contraseña'

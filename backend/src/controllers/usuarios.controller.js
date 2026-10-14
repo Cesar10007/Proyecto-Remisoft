@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
+import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
 const ROL_SUPERADMIN = 1;
 const ROL_GERENTE = 2;
@@ -17,60 +18,12 @@ const ESTADOS_USUARIO = {
   ELIMINADO: 'ELIMINADO',
 };
 
-function parseId(id) {
-  const parsed = Number(id);
-
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
 function isEmpty(value) {
   return value === undefined || value === null || value === '';
 }
 
 function cleanString(value) {
   return typeof value === 'string' ? value.trim() : value;
-}
-
-function validateString(value, field, max, required = false) {
-  const cleaned = cleanString(value);
-
-  if (required && isEmpty(cleaned)) {
-    return `El campo ${field} es requerido`;
-  }
-
-  if (!isEmpty(cleaned) && typeof cleaned !== 'string') {
-    return `El campo ${field} debe ser texto`;
-  }
-
-  if (!isEmpty(cleaned) && cleaned.length > max) {
-    return `El campo ${field} no puede superar ${max} caracteres`;
-  }
-
-  return null;
-}
-
-function validateEmail(value) {
-  const cleaned = cleanString(value);
-
-  if (isEmpty(cleaned)) {
-    return 'El campo email es requerido';
-  }
-
-  if (typeof cleaned !== 'string') {
-    return 'El campo email debe ser texto';
-  }
-
-  if (cleaned.length > 100) {
-    return 'El campo email no puede superar 100 caracteres';
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(cleaned)) {
-    return 'El campo email debe ser un correo válido';
-  }
-
-  return null;
 }
 
 function validateIdRol(value) {
@@ -198,7 +151,7 @@ function validarUsuario(
     validateString(body.identificacion, 'identificacion', 20),
     validateString(body.nombre, 'nombre', 60, true),
     validateString(body.apellido, 'apellido', 60),
-    validateEmail(body.email),
+    validateEmail(body.email, { required: true }),
     validateString(body.telefono, 'telefono', 20),
     validatePassword(body.contrasena, requirePassword),
   ];

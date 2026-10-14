@@ -1,9 +1,5 @@
 import prisma from '../config/prisma.js';
-
-function parseId(id) {
-  const parsed = Number(id);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
+import { parseId, validateString } from '../utils/validation.js';
 
 function isEmpty(value) {
   return value === undefined || value === null || value === '';
@@ -11,24 +7,6 @@ function isEmpty(value) {
 
 function cleanString(value) {
   return typeof value === 'string' ? value.trim() : value;
-}
-
-function validateString(value, field, max, required = false) {
-  const cleaned = cleanString(value);
-
-  if (required && isEmpty(cleaned)) {
-    return `El campo ${field} es requerido`;
-  }
-
-  if (!isEmpty(cleaned) && typeof cleaned !== 'string') {
-    return `El campo ${field} debe ser texto`;
-  }
-
-  if (!isEmpty(cleaned) && cleaned.length > max) {
-    return `El campo ${field} no puede superar ${max} caracteres`;
-  }
-
-  return null;
 }
 
 function parseNullableInt(value, field) {

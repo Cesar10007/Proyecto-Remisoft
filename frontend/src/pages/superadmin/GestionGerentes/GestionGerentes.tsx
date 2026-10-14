@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable, Column } from '../../../components/common/DataTable'
+import { Badge } from '../../../components/common/Badge'
+import { InputField } from '../../../components/common/InputField'
 import './GestionGerentes.css'
 
 interface Usuario {
@@ -208,6 +211,97 @@ function GestionGerentes() {
     }
   }
 
+  const columns: Column<Usuario>[] = [
+    {
+      header: 'Usuario',
+      render: (usuario) => (
+        <div className="sa-user-cell">
+          <div className="sa-user-avatar-wrap">
+            {usuario.nombre?.[0]?.toUpperCase() || 'G'}
+          </div>
+          <div>
+            <p className="sa-user-name">
+              {usuario.nombre} {usuario.apellido || ''}
+            </p>
+            <p className="sa-user-email">{usuario.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Identificación',
+      render: (usuario) => usuario.identificacion || '—',
+    },
+    {
+      header: 'Rol',
+      render: () => <span className="sa-role-pill">GERENTE</span>,
+    },
+    {
+      header: 'Establecimiento',
+      render: (usuario) => usuario.restaurante || '—',
+    },
+    {
+      header: 'Teléfono',
+      render: (usuario) => usuario.telefono || '—',
+    },
+    {
+      header: 'Estado',
+      render: (usuario) => {
+        const activo = estaActivo(usuario)
+        return (
+          <Badge
+            status={activo ? 'active' : 'inactive'}
+            label={activo ? 'Activo' : 'Inactivo'}
+          />
+        )
+      },
+    },
+    {
+      header: 'Acciones',
+      render: (usuario) => {
+        const activo = estaActivo(usuario)
+        const procesandoEstado = cambiandoEstado === usuario.id_usuario
+        const procesandoEliminacion = eliminando === usuario.id_usuario
+
+        return (
+          <div className="sa-user-actions">
+            <button
+              type="button"
+              className="sa-action-button sa-action-button--state"
+              onClick={() => void cambiarEstado(usuario)}
+              disabled={procesandoEstado || procesandoEliminacion}
+              title={activo ? 'Desactivar gerente' : 'Activar gerente'}
+            >
+              <span className="material-symbols-outlined">
+                {activo ? 'person_off' : 'person_check'}
+              </span>
+              {procesandoEstado
+                ? 'Guardando...'
+                : activo
+                  ? 'Desactivar'
+                  : 'Activar'}
+            </button>
+
+            <button
+              type="button"
+              className="sa-action-button sa-action-button--delete"
+              onClick={() => void eliminarUsuario(usuario)}
+              disabled={procesandoEstado || procesandoEliminacion}
+              title="Eliminar gerente"
+            >
+              <span className="material-symbols-outlined">
+                delete
+              </span>
+              {procesandoEliminacion
+                ? 'Eliminando...'
+                : 'Eliminar'}
+            </button>
+          </div>
+        )
+      },
+    },
+  ]
+
   return (
     <section className="sa-users-panel">
       <div className="sa-panel-header">
@@ -264,54 +358,46 @@ function GestionGerentes() {
 
             <form className="sa-manager-form" onSubmit={crearGerente}>
               <div className="sa-manager-form__grid">
-                <label>
-                  Identificación
-                  <input
-                    type="text"
-                    value={formulario.identificacion}
-                    onChange={(event) =>
-                      cambiarCampo('identificacion', event.target.value)
-                    }
-                  />
-                </label>
+                <InputField
+                  label="Identificación"
+                  type="text"
+                  value={formulario.identificacion}
+                  onChange={(event) =>
+                    cambiarCampo('identificacion', event.target.value)
+                  }
+                />
 
-                <label>
-                  Nombre *
-                  <input
-                    type="text"
-                    value={formulario.nombre}
-                    onChange={(event) =>
-                      cambiarCampo('nombre', event.target.value)
-                    }
-                    required
-                  />
-                </label>
+                <InputField
+                  label="Nombre *"
+                  type="text"
+                  value={formulario.nombre}
+                  onChange={(event) =>
+                    cambiarCampo('nombre', event.target.value)
+                  }
+                  required
+                />
 
-                <label>
-                  Apellido
-                  <input
-                    type="text"
-                    value={formulario.apellido}
-                    onChange={(event) =>
-                      cambiarCampo('apellido', event.target.value)
-                    }
-                  />
-                </label>
+                <InputField
+                  label="Apellido"
+                  type="text"
+                  value={formulario.apellido}
+                  onChange={(event) =>
+                    cambiarCampo('apellido', event.target.value)
+                  }
+                />
 
-                <label>
-                  Teléfono
-                  <input
-                    type="tel"
-                    value={formulario.telefono}
-                    onChange={(event) =>
-                      cambiarCampo('telefono', event.target.value)
-                    }
-                  />
-                </label>
+                <InputField
+                  label="Teléfono"
+                  type="tel"
+                  value={formulario.telefono}
+                  onChange={(event) =>
+                    cambiarCampo('telefono', event.target.value)
+                  }
+                />
 
-                <label className="sa-manager-form__field--full">
-                  Correo electrónico *
-                  <input
+                <div className="sa-manager-form__field--full">
+                  <InputField
+                    label="Correo electrónico *"
                     type="email"
                     value={formulario.email}
                     onChange={(event) =>
@@ -319,57 +405,54 @@ function GestionGerentes() {
                     }
                     required
                   />
-                </label>
+                </div>
 
-                <label>
-                  Nombre Establecimiento *
-                  <input
-                    type="text"
-                    placeholder="Ej. Restaurante Central"
-                    value={formulario.nombre_establecimiento}
+                <InputField
+                  label="Nombre Establecimiento *"
+                  type="text"
+                  placeholder="Ej. Restaurante Central"
+                  value={formulario.nombre_establecimiento}
+                  onChange={(event) =>
+                    cambiarCampo(
+                      'nombre_establecimiento',
+                      event.target.value,
+                    )
+                  }
+                  required
+                />
+
+                <div className="sa-password-field">
+                  <InputField
+                    label="Contraseña *"
+                    type={mostrarContrasena ? 'text' : 'password'}
+                    value={formulario.contrasena}
                     onChange={(event) =>
-                      cambiarCampo(
-                        'nombre_establecimiento',
-                        event.target.value,
-                      )
+                      cambiarCampo('contrasena', event.target.value)
                     }
+                    minLength={8}
                     required
+                    className="pr-12"
                   />
-                </label>
 
-                <label>
-                  Contraseña *
-                  <div className="sa-password-field">
-                    <input
-                      type={mostrarContrasena ? 'text' : 'password'}
-                      value={formulario.contrasena}
-                      onChange={(event) =>
-                        cambiarCampo('contrasena', event.target.value)
-                      }
-                      minLength={8}
-                      required
-                    />
-
-                    <button
-                      type="button"
-                      className="sa-password-toggle"
-                      onClick={() =>
-                        setMostrarContrasena((actual) => !actual)
-                      }
-                      aria-label={
-                        mostrarContrasena
-                          ? 'Ocultar contraseña'
-                          : 'Mostrar contraseña'
-                      }
-                    >
-                      <span className="material-symbols-outlined">
-                        {mostrarContrasena
-                          ? 'visibility_off'
-                          : 'visibility'}
-                      </span>
-                    </button>
-                  </div>
-                </label>
+                  <button
+                    type="button"
+                    className="sa-password-toggle !top-8 !h-10"
+                    onClick={() =>
+                      setMostrarContrasena((actual) => !actual)
+                    }
+                    aria-label={
+                      mostrarContrasena
+                        ? 'Ocultar contraseña'
+                        : 'Mostrar contraseña'
+                    }
+                  >
+                    <span className="material-symbols-outlined">
+                      {mostrarContrasena
+                        ? 'visibility_off'
+                        : 'visibility'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <p className="sa-manager-form__hint">
@@ -401,137 +484,14 @@ function GestionGerentes() {
         </div>
       )}
 
-      <div className="sa-table-card">
-        <div className="sa-table-scroll">
-          <table className="sa-table">
-            <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Identificación</th>
-                <th>Rol</th>
-                <th>Establecimiento</th>
-                <th>Teléfono</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={7} className="sa-table-message">
-                    Cargando gerentes...
-                  </td>
-                </tr>
-              )}
-
-              {!cargando && !error && usuarios.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="sa-table-message">
-                    No hay gerentes registrados.
-                  </td>
-                </tr>
-              )}
-
-              {!cargando &&
-                usuarios.map((usuario) => {
-                  const activo = estaActivo(usuario)
-                  const procesandoEstado =
-                    cambiandoEstado === usuario.id_usuario
-                  const procesandoEliminacion =
-                    eliminando === usuario.id_usuario
-
-                  return (
-                    <tr key={usuario.id_usuario}>
-                      <td>
-                        <div className="sa-user-cell">
-                          <div className="sa-user-avatar-wrap">
-                            {usuario.nombre?.[0]?.toUpperCase() || 'G'}
-                          </div>
-
-                          <div>
-                            <p className="sa-user-name">
-                              {usuario.nombre} {usuario.apellido || ''}
-                            </p>
-                            <p className="sa-user-email">
-                              {usuario.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td>{usuario.identificacion || '—'}</td>
-
-                      <td>
-                        <span className="sa-role-pill">GERENTE</span>
-                      </td>
-
-                      <td>{usuario.restaurante || '—'}</td>
-                      <td>{usuario.telefono || '—'}</td>
-
-                      <td>
-                        <span
-                          className={`sa-status-label ${
-                            activo
-                              ? 'sa-status-label--active'
-                              : 'sa-status-label--inactive'
-                          }`}
-                        >
-                          <span className="sa-status-dot" />
-                          {activo ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-
-                      <td>
-                        <div className="sa-user-actions">
-                          <button
-                            type="button"
-                            className="sa-action-button sa-action-button--state"
-                            onClick={() => void cambiarEstado(usuario)}
-                            disabled={
-                              procesandoEstado || procesandoEliminacion
-                            }
-                            title={
-                              activo
-                                ? 'Desactivar gerente'
-                                : 'Activar gerente'
-                            }
-                          >
-                            <span className="material-symbols-outlined">
-                              {activo ? 'person_off' : 'person_check'}
-                            </span>
-                            {procesandoEstado
-                              ? 'Guardando...'
-                              : activo
-                                ? 'Desactivar'
-                                : 'Activar'}
-                          </button>
-
-                          <button
-                            type="button"
-                            className="sa-action-button sa-action-button--delete"
-                            onClick={() => void eliminarUsuario(usuario)}
-                            disabled={
-                              procesandoEstado || procesandoEliminacion
-                            }
-                            title="Eliminar gerente"
-                          >
-                            <span className="material-symbols-outlined">
-                              delete
-                            </span>
-                            {procesandoEliminacion
-                              ? 'Eliminando...'
-                              : 'Eliminar'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        title="Gerentes registrados"
+        columns={columns}
+        data={usuarios}
+        isLoading={cargando}
+        emptyMessage="No hay gerentes registrados."
+        keyExtractor={(usuario) => usuario.id_usuario}
+      />
     </section>
   )
 }

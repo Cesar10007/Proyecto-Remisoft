@@ -1,61 +1,11 @@
 import prisma from '../config/prisma.js';
-
-function parseId(id) {
-  const parsed = Number(id);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function isEmpty(value) {
-  return value === undefined || value === null || value === '';
-}
-
-function validateString(value, field, max, required = false) {
-  if (required && isEmpty(value)) {
-    return `El campo ${field} es requerido`;
-  }
-
-  if (!isEmpty(value) && typeof value !== 'string') {
-    return `El campo ${field} debe ser texto`;
-  }
-
-  if (!isEmpty(value) && value.length > max) {
-    return `El campo ${field} no puede superar ${max} caracteres`;
-  }
-
-  return null;
-}
-
-function validateEmail(value, required = false) {
-  if (required && isEmpty(value)) {
-    return 'El campo Email es requerido';
-  }
-
-  if (isEmpty(value)) {
-    return null;
-  }
-
-  if (typeof value !== 'string') {
-    return 'El campo Email debe ser texto';
-  }
-
-  if (value.length > 60) {
-    return 'El campo Email no puede superar 60 caracteres';
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(value)) {
-    return 'El campo Email debe ser un correo válido';
-  }
-
-  return null;
-}
+import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
 function validarCliente(body) {
   const validations = [
     validateString(body.Nombre, 'Nombre', 50, true),
     validateString(body.Apellido, 'Apellido', 50),
-    validateEmail(body.Email, true),
+    validateEmail(body.Email, { required: true, maxLength: 60, field: 'Email' }),
     validateString(body.Telefono, 'Telefono', 20),
     validateString(body.Direccion, 'Direccion', 120),
     validateString(body.coordenadas_gps, 'coordenadas_gps', 80),
@@ -73,7 +23,7 @@ function validarCliente(body) {
     data: {
       Nombre: body.Nombre,
       Apellido: body.Apellido || null,
-      Email: body.Email,
+      Email: body.Email.trim(),
       Telefono: body.Telefono || null,
       Direccion: body.Direccion || null,
       coordenadas_gps: body.coordenadas_gps || null,

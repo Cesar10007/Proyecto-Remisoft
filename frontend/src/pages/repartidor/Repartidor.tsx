@@ -1,16 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import { InputField } from '../../components/common/InputField'
+import { SelectField } from '../../components/common/SelectField'
+import { DashboardSidebar } from '../../components/layout/DashboardSidebar'
+import { useDashboardSidebarCollapsed } from '../../components/layout/useDashboardSidebar'
 import './Repartidor.css'
 
 const menuItems = [
-  { icon: 'dashboard', label: 'Resumen' },
-  { icon: 'local_shipping', label: 'Entregas' },
-  { icon: 'history', label: 'Historial' },
-  { icon: 'support_agent', label: 'Soporte' },
+  { id: 'resumen', icon: 'dashboard', label: 'Resumen' },
+  { id: 'entregas', icon: 'local_shipping', label: 'Entregas' },
+  { id: 'historial', icon: 'history', label: 'Historial' },
+  { id: 'soporte', icon: 'support_agent', label: 'Soporte', badge: 3 },
 ]
 
 interface Domicilio {
@@ -30,19 +33,6 @@ const domicilioVacio = {
   id_repartidor: '',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.6rem 0.85rem',
-  borderRadius: '12px',
-  border: '1px solid rgba(0,0,0,0.08)',
-  background: '#fcfaf8',
-  fontSize: '0.9rem',
-  color: '#1a1a1a',
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontFamily: 'DM Sans, sans-serif',
-}
-
 const estadoColor: Record<string, string> = {
   ASIGNADO: '#9a5e10',
   EN_CAMINO: '#1d9e75',
@@ -58,9 +48,9 @@ const estadoBg: Record<string, string> = {
 }
 
 function Repartidor() {
+  const sidebarCollapsed = useDashboardSidebarCollapsed()
   const [activeItem, setActiveItem] = useState('Resumen')
-  const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
 
   const [domicilios, setDomicilios] = useState<Domicilio[]>([])
   const [cargandoDomicilios, setCargandoDomicilios] = useState(false)
@@ -150,57 +140,35 @@ function Repartidor() {
         color: 'var(--rd-text)',
       }}
     >
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="fixed left-0 top-0 z-20 flex min-h-screen w-60 flex-col border-r border-[var(--rd-border)] bg-[var(--rd-card)] p-4">
-        <div className="mb-8 px-2">
-          <span className="block font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rd-primary-dark)]">
-            Remi<span className="text-[var(--rd-secondary)]">Soft</span>
-          </span>
-          <span className="mt-1 block text-[0.7rem] uppercase tracking-[1.5px] text-[var(--rd-text-muted)]">
-            Operación de Reparto
-          </span>
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-0.5">
-          {menuItems.map(item => (
+      <DashboardSidebar
+        roleTitle="Operación de Reparto"
+        navItems={menuItems}
+        activeItem={menuItems.find((item) => item.label === activeItem)?.id}
+        onNavigate={(itemId) => {
+          const selectedItem = menuItems.find((item) => item.id === itemId)
+          if (selectedItem) setActiveItem(selectedItem.label)
+        }}
+        footerActions={
+          <>
             <button
-              key={item.label}
-              onClick={() => setActiveItem(item.label)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[0.92rem] font-medium ${
-                activeItem === item.label
-                  ? 'bg-[var(--rd-primary-soft)] font-bold text-[var(--rd-primary-dark)]'
-                  : 'bg-transparent text-[var(--rd-text-muted)] hover:bg-[#f8f4f1] hover:text-[var(--rd-text)]'
-              }`}
+              type="button"
+              className="w-full rounded-xl bg-[var(--rojo)] px-4 py-3.5 font-bold text-white"
             >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              {item.label}
-              {item.label === 'Soporte' && (
-                <span className="ml-auto rounded-full bg-[var(--rd-primary)] px-2 py-0.5 text-[0.7rem] font-bold text-white">3</span>
-              )}
+              <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
+              Finalizar turno
             </button>
-          ))}
-        </nav>
+            <button
+              type="button"
+              className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm text-[var(--texto-muted)] hover:bg-[#f5ede7]"
+            >
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+              Configuraciones
+            </button>
+          </>
+        }
+      />
 
-        <div className="mt-auto flex flex-col gap-2.5 px-1">
-          <button className="w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3.5 font-bold text-white">
-            <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
-            Finalizar turno
-          </button>
-          <button className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[var(--rd-text-muted)] hover:bg-[#f8f4f1]">
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            Configuraciones
-          </button>
-          <button
-            onClick={() => { logout(); navigate('/') }}
-            className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[#b64646] hover:bg-[#f8f4f1]"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
-
-      <main className="ml-60 min-w-0 flex-1">
+      <main className={`ml-0 min-w-0 flex-1 pt-14 transition-[margin] duration-200 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-60'} lg:pt-0`}>
         {activeItem === 'Resumen' && (
           <>
             <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[rgba(253,250,247,0.88)] px-7 py-5.5 backdrop-blur-[12px]">
@@ -233,17 +201,17 @@ function Repartidor() {
               <div className="grid grid-cols-3 gap-4.5">
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold">$142.500</span>
+                  <span className="font-number text-[2rem]">$142.500</span>
                   <span className="text-[0.8rem] font-semibold text-white/82">+12% vs ayer</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregas completadas</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold text-[var(--rd-success)]">18</span>
+                  <span className="font-number text-[2rem] text-[var(--rd-success)]">18</span>
                   <span className="text-[0.8rem] font-semibold text-[var(--rd-success)]">2 pendientes en cola</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Tiempo de turno</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold">6h 14m</span>
+                  <span className="font-number text-[2rem]">6h 14m</span>
                   <span className="text-[0.8rem] font-semibold text-[var(--rd-text-muted)]">Inicio: 11:30 AM</span>
                 </div>
               </div>
@@ -465,55 +433,51 @@ function Repartidor() {
             </div>
 
             <Modal isOpen={modalDomicilio} onClose={() => setModalDomicilio(false)}>
-              <div className="px-6 pb-6">
+              <form
+                className="px-6 pb-6"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void guardarDomicilio()
+                }}
+              >
                 <h3 className="mb-6 font-['Syne'] text-[1.2rem] font-extrabold">
                   {modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
                 </h3>
                 <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Pedido *</label>
-                    <input
-                      type="number"
-                      placeholder="Ej: 12"
-                      value={domicilioActual.id_pedido}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))}
-                      disabled={modoEdicionDomicilio}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Dirección *</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Calle 45 # 12-34, Bogotá"
-                      value={domicilioActual.direccion}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Estado</label>
-                    <select
-                      value={domicilioActual.estado}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}
-                      className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    >
-                      <option value="ASIGNADO">ASIGNADO</option>
-                      <option value="EN_CAMINO">EN_CAMINO</option>
-                      <option value="ENTREGADO">ENTREGADO</option>
-                      <option value="CANCELADO">CANCELADO</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Repartidor</label>
-                    <input
-                      type="number"
-                      placeholder="Opcional"
-                      value={domicilioActual.id_repartidor}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[#fcfaf8] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
+                  <InputField
+                    label="ID Pedido *"
+                    type="number"
+                    placeholder="Ej: 12"
+                    value={domicilioActual.id_pedido}
+                    onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))}
+                    disabled={modoEdicionDomicilio}
+                    required
+                  />
+                  <InputField
+                    label="Dirección *"
+                    type="text"
+                    placeholder="Ej: Calle 45 # 12-34, Bogotá"
+                    value={domicilioActual.direccion}
+                    onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))}
+                    required
+                  />
+                  <SelectField
+                    label="Estado"
+                    value={domicilioActual.estado}
+                    onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}
+                  >
+                    <option value="ASIGNADO">ASIGNADO</option>
+                    <option value="EN_CAMINO">EN_CAMINO</option>
+                    <option value="ENTREGADO">ENTREGADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </SelectField>
+                  <InputField
+                    label="ID Repartidor"
+                    type="number"
+                    placeholder="Opcional"
+                    value={domicilioActual.id_repartidor}
+                    onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))}
+                  />
                   {errorDomicilio && (
                     <p className="rounded-[10px] bg-[#fdecea] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
                       {errorDomicilio}
@@ -521,13 +485,14 @@ function Repartidor() {
                   )}
                   <div className="mt-2 flex gap-2.5">
                     <button
+                      type="button"
                       onClick={() => setModalDomicilio(false)}
                       className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
                     >
                       Cancelar
                     </button>
                     <button
-                      onClick={guardarDomicilio}
+                      type="submit"
                       disabled={guardandoDomicilio}
                       className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
                     >
@@ -535,7 +500,7 @@ function Repartidor() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </form>
             </Modal>
           </>
         )}
