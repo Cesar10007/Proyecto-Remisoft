@@ -8,6 +8,7 @@ import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
+import { DataTable } from '../../components/common/DataTable'
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
 
@@ -421,26 +422,16 @@ export default function Cajero() {
             </div>
           )}
           {productos.length > 0 && (
-            <table className="cajero__tabla">
-              <thead>
-                <tr>
-                  <th>Plato</th>
-                  <th>Descripción</th>
-                  <th>Categoría</th>
-                  <th>Precio</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productos.map(p => (
-                  <tr key={p.id_producto}>
-                    <td>{p.Nombre}</td>
-                    <td>{p.Descripcion}</td>
-                    <td>{p.categoria?.nombre ?? (p.Categoria || '—')}</td>
-                    <td>{formatoCOP(Number(p.precio_venta))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              columns={[
+                { header: 'Plato', render: (p) => p.Nombre },
+                { header: 'Descripción', render: (p) => p.Descripcion },
+                { header: 'Categoría', render: (p) => p.categoria?.nombre ?? (p.Categoria || '—') },
+                { header: 'Precio', render: (p) => formatoCOP(Number(p.precio_venta)) },
+              ]}
+              data={productos}
+              keyExtractor={(p) => p.id_producto}
+            />
           )}
         </section>
       )}
