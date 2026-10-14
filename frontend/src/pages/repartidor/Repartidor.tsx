@@ -5,7 +5,8 @@ import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
 import './Repartidor.css'
-import ThemeToggle from '../../components/common/ThemeToggle'
+import Sidebar from '../../components/layout/Sidebar'
+import Header from '../../components/layout/Header'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen' },
@@ -132,9 +133,10 @@ const formatoPesos = (valor: number) =>
 const etiquetaEstadoCola: Record<string, string> = { ASIGNADO: 'Asignado', EN_CAMINO: 'En camino' }
 
 function Repartidor() {
-  const [activeItem, setActiveItem] = useState('Resumen')
+  const [activeItem, setActiveItem] = useState('resumen')
   const navigate = useNavigate()
   const { logout, user } = useAuth()
+  const nombreUsuario = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Repartidor'
 
   const [domicilios, setDomicilios] = useState<Domicilio[]>([])
   const [cargandoDomicilios, setCargandoDomicilios] = useState(false)
@@ -151,10 +153,10 @@ function Repartidor() {
     api.get('/domicilios').then(r => setDomicilios(r.data)).catch(console.error).finally(() => setCargandoDomicilios(false))
   }
 
-  useEffect(() => { if (['Resumen', 'Entregas', 'Historial'].includes(activeItem)) cargarDomicilios() }, [activeItem])
+  useEffect(() => { if (['resumen', 'entregas', 'historial'].includes(activeItem)) cargarDomicilios() }, [activeItem])
 
   useEffect(() => {
-    if (activeItem !== 'Resumen') return
+    if (activeItem !== 'resumen') return
     api.get('/domicilios/resumen').then(r => setResumen(r.data.data)).catch(console.error)
   }, [activeItem])
 
@@ -338,92 +340,55 @@ function Repartidor() {
 
   return (
     <div
-      className="rd-wrapper flex min-h-screen font-['DM_Sans']"
+      className="rd-wrapper min-h-screen font-['DM_Sans']"
       style={{
         background: 'var(--rd-bg)',
         color: 'var(--rd-text)',
       }}
     >
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="fixed left-0 top-0 z-20 flex min-h-screen w-60 flex-col border-r border-[var(--rd-border)] bg-[var(--rd-card)] p-4">
-        <div className="mb-4 px-2"><ThemeToggle /></div>
-        <div className="mb-8 px-2">
-          <span className="block font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rd-primary-dark)]">
-            Remi<span className="text-[var(--rd-secondary)]">Soft</span>
-          </span>
-          <span className="mt-1 block text-[0.7rem] uppercase tracking-[1.5px] text-[var(--rd-text-muted)]">
-            Operación de Reparto
-          </span>
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-0.5">
-          {menuItems.map(item => (
-            <button
-              key={item.label}
-              onClick={() => setActiveItem(item.label)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[0.92rem] font-medium ${
-                activeItem === item.label
-                  ? 'bg-[var(--rd-primary-soft)] font-bold text-[var(--rd-primary-dark)]'
-                  : 'bg-transparent text-[var(--rd-text-muted)] hover:bg-[var(--t-bg-f8f4f1,#f8f4f1)] hover:text-[var(--rd-text)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              {item.label}
-              {item.label === 'Soporte' && casosAbiertos > 0 && (
-                <span className="ml-auto rounded-full bg-[var(--rd-primary)] px-2 py-0.5 text-[0.7rem] font-bold text-white">
-                  {casosAbiertos}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-auto flex flex-col gap-2.5 px-1">
-          <button className="w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3.5 font-bold text-white">
+      <Sidebar
+        subtitulo="Operación de Reparto"
+        menuItems={menuItems.map(m => ({ ...m, badge: m.label === 'Soporte' ? casosAbiertos : undefined }))}
+        vistaActual={activeItem}
+        onNavigate={setActiveItem}
+        onLogout={() => { logout(); navigate('/') }}
+        footer={
+          <button className="mb-2 w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3 font-bold text-white">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
             Finalizar turno
           </button>
-          <button
-            onClick={() => { logout(); navigate('/') }}
-            className="flex items-center gap-2.5 rounded-[10px] border-none bg-transparent px-3 py-2.5 text-[0.9rem] text-[var(--t-txt-b64646,#b64646)] hover:bg-[var(--t-bg-f8f4f1,#f8f4f1)]"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
+        }
+      />
 
-      <main className="ml-60 min-w-0 flex-1">
-        {activeItem === 'Resumen' && (
+      <main className="min-w-0 pt-14 md:ml-[240px] md:pt-0">
+        {activeItem === 'resumen' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
-              <div className="flex flex-col gap-1">
-                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3.5">
-                <div className="relative w-80">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--rd-text-muted)]">search</span>
-                  <input
-                    type="text"
-                    placeholder="Buscar una orden específica..."
-                    className="w-full rounded-full border border-[var(--rd-border)] bg-white py-2.5 pl-10 pr-4 outline-none"
-                  />
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--rd-success-soft)] px-3 py-2 text-[0.76rem] font-bold text-[var(--rd-success)]">
-                  <span className="h-2 w-2 rounded-full bg-[var(--rd-success)]" />
-                  En turno
-                </div>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-white text-[var(--rd-text-muted)]">
-                  <span className="material-symbols-outlined text-[20px]">notifications</span>
-                </button>
-                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--t-bg-f2ece8,#f2ece8)] text-[0.9rem] font-bold text-[var(--rd-primary-dark)]">
-                  {(user?.nombre ?? 'R')[0].toUpperCase()}
-                </div>
-              </div>
+            <div className="px-4 pt-6 md:px-7">
+              <Header
+                seccionActiva="Resumen"
+                subtitulo="Tu operación de hoy"
+                nombreUsuario={nombreUsuario}
+                acciones={
+                  <>
+                    <div className="relative w-full md:w-80">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--rd-text-muted)]">search</span>
+                      <input
+                        type="text"
+                        placeholder="Buscar una orden específica..."
+                        className="w-full rounded-full border border-[var(--rd-border)] bg-white py-2.5 pl-10 pr-4 outline-none"
+                      />
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[var(--rd-success-soft)] px-3 py-2 text-[0.76rem] font-bold text-[var(--rd-success)]">
+                      <span className="h-2 w-2 rounded-full bg-[var(--rd-success)]" />
+                      En turno
+                    </div>
+                  </>
+                }
+              />
             </div>
 
-            <div className="flex flex-col gap-6 p-7">
-              <div className="grid grid-cols-3 gap-4.5">
+            <div className="flex flex-col gap-6 p-4 md:p-7">
+              <div className="grid grid-cols-1 gap-4.5 md:grid-cols-3">
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
                   <span className="font-['Syne'] text-[2rem] font-extrabold">{formatoPesos(resumen?.ganancias_hoy ?? 0)}</span>
@@ -442,7 +407,7 @@ function Repartidor() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[2fr_1fr] gap-6">
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr]">
                 <div className="overflow-hidden rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)]">
                   <div className="relative h-[260px]">
                     <div className="flex h-full w-full items-center justify-center bg-[var(--rd-card)] px-6 text-center text-[0.85rem] text-[var(--rd-text-muted)]">
@@ -592,25 +557,26 @@ function Repartidor() {
             </div>
           </>
         )}
-        {activeItem === 'Entregas' && (
+        {activeItem === 'entregas' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
-              <div className="flex flex-col gap-1">
-                <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Gestión de Entregas</h1>
-                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Bienvenido de nuevo, <strong>{user?.nombre ?? 'Repartidor'}</strong></p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3.5">
-                <button
-                  className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-5 py-2.5 text-[0.875rem] font-extrabold text-white"
-                  onClick={abrirCrearDomicilio}
-                >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                  Nuevo Domicilio
-                </button>
-              </div>
+            <div className="px-4 pt-6 md:px-7">
+              <Header
+                seccionActiva="Gestión de Entregas"
+                subtitulo="Tus domicilios asignados"
+                nombreUsuario={nombreUsuario}
+                acciones={
+                  <button
+                    className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-5 py-2.5 text-[0.875rem] font-extrabold text-white"
+                    onClick={abrirCrearDomicilio}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    Nuevo Domicilio
+                  </button>
+                }
+              />
             </div>
 
-            <div className="flex flex-col gap-6 p-7">
+            <div className="flex flex-col gap-6 p-4 md:p-7">
               {cargandoDomicilios ? (
                 <div className="p-12 text-center text-[var(--rd-text-muted)]">
                   <span className="material-symbols-outlined mb-2 block text-[2rem]">sync</span>
@@ -776,17 +742,18 @@ function Repartidor() {
         {/* =========================================================
             HISTORIAL
         ========================================================== */}
-        {activeItem === 'Historial' && (
+        {activeItem === 'historial' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
-              <div className="flex flex-col gap-1">
-                <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Historial de entregas</h1>
-                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">Consulta tus entregas anteriores</p>
-              </div>
+            <div className="px-4 pt-6 md:px-7">
+              <Header
+                seccionActiva="Historial de entregas"
+                subtitulo="Consulta tus entregas anteriores"
+                nombreUsuario={nombreUsuario}
+              />
             </div>
 
-            <div className="flex flex-col gap-6 p-7">
-              <div className="grid grid-cols-3 gap-4.5">
+            <div className="flex flex-col gap-6 p-4 md:p-7">
+              <div className="grid grid-cols-1 gap-4.5 md:grid-cols-3">
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Ganado (entregadas)</span>
                   <span className="font-['Syne'] text-[1.7rem] font-extrabold text-[var(--rd-success)]">
@@ -862,19 +829,22 @@ function Repartidor() {
         {/* =========================================================
             SOPORTE
         ========================================================== */}
-        {activeItem === 'Soporte' && (
+        {activeItem === 'soporte' && (
           <>
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[var(--rd-border)] bg-[var(--t-bg-rgba_253_250_247_0_88,rgba(253,250,247,0.88))] px-7 py-5.5 backdrop-blur-[12px]">
-              <div className="flex flex-col gap-1">
-                <h1 className="font-['Syne'] text-[1.4rem] font-extrabold">Soporte</h1>
-            <span className="rounded-full bg-[var(--rd-card)] px-2 py-0.5 text-[0.65rem] text-[var(--rd-text-muted)]">Demo</span>
-                <p className="text-[0.88rem] text-[var(--rd-text-muted)]">
-                  Reclamos de clientes y reportes que has enviado
-                </p>
-              </div>
+            <div className="px-4 pt-6 md:px-7">
+              <Header
+                seccionActiva="Soporte"
+                subtitulo={
+                  <>
+                    Reclamos de clientes y reportes que has enviado
+                    <span className="ml-2 rounded-full bg-[var(--rd-card)] px-2 py-0.5 text-[0.65rem] text-[var(--rd-text-muted)]">Demo</span>
+                  </>
+                }
+                nombreUsuario={nombreUsuario}
+              />
             </div>
 
-            <div className="flex flex-col gap-6 p-7">
+            <div className="flex flex-col gap-6 p-4 md:p-7">
               <div className="rounded-[18px] border border-[var(--rd-secondary-soft)] bg-[var(--rd-secondary-soft)]/40 p-4.5 text-[0.85rem] text-[var(--rd-text-muted)]">
                 <span className="material-symbols-outlined mr-1.5 align-middle text-[18px] text-[var(--t-txt-9a5e10,#9a5e10)]">info</span>
                 Tip: en cualquier domicilio, mantén presionado el ícono <strong>⚠ Reportar</strong> por un segundo para abrir un reporte de problema.

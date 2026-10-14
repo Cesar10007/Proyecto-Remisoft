@@ -9,8 +9,8 @@ import IngredientesSection from './sections/IngredientesSection'
 import FinanzasSection from './sections/FinanzasSection'
 import ProveedoresSection from './sections/ProveedoresSection'
 import CajasSection from './sections/CajasSection'
-import GerenteHeader from './components/GerenteHeader'
-import GerenteSidebar from './components/GerenteSidebar'
+import Header from '../../components/layout/Header'
+import Sidebar from '../../components/layout/Sidebar'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
@@ -522,9 +522,16 @@ function Gerente() {
   }
   return (
     <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
-      <GerenteSidebar menuItems={menuItems} vistaActual={vistaActual} onNavigate={setVistaActual} onLogout={() => { logout(); navigate('/') }} />
-      <main className="ml-[240px] flex flex-1 flex-col gap-8 p-8">
-        <GerenteHeader seccionActiva={seccionActiva} nombreUsuario={user?.nombre} />
+      <Sidebar
+        subtitulo="Gerente"
+        menuItems={menuItems}
+        vistaActual={vistaActual}
+        onNavigate={setVistaActual}
+        onLogout={() => { logout(); navigate('/') }}
+        footer={<button className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">Cerrar Caja</button>}
+      />
+      <main className="flex flex-1 flex-col gap-8 p-4 pt-20 md:ml-[240px] md:p-8">
+        <Header seccionActiva={seccionActiva} nombreUsuario={[user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Gerente'} />
         {/* MENÚ — Dashboard principal */}
         {seccionActiva === 'Menú' && (
           <>
