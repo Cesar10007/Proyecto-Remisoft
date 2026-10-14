@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import api from '../../../api/axios'
 import { DataTable } from '../../../components/common/DataTable'
 import Modal from '../../../components/common/Modal'
+import { InputField } from '../../../components/common/InputField'
+import { SelectField } from '../../../components/common/SelectField'
 import './Pedidos.css'
  
 interface Pedido {
@@ -180,66 +182,25 @@ function Pedidos() {
         <div className="px-6 pb-6">
           <h3 className="mb-5 font-bold">{modoEdicion ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
           <div className="flex flex-col gap-3.5">
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
-              <input
-                type="number"
-                placeholder="Opcional"
-                value={pedidoActual.id_cliente}
-                onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))}
-                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              />
-            </div>
+            <InputField label="ID Cliente" type="number" placeholder="Opcional" value={pedidoActual.id_cliente} onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))} />
  
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Mesero</label>
-              <input
-                type="number"
-                placeholder="Opcional"
-                value={pedidoActual.id_mesero}
-                onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))}
-                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              />
-            </div>
+            <InputField label="ID Mesero" type="number" placeholder="Opcional" value={pedidoActual.id_mesero} onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))} />
  
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Tipo de Pedido *</label>
-              <select
-                value={pedidoActual.Tipo_pedido}
-                onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}
-                className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              >
+            <SelectField label="Tipo de Pedido *" value={pedidoActual.Tipo_pedido} onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}>
                 <option value="MESA">MESA</option>
                 <option value="DOMICILIO">DOMICILIO</option>
                 <option value="LLEVAR">LLEVAR</option>
-              </select>
-            </div>
+              </SelectField>
  
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de Mesa</label>
-              <input
-                type="number"
-                placeholder="Opcional"
-                value={pedidoActual.Mesa_num}
-                onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))}
-                className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              />
-            </div>
+            <InputField label="Número de Mesa" type="number" placeholder="Opcional" value={pedidoActual.Mesa_num} onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))} />
  
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Estado</label>
-              <select
-                value={pedidoActual.estado}
-                onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}
-                className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              >
+            <SelectField label="Estado" value={pedidoActual.estado} onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}>
                 <option value="ABIERTO">ABIERTO</option>
                 <option value="EN_PROCESO">EN_PROCESO</option>
                 <option value="LISTO">LISTO</option>
                 <option value="ENTREGADO">ENTREGADO</option>
                 <option value="CANCELADO">CANCELADO</option>
-              </select>
-            </div>
+              </SelectField>
  
             <div>
               <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Notas</label>
