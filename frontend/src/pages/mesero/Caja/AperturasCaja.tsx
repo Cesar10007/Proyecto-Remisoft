@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
+import { Badge } from '../../../components/common/Badge'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
 
@@ -182,79 +184,52 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                <th className="px-5 py-3 font-semibold">Fecha</th>
-                <th className="px-5 py-3 font-semibold">Hora</th>
-                <th className="px-5 py-3 font-semibold">Caja</th>
-                <th className="px-5 py-3 font-semibold">Responsable</th>
-                <th className="px-5 py-3 font-semibold">Monto inicial</th>
-                <th className="px-5 py-3 font-semibold">Estado</th>
-                <th className="px-5 py-3 text-right font-semibold">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={7} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">Cargando aperturas…</td>
-                </tr>
-              )}
-
-              {!cargando && aperturasFiltradas.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">No hay aperturas para mostrar.</td>
-                </tr>
-              )}
-
-              {aperturasFiltradas.map((a) => (
-                <tr key={a.id_turno} className="border-t border-[var(--wa-border)]">
-                  <td className="px-5 py-4 text-sm">{fecha(a.fecha_apertura)}</td>
-                  <td className="px-5 py-4 text-sm">{hora(a.fecha_apertura)}</td>
-                  <td className="px-5 py-4 text-sm">{a.caja?.nombre ?? '—'}</td>
-                  <td className="px-5 py-4 text-sm font-medium">{responsable(a.usuario)}</td>
-                  <td className="px-5 py-4 text-sm font-semibold">{formatCOP(Number(a.efectivo_inicial ?? 0))}</td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        esActiva(a)
-                          ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]'
-                          : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
-                      }`}
-                    >
-                      {esActiva(a) ? 'Abierta' : 'Cerrada'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDetalle({
-                          open: true,
-                          title: 'Apertura de caja',
-                          rows: [
-                            { label: 'Fecha', value: fecha(a.fecha_apertura) },
-                            { label: 'Hora', value: hora(a.fecha_apertura) },
-                            { label: 'Caja', value: a.caja?.nombre ?? '—' },
-                            { label: 'Responsable', value: responsable(a.usuario) },
-                            { label: 'Monto inicial', value: formatCOP(Number(a.efectivo_inicial ?? 0)) },
-                            { label: 'Cierre', value: a.fecha_cierre ? `${fecha(a.fecha_cierre)} ${hora(a.fecha_cierre)}` : '—' },
-                            { label: 'Estado', value: esActiva(a) ? 'Abierta' : 'Cerrada' },
-                          ],
-                        })
-                      }
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                      title="Ver apertura"
-                    >
-                      <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: 'Fecha', render: (a) => fecha(a.fecha_apertura) },
+            { header: 'Hora', render: (a) => hora(a.fecha_apertura) },
+            { header: 'Caja', render: (a) => a.caja?.nombre ?? '—' },
+            { header: 'Responsable', render: (a) => responsable(a.usuario) },
+            { header: 'Monto inicial', render: (a) => formatCOP(Number(a.efectivo_inicial ?? 0)) },
+            {
+              header: 'Estado',
+              render: (a) => (
+                <Badge status={esActiva(a) ? 'active' : 'inactive'} label={esActiva(a) ? 'Abierta' : 'Cerrada'} />
+              ),
+            },
+            {
+              header: 'Acción',
+              render: (a) => (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetalle({
+                      open: true,
+                      title: 'Apertura de caja',
+                      rows: [
+                        { label: 'Fecha', value: fecha(a.fecha_apertura) },
+                        { label: 'Hora', value: hora(a.fecha_apertura) },
+                        { label: 'Caja', value: a.caja?.nombre ?? '—' },
+                        { label: 'Responsable', value: responsable(a.usuario) },
+                        { label: 'Monto inicial', value: formatCOP(Number(a.efectivo_inicial ?? 0)) },
+                        { label: 'Cierre', value: a.fecha_cierre ? `${fecha(a.fecha_cierre)} ${hora(a.fecha_cierre)}` : '—' },
+                        { label: 'Estado', value: esActiva(a) ? 'Abierta' : 'Cerrada' },
+                      ],
+                    })
+                  }
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver apertura"
+                >
+                  <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                </button>
+              ),
+            },
+          ]}
+          data={aperturasFiltradas}
+          isLoading={cargando}
+          emptyMessage="No hay aperturas para mostrar."
+          keyExtractor={(a) => a.id_turno}
+        />
       </div>
 
       <DetalleModal
