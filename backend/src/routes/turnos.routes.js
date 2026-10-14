@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authRequired } from '../middleware/auth.js';
 import { requireRole } from '../middleware/requireRole.js';
-import { index, show, store, update, destroy, cerrar, aperturas } from '../controllers/turnos.controller.js';
+import { index, show, store, update, destroy, cerrar, aperturas, gastos } from '../controllers/turnos.controller.js';
 
 const router = Router();
 
@@ -12,10 +12,11 @@ const escritura = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO');
 const eliminar = requireRole('SUPERADMIN', 'GERENTE');
 
 // Lectura para Mesero > Caja: solo datos de la apertura, sin el usuario completo.
-const aperturasLectura = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO');
+const lecturaCaja = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO');
 
 router.get('/', lectura, index);
-router.get('/aperturas', aperturasLectura, aperturas);
+router.get('/aperturas', lecturaCaja, aperturas);
+router.get('/gastos', lecturaCaja, gastos);
 router.get('/:id', lectura, show);
 router.post('/', escritura, store);
 router.post('/:id/cerrar', escritura, cerrar);

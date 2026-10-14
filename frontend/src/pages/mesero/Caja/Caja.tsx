@@ -20,7 +20,7 @@ function Caja({ nombreUsuario }: CajaProps) {
   if (vista === 'cierres') return <CierresCaja onBack={volver} />
   if (vista === 'reportes') return <ReportesCaja onBack={volver} />
   if (vista === 'arqueos') return <ArqueosCaja nombreUsuario={nombreUsuario} onBack={volver} />
-  if (vista === 'gastos') return <GastosCaja nombreUsuario={nombreUsuario} onBack={volver} />
+  if (vista === 'gastos') return <GastosCaja onBack={volver} />
 
   return <ResumenCaja onNavigate={setVista} />
 }

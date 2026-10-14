@@ -374,3 +374,40 @@ export async function aperturas(req, res, next) {
     next(error);
   }
 }
+
+// Gastos de caja para Mesero > Caja: egresos de flujo_caja, con turno y responsable.
+export async function gastos(req, res, next) {
+  try {
+    const movimientos = await prisma.flujo_caja.findMany({
+      where: {
+        egresos: { gt: 0 },
+      },
+      select: {
+        id_flujo: true,
+        fecha: true,
+        concepto: true,
+        egresos: true,
+        metodo: true,
+        referencia: true,
+        turno_caja: {
+          select: {
+            fecha_apertura: true,
+            caja: { select: { nombre: true } },
+            usuario: { select: { nombre: true, apellido: true } },
+          },
+        },
+      },
+      orderBy: {
+        fecha: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: movimientos,
+      count: movimientos.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
