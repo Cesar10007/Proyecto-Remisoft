@@ -11,6 +11,7 @@ import ProveedoresSection from './sections/ProveedoresSection'
 import CajasSection from './sections/CajasSection'
 import Header from '../../components/layout/Header'
 import Sidebar from '../../components/layout/Sidebar'
+import { DataTable } from '../../components/common/DataTable'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
@@ -657,48 +658,40 @@ function Gerente() {
               {cargandoProductos ? (
                 <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Nombre</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Descripción</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Precio</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Categoría</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Tiempo prep.</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productos.length === 0 ? (
-                        <tr><td colSpan={7} className="py-4 text-center text-[var(--texto-muted)]">Sin productos</td></tr>
-                      ) : productos.map(p => (
-                        <tr key={p.id_producto}>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{p.Nombre}</strong></td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Descripcion}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">${Number(p.precio_venta).toLocaleString('es-CO')}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Categoria}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Tiempo_preparacion}</td>
-                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] ${p.Estado ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{p.Estado ? 'Activo' : 'Inactivo'}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
-                            <div className="flex gap-2">
-                              <button className="rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
-                              <button
-                                className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
-                                  p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
-                                }`}
-                                onClick={() => toggleProducto(p.id_producto, p.Estado)}
-                              >
-                                {p.Estado ? 'Desactivar' : 'Activar'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={[
+                    { header: 'Nombre', render: (p) => <strong>{p.Nombre}</strong> },
+                    { header: 'Descripción', render: (p) => p.Descripcion },
+                    { header: 'Precio', render: (p) => `$${Number(p.precio_venta).toLocaleString('es-CO')}` },
+                    { header: 'Categoría', render: (p) => p.Categoria },
+                    { header: 'Tiempo prep.', render: (p) => p.Tiempo_preparacion },
+                    {
+                      header: 'Estado',
+                      render: (p) => (
+                        <span className={p.Estado ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}>{p.Estado ? 'Activo' : 'Inactivo'}</span>
+                      ),
+                    },
+                    {
+                      header: 'Acciones',
+                      render: (p) => (
+                        <div className="flex gap-2">
+                          <button className="rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
+                          <button
+                            className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
+                              p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
+                            }`}
+                            onClick={() => toggleProducto(p.id_producto, p.Estado)}
+                          >
+                            {p.Estado ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  data={productos}
+                  emptyMessage="Sin productos"
+                  keyExtractor={(p) => p.id_producto}
+                />
               )}
             </section>
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
