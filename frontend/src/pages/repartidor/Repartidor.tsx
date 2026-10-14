@@ -340,7 +340,7 @@ function Repartidor() {
 
   return (
     <div
-      className="rd-wrapper min-h-screen font-['DM_Sans']"
+      className="rd-wrapper flex min-h-screen font-['DM_Sans']"
       style={{
         background: 'var(--rd-bg)',
         color: 'var(--rd-text)',
@@ -360,7 +360,7 @@ function Repartidor() {
         }
       />
 
-      <main className="min-w-0 pt-14 md:ml-[240px] md:pt-0">
+      <main className="min-w-0 flex-1 pt-14 md:pt-0">
         {activeItem === 'resumen' && (
           <>
             <div className="px-4 pt-6 md:px-7">

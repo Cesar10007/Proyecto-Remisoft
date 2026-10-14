@@ -77,7 +77,7 @@
   color: #ffffff !important;
 }
 
-.sa-main { flex: 1; min-width: 0; min-height: 100vh; margin-left: 240px; }
+.sa-main { flex: 1; min-width: 0; min-height: 100vh; }
 .sa-topbar { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 32px; background: var(--t-bg-rgba_252_249_248_0_9, rgba(252, 249, 248, 0.9)); backdrop-filter: blur(12px); box-shadow: 0 12px 32px -4px rgba(28, 27, 27, 0.06); }
 .sa-topbar__left, .sa-topbar__right { display: flex; align-items: center; gap: 24px; }
 .sa-topbar__title { margin: 0; font-size: 1.125rem; font-weight: 800; letter-spacing: -0.03em; }

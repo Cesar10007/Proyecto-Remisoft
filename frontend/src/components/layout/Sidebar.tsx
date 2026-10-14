@@ -15,11 +15,17 @@ interface SidebarProps {
   onLogout: () => void
   // Botones propios de cada panel (por ejemplo "Cerrar Caja" en Gerente).
   footer?: ReactNode
+  // Permite contraer el menú a iconos (escritorio).
+  colapsable?: boolean
 }
 
-// Menú lateral de los paneles. En escritorio es fijo; en celular se abre desde una barra superior.
-function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer }: SidebarProps) {
+// Menú lateral compartido por los paneles.
+// Escritorio: columna fija a la izquierda del contenido (puede contraerse si es colapsable).
+// Celular: barra superior con modo oscuro y menú, que abre un cajón.
+function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer, colapsable = false }: SidebarProps) {
   const [abierto, setAbierto] = useState(false)
+  const [colapsado, setColapsado] = useState(false)
+  const compacto = colapsable && colapsado
 
   const navegar = (vista: string) => {
     onNavigate(vista)
@@ -46,10 +52,23 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
       {abierto && <div className="fixed inset-0 z-[99] bg-black/40 md:hidden" onClick={() => setAbierto(false)} />}
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] flex-col overflow-y-auto border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-transform duration-200 md:translate-x-0 ${
-          abierto ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-all duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
+          compacto ? 'md:w-20 md:px-2' : 'md:w-[240px]'
+        } ${abierto ? 'translate-x-0' : '-translate-x-full'}`}
       >
+        {colapsable && (
+          <button
+            type="button"
+            onClick={() => setColapsado((v) => !v)}
+            title={colapsado ? 'Expandir menú' : 'Contraer menú'}
+            className="absolute -right-3 top-8 z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
+          >
+            <span className={`material-symbols-outlined text-[16px] text-[var(--texto-muted)] transition-transform duration-300 ${compacto ? 'rotate-180' : ''}`}>
+              chevron_left
+            </span>
+          </button>
+        )}
+
         <div className="mb-4 flex items-center justify-between px-2">
           <ThemeToggle />
           <button
@@ -61,12 +80,19 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        <div className="mb-8 px-2">
+
+        <div className={`mb-8 px-2 ${compacto ? 'md:text-center' : ''}`}>
           <div className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rojo-dark)]">
-            Remi<span className="text-[var(--amarillo)]">Soft</span>
+            {compacto ? <span className="hidden md:inline">R</span> : null}
+            <span className={compacto ? 'md:hidden' : ''}>
+              Remi<span className="text-[var(--amarillo)]">Soft</span>
+            </span>
           </div>
-          <div className="mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)]">{subtitulo}</div>
+          <div className={`mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)] ${compacto ? 'md:hidden' : ''}`}>
+            {subtitulo}
+          </div>
         </div>
+
         <nav className="flex flex-1 flex-col gap-0.5">
           {menuItems.map((item) => {
             const activo = vistaActual === item.label.toLowerCase()
@@ -74,17 +100,20 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
               <button
                 key={item.label}
                 type="button"
+                title={compacto ? item.label : undefined}
                 onClick={() => navegar(item.label.toLowerCase())}
                 className={`flex items-center gap-3 rounded-[10px] border-r-[3px] px-3 py-2.5 text-left font-['DM_Sans'] text-[0.875rem] font-medium transition-all duration-150 ease-in-out ${
+                  compacto ? 'md:justify-center md:px-0' : ''
+                } ${
                   activo
                     ? 'border-r-[var(--rojo)] bg-[var(--rojo-light)] text-[var(--rojo-dark)]'
                     : 'border-r-transparent bg-transparent text-[var(--texto-muted)]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className={compacto ? 'md:hidden' : ''}>{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white">
+                  <span className={`ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white ${compacto ? 'md:hidden' : ''}`}>
                     {item.badge}
                   </span>
                 )}
@@ -92,15 +121,19 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
             )
           })}
         </nav>
+
         <div className="flex flex-col gap-1 border-t border-[var(--borde)] pt-4">
-          {footer}
+          <div className={compacto ? 'md:hidden' : ''}>{footer}</div>
           <button
             type="button"
             onClick={onLogout}
-            className="flex items-center gap-2 rounded-[10px] bg-transparent px-3 py-2 font-['DM_Sans'] text-[0.875rem] text-[var(--texto-muted)]"
+            title={compacto ? 'Cerrar sesión' : undefined}
+            className={`flex items-center gap-2 rounded-[10px] bg-transparent px-3 py-2 font-['DM_Sans'] text-[0.875rem] text-[var(--texto-muted)] ${
+              compacto ? 'md:justify-center md:px-0' : ''
+            }`}
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            Cerrar sesión
+            <span className={compacto ? 'md:hidden' : ''}>Cerrar sesión</span>
           </button>
         </div>
       </aside>

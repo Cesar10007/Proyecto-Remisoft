@@ -1,8 +1,9 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import Footer from '../../components/layout/Footer'
+import Sidebar from '../../components/layout/Sidebar'
+import Header from '../../components/layout/Header'
 import './SuperAdmin.css'
-import ThemeToggle from '../../components/common/ThemeToggle'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen', path: '/superadmin' },
@@ -12,7 +13,16 @@ const menuItems = [
 
 function SuperAdmin() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, user } = useAuth()
+
+  const nombreCompleto = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'SuperAdmin'
+
+  // Sección activa según la ruta actual.
+  const itemActual =
+    menuItems.find((item) => item.path === location.pathname) ??
+    menuItems.find((item) => item.path !== '/superadmin' && location.pathname.startsWith(item.path)) ??
+    menuItems[0]
 
   const cerrarSesion = () => {
     logout()
@@ -20,82 +30,22 @@ function SuperAdmin() {
   }
 
   return (
-    <div className="sa-wrapper">
-      <aside className="ge-sidebar">
-        <div className="px-2 pt-2"><ThemeToggle /></div>
-        <div className="ge-sidebar-brand">
-          <div className="ge-logo">
-            Remi<span className="ge-logo-accent">Soft</span>
-          </div>
-          <div className="ge-role">Superadministrador</div>
-        </div>
-
-        <nav
-          className="ge-sidebar-menu"
-          aria-label="Navegación del superadministrador"
-        >
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/superadmin'}
-              className={({ isActive }) =>
-                `ge-menu-btn ${isActive ? 'is-active' : ''}`
-              }
-            >
-              <span className="material-symbols-outlined ge-menu-icon">
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="ge-sidebar-footer">
-          <button
-            onClick={cerrarSesion}
-            className="ge-logout-btn"
-            type="button"
-          >
-            <span className="material-symbols-outlined ge-logout-icon">
-              logout
-            </span>
-            <span>Cerrar sesión</span>
-          </button>
-        </div>
-      </aside>
+    <div className="sa-wrapper flex min-h-screen">
+      <Sidebar
+        subtitulo="Superadministrador"
+        menuItems={menuItems}
+        vistaActual={itemActual.label.toLowerCase()}
+        onNavigate={(vista) => {
+          const destino = menuItems.find((item) => item.label.toLowerCase() === vista)
+          if (destino) navigate(destino.path)
+        }}
+        onLogout={cerrarSesion}
+      />
 
       <main className="sa-main">
-        <header className="sa-topbar">
-          <div className="sa-topbar__left">
-            <h1 className="sa-topbar__title">
-              Centro de Comando Administrativo
-            </h1>
-            <p className="sa-welcome">
-              Bienvenido, {user?.nombre ?? 'SuperAdmin'}
-            </p>
-          </div>
-
-          <div className="sa-topbar__right">
-            <button
-              className="sa-icon-btn"
-              type="button"
-              aria-label="Notificaciones"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-
-            <button
-              className="sa-icon-btn"
-              type="button"
-              aria-label="Configuración de cuenta"
-            >
-              <span className="material-symbols-outlined">
-                admin_panel_settings
-              </span>
-            </button>
-          </div>
-        </header>
+        <div className="border-b border-[var(--borde)] bg-[var(--bg-card)] px-4 py-4 pt-16 md:px-8 md:py-5 md:pt-5">
+          <Header seccionActiva="Centro de Comando Administrativo" nombreUsuario={nombreCompleto} />
+        </div>
 
         <div className="sa-content">
           <Outlet />
