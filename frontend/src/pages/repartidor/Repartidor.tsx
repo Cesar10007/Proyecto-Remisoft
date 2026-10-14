@@ -353,7 +353,7 @@ function Repartidor() {
         onNavigate={setActiveItem}
         onLogout={() => { logout(); navigate('/') }}
         footer={
-          <button className="mb-2 w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3 font-bold text-white">
+          <button type="button" onClick={() => { logout(); navigate('/') }} className="mb-2 w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3 font-bold text-white">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
             Finalizar turno
           </button>

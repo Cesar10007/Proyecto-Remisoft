@@ -49,6 +49,7 @@ function Mesero() {
         footer={
           <button
             type="button"
+            onClick={() => setActiveItem('Pedidos')}
             className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] px-4 py-3 text-[0.9rem] font-extrabold text-white"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -68,10 +69,10 @@ function Mesero() {
             nombreUsuario={nombreCompleto}
             acciones={
               <>
-                <button className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-primary)] md:block">
+                <button type="button" onClick={() => setActiveItem('Mesas')} className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-primary)] md:block">
                   Plano del Piso
                 </button>
-                <button className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)] md:block">
+                <button type="button" onClick={() => setActiveItem('Facturas')} className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)] md:block">
                   Pago Rápido
                 </button>
                 <div className="relative w-full md:w-64">
