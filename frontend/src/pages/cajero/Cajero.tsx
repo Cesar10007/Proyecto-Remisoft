@@ -52,6 +52,15 @@ const METODOS: { id: MetodoPago; label: string; icon: string }[] = [
   { id: 'TRANSFERENCIA', label: 'Transferencia', icon: 'account_balance' },
 ]
 
+interface ProductoCarta {
+  id_producto: number
+  Nombre: string
+  Descripcion: string
+  precio_venta: string
+  Categoria: string
+  categoria: { id_categoria: number; nombre: string; descripcion: string | null } | null
+}
+
 const formatoCOP = (valor: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(valor)
 
@@ -76,6 +85,22 @@ export default function Cajero() {
   const [enviando, setEnviando] = useState(false)
   const [errorCobro, setErrorCobro] = useState<string | null>(null)
   const [factura, setFactura] = useState<FacturaEmitida | null>(null)
+  // Vista del menú lateral: cobro o carta de platos (productos de la base).
+  const [vista, setVista] = useState<'cobro' | 'menu'>('cobro')
+  const [productos, setProductos] = useState<ProductoCarta[]>([])
+  const [cargandoProductos, setCargandoProductos] = useState(false)
+  const [errorProductos, setErrorProductos] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (vista !== 'menu') return
+    setCargandoProductos(true)
+    setErrorProductos(null)
+    api
+      .get<ProductoCarta[]>('/productos')
+      .then(({ data }) => setProductos(Array.isArray(data) ? data : []))
+      .catch(err => setErrorProductos(mensajeError(err, 'No se pudo cargar el menú.')))
+      .finally(() => setCargandoProductos(false))
+  }, [vista])
 
   const cuenta = useMemo(
     () => cuentas.find((c) => c.id_pedido === seleccionada) ?? null,
@@ -151,9 +176,12 @@ export default function Cajero() {
     <div className="cajero">
       <Sidebar
         subtitulo="Cajero"
-        menuItems={[{ icon: 'point_of_sale', label: 'Cobro' }]}
-        vistaActual="cobro"
-        onNavigate={() => {}}
+        menuItems={[
+          { icon: 'point_of_sale', label: 'Cobro' },
+          { icon: 'restaurant_menu', label: 'Menú' },
+        ]}
+        vistaActual={vista === 'menu' ? 'menú' : 'cobro'}
+        onNavigate={(v) => setVista(v === 'menú' ? 'menu' : 'cobro')}
         onLogout={() => {
           logout()
           navigate('/')
@@ -170,19 +198,22 @@ export default function Cajero() {
       <main className="cajero__main">
         <div className="no-print">
           <Header
-            seccionActiva="Tablero Cajero"
+            seccionActiva={vista === 'menu' ? 'Menú' : 'Tablero Cajero'}
             nombreUsuario={nombreCompleto}
             subtitulo={`${rol ?? ''} · ${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} abierta${cuentas.length === 1 ? '' : 's'}`}
             acciones={
-              <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
-                <span className="material-symbols-outlined">refresh</span> Actualizar
-              </button>
+              vista === 'cobro' ? (
+                <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
+                  <span className="material-symbols-outlined">refresh</span> Actualizar
+                </button>
+              ) : undefined
             }
           />
         </div>
 
-      {error && <div className="cajero__alerta cajero__alerta--error">{error}</div>}
+      {vista === 'cobro' && error && <div className="cajero__alerta cajero__alerta--error">{error}</div>}
 
+      {vista === 'cobro' && (
       <div className="cajero__layout">
         <aside className="cajero__lista" aria-label="Cuentas abiertas">
           {cargando && <p className="cajero__vacio">Cargando cuentas…</p>}
@@ -378,6 +409,41 @@ export default function Cajero() {
           )}
         </section>
       </div>
+      )}
+
+      {vista === 'menu' && (
+        <section className="cajero__detalle" aria-label="Menú de platos">
+          {cargandoProductos && <p className="cajero__vacio">Cargando menú…</p>}
+          {errorProductos && <div className="cajero__alerta cajero__alerta--error">{errorProductos}</div>}
+          {!cargandoProductos && !errorProductos && productos.length === 0 && (
+            <div className="cajero__vacio">
+              <p>No hay platos registrados.</p>
+            </div>
+          )}
+          {productos.length > 0 && (
+            <table className="cajero__tabla">
+              <thead>
+                <tr>
+                  <th>Plato</th>
+                  <th>Descripción</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {productos.map(p => (
+                  <tr key={p.id_producto}>
+                    <td>{p.Nombre}</td>
+                    <td>{p.Descripcion}</td>
+                    <td>{p.categoria?.nombre ?? (p.Categoria || '—')}</td>
+                    <td>{formatoCOP(Number(p.precio_venta))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
       </main>
     </div>
   )
