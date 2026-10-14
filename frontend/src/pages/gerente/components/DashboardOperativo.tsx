@@ -58,7 +58,7 @@ function DashboardOperativo() {
   }, [])
 
   return (
-    <section className="grid grid-cols-[1fr_1fr] gap-4">
+    <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
         <div className="mb-4 flex items-end justify-between">
           <div>
@@ -106,7 +106,7 @@ function DashboardOperativo() {
         {!errorVentas && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {ventas && (
           <>
-            <div className="mb-4 grid grid-cols-3 gap-3">
+            <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <p className="text-[0.75rem] text-[var(--texto-muted)]">Ingresos brutos</p>
                 <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_brutos)}</p>

@@ -536,7 +536,7 @@ function Gerente() {
         {seccionActiva === 'Menú' && (
           <>
             <DashboardOperativo />
-            <section className="grid grid-cols-3 gap-4">
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {metricasDashboard.map(m => (
                 <div key={m.label} className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
                   <div className="flex items-start justify-between">
@@ -558,8 +558,8 @@ function Gerente() {
                 </div>
               ))}
             </section>
-            <section className="grid grid-cols-[1fr_320px] gap-4">
-              <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
+            <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-7 flex items-end justify-between">
                   <div>
                     <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia semanal</h3>
@@ -629,7 +629,7 @@ function Gerente() {
             <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
               <div className="mb-5 flex items-center justify-between">
                 <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Listado de Productos</h3>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     className={`rounded-[10px] border border-[var(--borde)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold ${
                       fuenteProductos === 'vista' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f9f5f0,#f9f5f0)] text-[var(--texto-muted)]'
@@ -701,8 +701,8 @@ function Gerente() {
                 </div>
               )}
             </section>
-            <section className="grid grid-cols-[1fr_360px] gap-4">
-              <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
+            <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
                   <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
                   <div className="flex gap-3">
@@ -772,7 +772,7 @@ function Gerente() {
         {seccionActiva === 'Proveedores' && <ProveedoresSection proveedores={proveedores} onCreate={abrirCrearProveedor} onEdit={abrirEditarProveedor} onToggle={toggleProveedor} />}
         {/* FLUJO DE CAJA — CRUD Cajas */}
         {seccionActiva === 'Flujo de Caja' && <CajasSection cajas={cajas} onCreate={abrirCrearCaja} onEdit={abrirEditarCaja} onToggle={toggleCaja} />}
-        {/* FINANZAS — vista con datos de ejemplo */}
+        {/* FINANZAS — pagos aprobados y compras de la base */}
         {seccionActiva === 'Finanzas' && (
           <FinanzasSection
             stats={[
@@ -810,7 +810,6 @@ function Gerente() {
               }))}
           />
         )}
-        {/* PEDIDOS — vista con datos de ejemplo */}
         {/* PEDIDOS — pedidos en curso desde la base */}
         {seccionActiva === 'Pedidos' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
@@ -848,7 +847,7 @@ function Gerente() {
             </div>
           </section>
         )}
-        {/* MESAS — vista con datos de ejemplo (reutiliza array 'mesas') */}
+        {/* MESAS — estado de mesas desde la base */}
         {seccionActiva === 'Mesas' && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between">
