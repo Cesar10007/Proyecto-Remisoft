@@ -411,3 +411,69 @@ export async function gastos(req, res, next) {
     next(error);
   }
 }
+
+// Arqueos para Mesero > Caja. Para turnos abiertos, el esperado se calcula como
+// inicial + ingresos - egresos de flujo_caja (misma fórmula de sp_cerrar_turno_caja).
+// Para turnos cerrados, usa lo que guardó el cierre.
+export async function arqueos(req, res, next) {
+  try {
+    const [turnos, movimientos] = await Promise.all([
+      prisma.turno_caja.findMany({
+        select: {
+          id_turno: true,
+          fecha_apertura: true,
+          fecha_cierre: true,
+          efectivo_inicial: true,
+          efectivo_esperado: true,
+          efectivo_real: true,
+          diferencia: true,
+          estado: true,
+          caja: { select: { nombre: true } },
+          usuario: { select: { nombre: true, apellido: true } },
+        },
+        orderBy: {
+          fecha_apertura: 'desc',
+        },
+      }),
+      prisma.flujo_caja.groupBy({
+        by: ['id_turno'],
+        _sum: { ingresos: true, egresos: true },
+      }),
+    ]);
+
+    const sumas = new Map(movimientos.map((m) => [m.id_turno, m._sum]));
+
+    const data = turnos.map((t) => {
+      const suma = sumas.get(t.id_turno);
+      const ingresos = Number(suma?.ingresos ?? 0);
+      const egresos = Number(suma?.egresos ?? 0);
+      const abierto = t.estado === 'ABIERTA';
+      const esperado = abierto
+        ? Number(t.efectivo_inicial ?? 0) + ingresos - egresos
+        : t.efectivo_esperado === null ? null : Number(t.efectivo_esperado);
+
+      return {
+        id_turno: t.id_turno,
+        fecha_apertura: t.fecha_apertura,
+        fecha_cierre: t.fecha_cierre,
+        efectivo_inicial: t.efectivo_inicial === null ? null : Number(t.efectivo_inicial),
+        esperado,
+        efectivo_real: t.efectivo_real === null ? null : Number(t.efectivo_real),
+        diferencia: t.diferencia === null ? null : Number(t.diferencia),
+        estado: t.estado,
+        caja: t.caja,
+        usuario: t.usuario,
+        ingresos,
+        egresos,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data,
+      count: data.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
