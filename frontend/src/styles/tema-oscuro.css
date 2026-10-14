@@ -115,6 +115,15 @@ html[data-theme='dark'] {
   --t-bg-faeeda: #3c2f1b;
   --t-txt-1d9e75: #6cdab7;
   --t-txt-c24732: #d77665;
+  --t-bg-dbeafe: #18293f;
+  --t-bg-ede5dc: #26211c;
+  --t-bg-f2ece6: #26211c;
+  --t-bg-f5ede7: #342a22;
+  --t-bg-faf6f2: #352b22;
+  --t-brd-bbf0dc: #2e4d41;
+  --t-brd-f7c2b5: #50322b;
+  --t-brd-fde5bc: #50422b;
+  --t-txt-1e40af: #647fd8;
 }
 
 html[data-theme='dark'] .bg-white { background-color: var(--bg-card); }

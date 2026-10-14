@@ -47,7 +47,7 @@ function estadoDe(a: ArqueoApi): 'En curso' | 'Cuadrado' | 'Sobrante' | 'Faltant
 const COLOR_ESTADO: Record<ReturnType<typeof estadoDe>, string> = {
   'En curso': 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]',
   Cuadrado: 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]',
-  Sobrante: 'bg-[#dbeafe] text-[#1e40af]',
+  Sobrante: 'bg-[var(--t-bg-dbeafe,#dbeafe)] text-[var(--t-txt-1e40af,#1e40af)]',
   Faltante: 'bg-[rgba(239,68,68,0.12)] text-[var(--rojo)]',
 }
 
