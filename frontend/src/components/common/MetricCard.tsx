@@ -19,7 +19,7 @@ export function MetricCard({ label, value, detail, icon, color = 'default' }: Me
     <article className="flex flex-col justify-between rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-sm">
       <span className="text-xs font-semibold uppercase tracking-wider text-[var(--texto-muted)]">{label}</span>
       <div className="my-2 flex items-baseline gap-2">
-        <span className="font-['Syne'] text-3xl font-extrabold text-[var(--texto)]">{value}</span>
+        <span className="font-number text-3xl text-[var(--texto)]">{value}</span>
       </div>
       {detail && (
         <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--texto-muted)]">

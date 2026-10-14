@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import api from '../../../api/axios'
+import { SelectField } from '../../../components/common/SelectField'
 import './Solicitudes.css'
 
 interface Solicitud {
@@ -216,11 +217,8 @@ function Solicitudes() {
 
       {pestana === 'historial' && (
         <div className="sa-request-filter">
-          <label htmlFor="filtro-estado">
-            Filtrar por estado:
-          </label>
-
-          <select
+          <SelectField
+            label="Filtrar por estado:"
             id="filtro-estado"
             value={filtroEstado}
             onChange={(event) =>
@@ -228,11 +226,12 @@ function Solicitudes() {
                 event.target.value as FiltroEstado,
               )
             }
+            containerClassName="sa-request-filter-control"
           >
             <option value="TODAS">Todas</option>
             <option value="APROBADA">Aprobadas</option>
             <option value="RECHAZADA">Rechazadas</option>
-          </select>
+          </SelectField>
         </div>
       )}
 

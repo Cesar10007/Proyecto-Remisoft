@@ -1,49 +1,5 @@
 import prisma from '../config/prisma.js';
-
-function parseId(id) {
-  const parsed = Number(id);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function isEmpty(value) {
-  return value === undefined || value === null || value === '';
-}
-
-function validateString(value, field, max, required = false) {
-  if (required && isEmpty(value)) {
-    return `El campo ${field} es requerido`;
-  }
-
-  if (!isEmpty(value) && typeof value !== 'string') {
-    return `El campo ${field} debe ser texto`;
-  }
-
-  if (!isEmpty(value) && value.length > max) {
-    return `El campo ${field} no puede superar ${max} caracteres`;
-  }
-
-  return null;
-}
-
-function validateEmail(value) {
-  if (isEmpty(value)) return null;
-
-  if (typeof value !== 'string') {
-    return 'El campo email debe ser texto';
-  }
-
-  if (value.length > 100) {
-    return 'El campo email no puede superar 100 caracteres';
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(value)) {
-    return 'El campo email debe ser un correo válido';
-  }
-
-  return null;
-}
+import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
 function validarProveedor(body) {
   const validations = [
@@ -68,7 +24,7 @@ function validarProveedor(body) {
       nombre: body.nombre,
       nombre_contacto: body.nombre_contacto || null,
       telefono: body.telefono || null,
-      email: body.email || null,
+      email: body.email?.trim() || null,
       direccion: body.direccion || null,
       nit: body.nit || null,
       tipo_proveedor: body.tipo_proveedor || null,
