@@ -4,15 +4,17 @@ import { gastosDelMes, pedidosActivos, ventasDiarias } from '../controllers/repo
 
 const router = Router();
 
-router.use(requireRole('SUPERADMIN', 'GERENTE'));
+const gerencia = requireRole('SUPERADMIN', 'GERENTE');
+// Mesero también ve las ventas del día (Mesero > Caja > Reportes).
+const ventasDelDia = requireRole('SUPERADMIN', 'GERENTE', 'MESERO');
 
 // GET /api/reportes/ventas-diarias?desde&hasta
-router.get('/ventas-diarias', ventasDiarias);
+router.get('/ventas-diarias', ventasDelDia, ventasDiarias);
 
 // GET /api/reportes/pedidos-activos
-router.get('/pedidos-activos', pedidosActivos);
+router.get('/pedidos-activos', gerencia, pedidosActivos);
 
 // GET /api/reportes/gastos-del-mes
-router.get('/gastos-del-mes', gastosDelMes);
+router.get('/gastos-del-mes', gerencia, gastosDelMes);
 
 export default router;

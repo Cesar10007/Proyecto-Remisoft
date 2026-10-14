@@ -1,8 +1,31 @@
+import { useEffect, useState } from 'react'
+import api from '../../../api/axios'
+import { formatCOP } from '../utils'
+
+// Forma de GET /api/turnos/arqueos (solo los campos que usamos).
+interface TurnoResumen {
+  estado: string | null
+  esperado: number | null
+  ingresos: number
+  egresos: number
+}
+
 interface ResumenCajaProps {
   onNavigate: (vista: string) => void
 }
  
 function ResumenCaja({ onNavigate }: ResumenCajaProps) {
+  const [turnos, setTurnos] = useState<TurnoResumen[]>([])
+
+  useEffect(() => {
+    api
+      .get<{ data: TurnoResumen[] }>('/turnos/arqueos')
+      .then(({ data }) => setTurnos(data.data))
+      .catch(() => setTurnos([]))
+  }, [])
+
+  const turnoAbierto = turnos.find((t) => t.estado === 'ABIERTA') ?? null
+
   return (
     <section className="m-6">
  
@@ -14,47 +37,55 @@ function ResumenCaja({ onNavigate }: ResumenCajaProps) {
         </p>
       </div>
  
-      {/* Resumen de caja */}
+      {/* Resumen del turno abierto */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
- 
+
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Saldo actual</span>
+            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Saldo esperado</span>
             <span className="material-symbols-outlined text-[1.4rem]">account_balance_wallet</span>
           </div>
-          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">$1.482.500</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Saldo disponible en caja</p>
+          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+            {turnoAbierto ? formatCOP(turnoAbierto.esperado ?? 0) : '—'}
+          </p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">
+            {turnoAbierto ? 'Efectivo esperado del turno abierto' : 'Sin caja abierta'}
+          </p>
         </div>
- 
+
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ingresos de hoy</span>
+            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ingresos del turno</span>
             <span className="material-symbols-outlined text-[1.4rem]">trending_up</span>
           </div>
-          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">$2.350.000</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Total de ingresos registrados</p>
+          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+            {turnoAbierto ? formatCOP(turnoAbierto.ingresos) : '—'}
+          </p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Ingresos registrados en el turno abierto</p>
         </div>
- 
+
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Egresos de hoy</span>
+            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Egresos del turno</span>
             <span className="material-symbols-outlined text-[1.4rem]">trending_down</span>
           </div>
-          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">$867.500</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Total de egresos registrados</p>
+          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">
+            {turnoAbierto ? formatCOP(turnoAbierto.egresos) : '—'}
+          </p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Egresos registrados en el turno abierto</p>
         </div>
- 
+
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Estado de caja</span>
             <span className="material-symbols-outlined text-[1.4rem]">point_of_sale</span>
           </div>
-          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">Abierta</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Turno activo</p>
+          <p className="text-[1.5rem] font-bold text-[var(--wa-text)]">{turnoAbierto ? 'Abierta' : 'Cerrada'}</p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">{turnoAbierto ? 'Turno activo' : 'Sin turno activo'}</p>
         </div>
- 
+
       </div>
- 
+
       {/* Acciones de caja */}
       <div className="mt-6">
  
