@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
+import { Badge } from '../../../components/common/Badge'
 import Modal from '../../../components/common/Modal'
 import './Facturas.css'
  
@@ -255,85 +257,59 @@ function Facturas({ nombreUsuario }: FacturasProps) {
         {cargando ? (
           <p className="p-5 text-[0.85rem] text-[var(--wa-text-muted)]">Cargando...</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
-              <thead>
-                <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                  <th className="px-5 py-3 font-semibold">#</th>
-                  <th className="px-5 py-3 font-semibold">Cliente</th>
-                  <th className="px-5 py-3 font-semibold">Mesero</th>
-                  <th className="px-5 py-3 font-semibold">Mesa</th>
-                  <th className="px-5 py-3 font-semibold">Fecha</th>
-                  <th className="px-5 py-3 font-semibold">Total</th>
-                  <th className="px-5 py-3 font-semibold">Estado</th>
-                  <th className="px-5 py-3 text-right font-semibold">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {facturasFiltradas.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-[var(--wa-text-muted)]">
-                      Sin facturas registradas
-                    </td>
-                  </tr>
-                ) : (
-                  facturasFiltradas.map(f => (
-                    <tr key={f.id_factura} className="border-t border-[var(--wa-border)]">
-                      <td className="px-5 py-4 font-medium">{f.numero}</td>
-                      <td className="px-5 py-4">{f.nombre_cliente ?? f.id_cliente ?? '—'}</td>
-                      <td className="px-5 py-4">{f.nombre_mesero ?? f.id_mesero ?? '—'}</td>
-                      <td className="px-5 py-4">{f.Mesa_num ?? '—'}</td>
-                      <td className="px-5 py-4">{f.fecha}</td>
-                      <td className="px-5 py-4 font-semibold">
-                        ${f.total.toLocaleString('es-CO')}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            f.estado === 'PAGADA'
-                              ? 'bg-[var(--t-bg-dcfce7,#dcfce7)] text-[var(--t-txt-166534,#166534)]'
-                              : f.estado === 'PENDIENTE'
-                              ? 'bg-[var(--wa-secondary-light)] text-[var(--wa-secondary)]'
-                              : 'bg-[var(--wa-surface-high)] text-[var(--wa-text-muted)]'
-                          }`}
-                        >
-                          {f.estado}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              abrirDetalle(`Factura ${f.numero}`, [
-                                { label: 'Cliente', value: String(f.nombre_cliente ?? f.id_cliente ?? '—') },
-                                { label: 'Mesero', value: String(f.nombre_mesero ?? f.id_mesero ?? '—') },
-                                { label: 'Mesa', value: String(f.Mesa_num ?? '—') },
-                                { label: 'Fecha', value: f.fecha },
-                                { label: 'Total', value: `$${f.total.toLocaleString('es-CO')}` },
-                                { label: 'Estado', value: f.estado },
-                              ])
-                            }
-                            className="rounded-[10px] border border-[var(--wa-border)] bg-[var(--wa-surface-low)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-text-muted)] transition hover:bg-[var(--wa-surface-high)]"
-                          >
-                            Ver
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => anularFactura(f)}
-                            className="rounded-[10px] border border-[var(--wa-primary)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-primary)] disabled:opacity-50"
-                            disabled={f.estado === 'ANULADA'}
-                          >
-                            Anular
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={[
+              { header: '#', render: (f) => <span className="font-medium">{f.numero}</span> },
+              { header: 'Cliente', render: (f) => f.nombre_cliente ?? f.id_cliente ?? '—' },
+              { header: 'Mesero', render: (f) => f.nombre_mesero ?? f.id_mesero ?? '—' },
+              { header: 'Mesa', render: (f) => f.Mesa_num ?? '—' },
+              { header: 'Fecha', render: (f) => f.fecha },
+              { header: 'Total', render: (f) => <span className="font-semibold">${f.total.toLocaleString('es-CO')}</span> },
+              {
+                header: 'Estado',
+                render: (f) => (
+                  <Badge
+                    status={f.estado === 'PAGADA' ? 'active' : f.estado === 'PENDIENTE' ? 'pending' : 'inactive'}
+                    label={f.estado}
+                  />
+                ),
+              },
+              {
+                header: 'Acciones',
+                render: (f) => (
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        abrirDetalle(`Factura ${f.numero}`, [
+                          { label: 'Cliente', value: String(f.nombre_cliente ?? f.id_cliente ?? '—') },
+                          { label: 'Mesero', value: String(f.nombre_mesero ?? f.id_mesero ?? '—') },
+                          { label: 'Mesa', value: String(f.Mesa_num ?? '—') },
+                          { label: 'Fecha', value: f.fecha },
+                          { label: 'Total', value: `$${f.total.toLocaleString('es-CO')}` },
+                          { label: 'Estado', value: f.estado },
+                        ])
+                      }
+                      className="rounded-[10px] border border-[var(--wa-border)] bg-[var(--wa-surface-low)] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-text-muted)] transition hover:bg-[var(--wa-surface-high)]"
+                    >
+                      Ver
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => anularFactura(f)}
+                      className="rounded-[10px] border border-[var(--wa-primary)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--wa-primary)] disabled:opacity-50"
+                      disabled={f.estado === 'ANULADA'}
+                    >
+                      Anular
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+            data={facturasFiltradas}
+            emptyMessage="Sin facturas registradas"
+            keyExtractor={(f) => f.id_factura}
+          />
         )}
       </div>
  
