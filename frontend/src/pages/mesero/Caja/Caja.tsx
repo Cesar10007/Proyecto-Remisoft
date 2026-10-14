@@ -16,7 +16,7 @@ function Caja({ nombreUsuario }: CajaProps) {
 
   const volver = () => setVista('resumen')
 
-  if (vista === 'aperturas') return <AperturasCaja nombreUsuario={nombreUsuario} onBack={volver} />
+  if (vista === 'aperturas') return <AperturasCaja onBack={volver} />
   if (vista === 'cierres') return <CierresCaja nombreUsuario={nombreUsuario} onBack={volver} />
   if (vista === 'reportes') return <ReportesCaja onBack={volver} />
   if (vista === 'arqueos') return <ArqueosCaja nombreUsuario={nombreUsuario} onBack={volver} />

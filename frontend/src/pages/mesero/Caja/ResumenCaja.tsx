@@ -78,7 +78,7 @@ function ResumenCaja({ onNavigate }: ResumenCajaProps) {
             </div>
             <h3 className="text-[0.95rem] font-bold text-[var(--wa-text)]">Aperturas de caja</h3>
             <p className="mt-1 text-[0.8rem] leading-5 text-[var(--wa-text-muted)]">
-              Registra y consulta las aperturas de caja.
+              Consulta las aperturas de caja registradas.
             </p>
           </button>
  

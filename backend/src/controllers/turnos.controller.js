@@ -342,3 +342,31 @@ export async function cerrar(req, res, next) {
     next(error);
   }
 }
+
+// Aperturas para Mesero > Caja. Solo expone datos de la apertura y el nombre del responsable.
+export async function aperturas(req, res, next) {
+  try {
+    const turnos = await prisma.turno_caja.findMany({
+      select: {
+        id_turno: true,
+        fecha_apertura: true,
+        fecha_cierre: true,
+        efectivo_inicial: true,
+        estado: true,
+        caja: { select: { nombre: true } },
+        usuario: { select: { nombre: true, apellido: true } },
+      },
+      orderBy: {
+        fecha_apertura: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: turnos,
+      count: turnos.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
