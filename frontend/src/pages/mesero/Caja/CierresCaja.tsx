@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../../api/axios'
+import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
 
@@ -186,79 +187,57 @@ function CierresCaja({ onBack }: CierresCajaProps) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead>
-              <tr className="bg-[var(--wa-surface-low)] text-left text-sm">
-                <th className="px-5 py-3 font-semibold">Fecha</th>
-                <th className="px-5 py-3 font-semibold">Cierre</th>
-                <th className="px-5 py-3 font-semibold">Caja</th>
-                <th className="px-5 py-3 font-semibold">Responsable</th>
-                <th className="px-5 py-3 font-semibold">Esperado</th>
-                <th className="px-5 py-3 font-semibold">Contado</th>
-                <th className="px-5 py-3 font-semibold">Diferencia</th>
-                <th className="px-5 py-3 text-right font-semibold">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">Cargando cierres…</td>
-                </tr>
-              )}
-
-              {!cargando && cierresFiltrados.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-6 text-center text-sm text-[var(--wa-text-muted)]">No hay cierres para mostrar.</td>
-                </tr>
-              )}
-
-              {cierresFiltrados.map((c) => (
-                <tr key={c.id_turno} className="border-t border-[var(--wa-border)]">
-                  <td className="px-5 py-4 text-sm">{fecha(c.fecha_cierre)}</td>
-                  <td className="px-5 py-4 text-sm">{hora(c.fecha_cierre)}</td>
-                  <td className="px-5 py-4 text-sm">{c.caja?.nombre ?? '—'}</td>
-                  <td className="px-5 py-4 text-sm font-medium">{responsable(c.usuario)}</td>
-                  <td className="px-5 py-4 text-sm">{dinero(c.efectivo_esperado)}</td>
-                  <td className="px-5 py-4 text-sm">{dinero(c.efectivo_real)}</td>
-                  <td
-                    className={`px-5 py-4 text-sm font-semibold ${
-                      Number(c.diferencia ?? 0) < 0 ? 'text-[var(--rojo)]' : ''
-                    }`}
-                  >
-                    {dinero(c.diferencia)}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDetalle({
-                          open: true,
-                          title: 'Cierre de turno',
-                          rows: [
-                            { label: 'Apertura', value: `${fecha(c.fecha_apertura)} ${hora(c.fecha_apertura)}` },
-                            { label: 'Cierre', value: `${fecha(c.fecha_cierre)} ${hora(c.fecha_cierre)}` },
-                            { label: 'Caja', value: c.caja?.nombre ?? '—' },
-                            { label: 'Responsable', value: responsable(c.usuario) },
-                            { label: 'Efectivo inicial', value: dinero(c.efectivo_inicial) },
-                            { label: 'Efectivo esperado', value: dinero(c.efectivo_esperado) },
-                            { label: 'Efectivo contado', value: dinero(c.efectivo_real) },
-                            { label: 'Diferencia', value: dinero(c.diferencia) },
-                            { label: 'Notas', value: c.notas || '—' },
-                          ],
-                        })
-                      }
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                      title="Ver cierre"
-                    >
-                      <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: 'Fecha', render: (c) => fecha(c.fecha_cierre) },
+            { header: 'Cierre', render: (c) => hora(c.fecha_cierre) },
+            { header: 'Caja', render: (c) => c.caja?.nombre ?? '—' },
+            { header: 'Responsable', render: (c) => responsable(c.usuario) },
+            { header: 'Esperado', render: (c) => dinero(c.efectivo_esperado) },
+            { header: 'Contado', render: (c) => dinero(c.efectivo_real) },
+            {
+              header: 'Diferencia',
+              render: (c) => (
+                <span className={`font-semibold ${Number(c.diferencia ?? 0) < 0 ? 'text-[var(--rojo)]' : ''}`}>
+                  {dinero(c.diferencia)}
+                </span>
+              ),
+            },
+            {
+              header: 'Acción',
+              render: (c) => (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetalle({
+                      open: true,
+                      title: 'Cierre de turno',
+                      rows: [
+                        { label: 'Apertura', value: `${fecha(c.fecha_apertura)} ${hora(c.fecha_apertura)}` },
+                        { label: 'Cierre', value: `${fecha(c.fecha_cierre)} ${hora(c.fecha_cierre)}` },
+                        { label: 'Caja', value: c.caja?.nombre ?? '—' },
+                        { label: 'Responsable', value: responsable(c.usuario) },
+                        { label: 'Efectivo inicial', value: dinero(c.efectivo_inicial) },
+                        { label: 'Efectivo esperado', value: dinero(c.efectivo_esperado) },
+                        { label: 'Efectivo contado', value: dinero(c.efectivo_real) },
+                        { label: 'Diferencia', value: dinero(c.diferencia) },
+                        { label: 'Notas', value: c.notas || '—' },
+                      ],
+                    })
+                  }
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
+                  title="Ver cierre"
+                >
+                  <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                </button>
+              ),
+            },
+          ]}
+          data={cierresFiltrados}
+          isLoading={cargando}
+          emptyMessage="No hay cierres para mostrar."
+          keyExtractor={(c) => c.id_turno}
+        />
       </div>
 
       <DetalleModal
