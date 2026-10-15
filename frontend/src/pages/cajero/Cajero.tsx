@@ -9,6 +9,7 @@ import './Cajero.css'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { DataTable } from '../../components/common/DataTable'
+import { InputField } from '../../components/common/InputField'
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
 
@@ -359,39 +360,32 @@ export default function Cajero() {
                 </div>
 
                 {metodo === 'EFECTIVO' && (
-                  <div className="cajero__campo">
-                    <label htmlFor="monto-recibido">Monto recibido</label>
-                    <input
-                      id="monto-recibido"
-                      type="number"
-                      min={cuenta.total}
-                      inputMode="numeric"
-                      value={montoRecibido}
-                      onChange={(e) => setMontoRecibido(e.target.value)}
-                      placeholder={String(cuenta.total)}
-                    />
-                    {cambio !== null && (
-                      <p className={cambio < 0 ? 'cajero__error-campo' : 'cajero__cambio'}>
-                        {cambio < 0
-                          ? `Faltan ${formatoCOP(Math.abs(cambio))}`
-                          : `Cambio: ${formatoCOP(cambio)}`}
-                      </p>
-                    )}
-                  </div>
+                  <>
+                  <InputField
+                    id="monto-recibido"
+                    label="Monto recibido"
+                    type="number"
+                    min={cuenta.total}
+                    inputMode="numeric"
+                    value={montoRecibido}
+                    onChange={(e) => setMontoRecibido(e.target.value)}
+                    placeholder={String(cuenta.total)}
+                    error={cambio !== null && cambio < 0 ? `Faltan ${formatoCOP(Math.abs(cambio))}` : undefined}
+                  />
+                  {cambio !== null && cambio >= 0 && <p className="cajero__cambio">Cambio: {formatoCOP(cambio)}</p>}
+                  </>
                 )}
 
                 {metodo && metodo !== 'EFECTIVO' && (
-                  <div className="cajero__campo">
-                    <label htmlFor="referencia">Referencia (opcional)</label>
-                    <input
-                      id="referencia"
-                      type="text"
-                      maxLength={80}
-                      value={referencia}
-                      onChange={(e) => setReferencia(e.target.value)}
-                      placeholder="Número de aprobación o transacción"
-                    />
-                  </div>
+                  <InputField
+                    id="referencia"
+                    label="Referencia (opcional)"
+                    type="text"
+                    maxLength={80}
+                    value={referencia}
+                    onChange={(e) => setReferencia(e.target.value)}
+                    placeholder="Número de aprobación o transacción"
+                  />
                 )}
               </fieldset>
 
