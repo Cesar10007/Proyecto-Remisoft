@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import './Gerente.css'
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
@@ -12,6 +12,8 @@ import CajasSection from './sections/CajasSection'
 import Header from '../../components/layout/Header'
 import Sidebar from '../../components/layout/Sidebar'
 import { DataTable } from '../../components/common/DataTable'
+import { InputField } from '../../components/common/InputField'
+import Modal from '../../components/common/Modal'
 import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
@@ -385,6 +387,11 @@ function Gerente() {
       setErrorTurno('No se pudo abrir el turno')
     }
   }
+
+  const nombreEmpleado = (t: TurnoApi) => `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—'
+  const horaTurno = (fecha: string | null) =>
+    fecha ? new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '—'
+  const turnoParaCerrar = turnos.find(t => t.id_turno === turnoCerrando) ?? null
 
   const cerrarTurno = async (t: TurnoApi) => {
     const contado = Number(efectivoContado)
@@ -972,92 +979,95 @@ function Gerente() {
                 </button>
               </div>
             )}
-            {errorTurno && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Empleado</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Rol</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Turno</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {turnos.length === 0 && (
-                    <tr><td colSpan={5} className="px-3 py-4 text-[0.85rem] text-[var(--texto-muted)]">No hay turnos registrados.</td></tr>
-                  )}
-                  {turnos.map(t => {
-                    const hora = (fecha: string | null) => fecha
-                      ? new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
-                      : '—'
-                    const abierto = t.estado === 'ABIERTA'
-                    const empleado = `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—'
-                    const cerrandoEste = turnoCerrando === t.id_turno
-                    return (
-                      <Fragment key={t.id_turno}>
-                        <tr>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]"><strong>{empleado}</strong></td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{hora(t.fecha_apertura)} - {t.fecha_cierre ? hora(t.fecha_cierre) : 'En curso'}</td>
-                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${abierto ? 'text-[var(--verde)]' : 'text-[var(--t-txt-854f0b,#854F0B)]'}`}>
-                            {abierto ? 'Activo' : 'Cerrado'}
-                            {!abierto && (
-                              <span className="block text-[0.75rem] font-normal text-[var(--texto-muted)]">
-                                Esperado {monedaTurno(t.efectivo_esperado)} · Diferencia {monedaTurno(t.diferencia)}
-                              </span>
-                            )}
-                          </td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
-                            {abierto ? (
-                              <button
-                                type="button"
-                                onClick={() => { setTurnoCerrando(cerrandoEste ? null : t.id_turno); setEfectivoContado(''); setNotasCierre(''); setErrorTurno('') }}
-                                className="rounded-lg border border-[var(--borde)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto)]"
-                              >
-                                {cerrandoEste ? 'Cancelar' : 'Cerrar turno'}
-                              </button>
-                            ) : '—'}
-                          </td>
-                        </tr>
-                        {cerrandoEste && (
-                          <tr>
-                            <td colSpan={5} className="border-b border-[var(--borde)] px-3 py-3">
-                              <div className="flex flex-wrap items-end gap-3">
-                                <label className="flex flex-col text-[0.78rem] text-[var(--texto-muted)]">
-                                  Efectivo contado
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    value={efectivoContado}
-                                    onChange={e => setEfectivoContado(e.target.value)}
-                                    className="mt-1 w-44 rounded-lg border border-[var(--borde)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
-                                  />
-                                </label>
-                                <label className="flex flex-col text-[0.78rem] text-[var(--texto-muted)]">
-                                  Notas
-                                  <input
-                                    type="text"
-                                    maxLength={500}
-                                    value={notasCierre}
-                                    onChange={e => setNotasCierre(e.target.value)}
-                                    className="mt-1 w-64 rounded-lg border border-[var(--borde)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
-                                  />
-                                </label>
-                                <button type="button" onClick={() => cerrarTurno(t)} className="rounded-lg bg-[var(--rojo-dark)] px-4 py-2 text-[0.85rem] font-semibold text-white">
-                                  Confirmar cierre
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+            {errorTurno && turnoCerrando === null && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
+              <DataTable
+                columns={[
+                  { header: 'Empleado', render: (t) => <strong>{nombreEmpleado(t)}</strong> },
+                  {
+                    header: 'Rol',
+                    render: (t) => <span className="text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</span>,
+                  },
+                  {
+                    header: 'Turno',
+                    render: (t) => (
+                      <span className="text-[var(--texto-muted)]">
+                        {horaTurno(t.fecha_apertura)} - {t.fecha_cierre ? horaTurno(t.fecha_cierre) : 'En curso'}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: 'Estado',
+                    render: (t) => (
+                      <span className={`font-semibold ${t.estado === 'ABIERTA' ? 'text-[var(--verde)]' : 'text-[var(--t-txt-854f0b,#854F0B)]'}`}>
+                        {t.estado === 'ABIERTA' ? 'Activo' : 'Cerrado'}
+                        {t.estado !== 'ABIERTA' && (
+                          <span className="block text-[0.75rem] font-normal text-[var(--texto-muted)]">
+                            Esperado {monedaTurno(t.efectivo_esperado)} · Diferencia {monedaTurno(t.diferencia)}
+                          </span>
                         )}
-                      </Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      </span>
+                    ),
+                  },
+                  {
+                    header: 'Acciones',
+                    render: (t) =>
+                      t.estado === 'ABIERTA' ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTurnoCerrando(t.id_turno)
+                            setEfectivoContado('')
+                            setNotasCierre('')
+                            setErrorTurno('')
+                          }}
+                          className="rounded-lg border border-[var(--borde)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto)]"
+                        >
+                          Cerrar turno
+                        </button>
+                      ) : (
+                        '—'
+                      ),
+                  },
+                ]}
+                data={turnos}
+                emptyMessage="No hay turnos registrados."
+                keyExtractor={(t) => t.id_turno}
+              />
+
+              <Modal isOpen={turnoParaCerrar !== null} onClose={() => setTurnoCerrando(null)}>
+                {turnoParaCerrar && (
+                  <div className="px-6 pb-6">
+                    <h3 className="mb-1 font-bold">Cerrar turno</h3>
+                    <p className="mb-5 text-[0.85rem] text-[var(--texto-muted)]">
+                      {nombreEmpleado(turnoParaCerrar)}
+                      {turnoParaCerrar.caja?.nombre ? ` · ${turnoParaCerrar.caja.nombre}` : ''}
+                    </p>
+                    {errorTurno && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
+                    <div className="flex flex-col gap-3">
+                      <InputField
+                        label="Efectivo contado"
+                        type="number"
+                        min="0"
+                        value={efectivoContado}
+                        onChange={e => setEfectivoContado(e.target.value)}
+                      />
+                      <InputField
+                        label="Notas"
+                        maxLength={500}
+                        value={notasCierre}
+                        onChange={e => setNotasCierre(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => cerrarTurno(turnoParaCerrar)}
+                        className="mt-2 rounded-lg bg-[var(--rojo-dark)] px-4 py-2 text-[0.85rem] font-semibold text-white"
+                      >
+                        Confirmar cierre
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </Modal>
           </section>
         )}
       </main>
