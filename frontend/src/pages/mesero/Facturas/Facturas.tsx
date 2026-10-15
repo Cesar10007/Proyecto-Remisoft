@@ -3,6 +3,7 @@ import api from '../../../api/axios'
 import { DataTable } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
 import Modal from '../../../components/common/Modal'
+import { InputField } from '../../../components/common/InputField'
 import './Facturas.css'
  
 interface Factura {
@@ -19,18 +20,6 @@ interface Factura {
 }
  
 const facturaVacia = { id_cliente: '', Mesa_num: '', total: '' }
- 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.6rem 0.85rem',
-  borderRadius: '8px',
-  border: '1.5px solid var(--borde)',
-  background: 'var(--bg)',
-  fontSize: '0.95rem',
-  color: 'var(--texto)',
-  outline: 'none',
-  boxSizing: 'border-box',
-}
  
 // Forma que devuelve GET /api/facturas (con pedido y pagos incluidos).
 interface FacturaApi {
@@ -341,36 +330,9 @@ function Facturas({ nombreUsuario }: FacturasProps) {
         <div className="px-6 pb-6">
           <h3 className="mb-5 font-bold">Nueva factura</h3>
           <div className="flex flex-col gap-3.5">
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
-              <input
-                type="number"
-                placeholder="Opcional"
-                value={nuevaFactura.id_cliente}
-                onChange={e => setNuevaFactura(prev => ({ ...prev, id_cliente: e.target.value }))}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de mesa</label>
-              <input
-                type="number"
-                placeholder="Opcional"
-                value={nuevaFactura.Mesa_num}
-                onChange={e => setNuevaFactura(prev => ({ ...prev, Mesa_num: e.target.value }))}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Total *</label>
-              <input
-                type="number"
-                placeholder="Ej: 142500"
-                value={nuevaFactura.total}
-                onChange={e => setNuevaFactura(prev => ({ ...prev, total: e.target.value }))}
-                style={inputStyle}
-              />
-            </div>
+            <InputField label="ID Cliente" type="number" placeholder="Opcional" value={nuevaFactura.id_cliente} onChange={e => setNuevaFactura(prev => ({ ...prev, id_cliente: e.target.value }))} />
+            <InputField label="Número de mesa" type="number" placeholder="Opcional" value={nuevaFactura.Mesa_num} onChange={e => setNuevaFactura(prev => ({ ...prev, Mesa_num: e.target.value }))} />
+            <InputField label="Total *" type="number" placeholder="Ej: 142500" value={nuevaFactura.total} onChange={e => setNuevaFactura(prev => ({ ...prev, total: e.target.value }))} />
             {errorFactura && (
               <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">
                 {errorFactura}
