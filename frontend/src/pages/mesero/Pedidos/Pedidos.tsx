@@ -4,6 +4,7 @@ import { DataTable } from '../../../components/common/DataTable'
 import Modal from '../../../components/common/Modal'
 import { InputField } from '../../../components/common/InputField'
 import { SelectField } from '../../../components/common/SelectField'
+import { TextAreaField } from '../../../components/common/TextAreaField'
 import './Pedidos.css'
  
 interface Pedido {
@@ -202,15 +203,7 @@ function Pedidos() {
                 <option value="CANCELADO">CANCELADO</option>
               </SelectField>
  
-            <div>
-              <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Notas</label>
-              <textarea
-                placeholder="Indicaciones especiales..."
-                value={pedidoActual.notas}
-                onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))}
-                className="min-h-[80px] w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-              />
-            </div>
+            <TextAreaField label="Notas" className="min-h-[80px]" placeholder="Indicaciones especiales..." value={pedidoActual.notas} onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))} />
  
             {error && (
               <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">{error}</p>
