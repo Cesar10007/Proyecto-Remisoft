@@ -9,6 +9,7 @@ import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { InputField } from '../../components/common/InputField'
 import { SelectField } from '../../components/common/SelectField'
+import { TextAreaField } from '../../components/common/TextAreaField'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen' },
@@ -935,17 +936,7 @@ function Repartidor() {
                 ))}
               </SelectField>
 
-              <div>
-                <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">
-                  Describe lo ocurrido *
-                </label>
-                <textarea
-                  placeholder="Ej: El cliente no contesta el teléfono ni la puerta."
-                  value={nuevoReporte.descripcion}
-                  onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))}
-                  className="min-h-[100px] w-full resize-y rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                />
-              </div>
+              <TextAreaField label="Describe lo ocurrido *" className="min-h-[100px]" placeholder="Ej: El cliente no contesta el teléfono ni la puerta." value={nuevoReporte.descripcion} onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))} />
 
               {errorReporte && (
                 <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
