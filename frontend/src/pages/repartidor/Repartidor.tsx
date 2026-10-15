@@ -924,21 +924,16 @@ function Repartidor() {
             <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">Pedido {modalReporte.pedido}</p>
 
             <div className="flex flex-col gap-4">
-              <div>
-                <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">
-                  Categoría *
-                </label>
-                <select
-                  value={nuevoReporte.categoria}
-                  onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
-                  className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                >
-                  <option value="">Selecciona una opción</option>
-                  {categoriasReporte.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
+              <SelectField
+                label="Categoría *"
+                value={nuevoReporte.categoria}
+                onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
+              >
+                <option value="">Selecciona una opción</option>
+                {categoriasReporte.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </SelectField>
 
               <div>
                 <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">
