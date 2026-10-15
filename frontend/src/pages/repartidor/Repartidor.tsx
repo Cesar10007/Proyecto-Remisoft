@@ -7,6 +7,8 @@ import Modal from '../../components/common/Modal'
 import './Repartidor.css'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
+import { InputField } from '../../components/common/InputField'
+import { SelectField } from '../../components/common/SelectField'
 
 const menuItems = [
   { icon: 'dashboard', label: 'Resumen' },
@@ -669,50 +671,15 @@ function Repartidor() {
                   {modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
                 </h3>
                 <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Pedido *</label>
-                    <input
-                      type="number"
-                      placeholder="Ej: 12"
-                      value={domicilioActual.id_pedido}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))}
-                      disabled={modoEdicionDomicilio}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Dirección *</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Calle 45 # 12-34, Bogotá"
-                      value={domicilioActual.direccion}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">Estado</label>
-                    <select
-                      value={domicilioActual.estado}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}
-                      className="w-full cursor-pointer rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    >
+                  <InputField label="ID Pedido *" type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido} onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))} disabled={modoEdicionDomicilio} />
+                  <InputField label="Dirección *" type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion} onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
+                  <SelectField label="Estado" value={domicilioActual.estado} onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
                       <option value="ASIGNADO">ASIGNADO</option>
                       <option value="EN_CAMINO">EN_CAMINO</option>
                       <option value="ENTREGADO">ENTREGADO</option>
                       <option value="CANCELADO">CANCELADO</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[1px] text-[var(--rd-text-muted)]">ID Repartidor</label>
-                    <input
-                      type="number"
-                      placeholder="Opcional"
-                      value={domicilioActual.id_repartidor}
-                      onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--rd-border)] bg-[var(--t-bg-fcfaf8,#fcfaf8)] px-3.5 py-2.5 text-[0.9rem] text-[var(--rd-text)] outline-none"
-                    />
-                  </div>
+                    </SelectField>
+                  <InputField label="ID Repartidor" type="number" placeholder="Opcional" value={domicilioActual.id_repartidor} onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
                   {errorDomicilio && (
                     <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
                       {errorDomicilio}
