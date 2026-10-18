@@ -50,12 +50,20 @@ jobs:
         continue-on-error: true
         run: pnpm audit --audit-level=high
 
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: pnpm run prisma:generate
+
       - name: Lint backend
         working-directory: backend
         run: pnpm run lint
 
       - name: Tests backend
         working-directory: backend
+        env:
+          DB_USERNAME: ci_user
+          DB_PASSWORD: ci_password
+          DB_DATABASE: ci_db
         run: pnpm run test
 
       - name: Lint frontend
