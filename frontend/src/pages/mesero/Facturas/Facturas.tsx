@@ -51,7 +51,7 @@ interface FacturasProps {
   nombreUsuario: string
 }
  
-function Facturas({ nombreUsuario }: FacturasProps) {
+function Facturas(_: FacturasProps) {
   const [facturas, setFacturas] = useState<Factura[]>([])
   const [cargando, setCargando] = useState(false)
  
