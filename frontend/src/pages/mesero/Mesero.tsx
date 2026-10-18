@@ -1,16 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import { DataTable, type Column } from '../../components/common/DataTable'
+import { InputField } from '../../components/common/InputField'
+import { SelectField } from '../../components/common/SelectField'
+import { TextAreaField } from '../../components/common/TextAreaField'
+import { DashboardSidebar } from '../../components/layout/DashboardSidebar'
+import { useDashboardSidebarCollapsed } from '../../components/layout/useDashboardSidebar'
 import './Mesero.css'
 
 const navItems = [
-  { icon: 'table_restaurant', label: 'Mesas' },
-  { icon: 'receipt_long', label: 'Pedidos' },
-  { icon: 'point_of_sale', label: 'Caja' },
-  { icon: 'description', label: 'Facturas' },
+  { id: 'mesas', icon: 'table_restaurant', label: 'Mesas' },
+  { id: 'pedidos', icon: 'receipt_long', label: 'Pedidos' },
+  { id: 'caja', icon: 'point_of_sale', label: 'Caja' },
+  { id: 'facturas', icon: 'description', label: 'Facturas' },
 ]
 
 const stats = [
@@ -59,17 +64,10 @@ const pedidoVacio = {
   notas: '',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '0.6rem 0.85rem', borderRadius: '8px',
-  border: '1.5px solid var(--borde)', background: 'var(--bg)',
-  fontSize: '0.95rem', color: 'var(--texto)', outline: 'none',
-  boxSizing: 'border-box',
-}
-
 function Mesero() {
+  const sidebarCollapsed = useDashboardSidebarCollapsed()
   const [activeItem, setActiveItem] = useState('Mesas')
-  const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
 
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [cargandoPedidos, setCargandoPedidos] = useState(false)
@@ -139,6 +137,52 @@ function Mesero() {
     if (!confirm('¿Deseas cancelar este pedido?')) return
     try { await api.delete(`/pedidos/${id}`); cargarPedidos() } catch { alert('Error al cancelar') }
   }
+
+  const pedidoColumns: Column<Pedido>[] = [
+    { header: '#', accessor: 'id_pedido' },
+    { header: 'Cliente', render: (pedido) => pedido.nombre_cliente ?? pedido.id_cliente ?? '—' },
+    { header: 'Mesero', render: (pedido) => pedido.nombre_mesero ?? pedido.id_mesero ?? '—' },
+    { header: 'Tipo', accessor: 'Tipo_pedido' },
+    { header: 'Mesa', render: (pedido) => pedido.Mesa_num ?? '—' },
+    {
+      header: 'Estado',
+      render: (pedido) => (
+        <span className={
+          pedido.estado === 'ABIERTO'
+            ? 'text-[var(--verde)]'
+            : pedido.estado === 'CANCELADO'
+              ? 'text-[var(--rojo)]'
+              : 'text-[var(--texto-muted)]'
+        }>
+          {pedido.estado}
+        </span>
+      ),
+    },
+    { header: 'Notas', render: (pedido) => pedido.notas || '—' },
+    {
+      header: 'Acciones',
+      render: (pedido) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+            onClick={() => abrirEditarPedido(pedido)}
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
+            onClick={() => cancelarPedido(pedido.id_pedido)}
+            disabled={pedido.estado === 'CANCELADO'}
+          >
+            Cancelar
+          </button>
+        </div>
+      ),
+    },
+  ]
+
   return (
 
     <div
@@ -166,51 +210,35 @@ function Mesero() {
         color: 'var(--wa-text)',
       }}
     >
-      <aside className="flex h-screen w-64 min-w-64 shrink-0 flex-col bg-[var(--wa-bg)] p-6 px-4">
-        <div className="mb-10 px-2">
-          <span className="block text-[1.25rem] font-extrabold tracking-[-0.03em] text-[var(--wa-primary)]">
-            Remi<span className="text-[var(--wa-primary)]">Soft</span>
-          </span>
-          <div className="mt-1 text-[0.625rem] font-bold uppercase tracking-[0.18em] text-[var(--wa-text-muted)]">
-            Mesero
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col gap-2">
-          {navItems.map((item) => (
+      <DashboardSidebar
+        roleTitle="Mesero"
+        navItems={navItems}
+        activeItem={navItems.find((item) => item.label === activeItem)?.id}
+        onNavigate={(itemId) => {
+          const selectedItem = navItems.find((item) => item.id === itemId)
+          if (selectedItem) setActiveItem(selectedItem.label)
+        }}
+        footerActions={
+          <>
             <button
-              key={item.label}
-              onClick={() => setActiveItem(item.label)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-[0.95rem] font-bold transition-all duration-150 ease-in-out active:scale-[0.97] ${
-                activeItem === item.label
-                  ? 'bg-[var(--wa-surface)] text-[var(--wa-primary)] shadow-[0_2px_10px_rgba(28,27,27,0.05)]'
-                  : 'bg-transparent text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]'
-              }`}
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--rojo)] to-[var(--rojo-dark)] px-4 py-3 text-sm font-extrabold text-white"
             >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              {item.label}
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Acción Rápida
             </button>
-          ))}
-        </div>
-        <div className="mt-auto flex flex-col gap-2">
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] px-4 py-3.5 text-[0.9rem] font-extrabold text-white shadow-[0_16px_24px_rgba(165,54,13,0.22)]">
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Acción Rápida
-          </button>
-          <button className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]">
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            Configuraciones
-          </button>
-          <button
-            onClick={() => { logout(); navigate('/') }}
-            className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-3.5 text-left text-[0.95rem] font-bold text-[var(--wa-text-muted)] hover:bg-[var(--wa-surface-low)]"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-[var(--texto-muted)] hover:bg-[#f5ede7]"
+            >
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+              Configuraciones
+            </button>
+          </>
+        }
+      />
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)]">
+      <main className={`ml-0 flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)] pt-14 transition-[margin] duration-200 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-60'} lg:pt-0`}>
         <header className="flex items-center justify-between gap-6 border-b border-[var(--wa-border)] bg-[rgba(252,249,248,0.8)] px-6 py-3 shadow-[0_12px_32px_-4px_rgba(28,27,27,0.06)] backdrop-blur-[12px]">
           <div className="flex items-center gap-6">
             <span className="text-[1.125rem] font-black text-[var(--wa-text)]">Bienvenido de nuevo, {user?.nombre ?? 'Mesero'}</span>
@@ -397,157 +425,108 @@ function Mesero() {
                             actualizando el estado del padre con los datos del pedido
           */}
           {activeItem === 'Pedidos' && (
-            <section className="m-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-[1rem] font-bold">Gestión de Pedidos</h3>
-                <button
-                  className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
-                  onClick={abrirCrearPedido}
-                >
-                  + Nuevo Pedido
-                </button>
-              </div>
-              {cargandoPedidos ? (
-                <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-[0.875rem]">
-                    <thead>
-                      <tr className="border-b border-[var(--borde)]">
-                        {['#', 'Cliente', 'Mesero', 'Tipo', 'Mesa', 'Estado', 'Notas', 'Acciones'].map(h => (
-                          <th key={h} className="whitespace-nowrap px-3 py-2.5 text-left font-semibold text-[var(--texto-muted)]">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pedidos.length === 0 ? (
-                        <tr><td colSpan={8} className="py-8 text-center text-[var(--texto-muted)]">Sin pedidos registrados</td></tr>
-                      ) : pedidos.map(p => (
-                        <tr key={p.id_pedido} className="border-b border-[var(--borde)]">
-                          <td className="px-3 py-2.5 font-semibold">{p.id_pedido}</td>
-                          <td className="px-3 py-2.5">{p.nombre_cliente ?? p.id_cliente ?? '—'}</td>
-                          <td className="px-3 py-2.5">{p.nombre_mesero ?? p.id_mesero ?? '—'}</td>
-                          <td className="px-3 py-2.5">{p.Tipo_pedido}</td>
-                          <td className="px-3 py-2.5">{p.Mesa_num ?? '—'}</td>
-                          <td className={`px-3 py-2.5 ${
-                            p.estado === 'ABIERTO' ? 'text-[var(--verde)]' : p.estado === 'CANCELADO' ? 'text-[var(--rojo)]' : 'text-[var(--texto-muted)]'
-                          }`}>{p.estado}</td>
-                          <td className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5">{p.notas || '—'}</td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex gap-2">
-                              <button
-                                className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
-                                onClick={() => abrirEditarPedido(p)}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                className="w-auto rounded-[10px] border border-[var(--rojo)] bg-transparent px-3.5 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] disabled:opacity-50"
-                                onClick={() => cancelarPedido(p.id_pedido)}
-                                disabled={p.estado === 'CANCELADO'}
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+            <>
+              <DataTable
+                title="Gestión de Pedidos"
+                columns={pedidoColumns}
+                data={pedidos}
+                isLoading={cargandoPedidos}
+                emptyMessage="Sin pedidos registrados"
+                keyExtractor={(pedido) => pedido.id_pedido}
+                className="m-6"
+                actionButton={
+                  <button
+                    type="button"
+                    className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
+                    onClick={abrirCrearPedido}
+                  >
+                    + Nuevo Pedido
+                  </button>
+                }
+              />
 
               <Modal isOpen={modalPedido} onClose={() => setModalPedido(false)}>
-                <div className="px-6 pb-6">
+                <form
+                  className="px-6 pb-6"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void guardarPedido()
+                  }}
+                >
                   <h3 className="mb-5 font-bold">{modoEdicionPedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h3>
                   <div className="flex flex-col gap-3.5">
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Cliente</label>
-                      <input
-                        type="number"
-                        placeholder="Opcional"
-                        value={pedidoActual.id_cliente}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))}
-                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">ID Mesero</label>
-                      <input
-                        type="number"
-                        placeholder="Opcional"
-                        value={pedidoActual.id_mesero}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))}
-                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Tipo de Pedido *</label>
-                      <select
-                        value={pedidoActual.Tipo_pedido}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}
-                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      >
-                        <option value="MESA">MESA</option>
-                        <option value="DOMICILIO">DOMICILIO</option>
-                        <option value="LLEVAR">LLEVAR</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Número de Mesa</label>
-                      <input
-                        type="number"
-                        placeholder="Opcional"
-                        value={pedidoActual.Mesa_num}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))}
-                        className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Estado</label>
-                      <select
-                        value={pedidoActual.estado}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}
-                        className="w-full cursor-pointer rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      >
-                        <option value="ABIERTO">ABIERTO</option>
-                        <option value="EN_PROCESO">EN_PROCESO</option>
-                        <option value="LISTO">LISTO</option>
-                        <option value="ENTREGADO">ENTREGADO</option>
-                        <option value="CANCELADO">CANCELADO</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[0.8rem] font-semibold text-[var(--texto-muted)]">Notas</label>
-                      <textarea
-                        placeholder="Indicaciones especiales..."
-                        value={pedidoActual.notas}
-                        onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))}
-                        className="min-h-[80px] w-full resize-y rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.95rem] text-[var(--texto)] outline-none"
-                      />
-                    </div>
+                    <InputField
+                      label="ID Cliente"
+                      type="number"
+                      placeholder="Opcional"
+                      value={pedidoActual.id_cliente}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, id_cliente: e.target.value }))}
+                    />
+                    <InputField
+                      label="ID Mesero"
+                      type="number"
+                      placeholder="Opcional"
+                      value={pedidoActual.id_mesero}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, id_mesero: e.target.value }))}
+                    />
+                    <SelectField
+                      label="Tipo de Pedido *"
+                      value={pedidoActual.Tipo_pedido}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, Tipo_pedido: e.target.value }))}
+                      required
+                    >
+                      <option value="MESA">MESA</option>
+                      <option value="DOMICILIO">DOMICILIO</option>
+                      <option value="LLEVAR">LLEVAR</option>
+                    </SelectField>
+                    <InputField
+                      label="Número de Mesa"
+                      type="number"
+                      placeholder="Opcional"
+                      value={pedidoActual.Mesa_num}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, Mesa_num: e.target.value }))}
+                    />
+                    <SelectField
+                      label="Estado"
+                      value={pedidoActual.estado}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, estado: e.target.value }))}
+                    >
+                      <option value="ABIERTO">ABIERTO</option>
+                      <option value="EN_PROCESO">EN_PROCESO</option>
+                      <option value="LISTO">LISTO</option>
+                      <option value="ENTREGADO">ENTREGADO</option>
+                      <option value="CANCELADO">CANCELADO</option>
+                    </SelectField>
+                    <TextAreaField
+                      label="Notas"
+                      placeholder="Indicaciones especiales..."
+                      value={pedidoActual.notas}
+                      onChange={e => setPedidoActual(prev => ({ ...prev, notas: e.target.value }))}
+                      className="min-h-[80px]"
+                    />
                     {errorPedido && (
                       <p className="rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-[0.82rem] text-[var(--rojo)]">{errorPedido}</p>
                     )}
                     <div className="mt-2 flex justify-end gap-3">
                       <button
+                        type="button"
                         className="w-auto rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-5 py-2 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
                         onClick={() => setModalPedido(false)}
                       >
                         Cancelar
                       </button>
                       <button
+                        type="submit"
                         className="w-auto rounded-[10px] bg-[var(--rojo)] px-5 py-2 text-[0.875rem] font-semibold text-white"
-                        onClick={guardarPedido}
                         disabled={guardandoPedido}
                       >
                         {guardandoPedido ? 'Guardando...' : modoEdicionPedido ? 'Actualizar' : 'Crear Pedido'}
                       </button>
                     </div>
                   </div>
-                </div>
+                </form>
               </Modal>
-            </section>
+            </>
           )}
           {(activeItem === 'Caja' || activeItem === 'Facturas') && (
             <div className="m-6 p-12 text-center text-[var(--texto-muted)]">

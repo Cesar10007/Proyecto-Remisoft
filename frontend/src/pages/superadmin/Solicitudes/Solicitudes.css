@@ -188,6 +188,12 @@
   padding: 8px 12px;
 }
 
+.sa-request-filter-control {
+  align-items: center;
+  flex-direction: row;
+  gap: 12px;
+}
+
 .sa-request-content {
   flex: 1;
 }

@@ -1,16 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import './Gerente.css'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import { DataTable, type Column } from '../../components/common/DataTable'
+import { DashboardSidebar } from '../../components/layout/DashboardSidebar'
+import { useDashboardSidebarCollapsed } from '../../components/layout/useDashboardSidebar'
 import PersonalSection from './sections/PersonalSection'
 import IngredientesSection from './sections/IngredientesSection'
 import FinanzasSection from './sections/FinanzasSection'
 import ProveedoresSection from './sections/ProveedoresSection'
 import CajasSection from './sections/CajasSection'
 import GerenteHeader from './components/GerenteHeader'
-import GerenteSidebar from './components/GerenteSidebar'
 import GerenteModals from './components/GerenteModals'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
 import { barras, finanzasStats, historialEventos, iaInsights, inventario, menuItems, mesas, metricas, movimientos, pedidosActivosMock, transacciones, turnosMock } from './data'
@@ -28,13 +29,13 @@ const cajaVacia = { nombre: '', estado: 'ACTIVA' }
 const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as number | '' , contrasena: '' }
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
+  const sidebarCollapsed = useDashboardSidebarCollapsed()
   const vistaActual = seccionActiva.toLowerCase()
   const setVistaActual = (vista: string) => {
     const itemSeleccionado = menuItems.find(item => item.label.toLowerCase() === vista)
     if (itemSeleccionado) setSeccionActiva(itemSeleccionado.label)
   }
-  const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
   const [productos, setProductos] = useState<Producto[]>([])
   const [fuenteProductos, setFuenteProductos] = useState<'vista' | 'sp'>('vista')
   const [cargandoProductos, setCargandoProductos] = useState(false)
@@ -181,10 +182,77 @@ function Gerente() {
     if (!confirm(`¿Deseas ${estado === 'ACTIVA' ? 'desactivar' : 'activar'} esta caja?`)) return
     try { await api.delete(`/cajas/${id}`); api.get('/cajas').then(r => setCajas(r.data)) } catch { alert('Error') }
   }
+
+  const productoColumns: Column<Producto>[] = [
+    { header: 'Nombre', render: (producto) => <strong>{producto.Nombre}</strong> },
+    { header: 'Descripción', render: (producto) => producto.Descripcion || '—' },
+    { header: 'Precio', render: (producto) => `$${Number(producto.precio_venta).toLocaleString('es-CO')}` },
+    { header: 'Categoría', render: (producto) => producto.Categoria || '—' },
+    { header: 'Tiempo prep.', accessor: 'Tiempo_preparacion' },
+    {
+      header: 'Estado',
+      render: (producto) => (
+        <span className={producto.Estado ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}>
+          {producto.Estado ? 'Activo' : 'Inactivo'}
+        </span>
+      ),
+    },
+    {
+      header: 'Acciones',
+      render: (producto) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]"
+            onClick={() => abrirEditarProducto(producto)}
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
+              producto.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
+            }`}
+            onClick={() => toggleProducto(producto.id_producto, producto.Estado)}
+          >
+            {producto.Estado ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  const turnoColumns: Column<(typeof turnosMock)[number]>[] = [
+    { header: 'Empleado', render: (turno) => <strong>{turno.empleado}</strong> },
+    { header: 'Rol', accessor: 'rol' },
+    { header: 'Turno', accessor: 'turno' },
+    {
+      header: 'Estado',
+      render: (turno) => (
+        <span className={`font-semibold ${turno.estado === 'Activo' ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>
+          {turno.estado}
+        </span>
+      ),
+    },
+  ]
+
   return (
     <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
-      <GerenteSidebar menuItems={menuItems} vistaActual={vistaActual} onNavigate={setVistaActual} onLogout={() => { logout(); navigate('/') }} />
-      <main className="ml-[240px] flex flex-1 flex-col gap-8 p-8">
+      <DashboardSidebar
+        roleTitle="Gerente"
+        navItems={menuItems}
+        activeItem={vistaActual}
+        onNavigate={setVistaActual}
+        footerActions={
+          <button
+            type="button"
+            className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 text-sm font-semibold text-white"
+          >
+            Cerrar Caja
+          </button>
+        }
+      />
+      <main className={`ml-0 flex flex-1 flex-col gap-8 p-4 pt-16 transition-[margin] duration-200 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-60'} lg:p-8`}>
         <GerenteHeader seccionActiva={seccionActiva} nombreUsuario={user?.nombre} />
         {/* MENÚ — Dashboard principal */}
         {seccionActiva === 'Menú' && (
@@ -206,7 +274,7 @@ function Gerente() {
                   </div>
                   <div>
                     <p className="mb-1 text-[0.78rem] text-[var(--texto-muted)]">{m.label}</p>
-                    <p className="font-['Syne'] text-[1.6rem] font-bold text-[var(--texto)]">{m.valor}</p>
+                    <p className="font-number text-[1.6rem] text-[var(--texto)]">{m.valor}</p>
                   </div>
                 </div>
               ))}
@@ -311,52 +379,14 @@ function Gerente() {
                   </button>
                 </div>
               </div>
-              {cargandoProductos ? (
-                <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Nombre</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Descripción</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Precio</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Categoría</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Tiempo prep.</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
-                        <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productos.length === 0 ? (
-                        <tr><td colSpan={7} className="py-4 text-center text-[var(--texto-muted)]">Sin productos</td></tr>
-                      ) : productos.map(p => (
-                        <tr key={p.id_producto}>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{p.Nombre}</strong></td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Descripcion}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">${Number(p.precio_venta).toLocaleString('es-CO')}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Categoria}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]">{p.Tiempo_preparacion}</td>
-                          <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] ${p.Estado ? 'text-[var(--verde)]' : 'text-[var(--rojo)]'}`}>{p.Estado ? 'Activo' : 'Inactivo'}</td>
-                          <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem]">
-                            <div className="flex gap-2">
-                              <button className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
-                              <button
-                                className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
-                                  p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
-                                }`}
-                                onClick={() => toggleProducto(p.id_producto, p.Estado)}
-                              >
-                                {p.Estado ? 'Desactivar' : 'Activar'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <DataTable
+                columns={productoColumns}
+                data={productos}
+                isLoading={cargandoProductos}
+                emptyMessage="Sin productos"
+                keyExtractor={(producto) => producto.id_producto}
+                className="mt-5 border-0 bg-transparent p-0 shadow-none"
+              />
             </section>
             <section className="grid grid-cols-[1fr_360px] gap-4">
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
@@ -549,31 +579,14 @@ function Gerente() {
         )}
         {/* TURNOS — vista con datos de ejemplo */}
         {seccionActiva === 'Turnos' && (
-          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos del personal</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Empleado</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Rol</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Turno</th>
-                    <th className="border-b border-[var(--borde)] px-3 py-2 text-left text-[0.78rem] font-semibold text-[var(--texto-muted)]">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {turnosMock.map((t, i) => (
-                    <tr key={i}>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto)]"><strong>{t.empleado}</strong></td>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.rol}</td>
-                      <td className="border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] text-[var(--texto-muted)]">{t.turno}</td>
-                      <td className={`border-b border-[var(--borde)] px-3 py-2.5 text-[0.85rem] font-semibold ${t.estado === 'Activo' ? 'text-[var(--verde)]' : 'text-[#854F0B]'}`}>{t.estado}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <DataTable
+            title="Turnos del personal"
+            columns={turnoColumns}
+            data={turnosMock}
+            emptyMessage="No hay turnos programados"
+            keyExtractor={(turno) => turno.empleado}
+            className="mt-6"
+          />
         )}
       </main>
       <GerenteModals
