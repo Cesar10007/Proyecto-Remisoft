@@ -35,10 +35,20 @@
     "globals": "17.9.0",
     "prisma": "7.9.1"
   },
-  "pnpm": {
+    "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "proxy-addr": "2.0.8",
+      "deepmerge-ts": "8.0.0",
+      "mariadb": "3.4.7",
+      "mysql2": "3.22.0",
+      "fast-uri": "3.1.7",
+      "js-yaml": "4.3.2",
+      "brace-expansion": "1.1.20",
+      "nodemailer": "10.0.6"
+    }
   }
 }
