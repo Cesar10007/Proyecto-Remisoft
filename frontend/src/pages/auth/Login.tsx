@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import api from '../../api/axios'
 import { setCredentials } from '../../store/authSlice'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import Button from '../../components/common/Button'
 import { InputField } from '../../components/common/InputField'
 
@@ -52,6 +52,8 @@ function Login({ onClose }: LoginProps) {
         navigate('/superadmin')
       } else if (rolNormalizado === 'GERENTE') {
         navigate('/gerente')
+      } else if (rolNormalizado === 'CAJERO') {
+        navigate('/cajero')
       } else if (rolNormalizado === 'MESERO') {
         navigate('/mesero')
       } else if (rolNormalizado === 'REPARTIDOR') {
@@ -90,7 +92,7 @@ function Login({ onClose }: LoginProps) {
           <InputField
             label="Correo electrónico"
             id="login-email"
-            className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+            className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
             type="email"
             placeholder="correo@ejemplo.com"
             value={email}
@@ -104,7 +106,7 @@ function Login({ onClose }: LoginProps) {
             <InputField
               label="Contraseña"
               id="login-password"
-              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[#fdfaf7] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
+              className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={contrasena}

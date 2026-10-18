@@ -13,7 +13,7 @@ const variantClasses = {
   primary:
     'border-[var(--rojo)] bg-[var(--rojo)] text-white hover:-translate-y-px hover:border-[var(--rojo-dark)] hover:bg-[var(--rojo-dark)]',
   outline:
-    'border-[var(--borde)] bg-transparent text-[var(--texto-muted)] hover:border-[#c0b8b0] hover:bg-[#f0ebe5] hover:text-[var(--texto)]',
+    'border-[var(--borde)] bg-transparent text-[var(--texto-muted)] hover:border-[#c0b8b0] hover:bg-[var(--t-bg-f0ebe5,#f0ebe5)] hover:text-[var(--texto)]',
 }
 
 function Button({

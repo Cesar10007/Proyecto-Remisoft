@@ -1,9 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
+// Datos del usuario que devuelve /api/auth/login. Los campos extra son los que usan las páginas.
+export type AuthUser = {
+  id_usuario?: number
+  id_rol?: number
+  id_restaurante?: number | null
+  nombre: string
+  apellido?: string
+  email: string
+  [campo: string]: unknown
+} | null
+
 interface AuthState {
   token: string | null
   rol: string | null
-  user: { nombre: string; email: string } | null
+  user: AuthUser
 }
 
 const initialState: AuthState = {

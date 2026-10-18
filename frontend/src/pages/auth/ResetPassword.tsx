@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
+import ThemeToggle from '../../components/common/ThemeToggle'
 import { InputField } from '../../components/common/InputField'
 
 function ResetPassword() {
@@ -52,6 +53,7 @@ function ResetPassword() {
   if (!token || !email) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-5">
+        <ThemeToggle flotante />
         <div className="flex w-full max-w-[420px] flex-col gap-2 rounded-[20px] border border-[var(--borde)] bg-[var(--bg-card)] p-9 shadow-[26px_26px_26px_rgba(0,0,0,0.1)]">
           <div className="mb-2">
             <h3 className="mb-1 font-['Syne'] text-[1.4rem] font-bold tracking-[-0.4px] text-[var(--texto)]">
@@ -68,6 +70,7 @@ function ResetPassword() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-5">
+      <ThemeToggle flotante />
       <div className="flex w-full max-w-[420px] flex-col gap-2 rounded-[20px] border border-[var(--borde)] bg-[var(--bg-card)] p-9 shadow-[26px_26px_26px_rgba(0,0,0,0.1)]">
         <p className="mb-6 text-center font-['Syne'] text-[1.8rem] font-extrabold tracking-[-0.5px] text-[var(--rojo-dark)]">
           Remi<span className="text-[var(--amarillo)]">Soft</span>

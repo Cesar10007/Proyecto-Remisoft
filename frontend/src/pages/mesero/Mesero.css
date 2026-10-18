@@ -126,7 +126,7 @@
   justify-content: space-between;
   gap: 24px;
   padding: 12px 24px;
-  background: rgba(252, 249, 248, 0.8);
+  background: var(--t-bg-rgba_252_249_248_0_8, rgba(252, 249, 248, 0.8));
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--wa-border);
   box-shadow: 0 12px 32px -4px rgba(28, 27, 27, 0.06);
@@ -424,7 +424,7 @@
   height: 48px;
   border-radius: 999px;
   background: var(--wa-secondary-fixed-dim);
-  color: #2a1700;
+  color: var(--t-txt-2a1700, #2a1700);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -624,7 +624,7 @@
   border-radius: 14px;
   padding: 14px;
   background: var(--wa-secondary-container);
-  color: #6b4200;
+  color: var(--t-txt-6b4200, #6b4200);
   font-size: 0.875rem;
   font-weight: 800;
   display: flex;

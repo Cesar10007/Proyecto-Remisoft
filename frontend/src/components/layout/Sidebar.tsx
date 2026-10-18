@@ -1,0 +1,152 @@
+import { useEffect, useState, type ReactNode } from 'react'
+import ThemeToggle from '../common/ThemeToggle'
+
+export interface SidebarMenuItem {
+  icon: string
+  label: string
+  badge?: number
+}
+
+interface SidebarProps {
+  subtitulo: string
+  menuItems: SidebarMenuItem[]
+  vistaActual: string
+  onNavigate: (vista: string) => void
+  onLogout: () => void
+  // Botones propios de cada panel (por ejemplo "Cerrar Caja" en Gerente).
+  footer?: ReactNode
+  // Permite plegar el menú a iconos (escritorio). Por defecto está activo en todos los paneles.
+  colapsable?: boolean
+}
+
+// Menú lateral compartido por los paneles.
+// Escritorio: columna fija a la izquierda del contenido (puede contraerse si es colapsable).
+// Celular: barra superior con modo oscuro y menú, que abre un cajón.
+const CLAVE_PLEGADO = 'remisoft-sidebar'
+
+function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer, colapsable = true }: SidebarProps) {
+  const [abierto, setAbierto] = useState(false)
+  const [colapsado, setColapsado] = useState<boolean>(
+    () => colapsable && localStorage.getItem(CLAVE_PLEGADO) === 'plegado',
+  )
+
+  useEffect(() => {
+    if (colapsable) localStorage.setItem(CLAVE_PLEGADO, colapsado ? 'plegado' : 'desplegado')
+  }, [colapsado, colapsable])
+  const compacto = colapsable && colapsado
+
+  const navegar = (vista: string) => {
+    onNavigate(vista)
+    setAbierto(false)
+  }
+
+  return (
+    <>
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center justify-between border-b border-[var(--borde)] bg-[var(--bg-card)] px-3 md:hidden">
+        <ThemeToggle />
+        <span className="font-['Syne'] text-[1.1rem] font-extrabold text-[var(--rojo-dark)]">
+          Remi<span className="text-[var(--amarillo)]">Soft</span>
+        </span>
+        <button
+          type="button"
+          aria-label="Abrir menú"
+          onClick={() => setAbierto(true)}
+          className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-transparent text-[var(--texto)]"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+
+      {abierto && <div className="fixed inset-0 z-[99] bg-black/40 md:hidden" onClick={() => setAbierto(false)} />}
+
+      <aside
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-all duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
+          compacto ? 'md:w-20 md:px-2' : 'md:w-[240px]'
+        } ${abierto ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        {colapsable && (
+          <button
+            type="button"
+            onClick={() => setColapsado((v) => !v)}
+            title={colapsado ? 'Desplegar menú' : 'Plegar menú'}
+            className="absolute -right-3 top-[88px] z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
+          >
+            <span className={`material-symbols-outlined text-[16px] text-[var(--texto-muted)] transition-transform duration-300 ${compacto ? 'rotate-180' : ''}`}>
+              chevron_left
+            </span>
+          </button>
+        )}
+
+        <div className="mb-4 flex items-center justify-between px-2">
+          <ThemeToggle compacto={compacto} />
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            onClick={() => setAbierto(false)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border-none bg-transparent text-[var(--texto-muted)] md:hidden"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div className={`mb-8 px-2 ${compacto ? 'md:text-center' : ''}`}>
+          <div className="font-['Syne'] text-[1.2rem] font-extrabold text-[var(--rojo-dark)]">
+            {compacto ? <span className="hidden md:inline">R</span> : null}
+            <span className={compacto ? 'md:hidden' : ''}>
+              Remi<span className="text-[var(--amarillo)]">Soft</span>
+            </span>
+          </div>
+          <div className={`mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)] ${compacto ? 'md:hidden' : ''}`}>
+            {subtitulo}
+          </div>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+          {menuItems.map((item) => {
+            const activo = vistaActual === item.label.toLowerCase()
+            return (
+              <button
+                key={item.label}
+                type="button"
+                title={compacto ? item.label : undefined}
+                onClick={() => navegar(item.label.toLowerCase())}
+                className={`flex items-center gap-3 rounded-[10px] border-r-[3px] px-3 py-2.5 text-left font-['DM_Sans'] text-[0.875rem] font-medium transition-all duration-150 ease-in-out ${
+                  compacto ? 'md:justify-center md:px-0' : ''
+                } ${
+                  activo
+                    ? 'border-r-[var(--rojo)] bg-[var(--rojo-light)] text-[var(--rojo-dark)]'
+                    : 'border-r-transparent bg-transparent text-[var(--texto-muted)]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                <span className={compacto ? 'md:hidden' : ''}>{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white ${compacto ? 'md:hidden' : ''}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="flex flex-col gap-1 border-t border-[var(--borde)] pt-4">
+          <div className={compacto ? 'md:hidden' : ''}>{footer}</div>
+          <button
+            type="button"
+            onClick={onLogout}
+            title={compacto ? 'Cerrar sesión' : undefined}
+            className={`flex items-center gap-2 rounded-[10px] bg-transparent px-3 py-2 font-['DM_Sans'] text-[0.875rem] text-[var(--texto-muted)] ${
+              compacto ? 'md:justify-center md:px-0' : ''
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span className={compacto ? 'md:hidden' : ''}>Cerrar sesión</span>
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+export default Sidebar

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import { DashboardSidebar, type DashboardNavItem } from './DashboardSidebar'
 import { useDashboardSidebarCollapsed } from './useDashboardSidebar'
 

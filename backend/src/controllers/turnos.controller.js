@@ -278,3 +278,202 @@ export async function destroy(req, res, next) {
     next(error);
   }
 }
+
+// POST /api/turnos/:id/cerrar
+// Cierra el turno con el procedimiento de la base sp_cerrar_turno_caja, que calcula
+// el efectivo esperado (inicial + ingresos - egresos de flujo_caja) y la diferencia.
+export async function cerrar(req, res, next) {
+  try {
+    const idTurno = parseId(req.params.id);
+
+    if (idTurno === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de turno inválido',
+        code: 'INVALID_ID',
+      });
+    }
+
+    const { efectivo_real, notas } = req.body ?? {};
+    const efectivoReal = Number(efectivo_real);
+
+    if (efectivo_real === undefined || efectivo_real === null || efectivo_real === '' || Number.isNaN(efectivoReal) || efectivoReal < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El efectivo contado es requerido y no puede ser negativo',
+        code: 'INVALID_EFECTIVO',
+      });
+    }
+
+    const notasCierre = notas ? String(notas).trim().slice(0, 500) || null : null;
+
+    try {
+      await prisma.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre})`;
+    } catch (error) {
+      const mensaje = String(error?.message ?? '');
+      if (mensaje.includes('no existe')) {
+        return res.status(404).json({
+          success: false,
+          message: 'No encontrado',
+          code: 'NOT_FOUND',
+        });
+      }
+      if (mensaje.includes('ya fue cerrado')) {
+        return res.status(409).json({
+          success: false,
+          message: 'El turno ya fue cerrado',
+          code: 'TURNO_CERRADO',
+        });
+      }
+      throw error;
+    }
+
+    const turno = await prisma.turno_caja.findUnique({
+      where: { id_turno: idTurno },
+      include: turnoInclude,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Turno cerrado',
+      data: turno,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Turnos para Mesero > Caja (aperturas y cierres). Solo expone datos del turno y el nombre del responsable.
+export async function aperturas(req, res, next) {
+  try {
+    const turnos = await prisma.turno_caja.findMany({
+      select: {
+        id_turno: true,
+        fecha_apertura: true,
+        fecha_cierre: true,
+        efectivo_inicial: true,
+        efectivo_esperado: true,
+        efectivo_real: true,
+        diferencia: true,
+        notas: true,
+        estado: true,
+        caja: { select: { nombre: true } },
+        usuario: { select: { nombre: true, apellido: true } },
+      },
+      orderBy: {
+        fecha_apertura: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: turnos,
+      count: turnos.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Gastos de caja para Mesero > Caja: egresos de flujo_caja, con turno y responsable.
+export async function gastos(req, res, next) {
+  try {
+    const movimientos = await prisma.flujo_caja.findMany({
+      where: {
+        egresos: { gt: 0 },
+      },
+      select: {
+        id_flujo: true,
+        fecha: true,
+        concepto: true,
+        egresos: true,
+        metodo: true,
+        referencia: true,
+        turno_caja: {
+          select: {
+            fecha_apertura: true,
+            caja: { select: { nombre: true } },
+            usuario: { select: { nombre: true, apellido: true } },
+          },
+        },
+      },
+      orderBy: {
+        fecha: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: movimientos,
+      count: movimientos.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Arqueos para Mesero > Caja. Para turnos abiertos, el esperado se calcula como
+// inicial + ingresos - egresos de flujo_caja (misma fórmula de sp_cerrar_turno_caja).
+// Para turnos cerrados, usa lo que guardó el cierre.
+export async function arqueos(req, res, next) {
+  try {
+    const [turnos, movimientos] = await Promise.all([
+      prisma.turno_caja.findMany({
+        select: {
+          id_turno: true,
+          fecha_apertura: true,
+          fecha_cierre: true,
+          efectivo_inicial: true,
+          efectivo_esperado: true,
+          efectivo_real: true,
+          diferencia: true,
+          estado: true,
+          caja: { select: { nombre: true } },
+          usuario: { select: { nombre: true, apellido: true } },
+        },
+        orderBy: {
+          fecha_apertura: 'desc',
+        },
+      }),
+      prisma.flujo_caja.groupBy({
+        by: ['id_turno'],
+        _sum: { ingresos: true, egresos: true },
+      }),
+    ]);
+
+    const sumas = new Map(movimientos.map((m) => [m.id_turno, m._sum]));
+
+    const data = turnos.map((t) => {
+      const suma = sumas.get(t.id_turno);
+      const ingresos = Number(suma?.ingresos ?? 0);
+      const egresos = Number(suma?.egresos ?? 0);
+      const abierto = t.estado === 'ABIERTA';
+      const esperado = abierto
+        ? Number(t.efectivo_inicial ?? 0) + ingresos - egresos
+        : t.efectivo_esperado === null ? null : Number(t.efectivo_esperado);
+
+      return {
+        id_turno: t.id_turno,
+        fecha_apertura: t.fecha_apertura,
+        fecha_cierre: t.fecha_cierre,
+        efectivo_inicial: t.efectivo_inicial === null ? null : Number(t.efectivo_inicial),
+        esperado,
+        efectivo_real: t.efectivo_real === null ? null : Number(t.efectivo_real),
+        diferencia: t.diferencia === null ? null : Number(t.diferencia),
+        estado: t.estado,
+        caja: t.caja,
+        usuario: t.usuario,
+        ingresos,
+        egresos,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data,
+      count: data.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

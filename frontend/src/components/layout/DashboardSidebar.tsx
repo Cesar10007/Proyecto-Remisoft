@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../store/hooks'
 import { setDashboardSidebarCollapsed, useDashboardSidebarCollapsed } from './useDashboardSidebar'
 
 export interface DashboardNavItem {

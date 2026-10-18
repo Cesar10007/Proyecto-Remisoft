@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: Number(env.VITE_PORT) || 5173,
+      // Permite la vista previa alojada en subdominios de e2b.app (solo desarrollo).
+      allowedHosts: ['.e2b.app'],
       proxy: {
         '/api': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:3000',

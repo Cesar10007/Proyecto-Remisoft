@@ -1,4 +1,4 @@
-![Banner RemiSoft](./docs/banner-remisoft.png)
+![Banner RemiSoft](./docs/banner-remisoft.webp)
 
 # RemiSoft — Sistema Web Inteligente para Restaurantes
 
