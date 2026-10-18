@@ -11,7 +11,7 @@ interface CajaProps {
   nombreUsuario: string
 }
 
-function Caja({ nombreUsuario }: CajaProps) {
+function Caja(_: CajaProps) {
   const [vista, setVista] = useState('resumen')
 
   const volver = () => setVista('resumen')

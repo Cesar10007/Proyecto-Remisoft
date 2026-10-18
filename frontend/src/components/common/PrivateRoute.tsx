@@ -17,7 +17,9 @@ function PrivateRoute({ children, rolRequerido, rolesPermitidos }: PrivateRouteP
 
   if (!token) return <Navigate to="/" replace />
   if (rolRequerido && rol !== rolRequerido) return <Navigate to="/" replace />
-  if (rolesPermitidos && !rolesPermitidos.includes(rol)) return <Navigate to="/" replace />
+  if (rolesPermitidos && (!rol || !rolesPermitidos.includes(rol))) {
+    return <Navigate to="/" replace />
+  }
 
   return children
 }

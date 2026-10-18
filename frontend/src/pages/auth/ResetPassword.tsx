@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import type { AxiosError } from 'axios'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
 import ThemeToggle from '../../components/common/ThemeToggle'
@@ -35,12 +36,14 @@ function ResetPassword() {
       })
       alert('✓ Contraseña actualizada correctamente')
       navigate('/')
-    } catch (err) {
-      if (err.response?.status === 400) {
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError
+      if (axiosError.response?.status === 400) {
         setError('El enlace es inválido o ya expiró. Solicita uno nuevo.')
-      } else if (err.response?.status === 422) {
-        const errores = err.response.data.errors
-        const primero = Object.values(errores)[0][0]
+      } else if (axiosError.response?.status === 422) {
+        const data = axiosError.response.data as { errors?: Record<string, string[]> }
+        const errores = data.errors ?? {}
+        const primero = Object.values(errores)[0]?.[0] ?? 'Error de validación'
         setError(primero)
       } else {
         setError('Error al conectar con el servidor')

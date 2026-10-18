@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { AxiosError } from 'axios'
 import api from '../../api/axios'
 import Button from '../../components/common/Button'
 import ThemeToggle from '../../components/common/ThemeToggle'
@@ -12,15 +14,16 @@ function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
       await api.post('/auth/send-reset-link', { email })
       setEnviado(true)
-    } catch (err) {
-      if (err.response?.status === 422) {
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError
+      if (axiosError.response?.status === 422) {
         setError('Ingresa un correo electrónico válido.')
       } else {
         setError('Error al conectar con el servidor.')
