@@ -212,7 +212,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #6c757d;
+  color: var(--t-txt-6c757d, #6c757d);
 }
 
 .mockup-section-subtitle {
@@ -220,27 +220,27 @@
   font-size: 0.7rem;
   font-weight: 700;
   margin-bottom: 8px;
-  color: #6c757d;
+  color: var(--t-txt-6c757d, #6c757d);
 }
 
 .inventory-alert {
   margin-top: 12px;
   padding: 10px;
-  background: #f8f9fa;
+  background: var(--t-bg-f8f9fa, #f8f9fa);
   border-radius: 10px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--t-brd-dee2e6, #dee2e6);
 }
 
 .inventory-alert-title {
   font-size: 0.65rem;
-  color: #a30000;
+  color: var(--t-txt-a30000, #a30000);
   font-weight: 500;
   margin-bottom: 3px;
 }
 
 .inventory-alert-text {
   font-size: 0.68rem;
-  color: #6c757d;
+  color: var(--t-txt-6c757d, #6c757d);
 }
 
 .roles-title {
@@ -288,7 +288,7 @@
     border-radius: 10px;
     font-family: 'DM Sans', sans-serif;
     font-size: 0.9rem;
-    background: #fdfaf7;
+    background: var(--t-bg-fdfaf7, #fdfaf7);
     color: var(--texto);
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
@@ -305,7 +305,7 @@
     border-radius: 10px;
     font-family: 'DM Sans', sans-serif;
     font-size: 0.9rem;
-    background: #fdfaf7;
+    background: var(--t-bg-fdfaf7, #fdfaf7);
     color: var(--texto);
     transition: border-color 0.15s;
     outline: none;

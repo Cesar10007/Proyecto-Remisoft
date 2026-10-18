@@ -33,4 +33,4 @@
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s;
 }
-.modal-close:hover { background: #f0ebe5; }
+.modal-close:hover { background: var(--t-bg-f0ebe5, #f0ebe5); }

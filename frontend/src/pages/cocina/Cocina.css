@@ -1,0 +1,200 @@
+.cocina {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--texto);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Contenido a la derecha del menú compartido. En celular deja espacio para la barra superior fija. */
+.cocina__main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+}
+
+@media (max-width: 767px) {
+  .cocina__main {
+    padding-top: 72px;
+  }
+}
+
+.cocina__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.cocina__header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.cocina__header p {
+  margin: 4px 0 0;
+  color: var(--texto-muted);
+  font-size: 0.9rem;
+}
+
+.cocina__header-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.cocina__columnas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.cocina__columna {
+  background: var(--t-bg-f9f5f0, #f9f5f0);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 300px;
+}
+
+.cocina__columna h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cocina__contador {
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--borde);
+}
+
+.cocina__tarjeta {
+  background: var(--bg-card);
+  border: 1px solid var(--borde);
+  border-left: 5px solid var(--texto-muted);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cocina__tarjeta--pendiente {
+  border-left-color: var(--amarillo);
+}
+
+.cocina__tarjeta--preparando {
+  border-left-color: var(--rojo);
+}
+
+.cocina__tarjeta--listo {
+  border-left-color: var(--verde);
+}
+
+.cocina__tarjeta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cocina__tiempo {
+  font-size: 0.78rem;
+  color: var(--texto-muted);
+}
+
+.cocina__item {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cocina__cantidad {
+  color: var(--rojo-dark);
+}
+
+.cocina__meta {
+  font-size: 0.8rem;
+  color: var(--texto-muted);
+}
+
+.cocina__notas {
+  font-size: 0.85rem;
+  background: var(--amarillo-light);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.cocina__vacio {
+  color: var(--texto-muted);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.cocina__vacio--grande {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 8px;
+}
+
+.cocina__vacio .material-symbols-outlined {
+  font-size: 44px;
+  color: var(--verde);
+}
+
+.cocina__alerta {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  background: var(--rojo-light);
+  color: var(--rojo-dark);
+  font-size: 0.9rem;
+}
+
+.cocina__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--borde);
+  background: var(--t-bg-ffffff, #fff);
+  color: var(--texto);
+}
+
+.cocina__btn--primario {
+  background: var(--rojo);
+  border-color: var(--rojo);
+  color: #fff;
+  width: 100%;
+}
+
+.cocina__btn--primario:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+@media (max-width: 860px) {
+  .cocina__columnas {
+    grid-template-columns: 1fr;
+  }
+}

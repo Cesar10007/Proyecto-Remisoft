@@ -1,7 +1,5 @@
-import { useFetch } from '../../../hook/useFetch'
-import { MetricCard } from '../../../components/common/MetricCard'
-import { DataTable, Column } from '../../../components/common/DataTable'
-import { Badge } from '../../../components/common/Badge'
+import { useEffect, useState } from 'react'
+import api from '../../../api/axios'
 import './Dashboard.css'
 
 interface Usuario {
@@ -15,106 +13,198 @@ interface Usuario {
   id_rol?: number
 }
 
+// Uptime y latencia no existen en la base: se muestran como dato de ejemplo y etiquetados Demo.
 const metricasBase = [
   {
     label: 'Gerentes activos',
     detail: 'Datos obtenidos del sistema',
     icon: 'group',
-    color: 'green' as const,
+    color: 'green',
+    demo: false,
   },
   {
     label: 'Solicitudes pendientes',
     detail: 'Pendientes de revisión',
-    icon: undefined,
-    color: 'amber' as const,
+    icon: null,
+    color: 'amber',
+    demo: false,
   },
   {
     label: 'Tiempo de actividad del sistema',
-    detail: 'Estado del servicio',
+    detail: 'Estado del servicio (Demo)',
     icon: 'check_circle',
-    color: 'green' as const,
+    color: 'green',
+    demo: true,
+    valorDemo: '99,9 %',
   },
   {
     label: 'Respuesta de API',
-    detail: 'Latencia no disponible',
-    icon: undefined,
-    color: 'default' as const,
+    detail: 'Latencia de ejemplo (Demo)',
+    icon: null,
+    color: 'default',
+    demo: true,
+    valorDemo: '142 ms',
   },
 ]
 
 function Dashboard() {
-  const { data: usuarios, isLoading: cargando, error } = useFetch<Usuario>('/usuarios')
+  const [gerentes, setGerentes] = useState<Usuario[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState<number | null>(null)
 
-  const gerentes = usuarios.filter(
-    (usuario) =>
-      usuario.activo &&
-      (usuario.id_rol === 2 || usuario.rol?.toUpperCase() === 'GERENTE'),
-  )
+  useEffect(() => {
+    const cargarGerentes = async () => {
+      try {
+        setCargando(true)
+        const response = await api.get('/usuarios')
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data ?? []
+
+        setGerentes(
+          data.filter(
+            (usuario: Usuario) =>
+              usuario.activo &&
+              (usuario.id_rol === 2 || usuario.rol?.toUpperCase() === 'GERENTE'),
+          ),
+        )
+      } catch (requestError) {
+        console.error(requestError)
+        setError('No fue posible cargar los gerentes activos.')
+      } finally {
+        setCargando(false)
+      }
+    }
+
+    const cargarSolicitudes = async () => {
+      try {
+        const response = await api.get('/solicitudes')
+        const data = Array.isArray(response.data?.data) ? response.data.data : []
+        setSolicitudesPendientes(data.length)
+      } catch (requestError) {
+        console.error(requestError)
+        setSolicitudesPendientes(null)
+      }
+    }
+
+    cargarGerentes()
+    cargarSolicitudes()
+  }, [])
+
+  const valorPorIndice = (index: number) => {
+    if (index === 0) return cargando ? '—' : gerentes.length
+    if (index === 1) return solicitudesPendientes ?? '—'
+    return '—'
+  }
 
   const metricas = metricasBase.map((metrica, index) => ({
     ...metrica,
-    value: index === 0 ? (cargando ? '—' : gerentes.length) : '—',
+    value: metrica.demo ? metrica.valorDemo : valorPorIndice(index),
   }))
 
-  const columns: Column<Usuario>[] = [
-    {
-      header: 'Usuario',
-      render: (gerente) => (
-        <div className="sa-user-cell">
-          <div className="sa-user-avatar-wrap">
-            {gerente.nombre?.[0]?.toUpperCase() ?? 'G'}
-          </div>
-          <div>
-            <p className="sa-user-name">
-              {gerente.nombre} {gerente.apellido ?? ''}
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: 'Email',
-      accessor: 'email',
-    },
-    {
-      header: 'Teléfono',
-      render: (gerente) => gerente.telefono ?? '—',
-    },
-    {
-      header: 'Estado',
-      render: () => <Badge status="active" label="Activo" />,
-    },
-  ]
-
   return (
-    <section className="sa-dashboard flex flex-col gap-8">
+    <section className="sa-dashboard">
       <div className="sa-metrics-grid">
         {metricas.map((metric) => (
-          <MetricCard
-            key={metric.label}
-            label={metric.label}
-            value={metric.value}
-            detail={metric.detail}
-            icon={metric.icon}
-            color={metric.color}
-          />
+          <article key={metric.label} className="sa-metric-card">
+            <p className="sa-metric-card__label">
+              {metric.label}
+              {metric.demo && (
+                <span style={{ marginLeft: '0.5rem', padding: '0.1rem 0.45rem', borderRadius: 999, background: 'rgba(127,127,127,0.18)', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', verticalAlign: 'middle' }}>
+                  Demo
+                </span>
+              )}
+            </p>
+            <h2 className={`sa-metric-card__value sa-metric-card__value--${metric.color}`}>
+              {metric.value}
+            </h2>
+
+            {metric.icon ? (
+              <div className={`sa-metric-card__detail sa-metric-card__detail--${metric.color}`}>
+                <span className="material-symbols-outlined">{metric.icon}</span>
+                <span>{metric.detail}</span>
+              </div>
+            ) : (
+              <p className="sa-metric-card__text-detail">{metric.detail}</p>
+            )}
+          </article>
         ))}
       </div>
 
-      {error ? (
-        <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 text-sm text-red-500">
-          {error}
+      <section className="sa-dashboard-panel">
+        <h2 className="sa-panel-title">Gerentes activos</h2>
+        <p className="sa-panel-subtitle">
+          Gerentes activos registrados en el sistema.
+        </p>
+
+        <div className="sa-table-card">
+          <div className="sa-table-scroll">
+            <table className="sa-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cargando && (
+                  <tr>
+                    <td colSpan={4} className="sa-table-message">
+                      Cargando gerentes...
+                    </td>
+                  </tr>
+                )}
+
+                {!cargando && error && (
+                  <tr>
+                    <td colSpan={4} className="sa-table-message sa-table-message--error">
+                      {error}
+                    </td>
+                  </tr>
+                )}
+
+                {!cargando && !error && gerentes.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="sa-table-message">
+                      No hay gerentes activos registrados.
+                    </td>
+                  </tr>
+                )}
+
+                {!cargando && !error && gerentes.map((gerente) => (
+                  <tr key={gerente.id_usuario}>
+                    <td>
+                      <div className="sa-user-cell">
+                        <div className="sa-user-avatar-wrap">
+                          {gerente.nombre?.[0]?.toUpperCase() ?? 'G'}
+                        </div>
+                        <div>
+                          <p className="sa-user-name">
+                            {gerente.nombre} {gerente.apellido ?? ''}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{gerente.email}</td>
+                    <td>{gerente.telefono ?? '—'}</td>
+                    <td>
+                      <div className="sa-status-wrap">
+                        <span className="sa-status-dot sa-status-dot--active" />
+                        <span className="sa-status-text sa-status-text--active">
+                          Activo
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      ) : (
-        <DataTable
-          title="Gerentes activos"
-          columns={columns}
-          data={gerentes}
-          isLoading={cargando}
-          emptyMessage="No hay gerentes activos registrados."
-          keyExtractor={(row) => row.id_usuario}
-        />
-      )}
+      </section>
     </section>
   )
 }

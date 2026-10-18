@@ -11,6 +11,9 @@ const lectura = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'REPARTIDOR');
 const crear = requireRole('SUPERADMIN', 'GERENTE');
 const actualizar = requireRole('SUPERADMIN', 'GERENTE', 'REPARTIDOR');
 
+const resumen = requireRole('SUPERADMIN', 'GERENTE', 'REPARTIDOR');
+
+router.get('/resumen', resumen, domiciliosController.resumenRepartidor);
 router.get('/', lectura, domiciliosController.index);
 router.post('/', crear, domiciliosController.crear);
 router.put('/:id', actualizar, domiciliosController.actualizar);

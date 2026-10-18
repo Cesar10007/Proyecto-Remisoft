@@ -1,0 +1,348 @@
+.cajero {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--texto);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Contenido a la derecha del menú compartido. En celular deja espacio para la barra superior fija. */
+.cajero__main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+}
+
+@media (max-width: 767px) {
+  .cajero__main {
+    padding-top: 72px;
+  }
+}
+
+.cajero__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.cajero__header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.cajero__header p {
+  margin: 4px 0 0;
+  color: var(--texto-muted);
+  font-size: 0.9rem;
+}
+
+.cajero__header-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.cajero__layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.cajero__lista,
+.cajero__detalle {
+  background: var(--bg-card);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  box-shadow: var(--sombra);
+  padding: 16px;
+}
+
+.cajero__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.cajero__detalle {
+  padding: 24px;
+  min-height: 420px;
+}
+
+.cajero__detalle h2 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+}
+
+.cajero__cuenta {
+  text-align: left;
+  border: 1px solid var(--borde);
+  background: var(--t-bg-f9f5f0, #f9f5f0);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cajero__cuenta:hover {
+  border-color: var(--rojo-mid);
+}
+
+.cajero__cuenta--activa {
+  border-color: var(--rojo);
+  background: var(--rojo-light);
+}
+
+.cajero__cuenta-top,
+.cajero__cuenta-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cajero__cuenta-sub,
+.cajero__muted {
+  color: var(--texto-muted);
+  font-size: 0.85rem;
+}
+
+.cajero__cuenta-total {
+  margin-top: 6px;
+  font-weight: 700;
+  color: var(--rojo-dark);
+}
+
+.cajero__tiempo {
+  font-size: 0.78rem;
+  color: var(--texto-muted);
+}
+
+.cajero__vacio {
+  text-align: center;
+  color: var(--texto-muted);
+  padding: 24px 8px;
+}
+
+.cajero__vacio--grande {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.cajero__vacio .material-symbols-outlined {
+  font-size: 40px;
+  color: var(--verde);
+}
+
+.cajero__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+.cajero__tabla th,
+.cajero__tabla td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cajero__tabla th {
+  color: var(--texto-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.cajero__totales {
+  margin: 0 0 20px;
+  display: grid;
+  gap: 6px;
+  max-width: 320px;
+  margin-left: auto;
+}
+
+.cajero__totales div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.cajero__totales dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cajero__total-final dt,
+.cajero__total-final dd {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--rojo-dark);
+}
+
+.cajero__pago {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 0 16px;
+}
+
+.cajero__pago legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.cajero__metodos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cajero__metodo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 2px solid var(--borde);
+  border-radius: 12px;
+  background: var(--t-bg-ffffff, #fff);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: var(--texto-muted);
+}
+
+.cajero__metodo--activo {
+  border-color: var(--rojo);
+  color: var(--rojo-dark);
+  background: var(--rojo-light);
+}
+
+.cajero__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cajero__campo label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cajero__campo input {
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  font: inherit;
+  max-width: 260px;
+}
+
+.cajero__cambio {
+  font-weight: 700;
+  color: var(--verde);
+  margin: 0;
+}
+
+.cajero__error-campo {
+  font-weight: 600;
+  color: var(--rojo-dark);
+  margin: 0;
+}
+
+.cajero__alerta {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.cajero__alerta--error {
+  background: var(--rojo-light);
+  color: var(--rojo-dark);
+}
+
+.cajero__alerta--ok {
+  background: var(--verde-light);
+  color: var(--verde);
+  font-weight: 600;
+}
+
+.cajero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--borde);
+  background: var(--t-bg-ffffff, #fff);
+  color: var(--texto);
+}
+
+.cajero__btn--primario {
+  background: var(--rojo);
+  border-color: var(--rojo);
+  color: #fff;
+}
+
+.cajero__btn--primario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cajero__btn--grande {
+  width: 100%;
+  justify-content: center;
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.cajero__acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+@media (max-width: 860px) {
+  .cajero__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cajero__lista {
+    max-height: none;
+  }
+}
+
+@media print {
+  .cajero > :not(.cajero__main),
+  .no-print,
+  .cajero__lista {
+    display: none !important;
+  }
+
+  .cajero,
+  .cajero__layout,
+  .cajero__detalle {
+    display: block;
+    background: var(--t-bg-ffffff, #fff);
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+}

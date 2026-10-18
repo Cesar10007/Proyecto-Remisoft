@@ -1,0 +1,158 @@
+/* Modo oscuro. Generado a partir de los colores del proyecto: cada token tiene el valor claro
+   como respaldo en su uso y aqui se define el valor oscuro. Solo aplica con html[data-theme='dark']. */
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #151210;
+  --bg-card: #201b18;
+  --texto: #f2ece7;
+  --texto-muted: #b9aca3;
+  --borde: rgba(255, 255, 255, 0.10);
+  --sombra: 0 2px 24px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --rojo-light: #3a1f16;
+  --amarillo-light: #3a2e14;
+  --verde-light: #15332a;
+  background: var(--bg);
+  --t-bg-dcfce7: #193e26;
+  --t-bg-ebe9e7: #24201e;
+  --t-bg-efe8e2: #26211c;
+  --t-bg-f0ebe5: #26221d;
+  --t-bg-f1eae6: #26201c;
+  --t-bg-f2ece8: #26201d;
+  --t-bg-f3efed: #24201e;
+  --t-bg-f4efe9: #27221c;
+  --t-bg-f5f1ef: #25201d;
+  --t-bg-f7f2ee: #27201b;
+  --t-bg-f8eee9: #372820;
+  --t-bg-f8f4f1: #27201c;
+  --t-bg-f8f9fa: #1e2124;
+  --t-bg-f9f5f0: #352c22;
+  --t-bg-fbd0d0: #3e1919;
+  --t-bg-fcfaf8: #342b23;
+  --t-bg-fde8e8: #3e1919;
+  --t-bg-fdecea: #3d1d19;
+  --t-bg-fdfaf7: #382b1e;
+  --t-bg-fee2e2: #3f1818;
+  --t-bg-ffe0d1: #3f2518;
+  --t-bg-ffebe4: #3f2218;
+  --t-bg-fff0e8: #3f2518;
+  --t-bg-fff8f7: #3f1d18;
+  --t-bg-ffffff: #24201e;
+  --t-bg-rgba_240_237_237_0_5: rgba(36, 32, 30, 0.50);
+  --t-bg-rgba_252_249_248_0_8: rgba(52, 39, 35, 0.80);
+  --t-bg-rgba_252_249_248_0_9: rgba(52, 39, 35, 0.90);
+  --t-bg-rgba_253_250_247_0_88: rgba(56, 43, 30, 0.88);
+  --t-bg-rgba_253_250_247_0_92: rgba(56, 43, 30, 0.92);
+  --t-bg-rgba_253_250_247_88: rgba(56, 43, 30, 0.88);
+  --t-bg-rgba_255_255_255_0_06: rgba(36, 32, 30, 0.06);
+  --t-bg-rgba_255_255_255_0_1: rgba(36, 32, 30, 0.10);
+  --t-brd-d8c9c1: #433c38;
+  --t-brd-d9cbc2: #433c38;
+  --t-brd-dee2e6: #423c38;
+  --t-brd-ebe4df: #433c38;
+  --t-brd-eee2db: #463b34;
+  --t-brd-eee5df: #453c36;
+  --t-brd-efc4c0: #4c312f;
+  --t-brd-f0ebe7: #433d38;
+  --t-brd-f5c4b3: #50342b;
+  --t-brd-rgba_255_255_255_0_1: #423c38;
+  --t-txt-0f6e56: #99e5d2;
+  --t-txt-166534: #9ae6b7;
+  --t-txt-299b78: #67d7b5;
+  --t-txt-2a1700: #f4e6d5;
+  --t-txt-332a25: #d7cec8;
+  --t-txt-4c4039: #c5b9b2;
+  --t-txt-574b44: #bbafa8;
+  --t-txt-5c4d45: #baaba3;
+  --t-txt-625c58: #a9a39f;
+  --t-txt-6b4200: #e9cfa6;
+  --t-txt-6c757d: #979fa5;
+  --t-txt-6e625a: #a89c94;
+  --t-txt-766a62: #a79c95;
+  --t-txt-854f0b: #e2bc8b;
+  --t-txt-991b1b: #dc7171;
+  --t-txt-9a5e10: #ddb178;
+  --t-txt-9c421f: #da8b6c;
+  --t-txt-9f3f18: #db8e6f;
+  --t-txt-a30000: #df7d7d;
+  --t-txt-a52626: #d86464;
+  --t-txt-a53f17: #da8b6b;
+  --t-txt-a94722: #d88464;
+  --t-txt-b64646: #c97373;
+  --t-txt-b7791f: #d8a964;
+  --t-txt-ba7517: #d8a764;
+  --t-txt-e79b18: #d8ae64;
+  --t-txt-rgba_88_66_59_0_4: rgba(196, 174, 167, 0.40);
+  --t-txt-rgba_88_66_59_0_5: rgba(196, 174, 167, 0.50);
+  --t-txt-rgba_88_66_59_0_6: rgba(196, 174, 167, 0.60);
+  /* Variables de contenedor, tambien en la raiz: algunas paginas no usan la clase .wa-wrapper/.rd-wrapper/.sa-wrapper. */
+  --wa-primary-light: #3f2118;
+  --wa-secondary-light: #3f2c18;
+  --wa-bg: #342723;
+  --wa-surface: #24201e;
+  --wa-surface-low: #24201e;
+  --wa-surface-mid: #24201e;
+  --wa-surface-high: #24201e;
+  --wa-text: #dfdede;
+  --wa-text-muted: #c4aea7;
+  --rd-primary-soft: #3a251d;
+  --rd-secondary-soft: #3c2f1b;
+  --rd-success-soft: #21362f;
+  --rd-bg: #382b1e;
+  --rd-card: #24201e;
+  --rd-border: rgba(255, 255, 255, 0.08);
+  --rd-text: #e0e0e0;
+  --rd-text-muted: #a7a6a2;
+  --sa-bg: #342723;
+  --sa-surface: #24201e;
+  --sa-surface-low: #24201e;
+  --sa-surface-high: #24201e;
+  --sa-surface-highest: #24201e;
+  --sa-text: #dfdede;
+  --sa-text-muted: #c4aea7;
+  --t-bg-e1f5ee: #21362f;
+  --t-bg-f0ebe7: #25211d;
+  --t-bg-faeeda: #3c2f1b;
+  --t-txt-1d9e75: #6cdab7;
+  --t-txt-c24732: #d77665;
+  --t-bg-dbeafe: #18293f;
+  --t-bg-ede5dc: #26211c;
+  --t-bg-f2ece6: #26211c;
+  --t-bg-f5ede7: #342a22;
+  --t-bg-faf6f2: #352b22;
+  --t-brd-bbf0dc: #2e4d41;
+  --t-brd-f7c2b5: #50322b;
+  --t-brd-fde5bc: #50422b;
+  --t-txt-1e40af: #647fd8;
+}
+
+html[data-theme='dark'] .bg-white { background-color: var(--bg-card); }
+
+/* --rojo-dark se usa como texto (logo, enlaces) y como fondo de hover de botones: solo se aclara el texto. */
+html[data-theme='dark'] .text-\[var\(--rojo-dark\)\] { color: #f4a183; }
+html[data-theme='dark'] .nav-logo { color: #f4a183; }
+
+html[data-theme='dark'] .wa-wrapper { --wa-primary-light: #3f2118; }
+html[data-theme='dark'] .wa-wrapper { --wa-secondary-light: #3f2c18; }
+html[data-theme='dark'] .wa-wrapper { --wa-bg: #342723; }
+html[data-theme='dark'] .wa-wrapper { --wa-surface: #24201e; }
+html[data-theme='dark'] .wa-wrapper { --wa-surface-low: #24201e; }
+html[data-theme='dark'] .wa-wrapper { --wa-surface-mid: #24201e; }
+html[data-theme='dark'] .wa-wrapper { --wa-surface-high: #24201e; }
+html[data-theme='dark'] .wa-wrapper { --wa-text: #dfdede; }
+html[data-theme='dark'] .wa-wrapper { --wa-text-muted: #c4aea7; }
+html[data-theme='dark'] .rd-wrapper { --rd-primary-soft: #3a251d; }
+html[data-theme='dark'] .rd-wrapper { --rd-secondary-soft: #3c2f1b; }
+html[data-theme='dark'] .rd-wrapper { --rd-success-soft: #21362f; }
+html[data-theme='dark'] .rd-wrapper { --rd-bg: #382b1e; }
+html[data-theme='dark'] .rd-wrapper { --rd-card: #24201e; }
+html[data-theme='dark'] .rd-wrapper { --rd-border: rgba(255, 255, 255, 0.08); }
+html[data-theme='dark'] .rd-wrapper { --rd-text: #e0e0e0; }
+html[data-theme='dark'] .rd-wrapper { --rd-text-muted: #a7a6a2; }
+html[data-theme='dark'] .sa-wrapper { --sa-bg: #342723; }
+html[data-theme='dark'] .sa-wrapper { --sa-surface: #24201e; }
+html[data-theme='dark'] .sa-wrapper { --sa-surface-low: #24201e; }
+html[data-theme='dark'] .sa-wrapper { --sa-surface-high: #24201e; }
+html[data-theme='dark'] .sa-wrapper { --sa-surface-highest: #24201e; }
+html[data-theme='dark'] .sa-wrapper { --sa-text: #dfdede; }
+html[data-theme='dark'] .sa-wrapper { --sa-text-muted: #c4aea7; }

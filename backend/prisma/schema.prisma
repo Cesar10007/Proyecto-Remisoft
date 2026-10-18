@@ -331,6 +331,12 @@ model lote_ingrediente {
   @@index([id_ingrediente], map: "id_ingrediente")
 }
 
+model mesa {
+  id_mesa   Int  @id @default(autoincrement())
+  numero    Int  @unique(map: "mesa_numero_key")
+  capacidad Int? @default(4)
+}
+
 model migrations {
   id        Int    @id @default(autoincrement()) @db.UnsignedInt
   migration String @db.VarChar(255)
