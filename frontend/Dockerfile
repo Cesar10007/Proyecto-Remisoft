@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # ---- Stage: base ----
 FROM node:20.19.4-bookworm-slim AS base
 LABEL stage=base
