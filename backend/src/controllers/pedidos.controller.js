@@ -1,6 +1,18 @@
 import prisma from '../config/prisma.js';
 import { parseId, validateString } from '../utils/validation.js';
 
+// Estados que un usuario puede fijar manualmente desde la API.
+// CERRADO queda fuera a propósito: solo lo asigna el flujo de cobro,
+// para que nadie pueda "cerrar" un pedido sin pasar por la facturación.
+const ESTADOS_EDITABLES = new Set([
+  'ABIERTO',
+  'EN_PROCESO',
+  'EN_PREPARACION',
+  'LISTO',
+  'ENTREGADO',
+  'CANCELADO',
+]);
+
 function isEmpty(value) {
   return value === undefined || value === null || value === '';
 }
@@ -41,19 +53,25 @@ function formatPedido(pedido) {
 }
 
 function validarPedido(body, { creating = false } = {}) {
-  const idCliente = parseNullableInt(body.id_cliente, 'id_cliente');
+  const entrada = body ?? {};
+
+  // Solo se tocan los campos que el cliente realmente envía.
+  // Así un PUT parcial no borra datos que no venían en el body.
+  const tiene = (campo) => Object.prototype.hasOwnProperty.call(entrada, campo);
+
+  const idCliente = parseNullableInt(entrada.id_cliente, 'id_cliente');
   if (idCliente.error) return { error: idCliente.error };
 
-  const idMesero = parseNullableInt(body.id_mesero, 'id_mesero');
+  const idMesero = parseNullableInt(entrada.id_mesero, 'id_mesero');
   if (idMesero.error) return { error: idMesero.error };
 
-  const mesaNum = parseNullableInt(body.Mesa_num, 'Mesa_num');
+  const mesaNum = parseNullableInt(entrada.Mesa_num, 'Mesa_num');
   if (mesaNum.error) return { error: mesaNum.error };
 
   const validations = [
-    validateString(body.estado, 'estado', 20),
-    validateString(body.Tipo_pedido, 'Tipo_pedido', 20),
-    validateString(body.notas, 'notas', 500),
+    validateString(entrada.estado, 'estado', 20),
+    validateString(entrada.Tipo_pedido, 'Tipo_pedido', 20),
+    validateString(entrada.notas, 'notas', 500),
   ];
 
   const error = validations.find(Boolean);
@@ -62,16 +80,35 @@ function validarPedido(body, { creating = false } = {}) {
     return { error };
   }
 
-  return {
-    data: {
-      id_cliente: idCliente.value,
-      id_mesero: idMesero.value,
-      estado: cleanString(body.estado) || (creating ? 'ABIERTO' : null),
-      Tipo_pedido: cleanString(body.Tipo_pedido) || null,
-      Mesa_num: mesaNum.value,
-      notas: cleanString(body.notas) || null,
-    },
-  };
+  const estadoSolicitado = cleanString(entrada.estado);
+
+  if (estadoSolicitado && !ESTADOS_EDITABLES.has(estadoSolicitado)) {
+    return {
+      error: `El estado "${estadoSolicitado}" no es válido.`,
+    };
+  }
+
+  const data = {};
+
+  if (creating || tiene('id_cliente')) data.id_cliente = idCliente.value;
+  if (creating || tiene('id_mesero')) data.id_mesero = idMesero.value;
+  if (creating || tiene('Mesa_num')) data.Mesa_num = mesaNum.value;
+  if (creating || tiene('Tipo_pedido')) {
+    data.Tipo_pedido = cleanString(entrada.Tipo_pedido) || null;
+  }
+  if (creating || tiene('notas')) {
+    data.notas = cleanString(entrada.notas) || null;
+  }
+
+  // Regla de negocio: el pedido nace siempre ABIERTO (réplica de
+  // sp_crear_pedido). En edición solo se cambia el estado si viene en el body.
+  if (creating) {
+    data.estado = 'ABIERTO';
+  } else if (estadoSolicitado) {
+    data.estado = estadoSolicitado;
+  }
+
+  return { data };
 }
 
 // GET /api/pedidos
@@ -131,7 +168,9 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.pedido.create({ data });
+    // Doble seguro: aunque validarPedido ya fuerza ABIERTO, se vuelve a
+    // fijar aquí para que el cliente nunca pueda elegir el estado inicial.
+    await prisma.pedido.create({ data: { ...data, estado: 'ABIERTO' } });
 
     res.status(201).json({ message: 'Pedido creado' });
   } catch (err) {
@@ -153,6 +192,22 @@ export async function actualizar(req, res, next) {
     if (!id) {
       return res.status(422).json({
         message: 'El id del pedido debe ser un número entero válido',
+      });
+    }
+
+    // Regla de negocio: solo se modifica un pedido ABIERTO.
+    const pedidoActual = await prisma.pedido.findUnique({
+      where: { id_pedido: id },
+      select: { estado: true },
+    });
+
+    if (!pedidoActual) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+
+    if (pedidoActual.estado !== 'ABIERTO') {
+      return res.status(409).json({
+        message: `El pedido está en estado ${pedidoActual.estado} y solo se puede modificar si está ABIERTO.`,
       });
     }
 
@@ -194,6 +249,22 @@ export async function eliminar(req, res, next) {
     if (!id) {
       return res.status(422).json({
         message: 'El id del pedido debe ser un número entero válido',
+      });
+    }
+
+    // Regla de negocio: solo se cancela un pedido ABIERTO.
+    const pedidoActual = await prisma.pedido.findUnique({
+      where: { id_pedido: id },
+      select: { estado: true },
+    });
+
+    if (!pedidoActual) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+
+    if (pedidoActual.estado !== 'ABIERTO') {
+      return res.status(409).json({
+        message: `El pedido está en estado ${pedidoActual.estado} y no se puede cancelar.`,
       });
     }
 
