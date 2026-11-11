@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { verificarStockIngredientes } from '../services/inventario.service.js';
+import { registrarAuditoria } from '../utils/auditoria.js';
 
 const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
 const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
@@ -257,6 +258,20 @@ export async function ajuste(req, res, next) {
           observaciones: motivo,
         },
       });
+    });
+
+    // RNF-001.8 — ajuste manual fuera del flujo automático,
+    // con id_usuario (tomado del JWT) y motivo.
+    registrarAuditoria({
+      evento: 'INVENTARIO_AJUSTE_MANUAL',
+      id_usuario: idUsuario,
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      motivo: `${tipo} ${cantidad} de ${ingrediente.nombre ?? idIngrediente}: ${motivo}`,
+      extra: {
+        id_movimiento: movimiento.id_movimiento,
+        id_ingrediente: idIngrediente,
+      },
     });
 
     return res.status(201).json({
