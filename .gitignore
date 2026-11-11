@@ -43,3 +43,6 @@ Thumbs.db
 # Backups y dumps sueltos en backend/ - nunca deben subirse
 /backend/*.sql
 /backend/backup_*
+
+# Logs de auditoría generados en runtime
+backend/logs/

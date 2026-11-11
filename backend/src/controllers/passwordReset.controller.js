@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
 import { sendPasswordResetEmail } from '../services/mail.service.js';
+import { registrarAuditoria, enmascararEmail } from '../utils/auditoria.js';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 const BCRYPT_ROUNDS = 12;
@@ -44,6 +45,17 @@ export async function sendResetLink(req, res, next) {
     const user = await prisma.usuario.findUnique({
       where: { email: emailNormalizado },
       select: { id_usuario: true },
+    });
+
+    // RNF-001.8 — PASSWORD_RESET_REQUESTED (se registra exista o no la
+    // cuenta; el cliente nunca recibe esa diferencia).
+    registrarAuditoria({
+      evento: 'PASSWORD_RESET_REQUESTED',
+      id_usuario: user?.id_usuario ?? null,
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      motivo: user ? 'CUENTA_REGISTRADA' : 'CUENTA_NO_REGISTRADA',
+      extra: { email: enmascararEmail(emailNormalizado) },
     });
 
     /*
@@ -142,15 +154,26 @@ export async function resetPassword(req, res, next) {
 
     const contrasena_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    await prisma.$transaction([
+    // El select evita devolver el hash y nos da el id para la auditoría.
+    const [usuarioActualizado] = await prisma.$transaction([
       prisma.usuario.update({
         where: { email: emailNormalizado },
         data: { contrasena_hash },
+        select: { id_usuario: true },
       }),
       prisma.password_reset_tokens.delete({
         where: { email: emailNormalizado },
       }),
     ]);
+
+    // RNF-001.8 — PASSWORD_CHANGED con id_usuario.
+    registrarAuditoria({
+      evento: 'PASSWORD_CHANGED',
+      id_usuario: usuarioActualizado.id_usuario,
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      motivo: 'RESET_EXITOSO',
+    });
 
     return res.status(200).json({
       message: 'Contraseña actualizada correctamente.',
