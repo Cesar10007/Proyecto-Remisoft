@@ -1,4 +1,8 @@
 import prisma from '../config/prisma.js';
+import {
+  verificarStockSuficiente,
+  registrarSalidasPorConsumo,
+} from '../services/inventario.service.js';
 
 // Flujo de cobro del tablero Cajero (RF-003 · HU-009, HU-011, HU-012).
 // Al cerrar una cuenta se crea la factura, sus ítems, el pago y el movimiento
@@ -158,6 +162,17 @@ export async function cerrarCuenta(req, res, next) {
         };
       }
 
+      // Regla de negocio: no se cobra si no hay stock suficiente de los
+      // ingredientes que consume la receta (réplica de la validación de
+      // sp_registrar_movimiento_inventario).
+      const { requerimientos } = await verificarStockSuficiente(
+        tx,
+        detalles.map((d) => ({
+          id_producto: d.id_producto,
+          cantidad: Number(d.Cantidad ?? 0),
+        })),
+      );
+
       const { subtotal, iva, total } = calcularTotales(detalles);
 
       let montoRecibido = total;
@@ -257,6 +272,13 @@ export async function cerrarCuenta(req, res, next) {
       await tx.pedido.update({
         where: { id_pedido: idPedido },
         data: { estado: 'CERRADO' },
+      });
+
+      // Descuento de inventario por consumo (una sola vez por cobro).
+      await registrarSalidasPorConsumo(tx, requerimientos, {
+        id_usuario: idUsuario,
+        origen_tipo: 'VENTA',
+        origen_id: factura.id_factura,
       });
 
       return {

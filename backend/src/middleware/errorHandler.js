@@ -26,6 +26,15 @@ export default function errorHandler(err, req, res, next) {
     });
   }
 
+  if (err.code === 'STOCK_INSUFICIENTE') {
+    return res.status(409).json({
+      success: false,
+      message: err.message,
+      code: 'STOCK_INSUFICIENTE',
+      detalles: err.detalles ?? [],
+    });
+  }
+
   if (err.code === 'P2025') {
     return res.status(404).json({
       success: false,

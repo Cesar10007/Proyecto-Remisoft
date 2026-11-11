@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { verificarStockIngredientes } from '../services/inventario.service.js';
 
 const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
 const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
@@ -166,6 +167,102 @@ export async function stockBajo(req, res, next) {
       data,
       count: data.length,
       message: `${data.length} ingredientes con stock bajo.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+const TIPOS_AJUSTE = new Set(['ENTRADA', 'SALIDA']);
+
+/**
+ * POST /api/inventario/ajuste
+ * Ajuste manual de inventario fuera del flujo automático.
+ * - El usuario sale del JWT (req.user), nunca del body.
+ * - El motivo es obligatorio.
+ * - Si es SALIDA, se valida stock suficiente antes de registrar.
+ */
+export async function ajuste(req, res, next) {
+  try {
+    const idIngrediente = parseIngredientId(req.body?.id_ingrediente);
+    const tipo =
+      typeof req.body?.tipo === 'string'
+        ? req.body.tipo.trim().toUpperCase()
+        : '';
+    const motivo =
+      typeof req.body?.motivo === 'string' ? req.body.motivo.trim() : '';
+    const cantidad = Number(req.body?.cantidad);
+    const idUsuario = req.user?.id_usuario ?? null;
+
+    if (!idIngrediente) {
+      return res.status(422).json({
+        success: false,
+        message: 'id_ingrediente debe ser un entero positivo.',
+        code: 'INVALID_INGREDIENTE_ID',
+      });
+    }
+
+    if (!TIPOS_AJUSTE.has(tipo)) {
+      return res.status(422).json({
+        success: false,
+        message: 'El tipo de ajuste debe ser ENTRADA o SALIDA.',
+        code: 'INVALID_TIPO',
+      });
+    }
+
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      return res.status(422).json({
+        success: false,
+        message: 'La cantidad debe ser un número mayor a 0.',
+        code: 'INVALID_CANTIDAD',
+      });
+    }
+
+    if (motivo.length < 5 || motivo.length > 1000) {
+      return res.status(422).json({
+        success: false,
+        message: 'El motivo es obligatorio (entre 5 y 1000 caracteres).',
+        code: 'INVALID_MOTIVO',
+      });
+    }
+
+    const ingrediente = await prisma.ingrediente.findUnique({
+      where: { id_ingrediente: idIngrediente },
+      select: { id_ingrediente: true, nombre: true },
+    });
+
+    if (!ingrediente) {
+      return res.status(404).json({
+        success: false,
+        message: 'El ingrediente no existe.',
+        code: 'INGREDIENTE_NOT_FOUND',
+      });
+    }
+
+    const movimiento = await prisma.$transaction(async (tx) => {
+      if (tipo === 'SALIDA') {
+        await verificarStockIngredientes(tx, [
+          { id_ingrediente: idIngrediente, requerido: cantidad },
+        ]);
+      }
+
+      return tx.inventario_mov.create({
+        data: {
+          id_ingrediente: idIngrediente,
+          id_usuario: idUsuario,
+          fecha_hora: new Date(),
+          tipo_movimiento: tipo,
+          cantidad,
+          origen_tipo: 'AJUSTE',
+          observaciones: motivo,
+        },
+      });
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Ajuste de inventario registrado.',
+      data: movimiento,
     });
   } catch (error) {
     next(error);
