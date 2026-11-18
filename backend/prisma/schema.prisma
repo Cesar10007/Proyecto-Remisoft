@@ -24,13 +24,21 @@ model restaurante {
   proveedor        proveedor[]
   lote_ingrediente lote_ingrediente[]
   atenciones_mesa  mesa_atencion[]
+  productos        Producto[]
+  ingredientes     Ingrediente[]
+  clientes         Cliente[]
+  analisis         IA[]
+  categorias       categoria_productos[]
+  mesas            mesa[]
 }
 
 model Cliente {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_cliente      Int       @id @default(autoincrement())
   Nombre          String?   @db.VarChar(50)
   Apellido        String?   @db.VarChar(50)
-  Email           String?   @unique(map: "Email") @db.VarChar(60)
+  Email           String? @db.VarChar(60)
   Telefono        String?   @db.VarChar(20)
   Direccion       String?   @db.VarChar(120)
   coordenadas_gps String?   @db.VarChar(80)
@@ -38,6 +46,8 @@ model Cliente {
   Num_documento   String?   @db.VarChar(30)
   fecha_registro  DateTime? @default(now()) @db.DateTime(0)
   pedido          pedido[]
+
+  @@unique([id_restaurante, Email], map: "cliente_sede_email_key")
 }
 
 model Detalle_pedido {
@@ -89,6 +99,8 @@ model Factura_item {
 }
 
 model IA {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_IA                     Int              @id @default(autoincrement())
   Fecha_generacion          DateTime?        @default(now()) @db.DateTime(0)
   Tipo_prediccion           String?          @db.VarChar(50)
@@ -99,6 +111,7 @@ model IA {
   periodo_fin               DateTime?        @db.Date
   IA_INGREDIENTE            IA_INGREDIENTE[]
   IA_PRODUCTO               IA_PRODUCTO[]
+  @@index([id_restaurante], map: "idx_ia_restaurante")
 }
 
 model IA_INGREDIENTE {
@@ -131,6 +144,8 @@ model IA_PRODUCTO {
 }
 
 model Ingrediente {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_ingrediente        Int                     @id @default(autoincrement())
   nombre                String?                 @db.VarChar(50)
   descripcion           String?                 @db.VarChar(500)
@@ -143,9 +158,12 @@ model Ingrediente {
   inventario_mov        inventario_mov[]
   lote_ingrediente      lote_ingrediente[]
   proveedor_ingrediente proveedor_ingrediente[]
+  @@index([id_restaurante], map: "idx_ingrediente_restaurante")
 }
 
 model Producto {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_producto        Int                  @id @default(autoincrement())
   Nombre             String?              @db.VarChar(50)
   Descripcion        String?              @db.VarChar(500)
@@ -160,14 +178,18 @@ model Producto {
   Receta             Receta[]
 
   @@index([id_categoria], map: "id_categoria")
+  @@index([id_restaurante], map: "idx_producto_restaurante")
 }
 
 model categoria_productos {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_categoria Int        @id @default(autoincrement())
-  nombre       String     @unique @db.VarChar(100)
+  nombre       String     @db.VarChar(100)
   descripcion  String?    @db.VarChar(255)
   productos    Producto[]
 
+  @@unique([id_restaurante, nombre], map: "categoria_sede_nombre_key")
   @@map("categoria_productos")
 }
 
@@ -323,7 +345,7 @@ model lote_ingrediente {
   id_lote           Int              @id @default(autoincrement())
   id_restaurante    Int?
   id_ingrediente    Int
-  numero_lote       String?          @unique(map: "numero_lote") @db.VarChar(40)
+  numero_lote       String?          @db.VarChar(40)
   fecha_ingreso     DateTime?        @db.Date
   fecha_vencimiento DateTime?        @db.Date
   stock_inicial     Decimal?         @db.Decimal(10, 3)
@@ -335,19 +357,24 @@ model lote_ingrediente {
   inventario_mov    inventario_mov[]
   Ingrediente       Ingrediente      @relation(fields: [id_ingrediente], references: [id_ingrediente], onUpdate: Restrict, map: "lote_ingrediente_ibfk_1")
 
+  @@unique([id_restaurante, numero_lote], map: "lote_sede_numero_key")
   @@index([id_restaurante], map: "idx_lote_ingrediente_restaurante")
   @@index([id_ingrediente], map: "id_ingrediente")
 }
 
 model mesa {
+  id_restaurante Int?
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   id_mesa    Int             @id @default(autoincrement())
-  numero     Int             @unique(map: "mesa_numero_key")
+  numero     Int
   capacidad  Int?            @default(4)
   atenciones mesa_atencion[]
+
+  @@unique([numero, id_restaurante], map: "mesa_numero_sede_key")
+  @@index([id_restaurante], map: "idx_mesa_restaurante")
 }
 
-// Personas sentadas que aún no han hecho su primer pedido. El número de mesa
-// es compartido por las sedes; la atención, como la cuenta, pertenece a una sede.
+// Personas sentadas que aún no han hecho su primer pedido en esta sede.
 model mesa_atencion {
   id_atencion    Int          @id @default(autoincrement())
   numero         Int
@@ -355,7 +382,7 @@ model mesa_atencion {
   id_mesero      Int
   comensales     Int
   desde          DateTime     @default(now()) @db.DateTime(0)
-  mesa           mesa         @relation(fields: [numero], references: [numero], onDelete: Restrict, onUpdate: Restrict)
+  mesa           mesa?        @relation(fields: [numero, id_restaurante], references: [numero, id_restaurante], map: "mesa_atencion_mesa_sede_fkey", onDelete: Restrict, onUpdate: Restrict)
   restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
   mesero         usuario      @relation(fields: [id_mesero], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict)
 
@@ -585,6 +612,7 @@ model solicitud_registro {
   telefono          String?   @db.VarChar(20)
   contrasena_hash   String    @db.VarChar(255)
   id_rol_solicitado Int
+  nombre_establecimiento String? @db.VarChar(100)
   id_restaurante    Int?
   estado            String    @default("PENDIENTE") @db.VarChar(20)
   motivo_rechazo    String?   @db.VarChar(500)

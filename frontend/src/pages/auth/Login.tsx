@@ -1,8 +1,7 @@
+import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
 import api from '../../api/axios'
-import { setCredentials } from '../../store/authSlice'
 import { useAuth } from '../../store/hooks'
 import Button from '../../components/common/Button'
 import { InputField } from '../../components/common/InputField'
@@ -19,7 +18,6 @@ function Login({ onClose }: LoginProps) {
   const [loading, setLoading] = useState(false)
 
   const navigate = useNavigate()
-  const dispatch = useDispatch()
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,14 +33,6 @@ function Login({ onClose }: LoginProps) {
 
       const { token, user, rol } = response.data
       const rolNormalizado = String(rol).toUpperCase()
-
-      dispatch(
-        setCredentials({
-          token,
-          rol: rolNormalizado,
-          user,
-        }),
-      )
 
       login(token, rolNormalizado, user)
 
@@ -61,13 +51,14 @@ function Login({ onClose }: LoginProps) {
       } else {
         navigate('/')
       }
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err) {
+      const response = isAxiosError<{ message?: string }>(err) ? err.response : undefined
+      if (response?.status === 401) {
         setError('Credenciales incorrectas')
-      } else if (err.response?.status === 422) {
+      } else if (response?.status === 422) {
         setError('Revisa los datos ingresados')
-      } else if (err.response?.status === 403) {
-        setError('El usuario está inactivo')
+      } else if (response?.status === 403) {
+        setError(response?.data?.message ?? 'Acceso denegado')
       } else {
         setError('Error al conectar con el servidor')
       }

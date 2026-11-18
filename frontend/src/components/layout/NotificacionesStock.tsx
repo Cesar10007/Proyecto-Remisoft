@@ -82,7 +82,7 @@ export default function NotificacionesStock() {
             <p className="text-[0.8rem] text-[var(--texto-muted)]">Cargando...</p>
           ) : alertas.length === 0 ? (
             <p className="text-[0.8rem] text-[var(--texto-muted)]">
-              No hay ingredientes con lotes bajo el mínimo.
+              No hay ingredientes en alerta para este establecimiento.
             </p>
           ) : (
             <ul className="max-h-72 space-y-2.5 overflow-y-auto">

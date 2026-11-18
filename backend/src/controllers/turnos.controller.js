@@ -1,10 +1,15 @@
-import { deSede } from '../utils/salon.js';
+import { relacionDeSede } from '../utils/restaurante.js';
+import { ErrorSalon } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
 
 const turnoInclude = {
   caja: true,
-  usuario: true,
+  usuario: { select: { id_usuario: true, nombre: true, apellido: true, id_restaurante: true } },
 };
+
+function presentarTurno(t) {
+  return { ...t, caja: relacionDeSede(t.caja, t.id_restaurante), usuario: relacionDeSede(t.usuario, t.id_restaurante) };
+}
 
 function parseId(value) {
   const id = Number.parseInt(value, 10);
@@ -14,6 +19,7 @@ function parseId(value) {
 export async function index(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
+      where: req.sede,
       include: turnoInclude,
       orderBy: {
         fecha_apertura: 'desc',
@@ -22,7 +28,7 @@ export async function index(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turnos,
+      data: turnos.map(presentarTurno),
       count: turnos.length,
     });
   } catch (error) {
@@ -44,6 +50,7 @@ export async function show(req, res, next) {
 
     const turno = await prisma.turno_caja.findUnique({
       where: {
+        ...req.sede,
         id_turno: idTurno,
       },
       include: turnoInclude,
@@ -59,10 +66,19 @@ export async function show(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
+  }
+}
+
+async function validarReferenciasTurno(sede, idCaja, idCajero) {
+  if (idCaja !== undefined && !(await prisma.caja.count({ where: { ...sede, id_caja: Number(idCaja) } }))) {
+    throw new ErrorSalon(422, 'La caja no pertenece al establecimiento.');
+  }
+  if (idCajero !== undefined && !(await prisma.usuario.count({ where: { ...sede, id_usuario: Number(idCajero) } }))) {
+    throw new ErrorSalon(422, 'El cajero no pertenece al establecimiento.');
   }
 }
 
@@ -109,8 +125,10 @@ export async function store(req, res, next) {
       });
     }
 
+    await validarReferenciasTurno(req.sede, id_caja, id_usuario_cajero);
     const turno = await prisma.turno_caja.create({
       data: {
+        ...req.sede,
         id_caja: Number.parseInt(id_caja, 10),
         id_usuario_cajero: Number.parseInt(id_usuario_cajero, 10),
         fecha_apertura: fechaApertura,
@@ -140,7 +158,7 @@ export async function store(req, res, next) {
     res.status(201).json({
       success: true,
       message: 'Turno creado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -235,8 +253,10 @@ export async function update(req, res, next) {
       data.estado = estado;
     }
 
+    await validarReferenciasTurno(req.sede, id_caja, id_usuario_cajero);
     const turno = await prisma.turno_caja.update({
       where: {
+        ...req.sede,
         id_turno: idTurno,
       },
       data,
@@ -246,7 +266,7 @@ export async function update(req, res, next) {
     res.status(200).json({
       success: true,
       message: 'Actualizado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -267,6 +287,7 @@ export async function destroy(req, res, next) {
 
     await prisma.turno_caja.delete({
       where: {
+        ...req.sede,
         id_turno: idTurno,
       },
     });
@@ -309,7 +330,7 @@ export async function cerrar(req, res, next) {
     const notasCierre = notas ? String(notas).trim().slice(0, 500) || null : null;
 
     try {
-      await prisma.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre})`;
+      await prisma.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre}, ${req.sede.id_restaurante})`;
     } catch (error) {
       const mensaje = String(error?.message ?? '');
       if (mensaje.includes('no existe')) {
@@ -330,14 +351,14 @@ export async function cerrar(req, res, next) {
     }
 
     const turno = await prisma.turno_caja.findUnique({
-      where: { id_turno: idTurno },
+      where: { id_turno: idTurno, ...req.sede },
       include: turnoInclude,
     });
 
     res.status(200).json({
       success: true,
       message: 'Turno cerrado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -348,8 +369,9 @@ export async function cerrar(req, res, next) {
 export async function aperturas(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
-      where: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
+      where: req.sede,
       select: {
+        id_restaurante: true,
         id_turno: true,
         fecha_apertura: true,
         fecha_cierre: true,
@@ -359,8 +381,8 @@ export async function aperturas(req, res, next) {
         diferencia: true,
         notas: true,
         estado: true,
-        caja: { select: { nombre: true } },
-        usuario: { select: { nombre: true, apellido: true } },
+        caja: { select: { nombre: true, id_restaurante: true } },
+        usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
       },
       orderBy: {
         fecha_apertura: 'desc',
@@ -369,7 +391,7 @@ export async function aperturas(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turnos,
+      data: turnos.map(presentarTurno),
       count: turnos.length,
     });
   } catch (error) {
@@ -383,7 +405,7 @@ export async function gastos(req, res, next) {
     const movimientos = await prisma.flujo_caja.findMany({
       where: {
         egresos: { gt: 0 },
-        turno_caja: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
+        turno_caja: req.sede,
       },
       select: {
         id_flujo: true,
@@ -394,9 +416,10 @@ export async function gastos(req, res, next) {
         referencia: true,
         turno_caja: {
           select: {
+            id_restaurante: true,
             fecha_apertura: true,
-            caja: { select: { nombre: true } },
-            usuario: { select: { nombre: true, apellido: true } },
+            caja: { select: { nombre: true, id_restaurante: true } },
+            usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
           },
         },
       },
@@ -407,7 +430,7 @@ export async function gastos(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: movimientos,
+      data: movimientos.map(m => ({ ...m, turno_caja: presentarTurno(m.turno_caja) })),
       count: movimientos.length,
     });
   } catch (error) {
@@ -422,8 +445,9 @@ export async function arqueos(req, res, next) {
   try {
     const [turnos, movimientos] = await Promise.all([
       prisma.turno_caja.findMany({
-        where: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
+        where: req.sede,
         select: {
+          id_restaurante: true,
           id_turno: true,
           fecha_apertura: true,
           fecha_cierre: true,
@@ -432,8 +456,8 @@ export async function arqueos(req, res, next) {
           efectivo_real: true,
           diferencia: true,
           estado: true,
-          caja: { select: { nombre: true } },
-          usuario: { select: { nombre: true, apellido: true } },
+          caja: { select: { nombre: true, id_restaurante: true } },
+          usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
         },
         orderBy: {
           fecha_apertura: 'desc',
@@ -441,7 +465,7 @@ export async function arqueos(req, res, next) {
       }),
       prisma.flujo_caja.groupBy({
         by: ['id_turno'],
-        where: req.user.rol === 'MESERO' ? { turno_caja: deSede(req.user) } : undefined,
+        where: { turno_caja: req.sede },
         _sum: { ingresos: true, egresos: true },
       }),
     ]);
@@ -466,8 +490,8 @@ export async function arqueos(req, res, next) {
         efectivo_real: t.efectivo_real === null ? null : Number(t.efectivo_real),
         diferencia: t.diferencia === null ? null : Number(t.diferencia),
         estado: t.estado,
-        caja: t.caja,
-        usuario: t.usuario,
+        caja: relacionDeSede(t.caja, t.id_restaurante),
+        usuario: relacionDeSede(t.usuario, t.id_restaurante),
         ingresos,
         egresos,
       };

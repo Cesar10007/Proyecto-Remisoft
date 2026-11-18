@@ -62,9 +62,10 @@ export async function index(req, res, next) {
     }
 
     const ingredientes = await prisma.ingrediente.findMany({
-      where: idIngrediente ? { id_ingrediente: idIngrediente } : undefined,
+      where: { ...req.sede, ...(idIngrediente ? { id_ingrediente: idIngrediente } : {}) },
       include: {
         inventario_mov: {
+          where: req.sede,
           select: {
             tipo_movimiento: true,
             cantidad: true,
@@ -110,10 +111,12 @@ export async function show(req, res, next) {
 
     const ingrediente = await prisma.ingrediente.findUnique({
       where: {
+        ...req.sede,
         id_ingrediente: idIngrediente,
       },
       include: {
         inventario_mov: {
+          where: req.sede,
           orderBy: {
             fecha_hora: 'desc',
           },
@@ -143,15 +146,16 @@ export async function show(req, res, next) {
 
 /**
  * GET /api/inventario/alertas/stock-bajo
- * Lista ingredientes con stock en lotes activos menor o igual a su mínimo.
- * Lee de vista_inventario_bajo_minimo (fuente: lote_ingrediente).
+ * Lotes de la sede + ajustes/consumos sin lote. No vuelve a sumar los movimientos ya aplicados a un lote.
  */
 export async function stockBajo(req, res, next) {
   try {
+    const idSede = req.sede.id_restaurante ?? null;
     const filas = await prisma.$queryRaw`
       SELECT id_ingrediente, ingrediente, unidad_medida, stock_minimo,
              stock_total_actual, alerta
       FROM vista_inventario_bajo_minimo
+      WHERE (${idSede} IS NULL OR id_restaurante = ${idSede})
     `;
 
     const data = filas.map((fila) => ({
@@ -228,7 +232,7 @@ export async function ajuste(req, res, next) {
     }
 
     const ingrediente = await prisma.ingrediente.findUnique({
-      where: { id_ingrediente: idIngrediente },
+      where: { id_ingrediente: idIngrediente, ...req.sede },
       select: { id_ingrediente: true, nombre: true },
     });
 
@@ -241,15 +245,16 @@ export async function ajuste(req, res, next) {
     }
 
     const movimiento = await prisma.$transaction(async (tx) => {
-      await bloquearIngredientes(tx, [idIngrediente]);
+      await bloquearIngredientes(tx, [idIngrediente], req.sede.id_restaurante);
       if (tipo === 'SALIDA') {
         await verificarStockIngredientes(tx, [
           { id_ingrediente: idIngrediente, requerido: cantidad },
-        ]);
+        ], req.sede.id_restaurante);
       }
 
       return tx.inventario_mov.create({
         data: {
+          ...req.sede,
           id_ingrediente: idIngrediente,
           id_usuario: idUsuario,
           fecha_hora: new Date(),

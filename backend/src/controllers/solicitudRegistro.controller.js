@@ -1,3 +1,4 @@
+import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
 
@@ -87,6 +88,12 @@ export async function crearSolicitud(req, res, next) {
       errores.id_restaurante = ['El restaurante no es válido.'];
     }
 
+    const nombreEstablecimiento = texto(req.body.nombre_establecimiento);
+    if (nombreEstablecimiento.length > 100) errores.nombre_establecimiento = ['Máximo 100 caracteres.'];
+    if (![2, 3, 4, 5].includes(idRol)) errores.id_rol_solicitado = ['El rol no se puede solicitar.'];
+    if (idRol !== 2 && !idRestaurante) errores.id_restaurante = ['Indica el restaurante para el personal operativo.'];
+    if (idRol === 2 && idRestaurante !== null) errores.id_restaurante = ['Al aprobar un gerente se crea un establecimiento nuevo.'];
+
     if (Object.keys(errores).length > 0) {
       return res.status(422).json({
         success: false,
@@ -129,6 +136,7 @@ export async function crearSolicitud(req, res, next) {
         email: emailNormalizado,
         telefono: texto(telefono) || null,
         contrasena_hash: await bcrypt.hash(contrasena, 12),
+        nombre_establecimiento: idRol === 2 ? nombreEstablecimiento || null : null,
         id_rol_solicitado: idRol,
         id_restaurante: idRestaurante,
       },
@@ -338,10 +346,14 @@ export async function aprobarSolicitud(req, res, next) {
         throw error;
       }
 
+      // Tampoco una solicitud antigua puede adjudicar al gerente una sede ajena.
+      const idRestaurante = solicitud.id_rol_solicitado === 2
+        ? (await crearEstablecimiento(tx, solicitud.nombre_establecimiento || `Restaurante de ${solicitud.nombre}`)).id_restaurante
+        : req.user.id_restaurante;
       const usuario = await tx.usuario.create({
         data: {
           id_rol: solicitud.id_rol_solicitado,
-          id_restaurante: solicitud.id_restaurante,
+          id_restaurante: idRestaurante,
           nombre: solicitud.nombre,
           apellido: solicitud.apellido,
           email: solicitud.email,
@@ -360,6 +372,7 @@ export async function aprobarSolicitud(req, res, next) {
       const solicitudActualizada = await tx.solicitud_registro.update({
         where: { id_solicitud: idSolicitud },
         data: {
+          id_restaurante: idRestaurante,
           estado: 'APROBADA',
           fecha_revision: new Date(),
           revisado_por: idRevisor,

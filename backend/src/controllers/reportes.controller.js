@@ -1,3 +1,4 @@
+import { CUENTA_ABIERTA } from '../utils/salon.js';
 import { Prisma } from '../generated/prisma/client.js';
 import prisma from '../config/prisma.js';
 
@@ -47,39 +48,32 @@ export async function ventasDiarias(req, res, next) {
       });
     }
 
-    // La vista global no conserva la sede. En la consulta del mesero agrupamos
-    // después de filtrar el pedido por restaurante (incluidos los pedidos históricos).
-    const esMesero = req.user.rol === 'MESERO';
-    const unirSede = Prisma.sql`JOIN pedido pe ON pe.id_pedido = f.id_pedido LEFT JOIN usuario u ON u.id_usuario = pe.id_mesero`;
-    const sede = Prisma.sql`AND COALESCE(pe.id_restaurante, u.id_restaurante) <=> ${req.user.id_restaurante}`;
+    const idSede = req.sede.id_restaurante ?? null;
+    const sede = idSede === null ? Prisma.empty : Prisma.sql`AND pe.id_restaurante = ${idSede}`;
     const diaLocal = Prisma.sql`DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00'))`;
-    const filasDia = esMesero ? await prisma.$queryRaw`
-      SELECT DATE_FORMAT(${diaLocal}, '%Y-%m-%d') AS fecha, COUNT(*) AS total_pedidos,
-             SUM(f.total + COALESCE(f.Descuento, 0)) AS ingresos_brutos, SUM(f.IVA) AS total_iva, SUM(f.Descuento) AS total_descuentos,
-             SUM(f.Propina) AS total_propinas, SUM(f.total) AS ingresos_netos
-      FROM Factura f ${unirSede} WHERE f.estado = 'PAGADA' ${sede}
-        AND ${diaLocal} BETWEEN ${desde} AND ${hasta} GROUP BY fecha ORDER BY fecha DESC
-    ` : await prisma.$queryRaw`
-      SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, total_pedidos, ingresos_brutos, total_iva,
-             total_descuentos, total_propinas, ingresos_netos
-      FROM vista_resumen_ventas_diarias
-      WHERE fecha BETWEEN ${desde} AND ${hasta}
-      ORDER BY fecha DESC
+    const filasDia = await prisma.$queryRaw`
+      SELECT DATE_FORMAT(v.fecha, '%Y-%m-%d') AS fecha, SUM(v.total_pedidos) AS total_pedidos,
+             SUM(v.ingresos_brutos) AS ingresos_brutos, SUM(v.total_iva) AS total_iva,
+             SUM(v.total_descuentos) AS total_descuentos, SUM(v.total_propinas) AS total_propinas,
+             SUM(v.ingresos_netos) AS ingresos_netos
+      FROM vista_resumen_ventas_diarias v
+      WHERE v.fecha BETWEEN ${desde} AND ${hasta} AND (${idSede} IS NULL OR v.id_restaurante = ${idSede})
+      GROUP BY v.fecha ORDER BY v.fecha DESC
     `;
 
     const topProductos = await prisma.$queryRaw`
-      SELECT p.id_producto,
-             p.Nombre AS producto,
+      SELECT dp.id_producto,
+             COALESCE(p.Nombre, MAX(fi.nombre_producto), CONCAT('Producto #', dp.id_producto)) AS producto,
              SUM(fi.cantidad_facturada) AS unidades,
              SUM(fi.cantidad_facturada * COALESCE(fi.precio_unitario, dp.Precio_unitario)) AS ingresos
       FROM Factura_item fi
       JOIN Factura f ON f.id_factura = fi.id_factura
       JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido AND dp.id_pedido = f.id_pedido
-      JOIN Producto p ON p.id_producto = dp.id_producto
-      ${esMesero ? unirSede : Prisma.empty}
-      WHERE f.estado = 'PAGADA' ${esMesero ? sede : Prisma.empty}
-        AND ${esMesero ? diaLocal : Prisma.sql`DATE(f.Fecha_emision)`} BETWEEN ${desde} AND ${hasta}
-      GROUP BY p.id_producto, p.Nombre
+      JOIN pedido pe ON pe.id_pedido = f.id_pedido
+      LEFT JOIN Producto p ON p.id_producto = dp.id_producto AND p.id_restaurante = pe.id_restaurante
+      WHERE f.estado = 'PAGADA' ${sede}
+        AND ${diaLocal} BETWEEN ${desde} AND ${hasta}
+      GROUP BY dp.id_producto, p.Nombre
       ORDER BY unidades DESC, ingresos DESC
       LIMIT 5
     `;
@@ -140,11 +134,11 @@ export async function ventasDiarias(req, res, next) {
  */
 export async function pedidosActivos(req, res, next) {
   try {
-    const [fila] = await prisma.$queryRaw`SELECT COUNT(*) AS total FROM pedido WHERE estado NOT IN ('CERRADO', 'CANCELADO') OR estado IS NULL`;
+    const total = await prisma.pedido.count({ where: { ...req.sede, ...CUENTA_ABIERTA } });
 
     return res.status(200).json({
       success: true,
-      data: { pedidos_activos: numero(fila?.total) },
+      data: { pedidos_activos: total },
     });
   } catch (error) {
     next(error);
@@ -165,6 +159,7 @@ export async function gastosDelMes(req, res, next) {
 
     const ordenes = await prisma.orden_compra.findMany({
       where: {
+        ...req.sede,
         fecha_orden: { gte: desde, lt: hasta },
         OR: [{ estado: null }, { estado: { not: 'CANCELADA' } }],
       },

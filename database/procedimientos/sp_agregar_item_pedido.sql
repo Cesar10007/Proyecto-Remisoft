@@ -18,11 +18,12 @@ CREATE PROCEDURE sp_agregar_item_pedido(
     IN p_cantidad    INT
 )
 BEGIN
+    DECLARE v_sede INT;
     DECLARE v_estado_pedido VARCHAR(20);
     DECLARE v_precio        DECIMAL(10,2);
 
     -- Verificar que el pedido existe y está abierto
-    SELECT estado INTO v_estado_pedido
+    SELECT estado, id_restaurante INTO v_estado_pedido, v_sede
     FROM pedido
     WHERE id_pedido = p_id_pedido;
 
@@ -39,7 +40,7 @@ BEGIN
     -- Obtener precio actual del producto
     SELECT precio_venta INTO v_precio
     FROM Producto
-    WHERE id_producto = p_id_producto AND Estado = 1;
+    WHERE id_producto = p_id_producto AND id_restaurante = v_sede AND Estado = 1;
 
     IF v_precio IS NULL THEN
         SIGNAL SQLSTATE '45000'

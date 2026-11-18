@@ -2,7 +2,7 @@ import prisma from '../config/prisma.js';
 
 export async function index(req, res, next) {
   try {
-    const ingredientes = await prisma.ingrediente.findMany();
+    const ingredientes = await prisma.ingrediente.findMany({ where: req.sede });
     res.json(ingredientes);
   } catch (err) {
     next(err);
@@ -22,20 +22,21 @@ export async function crear(req, res, next) {
     if (unidad_medida && (typeof unidad_medida !== 'string' || unidad_medida.length > 20)) {
       return res.status(422).json({ message: 'El campo unidad_medida no puede superar 20 caracteres' });
     }
-    if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && isNaN(Number(costo_unitario_ref))) {
+    if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && !Number.isFinite(Number(costo_unitario_ref))) {
       return res.status(422).json({ message: 'El campo costo_unitario_ref debe ser numérico' });
     }
-    if (stock_minimo !== undefined && stock_minimo !== null && isNaN(Number(stock_minimo))) {
+    if (stock_minimo !== undefined && stock_minimo !== null && !Number.isFinite(Number(stock_minimo))) {
       return res.status(422).json({ message: 'El campo stock_minimo debe ser numérico' });
     }
 
     await prisma.ingrediente.create({
       data: {
+        ...req.sede,
         nombre,
         descripcion: descripcion ?? null,
         unidad_medida: unidad_medida ?? null,
-        costo_unitario_ref: costo_unitario_ref ?? null,
-        stock_minimo: stock_minimo ?? 0,
+        costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
+        stock_minimo: Number(stock_minimo ?? 0),
       },
     });
 
@@ -59,21 +60,21 @@ export async function actualizar(req, res, next) {
     if (unidad_medida && (typeof unidad_medida !== 'string' || unidad_medida.length > 20)) {
       return res.status(422).json({ message: 'El campo unidad_medida no puede superar 20 caracteres' });
     }
-    if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && isNaN(Number(costo_unitario_ref))) {
+    if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && !Number.isFinite(Number(costo_unitario_ref))) {
       return res.status(422).json({ message: 'El campo costo_unitario_ref debe ser numérico' });
     }
-    if (stock_minimo !== undefined && stock_minimo !== null && isNaN(Number(stock_minimo))) {
+    if (stock_minimo !== undefined && stock_minimo !== null && !Number.isFinite(Number(stock_minimo))) {
       return res.status(422).json({ message: 'El campo stock_minimo debe ser numérico' });
     }
 
     await prisma.ingrediente.update({
-      where: { id_ingrediente: Number(id) },
+      where: { id_ingrediente: Number(id), ...req.sede },
       data: {
         nombre,
         descripcion: descripcion ?? null,
         unidad_medida: unidad_medida ?? null,
-        costo_unitario_ref: costo_unitario_ref ?? null,
-        stock_minimo: stock_minimo ?? 0,
+        costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
+        stock_minimo: Number(stock_minimo ?? 0),
       },
     });
 
@@ -89,7 +90,7 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-    await prisma.ingrediente.delete({ where: { id_ingrediente: Number(id) } });
+    await prisma.ingrediente.delete({ where: { id_ingrediente: Number(id), ...req.sede } });
     res.json({ message: 'Ingrediente eliminado' });
   } catch (err) {
     if (err.code === 'P2003' || err.code === 'P2014') {

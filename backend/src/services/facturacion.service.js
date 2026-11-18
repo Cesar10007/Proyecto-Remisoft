@@ -1,3 +1,4 @@
+import { relacionDeSede } from '../utils/restaurante.js';
 import { consumoFacturado, esBorrador, importesFactura } from '../utils/facturacion.js';
 import { bloquearPedido, transaccionSalon } from './salon.service.js';
 import {
@@ -16,13 +17,13 @@ export const lineasDeFactura = {
   orderBy: { id_detalle_pedido: 'asc' },
   include: {
     Detalle_pedido: {
-      select: { id_pedido: true, Precio_unitario: true, Producto: { select: { Nombre: true } } },
+      select: { id_pedido: true, Precio_unitario: true, Producto: { select: { Nombre: true, id_restaurante: true } } },
     },
   },
 };
 export const origenDeFactura = {
-  Cliente: { select: { Nombre: true, Apellido: true } },
-  Detalle_pedido: { orderBy: { id_detalle: 'asc' }, include: { Producto: { select: { Nombre: true } } } },
+  Cliente: { select: { Nombre: true, Apellido: true, id_restaurante: true } },
+  Detalle_pedido: { orderBy: { id_detalle: 'asc' }, include: { Producto: { select: { Nombre: true, id_restaurante: true } } } },
 };
 
 function campos(body, permitidos) {
@@ -41,17 +42,18 @@ const editables = ['receptor', 'descuento', 'propina'];
 
 // Bajo el bloqueo del pedido. El cobro directo (sin borrador) conserva el flujo de caja anterior.
 export async function guardarConsumo(tx, pedido, ajustes, estado, anterior = null) {
+  const cliente = relacionDeSede(pedido.Cliente, pedido.id_restaurante);
   const items = itemsFacturables(pedido.Detalle_pedido).map((d) => ({
     id_detalle: d.id_detalle,
     cantidad: d.Cantidad,
     precio_unitario: Number(d.Precio_unitario ?? 0),
-    nombre: d.Producto?.Nombre || `Producto ${d.id_producto}`,
+    nombre: relacionDeSede(d.Producto, pedido.id_restaurante)?.Nombre || `Producto ${d.id_producto}`,
   }));
   const datos = {
     ...importesFactura(items, ajustes.descuento, ajustes.propina),
     receptor:
       texto(
-        ajustes.receptor ?? [pedido.Cliente?.Nombre, pedido.Cliente?.Apellido].filter(Boolean).join(' '),
+        ajustes.receptor ?? [cliente?.Nombre, cliente?.Apellido].filter(Boolean).join(' '),
         120,
         'Nombre de facturación',
       ) || 'Consumidor final',
@@ -87,7 +89,7 @@ export function generarFactura(user, body) {
   campos(body, ['id_pedido', ...editables]);
   const id = entero(body.id_pedido, 'El pedido');
   return transaccionSalon(async (tx) => {
-    await bloquearPedido(tx, id);
+    await bloquearPedido(tx, id, user.id_restaurante);
     const p = await tx.pedido.findFirst({
       where: { id_pedido: id, ...alcanceFacturacion(user) },
       include: { ...origenDeFactura, Factura: { select: { id_factura: true } } },
@@ -110,7 +112,7 @@ export function editarFactura(user, id, body) {
     const where = { id_factura: id, pedido: alcanceFacturacion(user) };
     const origen = await tx.factura.findFirst({ where, select: { id_pedido: true } });
     if (!origen) throw new ErrorSalon(404, 'Factura no encontrada.');
-    await bloquearPedido(tx, origen.id_pedido);
+    await bloquearPedido(tx, origen.id_pedido, user.id_restaurante);
     const f = await tx.factura.findFirst({
       where,
       include: { pago: { select: { estado: true } }, Factura_item: lineasDeFactura },
@@ -131,7 +133,7 @@ export function editarFactura(user, id, body) {
     if (!editables.some((k) => Object.hasOwn(body, k)))
       throw new ErrorSalon(422, 'Indica qué dato de la factura quieres editar.');
     const importes = importesFactura(
-      consumoFacturado(f),
+      consumoFacturado(f, user.id_restaurante),
       body.descuento === undefined ? Number(f.Descuento) : body.descuento,
       body.propina === undefined ? Number(f.Propina) : body.propina,
       Number(f.tasa_iva),

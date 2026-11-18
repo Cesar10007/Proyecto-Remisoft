@@ -12,7 +12,7 @@ export async function index(req, res, next) {
   try {
     const [catalogo, pedidos] = await prisma.$transaction(
       [
-        prisma.mesa.findMany({ orderBy: { numero: 'asc' }, include: atencionesDelComedor(req.user) }),
+        prisma.mesa.findMany({ where: req.sede, orderBy: { numero: 'asc' }, include: atencionesDelComedor(req.user) }),
         prisma.pedido.findMany({
           where: pedidosDelComedor(req.user),
           include: datosDelConsumo,
@@ -23,6 +23,21 @@ export async function index(req, res, next) {
     );
     res.json({ success: true, data: presentarMesas(catalogo, pedidos.map(consumoPublico), req.user) });
   } catch (err) {
+    next(err);
+  }
+}
+
+// Las sedes nuevas no heredan el plano de la demo.
+export async function crear(req, res, next) {
+  try {
+    const { numero, capacidad } = req.body;
+    if (![numero, capacidad].every(n => Number.isInteger(n) && n > 0 && n <= 2147483647)) {
+      return res.status(422).json({ message: 'Número y capacidad deben ser enteros positivos.' });
+    }
+    const mesa = await prisma.mesa.create({ data: { ...req.sede, numero, capacidad } });
+    res.status(201).json({ success: true, data: mesa });
+  } catch (err) {
+    if (err.code === 'P2002') return res.status(409).json({ message: 'Ya existe una mesa con ese número en el establecimiento.' });
     next(err);
   }
 }

@@ -7,6 +7,7 @@
 --   p_id_turno      INT          - ID del turno a cerrar
 --   p_efectivo_real DECIMAL(10,2)- Efectivo contado por el cajero
 --   p_notas         VARCHAR(500) - Observaciones del cierre
+--   p_id_restaurante INT         - Establecimiento de la sesión
 -- ============================================================
 
 DROP PROCEDURE IF EXISTS sp_cerrar_turno_caja;
@@ -16,7 +17,8 @@ DELIMITER //
 CREATE PROCEDURE sp_cerrar_turno_caja(
     IN p_id_turno       INT,
     IN p_efectivo_real  DECIMAL(10,2),
-    IN p_notas          VARCHAR(500)
+    IN p_notas          VARCHAR(500),
+    IN p_id_restaurante INT
 )
 BEGIN
     DECLARE v_efectivo_inicial  DECIMAL(10,2);
@@ -30,7 +32,7 @@ BEGIN
     SELECT estado, efectivo_inicial
     INTO v_estado_turno, v_efectivo_inicial
     FROM turno_caja
-    WHERE id_turno = p_id_turno;
+    WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
 
     IF v_estado_turno IS NULL THEN
         SIGNAL SQLSTATE '45000'
@@ -62,7 +64,7 @@ BEGIN
         diferencia         = v_diferencia,
         notas              = p_notas,
         estado             = 'CERRADA'
-    WHERE id_turno = p_id_turno;
+    WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
 END //
 
 DELIMITER ;

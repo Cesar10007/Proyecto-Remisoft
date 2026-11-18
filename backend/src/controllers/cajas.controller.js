@@ -2,7 +2,7 @@ import prisma from '../config/prisma.js';
 
 export async function index(req, res, next) {
   try {
-    const cajas = await prisma.caja.findMany();
+    const cajas = await prisma.caja.findMany({ where: req.sede });
     res.json(cajas);
   } catch (err) {
     next(err);
@@ -21,7 +21,7 @@ export async function crear(req, res, next) {
     }
 
     await prisma.caja.create({
-      data: { nombre, estado: estado || 'ACTIVA' },
+      data: { ...req.sede, nombre, estado: estado || 'ACTIVA' },
     });
 
     res.status(201).json({ message: 'Caja creada' });
@@ -43,7 +43,7 @@ export async function actualizar(req, res, next) {
     }
 
     await prisma.caja.update({
-      where: { id_caja: Number(id) },
+      where: { id_caja: Number(id), ...req.sede },
       data: { nombre, estado: estado || 'ACTIVA' },
     });
 
@@ -60,7 +60,7 @@ export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
     await prisma.caja.update({
-      where: { id_caja: Number(id) },
+      where: { id_caja: Number(id), ...req.sede },
       data: { estado: 'INACTIVA' },
     });
     res.json({ message: 'Caja desactivada' });

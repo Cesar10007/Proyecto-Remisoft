@@ -7,6 +7,7 @@
 
 CREATE OR REPLACE VIEW vista_domicilios_pendientes AS
 SELECT
+    pe.id_restaurante,
     d.id_domicilio,
     d.estado,
     d.Fecha_asignacion,
@@ -18,7 +19,7 @@ SELECT
     u.telefono                          AS telefono_repartidor
 FROM domicilio d
 INNER JOIN pedido  pe ON d.id_pedido      = pe.id_pedido
-LEFT  JOIN Cliente c  ON pe.id_cliente    = c.id_cliente
-LEFT  JOIN usuario u  ON d.id_repartidor  = u.id_usuario
+LEFT  JOIN Cliente c  ON pe.id_cliente    = c.id_cliente AND c.id_restaurante = pe.id_restaurante
+LEFT  JOIN usuario u  ON d.id_repartidor  = u.id_usuario AND u.id_restaurante = pe.id_restaurante
 WHERE d.estado IN ('ASIGNADO', 'EN_CAMINO')
 ORDER BY d.Fecha_asignacion ASC;

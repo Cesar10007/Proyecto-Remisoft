@@ -37,6 +37,7 @@ function validarCliente(body) {
 export async function index(req, res, next) {
   try {
     const clientes = await prisma.cliente.findMany({
+      where: req.sede,
       orderBy: {
         id_cliente: 'asc',
       },
@@ -61,6 +62,7 @@ export async function buscarPorTelefono(req, res, next) {
 
     const clientes = await prisma.cliente.findMany({
       where: {
+        ...req.sede,
         Telefono: telefono.trim(),
       },
       orderBy: {
@@ -87,6 +89,7 @@ export async function show(req, res, next) {
 
     const cliente = await prisma.cliente.findUnique({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
     });
@@ -115,7 +118,7 @@ export async function crear(req, res, next) {
     }
 
     await prisma.cliente.create({
-      data,
+      data: { ...data, ...req.sede },
     });
 
     res.status(201).json({
@@ -153,6 +156,7 @@ export async function actualizar(req, res, next) {
 
     await prisma.cliente.update({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
       data,
@@ -191,6 +195,7 @@ export async function eliminar(req, res, next) {
 
     await prisma.cliente.delete({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
     });

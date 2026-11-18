@@ -19,6 +19,8 @@ function publicUser(usuario) {
   return {
     id_usuario: usuario.id_usuario,
     id_rol: usuario.id_rol,
+    id_restaurante: usuario.id_restaurante,
+    nombre_establecimiento: usuario.restaurante?.nombre ?? null,
     identificacion: usuario.identificacion,
     nombre: usuario.nombre,
     apellido: usuario.apellido,
@@ -40,6 +42,7 @@ function signJwt(usuario) {
       id_usuario: usuario.id_usuario,
       id_rol: usuario.id_rol,
       rol: usuario.rol?.nombre ?? null,
+      id_restaurante: usuario.id_restaurante,
       email: usuario.email,
     },
     process.env.JWT_SECRET,
@@ -71,7 +74,7 @@ export async function login(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: { email: emailNormalizado },
-      include: { rol: true },
+      include: { rol: true, restaurante: { select: { nombre: true } } },
     });
 
     if (!usuario || !usuario.contrasena_hash) {
@@ -112,6 +115,10 @@ export async function login(req, res, next) {
       });
 
       return res.status(401).json({ message: 'Credenciales inválidas.' });
+    }
+
+    if (!usuario.id_restaurante && usuario.rol?.nombre !== 'SUPERADMIN') {
+      return res.status(403).json({ message: 'Tu usuario no tiene un establecimiento asignado.' });
     }
 
     const token = signJwt(usuario);

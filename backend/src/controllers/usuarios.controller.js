@@ -1,3 +1,4 @@
+import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
 import { parseId, validateString, validateEmail } from '../utils/validation.js';
@@ -227,6 +228,10 @@ function puedeVerUsuario(actor, usuario) {
   return false;
 }
 
+function sedeDelGerente(req) {
+  return req.user.rol === 'GERENTE' ? { id_restaurante: req.user.id_restaurante } : {};
+}
+
 function puedeGestionarUsuario(actor, usuario) {
   const rolActor = actor?.rol?.toUpperCase();
 
@@ -321,6 +326,7 @@ export async function show(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
       include: {
@@ -346,7 +352,10 @@ export async function crear(req, res, next) {
     const rolUsuario = req.user?.rol?.toUpperCase();
 
     if (rolUsuario === 'GERENTE') {
-      const { error, data, contrasena } = validarUsuario(req.body, {
+      if (req.body.id_restaurante != null && Number(req.body.id_restaurante) !== req.user.id_restaurante) {
+        return res.status(403).json({ message: 'Solo puedes crear personal en tu restaurante.' });
+      }
+      const { error, data, contrasena } = validarUsuario({ ...req.body, id_restaurante: req.user.id_restaurante }, {
         requirePassword: true,
         requireRestaurante: true,
       });
@@ -354,9 +363,6 @@ export async function crear(req, res, next) {
       if (error) return res.status(422).json({ message: error });
       if (!ROLES_OPERATIVOS.includes(data.id_rol)) {
         return res.status(403).json({ message: 'Solo puedes crear personal operativo.' });
-      }
-      if (data.id_restaurante !== req.user.id_restaurante) {
-        return res.status(403).json({ message: 'Solo puedes crear personal en tu restaurante.' });
       }
 
       const contrasena_hash = await bcrypt.hash(contrasena, 12);
@@ -418,16 +424,7 @@ export async function crear(req, res, next) {
     const contrasena_hash = await bcrypt.hash(contrasena, 12);
 
     const resultado = await prisma.$transaction(async (tx) => {
-      const restaurante = await tx.restaurante.create({
-        data: {
-          nombre: nombreEstablecimiento,
-          activo: true,
-        },
-        select: {
-          id_restaurante: true,
-          nombre: true,
-        },
-      });
+      const restaurante = await crearEstablecimiento(tx, nombreEstablecimiento);
 
       const usuario = await tx.usuario.create({
         data: {
@@ -486,6 +483,7 @@ export async function actualizar(req, res, next) {
 
     const usuarioObjetivo = await prisma.usuario.findUnique({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
     });
@@ -570,6 +568,7 @@ export async function actualizar(req, res, next) {
 
     await prisma.usuario.update({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
       data: updateData,
@@ -613,6 +612,7 @@ export async function eliminar(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
     });
@@ -654,6 +654,7 @@ export async function eliminar(req, res, next) {
 
     await prisma.usuario.update({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
       data: {
@@ -688,6 +689,7 @@ export async function cambiarEstado(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
     });
@@ -717,6 +719,7 @@ export async function cambiarEstado(req, res, next) {
 
     await prisma.usuario.update({
       where: {
+        ...sedeDelGerente(req),
         id_usuario: id,
       },
       data: {

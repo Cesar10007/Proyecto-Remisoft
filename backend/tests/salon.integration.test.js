@@ -14,22 +14,21 @@ test(
     const tag = randomUUID();
     const sede = await db.restaurante.create({ data: { nombre: `Salón de prueba ${tag}` } });
     const sitio = { id_restaurante: sede.id_restaurante };
-    const mesa = await db.mesa.create({ data: { numero: randomInt(1000000, 2000000000), capacidad: 4 } });
+    const mesa = await db.mesa.create({ data: { ...sitio, numero: randomInt(1000000, 2000000000), capacidad: 4 } });
     const segundaMesa = await db.mesa.create({
-      data: { numero: randomInt(1000000, 2000000000), capacidad: 4 },
+      data: { ...sitio, numero: randomInt(1000000, 2000000000), capacidad: 4 },
     });
-    const rol = (nombre) => db.rol.upsert({ where: { nombre }, update: {}, create: { nombre } });
     const usuario = async (nombre) =>
-      db.usuario.create({ data: { ...sitio, id_rol: (await rol(nombre)).id_rol, nombre } });
+      db.usuario.create({ data: { ...sitio, id_rol: (await db.rol.findUniqueOrThrow({ where: { nombre } })).id_rol, nombre } });
     const mesero = await usuario('MESERO'),
       colega = await usuario('MESERO'),
       cajero = await usuario('CAJERO'),
       gerente = await usuario('GERENTE');
     const caja = await db.caja.create({ data: { ...sitio, nombre: 'Prueba' } });
-    const ingrediente = await db.ingrediente.create({ data: { nombre: 'Insumo de prueba' } });
+    const ingrediente = await db.ingrediente.create({ data: { ...sitio, nombre: 'Insumo de prueba' } });
     const insumo = { id_ingrediente: ingrediente.id_ingrediente };
     const producto = await db.producto.create({
-      data: { Nombre: 'Plato de prueba', precio_venta: 1000, Estado: 1 },
+      data: { ...sitio, Nombre: 'Plato de prueba', precio_venta: 1000, Estado: 1 },
     });
     const productoId = { id_producto: producto.id_producto };
     await db.receta.create({ data: { ...insumo, ...productoId, Cantidad_necesaria: 1 } });
@@ -60,8 +59,8 @@ test(
       await db.caja.delete({ where: { id_caja: caja.id_caja } });
       await db.mesa_atencion.deleteMany({ where: sitio });
       await db.usuario.deleteMany({ where: sitio });
-      await db.restaurante.delete({ where: sitio });
       await db.mesa.deleteMany({ where: { id_mesa: { in: [mesa.id_mesa, segundaMesa.id_mesa] } } });
+      await db.restaurante.delete({ where: sitio });
       await db.$disconnect();
     });
     const pedir = async (u, method, path, body) => {
@@ -181,6 +180,8 @@ test(
         where: { id_usuario: colega.id_usuario },
         data: { id_restaurante: otraSede.id_restaurante },
       });
+      assert.deepEqual((await espera(200, colega, 'GET', '/mesas')).data, []);
+      await db.mesa.createMany({ data: [mesa, segundaMesa].map(m => ({ id_restaurante: otraSede.id_restaurante, numero: m.numero, capacidad: 4 })) });
       const otroSalon = await espera(200, colega, 'GET', '/salon');
       assert.equal(otroSalon.mesas.find((m) => m.numero === mesa.numero).ocupada, false);
       assert.equal(otroSalon.pedidos.length, 0);
@@ -199,6 +200,7 @@ test(
     } finally {
       await db.mesa_atencion.deleteMany({ where: { id_restaurante: otraSede.id_restaurante } });
       await db.usuario.update({ where: { id_usuario: colega.id_usuario }, data: sitio });
+      await db.mesa.deleteMany({ where: { id_restaurante: otraSede.id_restaurante } });
       await db.restaurante.delete({ where: { id_restaurante: otraSede.id_restaurante } });
     }
     await espera(403, mesero, 'POST', '/cobro/cerrar-cuenta', { id_pedido: id, metodo: 'TARJETA' });

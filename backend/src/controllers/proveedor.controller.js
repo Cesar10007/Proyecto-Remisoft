@@ -37,6 +37,7 @@ function validarProveedor(body) {
 export async function index(req, res, next) {
   try {
     const proveedores = await prisma.proveedor.findMany({
+      where: req.sede,
       orderBy: { id_proveedor: 'asc' },
     });
 
@@ -58,7 +59,7 @@ export async function show(req, res, next) {
     }
 
     const proveedor = await prisma.proveedor.findUnique({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
     });
 
     if (!proveedor) {
@@ -80,7 +81,7 @@ export async function store(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.proveedor.create({ data });
+    await prisma.proveedor.create({ data: { ...data, ...req.sede } });
 
     res.status(201).json({ message: 'Proveedor creado' });
   } catch (err) {
@@ -106,7 +107,7 @@ export async function update(req, res, next) {
     }
 
     await prisma.proveedor.update({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
       data,
     });
 
@@ -138,7 +139,7 @@ export async function destroy(req, res, next) {
     }
 
     const proveedor = await prisma.proveedor.findUnique({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
     });
 
     if (!proveedor) {
@@ -148,7 +149,7 @@ export async function destroy(req, res, next) {
     const nuevoEstado = proveedor.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
     await prisma.proveedor.update({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
       data: { estado: nuevoEstado },
     });
 

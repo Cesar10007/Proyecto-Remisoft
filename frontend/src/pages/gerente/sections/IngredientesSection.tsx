@@ -24,7 +24,7 @@ function IngredientesSection({ ingredientes, onCreate, onEdit, onDelete }: Ingre
     },
     {
       header: 'Costo ref.',
-      render: (i) => `$${Number(i.costo_unitario_ref).toLocaleString('es-CO')}`,
+      render: (i) => i.costo_unitario_ref == null ? '—' : `$${Number(i.costo_unitario_ref).toLocaleString('es-CO')}`,
     },
     {
       header: 'Stock mínimo',

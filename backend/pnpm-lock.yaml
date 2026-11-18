@@ -48,6 +48,9 @@ importers:
       jsonwebtoken:
         specifier: 9.0.3
         version: 9.0.3
+      mariadb:
+        specifier: 3.4.7
+        version: 3.4.7
       nodemailer:
         specifier: 10.0.6
         version: 10.0.6

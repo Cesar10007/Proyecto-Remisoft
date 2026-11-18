@@ -222,7 +222,7 @@ docker compose up --build
 
 > `-v` elimina el volumen `db_data` y borra los datos persistentes de MariaDB. Úsalo solo cuando quieras probar una instalación limpia.
 
-Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, carga datos iniciales si la base está vacía y luego carga vistas y procedimientos.
+Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, solo importa la demo si la base no tenía tablas antes de migrar y `CARGAR_DEMO=1`, y reinstala vistas y procedimientos. En una instalación real usa `CARGAR_DEMO=0` y [crea el primer superadmin sin ejemplos](docs/establecimientos.md#primera-instalación-sin-ejemplos).
 
 ### Validaciones rápidas
 
@@ -405,12 +405,9 @@ En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y su
 
 ## Modelo multi-restaurante
 
-El sistema soporta múltiples sedes mediante `restaurante`. Cada usuario puede tener un `id_restaurante` opcional.
+La clave existente es **`id_restaurante`**. Crear un gerente desde Superadmin (o aprobar su solicitud) crea un establecimiento propio y vacío. El personal opera en la sede que la API obtiene del usuario en la BD. Productos, existencias, mesas, IA, ventas y demás actividad del panel no se comparten entre negocios. Un gerente sin ventas o sin análisis ve ese estado, no datos de ejemplo.
 
-- `SUPERADMIN`: puede operar globalmente.
-- Roles operativos: deberían limitarse a su sede asignada.
-
-> **Estado pendiente:** que `id_restaurante` exista en el JWT no garantiza aislamiento de datos. El filtrado debe verificarse en cada controlador y endpoint antes de considerarlo completo.
+[Guía de establecimientos: actualizar sin borrar datos, tratar históricos sin sede y probar el aislamiento](docs/establecimientos.md).
 
 El middleware de autenticación soporta JWT estándar y tokens estilo Sanctum heredados, cuando corresponda.
 

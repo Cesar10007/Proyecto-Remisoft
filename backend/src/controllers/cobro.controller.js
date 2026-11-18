@@ -28,7 +28,7 @@ function cuentaParaCobro(pedido) {
   const cuenta = formatCuenta(pedido);
   const f = pedido.Factura;
   if (!esBorrador(f)) return { ...cuenta, descuento: 0, propina: 0, version_factura: null };
-  const items = consumoFacturado(f).map((i) => ({ ...i, subtotal: round2(i.cantidad * i.precio_unitario) }));
+  const items = consumoFacturado(f, pedido.id_restaurante).map((i) => ({ ...i, subtotal: round2(i.cantidad * i.precio_unitario) }));
   return {
     ...cuenta,
     items,
@@ -67,7 +67,7 @@ export async function pendientes(req, res, next) {
       include: {
         Detalle_pedido: { include: { Producto: true } },
         Factura: { include: { Factura_item: lineasDeFactura } },
-        usuario: { select: { nombre: true, apellido: true } },
+        usuario: { where: req.sede, select: { nombre: true, apellido: true, id_restaurante: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
@@ -102,9 +102,9 @@ export async function cerrarCuenta(req, res, next) {
     const resultado = await transaccionSalon(async (tx) => {
       // Serializa pagos de un mismo turno para no perder saldo ni cobrar en una caja cerrada.
       const [turno] = await tx.$queryRaw`SELECT id_turno, efectivo_inicial FROM turno_caja
-        WHERE id_usuario_cajero = ${idUsuario} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
+        WHERE id_usuario_cajero = ${idUsuario} AND id_restaurante = ${req.sede.id_restaurante} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
       if (!turno) return { status: 409, message: 'Debes tener un turno de caja abierto para cobrar.' };
-      await bloquearPedido(tx, idPedido);
+      await bloquearPedido(tx, idPedido, req.sede.id_restaurante);
       const pedido = await tx.pedido.findFirst({
         where: { id_pedido: idPedido, ...deSede(req.user) },
         include: {
@@ -171,6 +171,7 @@ export async function cerrarCuenta(req, res, next) {
                 id_producto: d.id_producto,
                 cantidad: Number(d.Cantidad ?? 0),
               })),
+              req.sede.id_restaurante,
             );
 
       const { subtotal, iva, total, descuento, propina } = cuenta;
@@ -242,6 +243,7 @@ export async function cerrarCuenta(req, res, next) {
       // Descuento de inventario por consumo (una sola vez por cobro).
       await registrarSalidasPorConsumo(tx, requerimientos, {
         id_usuario: idUsuario,
+        ...req.sede,
         origen_tipo: 'VENTA',
         origen_id: factura.id_factura,
       });

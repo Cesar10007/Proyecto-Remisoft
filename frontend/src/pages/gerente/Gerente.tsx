@@ -1,6 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import './Gerente.css'
-import { useState, useEffect } from 'react'
+import { mensajeError } from '../../utils/mensajeError'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
@@ -18,70 +18,15 @@ import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { finanzasStats, iaInsights, menuItems } from './data'
-const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+import { menuItems } from './data'
+import { useDatosGerente, formatoCOP, etiquetaMetodo, type TurnoApi, type Lectura } from './useDatosGerente'
+import IASection from './sections/IASection'
+import AltaMesa from './components/AltaMesa'
 
-// Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
-interface PagoApi { id_factura?: number; id_turno?: number | null; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
-interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
-interface TurnoApi {
-  id_turno: number
-  id_caja: number
-  id_usuario_cajero: number
-  fecha_apertura: string | null
-  fecha_cierre: string | null
-  efectivo_inicial: string | number | null
-  efectivo_esperado: string | number | null
-  efectivo_real: string | number | null
-  diferencia: string | number | null
-  estado: string | null
-  caja?: { nombre: string | null } | null
-  usuario?: { nombre: string | null; apellido: string | null } | null
-}
-interface PedidoApi {
-  id_pedido: number
-  Mesa_num: number | null
-  Tipo_pedido: string | null
-  Fecha_hora: string | null
-  nombre_mesero: string | null
-}
-interface EventoHistorial { fecha: string | null; usuario: string; accion: string }
-interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
-
-const etiquetaMetodo = (metodo: string | null) => {
-  const etiquetas: Record<string, string> = { EFECTIVO: 'Efectivo', TARJETA_CREDITO: 'Tarjeta crédito', TARJETA_DEBITO: 'Tarjeta débito', PSE: 'PSE' }
-  return metodo ? (etiquetas[metodo] ?? metodo) : 'Sin método'
-}
-
-const haceTiempo = (fecha: string | null) => {
-  if (!fecha) return '—'
-  const minutos = Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))
-  if (minutos < 60) return `Hace ${minutos} min`
-  if (minutos < 1440) return `Hace ${Math.round(minutos / 60)} h`
-  return `Hace ${Math.round(minutos / 1440)} d`
-}
-
-// Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
-function fechaBogota(desplazamientoDias = 0): string {
-  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
-  const fecha = new Date(`${hoy}T00:00:00Z`)
-  fecha.setUTCDate(fecha.getUTCDate() + desplazamientoDias)
-  return fecha.toISOString().slice(0, 10)
-}
-
-interface ResumenDashboard {
-  ingresosHoy: number
-  pedidosActivos: number
-  tendencia: { dia: string; alto: number }[]
-}
-
-interface PedidoEnCurso {
-  id_pedido: number
-  Mesa_num: number | null
-  Tipo_pedido: string
-  estado: string
-  Fecha_hora: string
-  nombre_mesero: string | null
+function EstadoLectura({ consulta, vacio }: { consulta: Lectura; vacio?: string }) {
+  if (consulta.error) return <p role="alert" className="text-sm text-[var(--rojo-dark)]">{consulta.error} <button onClick={consulta.cargar}>Reintentar</button></p>
+  const mensaje = consulta.data === null ? 'Cargando…' : vacio
+  return mensaje ? <p className="col-span-full text-sm text-[var(--texto-muted)]">{mensaje}</p> : null
 }
 
 const etiquetaEstadoPedido: Record<string, string> = {
@@ -110,19 +55,19 @@ const cajaVacia = { nombre: '', estado: 'ACTIVA' }
 const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as number | '' , contrasena: '' }
 function Gerente() {
   const [seccionActiva, setSeccionActiva] = useState('Menú')
-  const [ingresosDelMes, setIngresosDelMes] = useState<number | null>(null)
-  const [gastosMes, setGastosMes] = useState<number | null>(null)
-  // Gastos del mes: compras a proveedores de la base (orden_compra).
-  useEffect(() => {
-    if (seccionActiva !== 'Finanzas') return
-    api.get('/reportes/gastos-del-mes')
-      .then(({ data }: { data: { data: { gastos_mes: number } } }) => setGastosMes(Number(data.data.gastos_mes)))
-      .catch(console.error)
-  }, [seccionActiva])
-  const [pagosAprobados, setPagosAprobados] = useState<PagoApi[]>([])
-  const [turnos, setTurnos] = useState<TurnoApi[]>([])
-  const [historial, setHistorial] = useState<EventoHistorial[]>([])
-  const [cajeros, setCajeros] = useState<Personal[]>([])
+  const [fuenteProductos, setFuenteProductos] = useState<'vista' | 'sp'>('vista')
+  const datos = useDatosGerente(seccionActiva, fuenteProductos)
+  const { ingresosDelMes, pagosAprobados, historial, mesas, movimientosRecientes, estadoInventario, tendenciaSemanal } = datos
+  const gastosMes = datos.compras.data?.data.gastos_mes ?? null
+  const productos = datos.catalogo.data ?? []
+  const ingredientes = datos.ingredientes.data ?? []
+  const proveedores = datos.proveedores.data ?? []
+  const cajas = datos.cajas.data ?? []
+  const turnos = datos.jornadas.data?.data ?? []
+  const personal = (datos.usuarios.data ?? []).filter(u => u.id_rol !== 1 && u.id_rol !== 2)
+  const cajeros = personal.filter(u => u.rol === 'CAJERO' && u.activo === 1)
+  const pedidosEnCurso = (datos.ordenes.data ?? []).filter(p => p.estado !== 'CERRADO' && p.estado !== 'CANCELADO')
+  const pedidosActivos = datos.activos.error ? null : datos.activos.data?.data.pedidos_activos
   const [mostrarAbrirTurno, setMostrarAbrirTurno] = useState(false)
   const [formAbrir, setFormAbrir] = useState({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
   const [turnoCerrando, setTurnoCerrando] = useState<number | null>(null)
@@ -136,234 +81,58 @@ function Gerente() {
   }
   const navigate = useNavigate()
   const { logout, user } = useAuth()
-  const [productos, setProductos] = useState<Producto[]>([])
-  const [fuenteProductos, setFuenteProductos] = useState<'vista' | 'sp'>('vista')
-  const [cargandoProductos, setCargandoProductos] = useState(false)
   const [modalProducto, setModalProducto] = useState(false)
   const [modoEdicionProducto, setModoEdicionProducto] = useState(false)
   const [productoActual, setProductoActual] = useState<Omit<Producto, 'id_producto'>>(productoVacio)
   const [idEditandoProducto, setIdEditandoProducto] = useState<number | null>(null)
   const [guardandoProducto, setGuardandoProducto] = useState(false)
   const [errorProducto, setErrorProducto] = useState<string | null>(null)
-  const [ingredientes, setIngredientes] = useState<Ingrediente[]>([])
   const [modalIngrediente, setModalIngrediente] = useState(false)
   const [modoEdicionIngrediente, setModoEdicionIngrediente] = useState(false)
   const [ingredienteActual, setIngredienteActual] = useState(ingredienteVacio)
   const [idEditandoIngrediente, setIdEditandoIngrediente] = useState<number | null>(null)
   const [guardandoIngrediente, setGuardandoIngrediente] = useState(false)
   const [errorIngrediente, setErrorIngrediente] = useState<string | null>(null)
-  const [proveedores, setProveedores] = useState<Proveedor[]>([])
   const [modalProveedor, setModalProveedor] = useState(false)
   const [modoEdicionProveedor, setModoEdicionProveedor] = useState(false)
   const [proveedorActual, setProveedorActual] = useState(proveedorVacio)
   const [idEditandoProveedor, setIdEditandoProveedor] = useState<number | null>(null)
   const [guardandoProveedor, setGuardandoProveedor] = useState(false)
   const [errorProveedor, setErrorProveedor] = useState<string | null>(null)
-  const [cajas, setCajas] = useState<Caja[]>([])
   const [modalCaja, setModalCaja] = useState(false)
   const [modoEdicionCaja, setModoEdicionCaja] = useState(false)
   const [cajaActual, setCajaActual] = useState(cajaVacia)
   const [idEditandoCaja, setIdEditandoCaja] = useState<number | null>(null)
   const [guardandoCaja, setGuardandoCaja] = useState(false)
   const [errorCaja, setErrorCaja] = useState<string | null>(null)
-  const [personal, setPersonal] = useState<Personal[]>([])
   const [formData, setFormData] = useState(personalVacio)
   const [usuarioEditando, setUsuarioEditando] = useState<Personal | null>(null)
   const [errorPersonal, setErrorPersonal] = useState<string | null>(null)
   const [guardandoPersonal, setGuardandoPersonal] = useState(false)
-  const [cargandoPersonal, setCargandoPersonal] = useState(false)
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
-  const [resumenDashboard, setResumenDashboard] = useState<ResumenDashboard | null>(null)
-
-  useEffect(() => {
-    if (seccionActiva !== 'Menú') return
-    const hasta = fechaBogota(0)
-    const desde = fechaBogota(-6)
-    Promise.all([
-      api.get('/reportes/ventas-diarias', { params: { desde, hasta } }),
-      api.get('/reportes/pedidos-activos'),
-    ])
-      .then(([ventas, pedidos]) => {
-        const dias: { fecha: string; ingresos_brutos: number }[] = ventas.data.data.dias
-        const ingresosPorDia = new Map<string, number>(
-          dias.map(d => [d.fecha, Number(d.ingresos_brutos)] as [string, number]),
-        )
-        const serie = Array.from({ length: 7 }, (_, i) => {
-          const fecha = fechaBogota(i - 6)
-          return { fecha, valor: ingresosPorDia.get(fecha) ?? 0 }
-        })
-        const maximo = Math.max(...serie.map(s => s.valor), 1)
-        setResumenDashboard({
-          ingresosHoy: ingresosPorDia.get(hasta) ?? 0,
-          pedidosActivos: Number(pedidos.data.data.pedidos_activos),
-          tendencia: serie.map(s => ({
-            dia: new Date(`${s.fecha}T12:00:00Z`)
-              .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'UTC' })
-              .replace('.', '')
-              .slice(0, 3)
-              .toUpperCase(),
-            alto: Math.max(Math.round((s.valor / maximo) * 100), 2),
-          })),
-        })
-      })
-      .catch(console.error)
-  }, [seccionActiva])
-
   const metricasDashboard = [
     {
       icon: 'monetization_on',
       label: 'Ingresos del día',
-      valor: resumenDashboard ? formatoCOP.format(resumenDashboard.ingresosHoy) : '...',
-      badge: 'Hoy',
+      valor: datos.ingresosHoy === null ? '—' : formatoCOP.format(datos.ingresosHoy),
+      badge: datos.semana.error ? 'Error al consultar' : 'Hoy',
       badgeColor: 'muted',
     },
     {
       icon: 'account_balance_wallet',
       label: 'Ventas del mes',
-      valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
-      badge: 'Pagos aprobados',
+      valor: ingresosDelMes === null ? '—' : formatoCOP.format(ingresosDelMes),
+      badge: datos.facturas.error ? 'Error al consultar' : 'Pagos aprobados',
       badgeColor: 'muted',
     },
     {
       icon: 'shopping_bag',
       label: 'Pedidos activos',
-      valor: resumenDashboard ? String(resumenDashboard.pedidosActivos) : '...',
-      badge: resumenDashboard && resumenDashboard.pedidosActivos > 0 ? 'En curso' : 'Sin pedidos',
-      badgeColor: resumenDashboard && resumenDashboard.pedidosActivos > 0 ? 'rojo' : 'muted',
+      valor: pedidosActivos == null ? '—' : String(pedidosActivos),
+      badge: datos.activos.error ? 'Error al consultar' : pedidosActivos == null ? 'Cargando…' : pedidosActivos > 0 ? 'En curso' : 'Sin pedidos',
+      badgeColor: pedidosActivos != null && pedidosActivos > 0 ? 'rojo' : 'muted',
     },
   ]
-
-  const tendenciaSemanal = resumenDashboard?.tendencia ?? []
-
-  const [pedidosEnCurso, setPedidosEnCurso] = useState<PedidoEnCurso[]>([])
-
-  useEffect(() => {
-    if (seccionActiva !== 'Pedidos') return
-    api.get('/pedidos')
-      .then(({ data }: { data: PedidoEnCurso[] }) =>
-        setPedidosEnCurso(data.filter(p => p.estado !== 'CERRADO' && p.estado !== 'CANCELADO')))
-      .catch(console.error)
-  }, [seccionActiva])
-
-  // Estado de mesas: mesas reales de la base (GET /api/mesas), actualizadas cada 15 s.
-  const [mesas, setMesas] = useState<{ id: string; ocupada: boolean }[]>([])
-
-  useEffect(() => {
-    if (seccionActiva !== 'Menú' && seccionActiva !== 'Mesas') return
-    const cargarMesas = () =>
-      api.get('/mesas')
-        .then(({ data }: { data: { data: { numero: number; estado: string }[] } }) =>
-          setMesas(data.data.map(m => ({
-            id: `T-${String(m.numero).padStart(2, '0')}`,
-            ocupada: m.estado === 'occupied',
-          }))))
-        .catch(console.error)
-    cargarMesas()
-    const intervalo = setInterval(cargarMesas, 15000)
-    return () => clearInterval(intervalo)
-  }, [seccionActiva])
-
-  // Movimientos recientes (pagos aprobados) y Estado inventario (stock actual): datos de la base.
-  const [movimientosRecientes, setMovimientosRecientes] = useState<{ icon: string; titulo: string; sub: string; monto: string; positivo: boolean }[]>([])
-  const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
-
-  useEffect(() => {
-    if (seccionActiva !== 'Menú' && seccionActiva !== 'Finanzas') return
-    api.get('/facturas')
-      .then(({ data }: { data: { data: FacturaApi[] } }) => {
-        const aprobados = data.data
-          .flatMap(f => (f.pago ?? []).map(p => ({ ...p, mesa: f.pedido?.Mesa_num ?? null })))
-          .filter(p => p.estado === 'APROBADO')
-        const ahora = new Date()
-        setIngresosDelMes(aprobados
-          .filter(p => {
-            const fecha = new Date(p.fecha_pago ?? '')
-            return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear()
-          })
-          .reduce((acc, p) => acc + Number(p.monto ?? 0), 0))
-        setPagosAprobados(aprobados)
-        const pagos = [...aprobados]
-          .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
-          .slice(0, 4)
-        setMovimientosRecientes(pagos.map(p => ({
-          icon: 'shopping_cart',
-          titulo: p.mesa ? `Mesa ${String(p.mesa).padStart(2, '0')} - Pago recibido` : 'Pago recibido (domicilio)',
-          sub: `${haceTiempo(p.fecha_pago)} • ${etiquetaMetodo(p.metodo)}`,
-          monto: `+${formatoCOP.format(Number(p.monto ?? 0))}`,
-          positivo: true,
-        })))
-      })
-      .catch(console.error)
-
-    if (seccionActiva !== 'Menú') return
-    api.get('/inventario')
-      .then(({ data }: { data: { data: InventarioApi[] } }) => setEstadoInventario(data.data.map(i => {
-        const minimo = Number(i.stock_minimo ?? 0)
-        const actual = Number(i.stock_actual ?? 0)
-        return {
-          nombre: i.nombre,
-          porcentaje: minimo > 0 ? Math.min(100, Math.round((actual / minimo) * 100)) : 100,
-          color: i.stock_bajo ? 'rojo' : 'verde',
-          etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim(),
-        }
-      })))
-      .catch(console.error)
-  }, [seccionActiva])
-
-  // Historial: pedidos, pagos y turnos registrados en la base (no hay tabla de auditoria).
-  useEffect(() => {
-    if (seccionActiva !== 'Historial') return
-    Promise.all([api.get('/pedidos'), api.get('/turnos'), api.get('/facturas')])
-      .then(([pedidosRes, turnosRes, facturasRes]) => {
-        const pedidos: PedidoApi[] = pedidosRes.data
-        const turnosLista: TurnoApi[] = turnosRes.data.data
-        const facturasLista: FacturaApi[] = facturasRes.data.data
-        const cajeroDeTurno = new Map<number, string>(turnosLista.map(t => [
-          t.id_turno,
-          `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—',
-        ]))
-        const eventos: EventoHistorial[] = [
-          ...pedidos.map(p => ({
-            fecha: p.Fecha_hora,
-            usuario: p.nombre_mesero ?? '—',
-            accion: `Creó el pedido #${p.id_pedido} · ${p.Mesa_num ? `Mesa ${p.Mesa_num}` : (p.Tipo_pedido ?? 'Sin mesa')}`,
-          })),
-          ...turnosLista.flatMap(t => {
-            const caja = t.caja?.nombre ?? `caja ${t.id_caja}`
-            const cajero = cajeroDeTurno.get(t.id_turno) ?? '—'
-            const movimientos: EventoHistorial[] = [{ fecha: t.fecha_apertura, usuario: cajero, accion: `Abrió turno en ${caja}` }]
-            if (t.fecha_cierre) movimientos.push({ fecha: t.fecha_cierre, usuario: cajero, accion: `Cerró turno en ${caja}` })
-            return movimientos
-          }),
-          ...facturasLista.flatMap(f => (f.pago ?? []).map(p => ({
-            fecha: p.fecha_pago,
-            usuario: p.id_turno != null ? (cajeroDeTurno.get(p.id_turno) ?? '—') : '—',
-            accion: `Registró pago de ${formatoCOP.format(Number(p.monto ?? 0))} (${etiquetaMetodo(p.metodo)}) · factura #${p.id_factura ?? '—'}`,
-          }))),
-        ]
-        setHistorial(eventos
-          .sort((a, b) => new Date(b.fecha ?? 0).getTime() - new Date(a.fecha ?? 0).getTime())
-          .slice(0, 50))
-      })
-      .catch(console.error)
-  }, [seccionActiva])
-
-  const recargarTurnos = () => {
-    api.get('/turnos')
-      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
-      .catch(console.error)
-  }
-
-  useEffect(() => {
-    if (seccionActiva !== 'Turnos') return
-    api.get('/turnos')
-      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
-      .catch(console.error)
-    api.get('/cajas').then(r => setCajas(r.data)).catch(console.error)
-    api.get('/usuarios')
-      .then(({ data }: { data: Personal[] }) => setCajeros(data.filter(u => u.rol === 'CAJERO' && u.activo === 1)))
-      .catch(console.error)
-  }, [seccionActiva])
 
   const abrirTurno = async () => {
     const efectivo = Number(formAbrir.efectivo_inicial)
@@ -382,7 +151,7 @@ function Gerente() {
       setMostrarAbrirTurno(false)
       setFormAbrir({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
       setErrorTurno('')
-      recargarTurnos()
+      datos.jornadas.cargar()
     } catch {
       setErrorTurno('No se pudo abrir el turno')
     }
@@ -405,42 +174,17 @@ function Gerente() {
       setEfectivoContado('')
       setNotasCierre('')
       setErrorTurno('')
-      recargarTurnos()
+      datos.jornadas.cargar()
     } catch (error) {
       const mensaje = (error as { response?: { data?: { message?: string } } }).response?.data?.message
       setErrorTurno(mensaje ?? 'No se pudo cerrar el turno')
-      recargarTurnos()
+      datos.jornadas.cargar()
     }
   }
 
   const monedaTurno = (valor: string | number | null) =>
     valor === null || valor === undefined ? '—' : formatoCOP.format(Number(valor))
 
-  const etiquetaDemo = (
-    <span className="rounded-full bg-[var(--t-bg-f0ebe5,#f0ebe5)] px-2 py-0.5 text-[0.65rem] text-[var(--texto-muted)]">Demo</span>
-  )
-
-  const cargarProductos = () => {
-    const endpoint = fuenteProductos === 'vista' ? '/productos/vista' : '/productos/sp'
-    setCargandoProductos(true)
-    api.get(endpoint).then(res => setProductos(res.data)).catch(console.error).finally(() => setCargandoProductos(false))
-  }
-  useEffect(() => { cargarProductos() }, [fuenteProductos])
-  useEffect(() => { if (seccionActiva === 'Inventario') api.get('/ingredientes').then(r => setIngredientes(r.data)).catch(console.error) }, [seccionActiva])
-  useEffect(() => { if (seccionActiva === 'Proveedores') api.get('/proveedores').then(r => setProveedores(r.data)).catch(console.error) }, [seccionActiva])
-  useEffect(() => { if (seccionActiva === 'Flujo de Caja') api.get('/cajas').then(r => setCajas(r.data)).catch(console.error) }, [seccionActiva])
-  useEffect(() => { if (seccionActiva === 'Personal') cargarPersonal() }, [seccionActiva])
-  const cargarPersonal = async () => {
-    try {
-      setCargandoPersonal(true)
-      const { data } = await api.get('/usuarios')
-      setPersonal(data.filter((usuario: Personal) => usuario.id_rol !== 1 && usuario.id_rol !== 2))
-    } catch {
-      setErrorPersonal('Error al cargar personal')
-    } finally {
-      setCargandoPersonal(false)
-    }
-  }
   const editarUsuario = (usuario: Personal) => {
     setUsuarioEditando(usuario)
     setFormData({ nombre: usuario.nombre, apellido: usuario.apellido, email: usuario.email, id_rol: usuario.id_rol, contrasena: '' })
@@ -448,7 +192,7 @@ function Gerente() {
   }
   const eliminarUsuario = async (id: number) => {
     if (!confirm('¿Eliminar este usuario?')) return
-    try { await api.delete(`/usuarios/${id}`); await cargarPersonal() } catch { setErrorPersonal('No se pudo eliminar el usuario') }
+    try { await api.delete(`/usuarios/${id}`); await datos.usuarios.cargar() } catch { setErrorPersonal('No se pudo eliminar el usuario') }
   }
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -456,15 +200,15 @@ function Gerente() {
     setGuardandoPersonal(true)
     setErrorPersonal(null)
     try {
-      const datos = { ...formData, id_rol: Number(formData.id_rol), ...(formData.contrasena ? { contrasena: formData.contrasena } : {}) }
-      if (usuarioEditando) await api.put(`/usuarios/${usuarioEditando.id_usuario}`, datos)
-      else await api.post('/usuarios', { ...datos, id_restaurante: user?.id_restaurante })
+      const campos = { ...formData, id_rol: Number(formData.id_rol), ...(formData.contrasena ? { contrasena: formData.contrasena } : {}) }
+      if (usuarioEditando) await api.put(`/usuarios/${usuarioEditando.id_usuario}`, campos)
+      else await api.post('/usuarios', campos)
       setFormData(personalVacio)
       setUsuarioEditando(null)
       setMostrarContrasena(false)
-      await cargarPersonal()
-    } catch (err: any) {
-      setErrorPersonal(err.response?.data?.message ?? 'No se pudo guardar el usuario')
+      await datos.usuarios.cargar()
+    } catch (err) {
+      setErrorPersonal(mensajeError(err))
     } finally { setGuardandoPersonal(false) }
   }
   const abrirCrearProducto = () => { setModoEdicionProducto(false); setProductoActual(productoVacio); setIdEditandoProducto(null); setErrorProducto(null); setModalProducto(true) }
@@ -475,13 +219,13 @@ function Gerente() {
     setGuardandoProducto(true); setErrorProducto(null)
     try {
       modoEdicionProducto && idEditandoProducto ? await api.put(`/productos/${idEditandoProducto}`, productoActual) : await api.post('/productos', productoActual)
-      setModalProducto(false); cargarProductos()
-    } catch (err: any) { setErrorProducto(err.response?.data?.message ?? 'Error al guardar') }
+      setModalProducto(false); datos.catalogo.cargar()
+    } catch (err) { setErrorProducto(mensajeError(err)) }
     finally { setGuardandoProducto(false) }
   }
   const toggleProducto = async (id: number, estado: number) => {
     if (!confirm(`¿Deseas ${estado ? 'desactivar' : 'activar'} este producto?`)) return
-    try { await api.delete(`/productos/${id}`); cargarProductos() } catch { alert('Error') }
+    try { await api.delete(`/productos/${id}`); datos.catalogo.cargar() } catch { alert('Error') }
   }
   const abrirCrearIngrediente = () => { setModoEdicionIngrediente(false); setIngredienteActual(ingredienteVacio); setIdEditandoIngrediente(null); setErrorIngrediente(null); setModalIngrediente(true) }
   const abrirEditarIngrediente = (i: Ingrediente) => { setModoEdicionIngrediente(true); setIngredienteActual({ nombre: i.nombre, descripcion: i.descripcion, unidad_medida: i.unidad_medida, costo_unitario_ref: i.costo_unitario_ref, stock_minimo: i.stock_minimo }); setIdEditandoIngrediente(i.id_ingrediente); setErrorIngrediente(null); setModalIngrediente(true) }
@@ -490,13 +234,13 @@ function Gerente() {
     setGuardandoIngrediente(true); setErrorIngrediente(null)
     try {
       modoEdicionIngrediente && idEditandoIngrediente ? await api.put(`/ingredientes/${idEditandoIngrediente}`, ingredienteActual) : await api.post('/ingredientes', ingredienteActual)
-      setModalIngrediente(false); api.get('/ingredientes').then(r => setIngredientes(r.data))
-    } catch (err: any) { setErrorIngrediente(err.response?.data?.message ?? 'Error al guardar') }
+      setModalIngrediente(false); datos.ingredientes.cargar()
+    } catch (err) { setErrorIngrediente(mensajeError(err)) }
     finally { setGuardandoIngrediente(false) }
   }
   const eliminarIngrediente = async (id: number) => {
     if (!confirm('¿Eliminar este ingrediente?')) return
-    try { await api.delete(`/ingredientes/${id}`); api.get('/ingredientes').then(r => setIngredientes(r.data)) } catch { alert('Error al eliminar') }
+    try { await api.delete(`/ingredientes/${id}`); datos.ingredientes.cargar() } catch { alert('Error al eliminar') }
   }
   const abrirCrearProveedor = () => { setModoEdicionProveedor(false); setProveedorActual(proveedorVacio); setIdEditandoProveedor(null); setErrorProveedor(null); setModalProveedor(true) }
   const abrirEditarProveedor = (p: Proveedor) => { setModoEdicionProveedor(true); setProveedorActual({ nombre: p.nombre, nombre_contacto: p.nombre_contacto, telefono: p.telefono, email: p.email, direccion: p.direccion, nit: p.nit, tipo_proveedor: p.tipo_proveedor, estado: p.estado }); setIdEditandoProveedor(p.id_proveedor); setErrorProveedor(null); setModalProveedor(true) }
@@ -505,14 +249,14 @@ function Gerente() {
     setGuardandoProveedor(true); setErrorProveedor(null)
     try {
       modoEdicionProveedor && idEditandoProveedor ? await api.put(`/proveedores/${idEditandoProveedor}`, proveedorActual) : await api.post('/proveedores', proveedorActual)
-      setModalProveedor(false); api.get('/proveedores').then(r => setProveedores(r.data))
-    } catch (err: any) { setErrorProveedor(err.response?.data?.message ?? 'Error al guardar') }
+      setModalProveedor(false); datos.proveedores.cargar()
+    } catch (err) { setErrorProveedor(mensajeError(err)) }
     finally { setGuardandoProveedor(false) }
   }
   const toggleProveedor = async (id: number, estado: string) => {
     const nuevo = estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO'
     if (!confirm(`¿Deseas ${nuevo === 'INACTIVO' ? 'desactivar' : 'activar'} este proveedor?`)) return
-    try { await api.delete(`/proveedores/${id}`); api.get('/proveedores').then(r => setProveedores(r.data)) } catch { alert('Error') }
+    try { await api.delete(`/proveedores/${id}`); datos.proveedores.cargar() } catch { alert('Error') }
   }
   const abrirCrearCaja = () => { setModoEdicionCaja(false); setCajaActual(cajaVacia); setIdEditandoCaja(null); setErrorCaja(null); setModalCaja(true) }
   const abrirEditarCaja = (c: Caja) => { setModoEdicionCaja(true); setCajaActual({ nombre: c.nombre, estado: c.estado }); setIdEditandoCaja(c.id_caja); setErrorCaja(null); setModalCaja(true) }
@@ -521,13 +265,13 @@ function Gerente() {
     setGuardandoCaja(true); setErrorCaja(null)
     try {
       modoEdicionCaja && idEditandoCaja ? await api.put(`/cajas/${idEditandoCaja}`, cajaActual) : await api.post('/cajas', cajaActual)
-      setModalCaja(false); api.get('/cajas').then(r => setCajas(r.data))
-    } catch (err: any) { setErrorCaja(err.response?.data?.message ?? 'Error al guardar') }
+      setModalCaja(false); datos.cajas.cargar()
+    } catch (err) { setErrorCaja(mensajeError(err)) }
     finally { setGuardandoCaja(false) }
   }
   const toggleCaja = async (id: number, estado: string) => {
     if (!confirm(`¿Deseas ${estado === 'ACTIVA' ? 'desactivar' : 'activar'} esta caja?`)) return
-    try { await api.delete(`/cajas/${id}`); api.get('/cajas').then(r => setCajas(r.data)) } catch { alert('Error') }
+    try { await api.delete(`/cajas/${id}`); datos.cajas.cargar() } catch { alert('Error') }
   }
   return (
     <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
@@ -540,7 +284,12 @@ function Gerente() {
         footer={<button type="button" onClick={() => setVistaActual('turnos')} className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">Cerrar Caja</button>}
       />
       <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 pt-20 md:p-8">
-        <Header seccionActiva={seccionActiva} nombreUsuario={[user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Gerente'} />
+        <Header
+          seccionActiva={seccionActiva}
+          nombreUsuario={[user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Gerente'}
+          subtitulo={user?.nombre_establecimiento ? `Establecimiento: ${user.nombre_establecimiento}` : undefined}
+        />
+        {datos.aviso && <EstadoLectura consulta={datos.aviso} />}
         {/* MENÚ — Dashboard principal */}
         {seccionActiva === 'Menú' && (
           <>
@@ -571,6 +320,7 @@ function Gerente() {
                   </div>
                 </div>
                 <div className="flex h-40 items-end justify-between gap-2">
+                  <EstadoLectura consulta={datos.semana} vacio={!tendenciaSemanal.length ? 'No hay ventas registradas en los últimos 7 días.' : undefined} />
                   {tendenciaSemanal.map(b => (
                     <div key={b.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                       <div
@@ -601,8 +351,9 @@ function Gerente() {
                     <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Estado inventario</h4>
                   </div>
                   <div className="flex flex-col gap-3.5">
+                    <EstadoLectura consulta={datos.inventario} vacio={!estadoInventario.length ? 'No hay ingredientes registrados.' : undefined} />
                     {estadoInventario.map(i => (
-                      <div key={i.nombre}>
+                      <div key={i.id}>
                         <div className="mb-1 flex justify-between">
                           <span className="text-[0.75rem] font-medium text-[var(--texto-muted)]">{i.nombre}</span>
                           <span className={`text-[0.75rem] font-bold ${
@@ -653,8 +404,8 @@ function Gerente() {
                   </button>
                 </div>
               </div>
-              {cargandoProductos ? (
-                <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>
+              {datos.catalogo.data === null || datos.catalogo.error ? (
+                <EstadoLectura consulta={datos.catalogo} />
               ) : (
                 <DataTable
                   columns={[
@@ -706,6 +457,7 @@ function Gerente() {
                   </div>
                 </div>
                 <div className="grid grid-cols-6 gap-2.5">
+                  <EstadoLectura consulta={datos.plano} vacio={!mesas.length ? 'No hay mesas registradas.' : undefined} />
                   {mesas.map(m => (
                     <div
                       key={m.id}
@@ -729,6 +481,7 @@ function Gerente() {
                   <button className="border-none bg-transparent text-[0.75rem] font-semibold text-[var(--rojo)]">Ver todo</button>
                 </div>
                 <div className="flex flex-col gap-4">
+                  <EstadoLectura consulta={datos.facturas} vacio={!movimientosRecientes.length ? 'No hay pagos registrados.' : undefined} />
                   {movimientosRecientes.map((mov, i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
@@ -751,7 +504,7 @@ function Gerente() {
           </>
         )}
         {/* INVENTARIO — CRUD Ingredientes */}
-        {seccionActiva === 'Inventario' && (
+        {seccionActiva === 'Inventario' && !datos.aviso && (
           <IngredientesSection
             ingredientes={ingredientes}
             onCreate={abrirCrearIngrediente}
@@ -760,28 +513,30 @@ function Gerente() {
           />
         )}
         {/* PROVEEDORES — CRUD */}
-        {seccionActiva === 'Proveedores' && <ProveedoresSection proveedores={proveedores} onCreate={abrirCrearProveedor} onEdit={abrirEditarProveedor} onToggle={toggleProveedor} />}
+        {seccionActiva === 'Proveedores' && !datos.aviso && <ProveedoresSection proveedores={proveedores} onCreate={abrirCrearProveedor} onEdit={abrirEditarProveedor} onToggle={toggleProveedor} />}
         {/* FLUJO DE CAJA — CRUD Cajas */}
-        {seccionActiva === 'Flujo de Caja' && <CajasSection cajas={cajas} onCreate={abrirCrearCaja} onEdit={abrirEditarCaja} onToggle={toggleCaja} />}
+        {seccionActiva === 'Flujo de Caja' && !datos.aviso && <CajasSection cajas={cajas} onCreate={abrirCrearCaja} onEdit={abrirEditarCaja} onToggle={toggleCaja} />}
         {/* FINANZAS — pagos aprobados y compras de la base */}
-        {seccionActiva === 'Finanzas' && (
+        {seccionActiva === 'Finanzas' && !datos.aviso && (
           <FinanzasSection
             stats={[
               {
                 icon: 'trending_up',
                 label: 'Ventas del mes',
-                valor: ingresosDelMes === null ? '...' : formatoCOP.format(ingresosDelMes),
+                valor: ingresosDelMes === null ? '—' : formatoCOP.format(ingresosDelMes),
                 badge: 'Pagos aprobados',
                 badgeColor: 'verde',
               },
               {
-                ...finanzasStats[1],
+                icon: 'trending_down',
+                label: 'Gastos del mes',
                 valor: gastosMes === null ? '...' : formatoCOP.format(gastosMes),
                 badge: 'Compras del mes',
                 badgeColor: 'rojo',
               },
               {
-                ...finanzasStats[2],
+                icon: 'account_balance_wallet',
+                label: 'Utilidad neta',
                 valor: ingresosDelMes === null || gastosMes === null ? '...' : formatoCOP.format(ingresosDelMes - gastosMes),
                 badge: 'Ingresos − gastos',
                 badgeColor: 'muted',
@@ -796,13 +551,13 @@ function Gerente() {
                   : '—',
                 concepto: `Pago ${etiquetaMetodo(p.metodo)} · factura ${p.id_factura ?? '—'}`,
                 categoria: 'Ingreso',
-                monto: `+${formatoCOP.format(Number(p.monto ?? 0))}`,
+                monto: formatoCOP.format(Number(p.monto ?? 0)),
                 positivo: true,
               }))}
           />
         )}
         {/* PEDIDOS — pedidos en curso desde la base */}
-        {seccionActiva === 'Pedidos' && (
+        {seccionActiva === 'Pedidos' && !datos.aviso && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Pedidos activos</h3>
             <div className="flex flex-col gap-3">
@@ -839,7 +594,7 @@ function Gerente() {
           </section>
         )}
         {/* MESAS — estado de mesas desde la base */}
-        {seccionActiva === 'Mesas' && (
+        {seccionActiva === 'Mesas' && !datos.aviso && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
@@ -852,6 +607,8 @@ function Gerente() {
                 </span>
               </div>
             </div>
+            <AltaMesa alCrear={datos.plano.cargar} />
+            {!mesas.length && <p>No hay mesas registradas para este establecimiento.</p>}
             <div className="grid grid-cols-6 gap-2.5">
               {mesas.map(m => (
                 <div
@@ -871,28 +628,9 @@ function Gerente() {
             </div>
           </section>
         )}
-        {/* IA INSIGHTS — vista con datos de ejemplo */}
-        {seccionActiva === 'IA Insights' && (
-          <section className="mt-6 grid grid-cols-2 gap-4">
-            <div className="col-span-2 flex justify-end">{etiquetaDemo}</div>
-            {iaInsights.map((insight, i) => (
-              <div key={i} className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
-                <div className="mb-3 flex items-center gap-3">
-                  <span className={`material-symbols-outlined rounded-[10px] p-2 text-[22px] ${
-                    insight.tono === 'verde' ? 'bg-[var(--verde-light)] text-[var(--verde)]' :
-                    insight.tono === 'rojo' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' :
-                    insight.tono === 'amarillo' ? 'bg-[var(--amarillo-light)] text-[var(--t-txt-854f0b,#854F0B)]' :
-                    'bg-[var(--t-bg-f0ebe5,#f0ebe5)] text-[var(--texto-muted)]'
-                  }`}>{insight.icon}</span>
-                  <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">{insight.titulo}</h4>
-                </div>
-                <p className="text-[0.85rem] leading-[1.6] text-[var(--texto-muted)]">{insight.detalle}</p>
-              </div>
-            ))}
-          </section>
-        )}
+        {seccionActiva === 'IA Insights' && <IASection />}
         {/* HISTORIAL — pedidos, pagos y turnos de la base */}
-        {seccionActiva === 'Historial' && (
+        {seccionActiva === 'Historial' && !datos.aviso && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <h3 className="mb-2 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>
             <p className="mb-5 text-[0.78rem] text-[var(--texto-muted)]">Pedidos, pagos y turnos registrados en la base. No incluye ediciones ni borrados.</p>
@@ -914,14 +652,14 @@ function Gerente() {
             </div>
           </section>
         )}
-        {seccionActiva === 'Personal' && (
+        {seccionActiva === 'Personal' && !datos.aviso && (
           <PersonalSection
             personal={personal}
             formData={formData}
             usuarioEditando={usuarioEditando}
             errorPersonal={errorPersonal}
             guardandoPersonal={guardandoPersonal}
-            cargandoPersonal={cargandoPersonal}
+            cargandoPersonal={datos.usuarios.cargando}
             mostrarContrasena={mostrarContrasena}
             onFormSubmit={handleSubmit}
             onFormChange={(field, value) => setFormData(current => ({ ...current, [field]: value }))}
@@ -932,7 +670,7 @@ function Gerente() {
           />
         )}
         {/* TURNOS — apertura y cierre de caja con datos de la base */}
-        {seccionActiva === 'Turnos' && (
+        {seccionActiva === 'Turnos' && !datos.aviso && (
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
@@ -1108,4 +846,8 @@ function Gerente() {
     </div>
   )
 }
-export default Gerente
+// Reiniciar las lecturas y formularios si cambia la cuenta en la misma pestaña.
+export default function PanelGerente() {
+  const { user } = useAuth()
+  return <Gerente key={`${user?.id_usuario}:${user?.id_restaurante}`} />
+}

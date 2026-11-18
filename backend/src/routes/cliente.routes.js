@@ -1,11 +1,8 @@
 import { Router } from 'express';
-import { authRequired } from '../middleware/auth.js';
 import { requireRole } from '../middleware/requireRole.js';
 import * as clienteController from '../controllers/cliente.controller.js';
 
 const router = Router();
-
-router.use(authRequired);
 
 const lectura = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO', 'REPARTIDOR');
 const crear = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO');

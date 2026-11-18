@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import api from '../../../api/axios'
+import { useConsulta } from '../../../hook/useConsulta'
+import { formatoCOP } from '../useDatosGerente'
 
 interface AlertaStock {
   id_ingrediente: number
@@ -35,27 +35,11 @@ interface VentasDiarias {
   productos_top: ProductoTop[]
 }
 
-const formatoCOP = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-})
-
 function DashboardOperativo() {
-  const [alertas, setAlertas] = useState<AlertaStock[] | null>(null)
-  const [ventas, setVentas] = useState<VentasDiarias | null>(null)
-  const [errorAlertas, setErrorAlertas] = useState(false)
-  const [errorVentas, setErrorVentas] = useState(false)
-
-  useEffect(() => {
-    api.get('/inventario/alertas/stock-bajo')
-      .then(({ data }) => setAlertas(data.data))
-      .catch(() => setErrorAlertas(true))
-
-    api.get('/reportes/ventas-diarias')
-      .then(({ data }) => setVentas(data.data))
-      .catch(() => setErrorVentas(true))
-  }, [])
+  const stock = useConsulta<{ data: AlertaStock[] }>('/inventario/alertas/stock-bajo')
+  const reporte = useConsulta<{ data: VentasDiarias }>('/reportes/ventas-diarias')
+  const alertas = stock.error ? null : stock.data?.data ?? null
+  const ventas = reporte.error ? null : reporte.data?.data ?? null
 
   return (
     <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -72,10 +56,10 @@ function DashboardOperativo() {
           )}
         </div>
 
-        {errorAlertas && <p className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas.</p>}
-        {!errorAlertas && alertas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
+        {stock.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas. <button onClick={stock.cargar}>Reintentar</button></p>}
+        {!stock.error && alertas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {alertas && alertas.length === 0 && (
-          <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin alertas de stock.</p>
+          <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin alertas de stock para este establecimiento.</p>
         )}
         {alertas && alertas.length > 0 && (
           <ul className="flex flex-col gap-2">
@@ -102,8 +86,8 @@ function DashboardOperativo() {
           <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Facturas pagadas del día</p>
         </div>
 
-        {errorVentas && <p className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas.</p>}
-        {!errorVentas && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
+        {reporte.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas. <button onClick={reporte.cargar}>Reintentar</button></p>}
+        {!reporte.error && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {ventas && (
           <>
             <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -123,7 +107,7 @@ function DashboardOperativo() {
 
             <p className="mb-2 text-[0.78rem] font-semibold text-[var(--texto-muted)]">Productos más vendidos</p>
             {ventas.productos_top.length === 0 ? (
-              <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin ventas registradas hoy.</p>
+              <p className="text-[0.85rem] text-[var(--texto-muted)]">{ventas.total.total_pedidos === 0 ? 'Sin ventas registradas hoy en este establecimiento.' : 'Sin productos desglosados en las facturas de hoy.'}</p>
             ) : (
               <ol className="flex flex-col gap-1.5">
                 {ventas.productos_top.map((p, i) => (

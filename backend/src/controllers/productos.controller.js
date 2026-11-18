@@ -1,4 +1,5 @@
-import prisma from '../config/prisma.js';
+import mariadb from 'mariadb';
+import prisma, { dbConfig } from '../config/prisma.js';
 import { parseId, validateString } from '../utils/validation.js';
 
 function isEmpty(value) {
@@ -117,20 +118,20 @@ function formatProducto(producto) {
   };
 }
 
-async function categoriaExiste(idCategoria) {
+async function categoriaExiste(idCategoria, sede) {
   if (idCategoria === null || idCategoria === undefined) {
     return true;
   }
 
   const categoria = await prisma.categoria_productos.findUnique({
-    where: { id_categoria: idCategoria },
+    where: { id_categoria: idCategoria, ...sede },
     select: { id_categoria: true },
   });
 
   return Boolean(categoria);
 }
 
-async function validarProducto(body) {
+async function validarProducto(body, sede) {
   const timeResult = parseTimeToDate(body.Tiempo_preparacion);
 
   if (timeResult.error) {
@@ -156,7 +157,7 @@ async function validarProducto(body) {
     ? null
     : Number(body.id_categoria);
 
-  if (!(await categoriaExiste(idCategoria))) {
+  if (!(await categoriaExiste(idCategoria, sede))) {
     return { error: 'La categoría indicada no existe' };
   }
 
@@ -178,10 +179,12 @@ async function validarProducto(body) {
   };
 }
 
-async function listarProductos() {
+async function listarProductos(sede) {
   const productos = await prisma.producto.findMany({
+    where: sede,
     include: {
       categoria: {
+        where: sede,
         select: {
           id_categoria: true,
           nombre: true,
@@ -195,22 +198,10 @@ async function listarProductos() {
   return productos.map(formatProducto);
 }
 
-function obtenerPrimerResultSet(resultados) {
-  if (!Array.isArray(resultados)) {
-    return resultados;
-  }
-
-  if (Array.isArray(resultados[0])) {
-    return resultados[0];
-  }
-
-  return resultados;
-}
-
 // GET /api/productos
 export async function index(req, res, next) {
   try {
-    const productos = await listarProductos();
+    const productos = await listarProductos(req.sede);
     res.json(productos);
   } catch (err) {
     next(err);
@@ -221,6 +212,7 @@ export async function index(req, res, next) {
 // Consulta la vista SQL real: vista_listado_productos.
 export async function listarVista(req, res, next) {
   try {
+    const idSede = req.sede.id_restaurante ?? null; // null solo en la lectura global de SUPERADMIN
     const productos = await prisma.$queryRaw`
       SELECT
         id_producto,
@@ -231,6 +223,7 @@ export async function listarVista(req, res, next) {
         Tiempo_preparacion,
         Estado
       FROM vista_listado_productos
+      WHERE (${idSede} IS NULL OR id_restaurante = ${idSede})
       ORDER BY id_producto ASC
     `;
 
@@ -244,13 +237,15 @@ export async function listarVista(req, res, next) {
 // Ejecuta el procedimiento almacenado real: sp_listar_productos.
 export async function listarProcedimiento(req, res, next) {
   try {
-    const resultados = await prisma.$queryRaw`
-      CALL sp_listar_productos()
-    `;
-
-    const productos = obtenerPrimerResultSet(resultados);
-
-    res.json(productos.map(formatProducto));
+    // CALL devuelve [filas, metadatos]. $queryRaw de Prisma pierde los nombres
+    // de columna en respuestas múltiples del adaptador MariaDB.
+    const conexion = await mariadb.createConnection(dbConfig);
+    try {
+      const [productos] = await conexion.query('CALL sp_listar_productos(?)', [req.sede.id_restaurante ?? null]);
+      res.json(productos.map(formatProducto));
+    } finally {
+      await conexion.end();
+    }
   } catch (err) {
     next(err);
   }
@@ -268,9 +263,10 @@ export async function show(req, res, next) {
     }
 
     const producto = await prisma.producto.findUnique({
-      where: { id_producto: id },
+      where: { id_producto: id, ...req.sede },
       include: {
         categoria: {
+          where: req.sede,
           select: {
             id_categoria: true,
             nombre: true,
@@ -293,13 +289,13 @@ export async function show(req, res, next) {
 // POST /api/productos
 export async function crear(req, res, next) {
   try {
-    const { error, data } = await validarProducto(req.body);
+    const { error, data } = await validarProducto(req.body, req.sede);
 
     if (error) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.producto.create({ data });
+    await prisma.producto.create({ data: { ...data, ...req.sede } });
 
     res.status(201).json({ message: 'Producto creado' });
   } catch (err) {
@@ -318,14 +314,14 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    const { error, data } = await validarProducto(req.body);
+    const { error, data } = await validarProducto(req.body, req.sede);
 
     if (error) {
       return res.status(422).json({ message: error });
     }
 
     await prisma.producto.update({
-      where: { id_producto: id },
+      where: { id_producto: id, ...req.sede },
       data,
     });
 
@@ -352,7 +348,7 @@ export async function eliminar(req, res, next) {
     }
 
     const producto = await prisma.producto.findUnique({
-      where: { id_producto: id },
+      where: { id_producto: id, ...req.sede },
     });
 
     if (!producto) {
@@ -362,7 +358,7 @@ export async function eliminar(req, res, next) {
     const nuevoEstado = producto.Estado ? 0 : 1;
 
     await prisma.producto.update({
-      where: { id_producto: id },
+      where: { id_producto: id, ...req.sede },
       data: { Estado: nuevoEstado },
     });
 

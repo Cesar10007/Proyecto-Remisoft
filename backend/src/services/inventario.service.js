@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import { ErrorSalon } from '../utils/salon.js';
 import { Prisma } from '../generated/prisma/client.js';
 
 // Réplica en la API de la validación de sp_registrar_movimiento_inventario:
@@ -33,9 +33,12 @@ export class StockInsuficienteError extends Error {
 
 // Mismo orden de bloqueo para cada operación que consume/devuelve ingredientes:
 // entre una lectura de stock y su movimiento no puede intercalarse otra salida.
-export async function bloquearIngredientes(tx, ids) {
+export async function bloquearIngredientes(tx, ids, idRestaurante) {
   if (ids.length) {
-    await tx.$queryRaw`SELECT id_ingrediente FROM Ingrediente WHERE id_ingrediente IN (${Prisma.join([...new Set(ids)])}) ORDER BY id_ingrediente FOR UPDATE`;
+    const unicos = [...new Set(ids)];
+    const filas = await tx.$queryRaw`SELECT id_ingrediente FROM Ingrediente WHERE id_restaurante = ${idRestaurante}
+      AND id_ingrediente IN (${Prisma.join(unicos)}) ORDER BY id_ingrediente FOR UPDATE`;
+    if (filas.length !== unicos.length) throw new ErrorSalon(409, 'Hay un ingrediente sin asignar a este establecimiento.');
   }
 }
 
@@ -44,17 +47,16 @@ export async function bloquearIngredientes(tx, ids) {
  * [{ id_ingrediente, requerido }].
  * Lanza StockInsuficienteError si falta algo.
  */
-export async function verificarStockIngredientes(tx, requerimientos) {
+export async function verificarStockIngredientes(tx, requerimientos, idRestaurante) {
   if (!Array.isArray(requerimientos) || requerimientos.length === 0) {
     return [];
   }
 
-  const cliente = tx ?? prisma;
   const ids = [...new Set(requerimientos.map((r) => r.id_ingrediente))];
 
-  const movimientos = await cliente.inventario_mov.groupBy({
+  const movimientos = await tx.inventario_mov.groupBy({
     by: ['id_ingrediente', 'tipo_movimiento'],
-    where: { id_ingrediente: { in: ids } },
+    where: { id_restaurante: idRestaurante, id_ingrediente: { in: ids } },
     _sum: { cantidad: true },
   });
 
@@ -79,8 +81,8 @@ export async function verificarStockIngredientes(tx, requerimientos) {
     .filter((r) => r.disponible < r.requerido);
 
   if (faltantes.length > 0) {
-    const ingredientes = await cliente.ingrediente.findMany({
-      where: { id_ingrediente: { in: faltantes.map((f) => f.id_ingrediente) } },
+    const ingredientes = await tx.ingrediente.findMany({
+      where: { id_restaurante: idRestaurante, id_ingrediente: { in: faltantes.map((f) => f.id_ingrediente) } },
       select: { id_ingrediente: true, nombre: true, unidad_medida: true },
     });
     throw new StockInsuficienteError(
@@ -95,19 +97,21 @@ export async function verificarStockIngredientes(tx, requerimientos) {
  * Convierte items de pedido [{ id_producto, cantidad }] en requerimientos
  * de ingredientes usando la Receta de cada producto.
  */
-export async function calcularRequerimientos(tx, items) {
+export async function calcularRequerimientos(tx, items, idRestaurante) {
   if (!Array.isArray(items) || items.length === 0) {
     return [];
   }
 
-  const cliente = tx ?? prisma;
   const idsProductos = [...new Set(items.map((i) => i.id_producto))];
 
   if (idsProductos.length === 0) {
     return [];
   }
 
-  const recetas = await cliente.Receta.findMany({
+  if (await tx.producto.count({ where: { id_producto: { in: idsProductos }, id_restaurante: idRestaurante } }) !== idsProductos.length) {
+    throw new ErrorSalon(409, 'El pedido contiene productos sin asignar a este establecimiento.');
+  }
+  const recetas = await tx.receta.findMany({
     where: { id_producto: { in: idsProductos } },
     select: {
       id_producto: true,
@@ -147,8 +151,8 @@ export async function calcularRequerimientos(tx, items) {
  * Verifica stock para un pedido completo (vía recetas) y devuelve los
  * requerimientos calculados para poder descontarlos después.
  */
-export async function verificarStockSuficiente(tx, items) {
-  const requerimientos = await calcularRequerimientos(tx, items);
+export async function verificarStockSuficiente(tx, items, idRestaurante) {
+  const requerimientos = await calcularRequerimientos(tx, items, idRestaurante);
 
   if (requerimientos.length === 0) {
     return { requerimientos };
@@ -157,8 +161,9 @@ export async function verificarStockSuficiente(tx, items) {
   await bloquearIngredientes(
     tx,
     requerimientos.map((r) => r.id_ingrediente),
+    idRestaurante,
   );
-  await verificarStockIngredientes(tx, requerimientos);
+  await verificarStockIngredientes(tx, requerimientos, idRestaurante);
 
   return { requerimientos };
 }
@@ -170,7 +175,7 @@ export async function verificarStockSuficiente(tx, items) {
 export async function registrarSalidasPorConsumo(
   tx,
   requerimientos,
-  { id_usuario = null, origen_tipo = 'VENTA', origen_id = null } = {},
+  { id_usuario, id_restaurante, origen_tipo = 'VENTA', origen_id = null },
 ) {
   if (!Array.isArray(requerimientos) || requerimientos.length === 0) {
     return 0;
@@ -180,6 +185,7 @@ export async function registrarSalidasPorConsumo(
     data: requerimientos.map((r) => ({
       id_ingrediente: r.id_ingrediente,
       id_usuario,
+      id_restaurante,
       fecha_hora: new Date(),
       tipo_movimiento: 'SALIDA',
       cantidad: r.requerido,
