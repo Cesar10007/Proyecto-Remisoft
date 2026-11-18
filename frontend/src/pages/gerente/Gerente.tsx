@@ -939,7 +939,7 @@ function Gerente() {
               <button
                 type="button"
                 onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}
-                className="rounded-xl bg-[var(--texto)] px-4 py-2 text-[0.85rem] font-semibold text-white"
+                className="rounded-xl bg-[var(--rojo)] px-4 py-2 text-[0.85rem] font-semibold text-white"
               >
                 {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
               </button>
