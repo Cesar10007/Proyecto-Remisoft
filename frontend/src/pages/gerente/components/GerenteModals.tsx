@@ -53,7 +53,7 @@ function GerenteModals({
     <div className="mt-5 flex justify-end gap-3">
       <button
         type="button"
-        className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-4 py-2.5 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
+        className="rounded-[10px] border border-[var(--borde)] bg-[var(--bg)] px-4 py-2.5 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
         onClick={close}
         disabled={saving}
       >
@@ -74,7 +74,7 @@ function GerenteModals({
       {/* Modal Producto */}
       <Modal isOpen={productoOpen} onClose={closeProducto}>
         <form
-          className="min-w-[400px] p-6"
+          className="w-full"
           onSubmit={(event) => {
             event.preventDefault()
             submitProducto()
@@ -135,7 +135,7 @@ function GerenteModals({
       {/* Modal Ingrediente */}
       <Modal isOpen={ingredienteOpen} onClose={closeIngrediente}>
         <form
-          className="min-w-[400px] p-6"
+          className="w-full"
           onSubmit={(event) => {
             event.preventDefault()
             submitIngrediente()
@@ -188,7 +188,7 @@ function GerenteModals({
       {/* Modal Proveedor */}
       <Modal isOpen={proveedorOpen} onClose={closeProveedor}>
         <form
-          className="min-w-[420px] p-6"
+          className="w-full"
           onSubmit={(event) => {
             event.preventDefault()
             submitProveedor()
@@ -259,7 +259,7 @@ function GerenteModals({
       {/* Modal Caja */}
       <Modal isOpen={cajaOpen} onClose={closeCaja}>
         <form
-          className="min-w-[380px] p-6"
+          className="w-full"
           onSubmit={(event) => {
             event.preventDefault()
             submitCaja()
