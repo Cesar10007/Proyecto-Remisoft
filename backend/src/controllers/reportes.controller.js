@@ -64,7 +64,7 @@ export async function ventasDiarias(req, res, next) {
       JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido
       JOIN Producto p ON p.id_producto = dp.id_producto
       WHERE f.estado = 'PAGADA'
-        AND DATE(f.Fecha_emision) BETWEEN ${desde} AND ${hasta}
+        AND DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00')) BETWEEN ${desde} AND ${hasta}
       GROUP BY p.id_producto, p.Nombre
       ORDER BY unidades DESC, ingresos DESC
       LIMIT 5
