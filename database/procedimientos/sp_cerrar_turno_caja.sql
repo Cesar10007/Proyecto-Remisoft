@@ -21,18 +21,20 @@ CREATE PROCEDURE sp_cerrar_turno_caja(
     IN p_id_restaurante INT
 )
 BEGIN
-    DECLARE v_efectivo_inicial  DECIMAL(10,2);
-    DECLARE v_total_ingresos    DECIMAL(10,2);
-    DECLARE v_total_egresos     DECIMAL(10,2);
     DECLARE v_efectivo_esperado DECIMAL(10,2);
     DECLARE v_diferencia        DECIMAL(10,2);
     DECLARE v_estado_turno      VARCHAR(20);
 
-    -- Verificar que el turno existe y está abierto
-    SELECT estado, efectivo_inicial
-    INTO v_estado_turno, v_efectivo_inicial
-    FROM turno_caja
-    WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- Serializar el cierre con los cobros del cajero y con un segundo cierre.
+    START TRANSACTION;
+    SELECT estado INTO v_estado_turno FROM turno_caja
+    WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante FOR UPDATE;
 
     IF v_estado_turno IS NULL THEN
         SIGNAL SQLSTATE '45000'
@@ -44,15 +46,10 @@ BEGIN
             SET MESSAGE_TEXT = 'El turno ya fue cerrado.';
     END IF;
 
-    -- Calcular totales de flujo de caja del turno
-    SELECT
-        COALESCE(SUM(ingresos), 0),
-        COALESCE(SUM(egresos),  0)
-    INTO v_total_ingresos, v_total_egresos
-    FROM flujo_caja
-    WHERE id_turno = p_id_turno;
+    SELECT efectivo_esperado INTO v_efectivo_esperado
+    FROM vista_arqueo_turno
+    WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
 
-    SET v_efectivo_esperado = v_efectivo_inicial + v_total_ingresos - v_total_egresos;
     SET v_diferencia        = p_efectivo_real - v_efectivo_esperado;
 
     -- Actualizar el turno con el cierre
@@ -65,6 +62,7 @@ BEGIN
         notas              = p_notas,
         estado             = 'CERRADA'
     WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
+    COMMIT;
 END //
 
 DELIMITER ;

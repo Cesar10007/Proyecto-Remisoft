@@ -1,36 +1,13 @@
-import { randomUUID } from 'node:crypto'
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
+import { iniciarSedeNueva } from './helpers/sede'
 
 test.skip(process.env.ESTABLECIMIENTO_E2E !== '1', 'Solo para una base desechable con el superadmin de demostración.')
 
-async function entrar(page: Page, email: string, clave: string) {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).first().click()
-  await page.getByLabel('Correo electrónico').fill(email)
-  await page.locator('#login-password').fill(clave)
-  await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
-}
-
 test('un gerente nuevo ve su sede vacía, incluso si Principal ya tiene ventas y alertas', async ({ page }) => {
-  const id = randomUUID().slice(0, 8)
-  const email = `gerente-${id}@example.test`
-  const clave = `Nueva!9${id}`
   const boton = (name: string) => page.getByRole('button', { name, exact: true })
   const errores: string[] = []
   page.on('pageerror', e => errores.push(e.message))
-  await entrar(page, 'carlos.ramirez@resto.com', '123456')
-  await boton('Gestión de Gerentes').click()
-  await page.getByRole('button', { name: /Agregar gerente/ }).click()
-  const alta = page.getByRole('dialog', { name: 'Agregar gerente' })
-  await alta.getByLabel('Nombre *', { exact: true }).fill('Gerente de prueba')
-  await alta.getByLabel('Correo electrónico *').fill(email)
-  await alta.getByLabel('Nombre Establecimiento *').fill(`Sede ${id}`)
-  await alta.getByLabel('Contraseña *', { exact: true }).fill(clave)
-  await alta.getByRole('button', { name: 'Crear gerente' }).click()
-  await expect(page.getByText(email, { exact: true })).toBeVisible()
-  await boton('Cerrar sesión').click()
-  await entrar(page, email, clave)
-  await expect(page.getByText(`Establecimiento: Sede ${id}`)).toBeVisible()
+  const { id } = await iniciarSedeNueva(page)
   await expect(page.getByText(/Sin ventas registradas hoy/)).toBeVisible()
   await expect(page.getByText(/Sin alertas de stock/)).toBeVisible()
   await expect(page.getByText('Sin productos', { exact: true })).toBeVisible()

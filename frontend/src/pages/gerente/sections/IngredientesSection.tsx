@@ -1,15 +1,19 @@
-import type { Ingrediente } from '../types'
+import { useState } from 'react'
+import MovimientosIngrediente from '../components/MovimientosIngrediente'
+import type { Ingrediente, IngredienteConStock } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
 
 interface IngredientesSectionProps {
-  ingredientes: Ingrediente[]
+  ingredientes: IngredienteConStock[]
+  actualizar: () => Promise<void>
   onCreate: () => void
   onEdit: (ingrediente: Ingrediente) => void
   onDelete: (id: number) => void
 }
 
-function IngredientesSection({ ingredientes, onCreate, onEdit, onDelete }: IngredientesSectionProps) {
-  const columns: Column<Ingrediente>[] = [
+function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDelete }: IngredientesSectionProps) {
+  const [seleccion, setSeleccion] = useState<Ingrediente | null>(null)
+  const columns: Column<IngredienteConStock>[] = [
     {
       header: 'Nombre',
       render: (i) => <strong>{i.nombre}</strong>,
@@ -30,10 +34,12 @@ function IngredientesSection({ ingredientes, onCreate, onEdit, onDelete }: Ingre
       header: 'Stock mínimo',
       accessor: 'stock_minimo',
     },
+    { header: 'Stock actual', accessor: 'stock_actual' },
     {
       header: 'Acciones',
       render: (i) => (
         <div className="flex gap-2">
+          <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
           <button
             className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#ede5dc]"
             onClick={() => onEdit(i)}
@@ -68,6 +74,7 @@ function IngredientesSection({ ingredientes, onCreate, onEdit, onDelete }: Ingre
           </button>
         }
       />
+      {seleccion && <MovimientosIngrediente ingrediente={seleccion} actualizar={actualizar} cerrar={() => setSeleccion(null)} />}
     </div>
   )
 }

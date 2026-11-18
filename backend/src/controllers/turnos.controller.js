@@ -303,7 +303,7 @@ export async function destroy(req, res, next) {
 
 // POST /api/turnos/:id/cerrar
 // Cierra el turno con el procedimiento de la base sp_cerrar_turno_caja, que calcula
-// el efectivo esperado (inicial + ingresos - egresos de flujo_caja) y la diferencia.
+// el efectivo esperado (fondo inicial + movimientos en efectivo) y la diferencia.
 export async function cerrar(req, res, next) {
   try {
     const idTurno = parseId(req.params.id);
@@ -439,11 +439,12 @@ export async function gastos(req, res, next) {
 }
 
 // Arqueos para Mesero > Caja. Para turnos abiertos, el esperado se calcula como
-// inicial + ingresos - egresos de flujo_caja (misma fórmula de sp_cerrar_turno_caja).
+// en la misma vista que usa sp_cerrar_turno_caja, sin sumar pagos electrónicos al cajón.
 // Para turnos cerrados, usa lo que guardó el cierre.
 export async function arqueos(req, res, next) {
   try {
-    const [turnos, movimientos] = await Promise.all([
+    const sede = req.sede.id_restaurante ?? null;
+    const [turnos, movimientos] = await prisma.$transaction([
       prisma.turno_caja.findMany({
         where: req.sede,
         select: {
@@ -463,22 +464,18 @@ export async function arqueos(req, res, next) {
           fecha_apertura: 'desc',
         },
       }),
-      prisma.flujo_caja.groupBy({
-        by: ['id_turno'],
-        where: { turno_caja: req.sede },
-        _sum: { ingresos: true, egresos: true },
-      }),
-    ]);
+      prisma.$queryRaw`SELECT id_turno, ingresos, egresos, efectivo_esperado FROM vista_arqueo_turno
+        WHERE (${sede} IS NULL OR id_restaurante = ${sede})`,
+    ], { isolationLevel: 'RepeatableRead' });
 
-    const sumas = new Map(movimientos.map((m) => [m.id_turno, m._sum]));
-
+    const sumas = new Map(movimientos.map(m => [m.id_turno, m]));
     const data = turnos.map((t) => {
       const suma = sumas.get(t.id_turno);
       const ingresos = Number(suma?.ingresos ?? 0);
       const egresos = Number(suma?.egresos ?? 0);
       const abierto = t.estado === 'ABIERTA';
       const esperado = abierto
-        ? Number(t.efectivo_inicial ?? 0) + ingresos - egresos
+        ? Number(suma.efectivo_esperado)
         : t.efectivo_esperado === null ? null : Number(t.efectivo_esperado);
 
       return {

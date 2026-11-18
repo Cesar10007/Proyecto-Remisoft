@@ -6,3 +6,5 @@ export const menuItems = [
   { id: 'flujo de caja', icon: 'account_balance', label: 'Flujo de Caja' }, { id: 'turnos', icon: 'schedule', label: 'Turnos' },
   { id: 'personal', icon: 'group', label: 'Personal' },
 ]
+
+export const etiquetaMesa = (numero: number) => `T-${String(numero).padStart(2, '0')}`

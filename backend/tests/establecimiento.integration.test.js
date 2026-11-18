@@ -1,63 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import app from '../src/app.js';
+import { escenarioEstablecimiento } from './fixtures/establecimiento.js';
 import db from '../src/config/prisma.js';
 
 // Requiere una BD de pruebas migrada + las vistas y procedimientos de database/.
 // No depende de la demo. Solo se eliminan los registros creados por este escenario.
 test('alta por superadmin: cada establecimiento nace vacío y conserva su propia operación',
   { skip: process.env.ESTABLECIMIENTO_DB_TEST !== '1' }, async (t) => {
-    assert.match(process.env.DB_DATABASE, /_test$/);
-    const tag = randomUUID();
-    const contrasena = `Prueba!${tag}9`;
-    const sedes = [];
-    const admin = await db.usuario.create({ data: { nombre: tag, id_rol: 1 } });
-    const adminToken = jwt.sign({ sub: String(admin.id_usuario) }, process.env.JWT_SECRET);
-    const server = app.listen(0, '127.0.0.1');
-    await new Promise(resolve => server.once('listening', resolve));
-    t.after(async () => {
-      await new Promise(resolve => server.close(resolve));
-      const sede = { id_restaurante: { in: sedes } };
-      const pedido = { pedido: sede };
-      await db.flujo_caja.deleteMany({ where: { turno_caja: sede } });
-      await db.pago.deleteMany({ where: { Factura: pedido } });
-      await db.factura_item.deleteMany({ where: { Factura: pedido } });
-      await db.factura.deleteMany({ where: pedido });
-      await db.detalle_pedido.deleteMany({ where: pedido });
-      await db.pedido.deleteMany({ where: sede });
-      await db.detalle_orden_compra.deleteMany({ where: { orden_compra: sede } });
-      await db.orden_compra.deleteMany({ where: sede });
-      for (const modelo of ['inventario_mov', 'turno_caja', 'mesa', 'caja', 'cliente', 'proveedor', 'iA', 'ingrediente', 'producto', 'categoria_productos']) {
-        await db[modelo].deleteMany({ where: sede });
-      }
-      await db.solicitud_registro.deleteMany({ where: { email: `sol-${tag}@example.test` } });
-      await db.usuario.deleteMany({ where: { OR: [sede, { id_usuario: admin.id_usuario }, { email: `sin-${tag}@example.test` }] } });
-      await db.restaurante.deleteMany({ where: sede });
-      await db.$disconnect();
-    });
-    async function api(token, path, method = 'GET', body, status = 200) {
-      const r = await fetch(`http://127.0.0.1:${server.address().port}/api${path}`, {
-        method, headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
-        body: JSON.stringify(body),
-      });
-      const result = await r.json();
-      assert.equal(r.status, status, `${method} ${path}: ${JSON.stringify(result)}`);
-      return result;
-    }
-    async function altaGerente(nombre) {
-      const email = `${nombre}-${tag}@example.test`;
-      const alta = await api(adminToken, '/usuarios', 'POST', { nombre, email, contrasena, id_rol: 2, nombre_establecimiento: nombre }, 201);
-      const { id_restaurante } = alta.data.restaurante;
-      sedes.push(id_restaurante);
-      const sesion = await api(null, '/auth/login', 'POST', { email, contrasena });
-      assert.equal(sesion.user.id_restaurante, id_restaurante);
-      assert.equal(sesion.user.nombre_establecimiento, nombre);
-      assert.equal((await api(sesion.token, '/auth/me')).user.id_restaurante, id_restaurante);
-      return { token: sesion.token, id_restaurante, id_usuario: sesion.user.id_usuario };
-    }
-
+    const { api, altaGerente, adminToken, contrasena, sedes, tag } = await escenarioEstablecimiento(t);
     const a = await altaGerente('Alfa');
     const postA = (ruta, body) => api(a.token, ruta, 'POST', body, 201);
     const prod = { Nombre: 'Arepa', precio_venta: 1000, Tiempo_preparacion: '00:10:00' };
@@ -153,6 +104,19 @@ test('alta por superadmin: cada establecimiento nace vacío y conserva su propia
       assert.equal((await api(b.token, '/mesas')).data[0].ocupada, false);
       assert.equal((await api(a.token, '/mesas')).data[0].ocupada, true);
       assert.equal((await api(a.token, `/turnos/${abierto.id_turno}/cerrar`, 'POST', { efectivo_real: 0 })).data.estado, 'CERRADA');
+    });
+    await t.test('el arqueo histórico no duplica el fondo inicial ni cuenta egresos electrónicos como efectivo', async () => {
+      const { data: { id_turno } } = await postA('/turnos', { ...turno, efectivo_inicial: 50000 });
+      // Forma histórica de datos.sql: algunos turnos registraban el fondo también en el libro de caja.
+      await db.flujo_caja.createMany({ data: [
+        { id_turno, concepto: 'Apertura de caja', ingresos: 50000, metodo: 'EFECTIVO' },
+        { id_turno, concepto: 'Insumos', egresos: 3000, metodo: 'EFECTIVO' },
+        { id_turno, concepto: 'Domicilio', egresos: 1000, metodo: 'TRANSFERENCIA' },
+      ] });
+      const arqueo = (await api(a.token, '/turnos/arqueos')).data.find(t => t.id_turno === id_turno);
+      assert.deepEqual([arqueo.ingresos, arqueo.egresos, arqueo.esperado], [0, 4000, 47000]);
+      const { data } = await api(a.token, `/turnos/${id_turno}/cerrar`, 'POST', { efectivo_real: 46900 });
+      assert.deepEqual([Number(data.efectivo_esperado), Number(data.diferencia)], [47000, -100]);
     });
     await t.test('un enlace histórico no expone la ficha actual de otra sede', async () => {
       const historico = await db.pedido.create({ data: {

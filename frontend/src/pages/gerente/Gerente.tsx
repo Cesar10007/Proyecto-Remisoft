@@ -18,10 +18,11 @@ import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { menuItems } from './data'
+import { etiquetaMesa, menuItems } from './data'
 import { useDatosGerente, formatoCOP, etiquetaMetodo, type TurnoApi, type Lectura } from './useDatosGerente'
 import IASection from './sections/IASection'
-import AltaMesa from './components/AltaMesa'
+import MesasSection from './sections/MesasSection'
+import RecetaProducto from './components/RecetaProducto'
 
 function EstadoLectura({ consulta, vacio }: { consulta: Lectura; vacio?: string }) {
   if (consulta.error) return <p role="alert" className="text-sm text-[var(--rojo-dark)]">{consulta.error} <button onClick={consulta.cargar}>Reintentar</button></p>
@@ -60,7 +61,7 @@ function Gerente() {
   const { ingresosDelMes, pagosAprobados, historial, mesas, movimientosRecientes, estadoInventario, tendenciaSemanal } = datos
   const gastosMes = datos.compras.data?.data.gastos_mes ?? null
   const productos = datos.catalogo.data ?? []
-  const ingredientes = datos.ingredientes.data ?? []
+  const ingredientes = datos.inventario.data?.data ?? []
   const proveedores = datos.proveedores.data ?? []
   const cajas = datos.cajas.data ?? []
   const turnos = datos.jornadas.data?.data ?? []
@@ -81,6 +82,7 @@ function Gerente() {
   }
   const navigate = useNavigate()
   const { logout, user } = useAuth()
+  const [receta, setReceta] = useState<Producto | null>(null)
   const [modalProducto, setModalProducto] = useState(false)
   const [modoEdicionProducto, setModoEdicionProducto] = useState(false)
   const [productoActual, setProductoActual] = useState<Omit<Producto, 'id_producto'>>(productoVacio)
@@ -234,13 +236,13 @@ function Gerente() {
     setGuardandoIngrediente(true); setErrorIngrediente(null)
     try {
       modoEdicionIngrediente && idEditandoIngrediente ? await api.put(`/ingredientes/${idEditandoIngrediente}`, ingredienteActual) : await api.post('/ingredientes', ingredienteActual)
-      setModalIngrediente(false); datos.ingredientes.cargar()
+      setModalIngrediente(false); datos.inventario.cargar()
     } catch (err) { setErrorIngrediente(mensajeError(err)) }
     finally { setGuardandoIngrediente(false) }
   }
   const eliminarIngrediente = async (id: number) => {
     if (!confirm('¿Eliminar este ingrediente?')) return
-    try { await api.delete(`/ingredientes/${id}`); datos.ingredientes.cargar() } catch { alert('Error al eliminar') }
+    try { await api.delete(`/ingredientes/${id}`); datos.inventario.cargar() } catch { alert('Error al eliminar') }
   }
   const abrirCrearProveedor = () => { setModoEdicionProveedor(false); setProveedorActual(proveedorVacio); setIdEditandoProveedor(null); setErrorProveedor(null); setModalProveedor(true) }
   const abrirEditarProveedor = (p: Proveedor) => { setModoEdicionProveedor(true); setProveedorActual({ nombre: p.nombre, nombre_contacto: p.nombre_contacto, telefono: p.telefono, email: p.email, direccion: p.direccion, nit: p.nit, tipo_proveedor: p.tipo_proveedor, estado: p.estado }); setIdEditandoProveedor(p.id_proveedor); setErrorProveedor(null); setModalProveedor(true) }
@@ -349,6 +351,7 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Estado inventario</h4>
+                    <button type="button" onClick={() => setSeccionActiva('Inventario')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver inventario</button>
                   </div>
                   <div className="flex flex-col gap-3.5">
                     <EstadoLectura consulta={datos.inventario} vacio={!estadoInventario.length ? 'No hay ingredientes registrados.' : undefined} />
@@ -424,6 +427,7 @@ function Gerente() {
                       header: 'Acciones',
                       render: (p) => (
                         <div className="flex gap-2">
+                          <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setReceta(p)}>Receta</button>
                           <button className="rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
                           <button
                             className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
@@ -446,7 +450,9 @@ function Gerente() {
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
-                  <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
+                  <div><h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
+                    <button type="button" onClick={() => setSeccionActiva('Mesas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Administrar mesas</button>
+                  </div>
                   <div className="flex gap-3">
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
@@ -460,14 +466,14 @@ function Gerente() {
                   <EstadoLectura consulta={datos.plano} vacio={!mesas.length ? 'No hay mesas registradas.' : undefined} />
                   {mesas.map(m => (
                     <div
-                      key={m.id}
+                      key={m.numero}
                       className={`flex flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 ${
                         m.ocupada
                           ? 'border-[rgba(239,159,39,0.3)] bg-[var(--amarillo-light)]'
                           : 'border-[rgba(29,158,117,0.3)] bg-[var(--verde-light)]'
                       }`}
                     >
-                      <span className="text-[0.65rem] font-bold text-[var(--texto-muted)]">{m.id}</span>
+                      <span className="text-[0.65rem] font-bold text-[var(--texto-muted)]">{etiquetaMesa(m.numero)}</span>
                       <span className={`material-symbols-outlined text-[16px] ${m.ocupada ? 'text-[var(--amarillo)]' : 'text-[var(--verde)]'}`}>
                         {m.ocupada ? 'person' : 'check_circle'}
                       </span>
@@ -478,7 +484,7 @@ function Gerente() {
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
                   <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>
-                  <button className="border-none bg-transparent text-[0.75rem] font-semibold text-[var(--rojo)]">Ver todo</button>
+                  <button type="button" onClick={() => setSeccionActiva('Finanzas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver finanzas</button>
                 </div>
                 <div className="flex flex-col gap-4">
                   <EstadoLectura consulta={datos.facturas} vacio={!movimientosRecientes.length ? 'No hay pagos registrados.' : undefined} />
@@ -507,6 +513,7 @@ function Gerente() {
         {seccionActiva === 'Inventario' && !datos.aviso && (
           <IngredientesSection
             ingredientes={ingredientes}
+            actualizar={datos.inventario.cargar}
             onCreate={abrirCrearIngrediente}
             onEdit={abrirEditarIngrediente}
             onDelete={eliminarIngrediente}
@@ -595,38 +602,7 @@ function Gerente() {
         )}
         {/* MESAS — estado de mesas desde la base */}
         {seccionActiva === 'Mesas' && !datos.aviso && (
-          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
-              <div className="flex gap-3">
-                <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Disponible
-                </span>
-                <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--amarillo)]">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Ocupada
-                </span>
-              </div>
-            </div>
-            <AltaMesa alCrear={datos.plano.cargar} />
-            {!mesas.length && <p>No hay mesas registradas para este establecimiento.</p>}
-            <div className="grid grid-cols-6 gap-2.5">
-              {mesas.map(m => (
-                <div
-                  key={m.id}
-                  className={`flex flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 ${
-                    m.ocupada
-                      ? 'border-[rgba(239,159,39,0.3)] bg-[var(--amarillo-light)]'
-                      : 'border-[rgba(29,158,117,0.3)] bg-[var(--verde-light)]'
-                  }`}
-                >
-                  <span className="text-[0.65rem] font-bold text-[var(--texto-muted)]">{m.id}</span>
-                  <span className={`material-symbols-outlined text-[16px] ${m.ocupada ? 'text-[var(--amarillo)]' : 'text-[var(--verde)]'}`}>
-                    {m.ocupada ? 'person' : 'check_circle'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+          <MesasSection mesas={mesas} actualizar={datos.plano.cargar} />
         )}
         {seccionActiva === 'IA Insights' && <IASection />}
         {/* HISTORIAL — pedidos, pagos y turnos de la base */}
@@ -684,7 +660,7 @@ function Gerente() {
             </div>
             {mostrarAbrirTurno && (
               <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-[var(--borde)] p-4 md:grid-cols-4">
-                <select
+                <select aria-label="Caja"
                   value={formAbrir.id_caja}
                   onChange={e => setFormAbrir({ ...formAbrir, id_caja: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
@@ -694,7 +670,7 @@ function Gerente() {
                     <option key={c.id_caja} value={c.id_caja}>{c.nombre}</option>
                   ))}
                 </select>
-                <select
+                <select aria-label="Cajero"
                   value={formAbrir.id_usuario_cajero}
                   onChange={e => setFormAbrir({ ...formAbrir, id_usuario_cajero: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
@@ -809,6 +785,7 @@ function Gerente() {
           </section>
         )}
       </main>
+      {receta && <RecetaProducto key={receta.id_producto} producto={receta} cerrar={() => setReceta(null)} />}
       <GerenteModals
         producto={productoActual}
         ingrediente={ingredienteActual}

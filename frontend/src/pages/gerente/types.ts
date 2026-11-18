@@ -49,3 +49,6 @@ export interface Personal {
 export type CrearIngrediente = Omit<Ingrediente, 'id_ingrediente'>
 export type CrearProveedor = Omit<Proveedor, 'id_proveedor'>
 export type CrearCaja = Omit<Caja, 'id_caja'>
+
+export interface MesaGerente { numero: number; capacidad: number | null; ocupada: boolean }
+export interface IngredienteConStock extends Ingrediente { stock_actual: number; stock_bajo: boolean }

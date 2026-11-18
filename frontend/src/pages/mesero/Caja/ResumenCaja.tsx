@@ -51,7 +51,7 @@ export default function ResumenCaja({ onNavigate }: { onNavigate: (v: string) =>
             <dl>
               {(
                 [
-                  ['Saldo esperado', turno.esperado],
+                  ['Efectivo esperado', turno.esperado],
                   ['Ingresos', turno.ingresos],
                   ['Egresos', turno.egresos],
                 ] as const

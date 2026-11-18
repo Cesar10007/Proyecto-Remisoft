@@ -175,7 +175,7 @@ function GerenteModals({
             />
             <InputField
               label="Stock mínimo"
-              type="number"
+              type="number" min="0" step="0.01"
               placeholder="0"
               value={ingrediente.stock_minimo}
               onChange={(e) => setIngrediente({ ...ingrediente, stock_minimo: e.target.value })}

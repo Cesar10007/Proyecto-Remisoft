@@ -1,3 +1,4 @@
+import { cantidadInventarioValida } from '../utils/validation.js';
 import prisma from '../config/prisma.js';
 import { bloquearIngredientes, verificarStockIngredientes } from '../services/inventario.service.js';
 import { registrarAuditoria } from '../utils/auditoria.js';
@@ -6,14 +7,15 @@ const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
 const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
 
 function parseIngredientId(value) {
-  const id = Number.parseInt(value, 10);
-
-  return Number.isInteger(id) && id > 0 ? id : null;
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 && id <= 2147483647 ? id : null;
 }
 
 function calcularStockActual(movimientos) {
+  // Acumular milésimas enteras (DECIMAL(10,3)), no fracciones binarias.
   return movimientos.reduce((total, movimiento) => {
-    const cantidad = Number(movimiento.cantidad ?? 0);
+    const cantidad = Math.round(Number(movimiento.cantidad ?? 0) * 1000);
 
     if (TIPOS_MOVIMIENTO_SUMA.has(movimiento.tipo_movimiento)) {
       return total + cantidad;
@@ -24,7 +26,7 @@ function calcularStockActual(movimientos) {
     }
 
     return total;
-  }, 0);
+  }, 0) / 1000;
 }
 
 function serializarIngrediente(ingrediente) {
@@ -117,9 +119,7 @@ export async function show(req, res, next) {
       include: {
         inventario_mov: {
           where: req.sede,
-          orderBy: {
-            fecha_hora: 'desc',
-          },
+          orderBy: [{ fecha_hora: 'desc' }, { id_movimiento: 'desc' }],
         },
       },
     });
@@ -215,10 +215,10 @@ export async function ajuste(req, res, next) {
       });
     }
 
-    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+    if (!cantidadInventarioValida(req.body?.cantidad)) {
       return res.status(422).json({
         success: false,
-        message: 'La cantidad debe ser un número mayor a 0.',
+        message: 'La cantidad debe estar entre 0.001 y 9999999.999, con hasta tres decimales.',
         code: 'INVALID_CANTIDAD',
       });
     }

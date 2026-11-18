@@ -103,7 +103,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Arqueo actual</h2>
           <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
             {arqueoActual
-              ? 'Efectivo esperado del turno abierto: inicial más ingresos menos egresos.'
+              ? 'Efectivo esperado del turno abierto: fondo inicial más entradas menos salidas en efectivo. No incluye pagos electrónicos.'
               : cargando
                 ? 'Cargando…'
                 : 'No hay caja abierta en este momento.'}

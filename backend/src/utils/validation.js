@@ -43,3 +43,8 @@ export function validateEmail(
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(trimmed) ? null : `El campo ${field} debe ser un correo válido`;
 }
+
+// Receta.Cantidad_necesaria e inventario_mov.cantidad son DECIMAL(10,3).
+export function cantidadInventarioValida(valor) {
+  return ['number', 'string'].includes(typeof valor) && /^\d{1,7}(?:\.\d{1,3})?$/.test(String(valor)) && Number(valor) > 0;
+}

@@ -1,5 +1,5 @@
 import { useConsulta } from '../../hook/useConsulta'
-import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
+import type { Caja, IngredienteConStock, MesaGerente, Personal, Producto, Proveedor } from './types'
 
 export const formatoCOP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 
@@ -28,10 +28,9 @@ interface PedidoApi {
   nombre_mesero: string | null
 }
 interface EventoHistorial { fecha: string | null; usuario: string; accion: string }
-interface InventarioApi { id_ingrediente: number; nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
 
 export const etiquetaMetodo = (metodo: string | null) => {
-  const etiquetas: Record<string, string> = { EFECTIVO: 'Efectivo', TARJETA_CREDITO: 'Tarjeta crédito', TARJETA_DEBITO: 'Tarjeta débito', PSE: 'PSE' }
+  const etiquetas: Record<string, string> = { EFECTIVO: 'Efectivo', TARJETA: 'Tarjeta', TRANSFERENCIA: 'Transferencia', TARJETA_CREDITO: 'Tarjeta crédito', TARJETA_DEBITO: 'Tarjeta débito', PSE: 'PSE' }
   return metodo ? (etiquetas[metodo] ?? metodo) : 'Sin método'
 }
 
@@ -98,19 +97,18 @@ export function useDatosGerente(seccion: string, fuente: 'sp' | 'vista') {
   const activos = useConsulta<{ data: { pedidos_activos: number } }>(menu ? '/reportes/pedidos-activos' : null)
   const compras = useConsulta<{ data: { gastos_mes: number } }>(finanzas ? '/reportes/gastos-del-mes' : null)
   const facturas = useConsulta<Lista<FacturaApi>>(menu || finanzas || historial ? '/facturas' : null)
-  const inventario = useConsulta<Lista<InventarioApi>>(menu ? '/inventario' : null)
-  const plano = useConsulta<Lista<{ numero: number; ocupada: boolean }>>(menu || mesas ? '/mesas' : null, 15000)
+  const inventario = useConsulta<Lista<IngredienteConStock>>(menu || seccion === 'Inventario' ? '/inventario' : null)
+  const plano = useConsulta<Lista<MesaGerente>>(menu || mesas ? '/mesas' : null, 15000)
   const catalogo = useConsulta<Producto[]>(menu ? `/productos/${fuente}` : null)
   const ordenes = useConsulta<PedidoEnCurso[]>(pedidos || historial ? '/pedidos' : null)
   const jornadas = useConsulta<Lista<TurnoApi>>(turnos || historial ? '/turnos' : null)
   const cajas = useConsulta<Caja[]>(turnos || seccion === 'Flujo de Caja' ? '/cajas' : null)
   const usuarios = useConsulta<Personal[]>(turnos || seccion === 'Personal' ? '/usuarios' : null)
-  const ingredientes = useConsulta<Ingrediente[]>(seccion === 'Inventario' ? '/ingredientes' : null)
   const proveedores = useConsulta<Proveedor[]>(seccion === 'Proveedores' ? '/proveedores' : null)
 
   const consultas: Record<string, Lectura[]> = {
     Finanzas: [compras, facturas], Historial: [ordenes, jornadas, facturas], Turnos: [jornadas, cajas, usuarios],
-    Inventario: [ingredientes], Proveedores: [proveedores], 'Flujo de Caja': [cajas], Personal: [usuarios],
+    Inventario: [inventario], Proveedores: [proveedores], 'Flujo de Caja': [cajas], Personal: [usuarios],
     Mesas: [plano], Pedidos: [ordenes],
   }
   const lecturas = consultas[seccion] ?? []
@@ -133,12 +131,12 @@ export function useDatosGerente(seccion: string, fuente: 'sp' | 'vista') {
     .filter(p => p.fecha_pago && fechaLocal.format(new Date(p.fecha_pago)).slice(0, 7) === hasta.slice(0, 7))
     .reduce((n, p) => n + Number(p.monto), 0) : null
   return {
-    semana, activos, compras, facturas, inventario, plano, catalogo, ordenes, jornadas, cajas, usuarios, ingredientes, proveedores,
+    semana, activos, compras, facturas, inventario, plano, catalogo, ordenes, jornadas, cajas, usuarios, proveedores,
     aviso: lecturas.find(l => l.error) ?? lecturas.find(l => l.data === null),
     ingresosHoy: semana.data && !semana.error ? dias.get(hasta) ?? 0 : null,
     ingresosDelMes, pagosAprobados, tendenciaSemanal,
     historial: historial ? crearHistorial(ordenes.data ?? [], jornadas.data?.data ?? [], facturas.data?.data ?? []) : [],
-    mesas: (plano.data?.data ?? []).map(m => ({ id: `T-${String(m.numero).padStart(2, '0')}`, ocupada: m.ocupada })),
+    mesas: plano.data?.data ?? [],
     movimientosRecientes: pagosAprobados.slice(0, 4).map(p => ({
       icon: 'shopping_cart', titulo: p.mesa ? `Mesa ${String(p.mesa).padStart(2, '0')} - Pago recibido` : 'Pago recibido',
       sub: `${haceTiempo(p.fecha_pago)} • ${etiquetaMetodo(p.metodo)}`, monto: `+${formatoCOP.format(Number(p.monto))}`, positivo: true,
