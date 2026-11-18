@@ -14,7 +14,7 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 | **Título**        | Cerrar cuenta y generar factura | 
 | **Módulo**        | Pedidos en salon                |
 | **Prioridad**     | Alta                            |
-| **Estado**        | No Implementada                 |
+| **Estado**        | Implementada                    |
 | **RF asociados**  | RF-002                          |
 
 --- 

@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import api from '../../../api/axios'
+import { ArrowLeft, Eye, ListFilter } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useConsulta } from '../useConsulta'
+import { CargaCaja, ErrorCarga } from '../Elementos'
 import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
@@ -43,9 +45,8 @@ const responsable = (g: GastoApi) => {
 const monto = (g: GastoApi) => Number(g.egresos ?? 0)
 
 function GastosCaja({ onBack }: GastosCajaProps) {
-  const [gastos, setGastos] = useState<GastoApi[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, cargar, cargando } = useConsulta<{ data: GastoApi[] }>('/turnos/gastos')
+  const gastos = useMemo(() => data?.data ?? [], [data])
 
   const [openFiltro, setOpenFiltro] = useState(false)
   const [filtroMetodo, setFiltroMetodo] = useState('')
@@ -56,13 +57,6 @@ function GastosCaja({ onBack }: GastosCajaProps) {
     rows: [],
   })
 
-  useEffect(() => {
-    api
-      .get<{ data: GastoApi[] }>('/turnos/gastos')
-      .then(({ data }) => setGastos(data.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'No fue posible cargar los gastos.'))
-      .finally(() => setCargando(false))
-  }, [])
 
   const metodos = useMemo(
     () => Array.from(new Set(gastos.map((g) => g.metodo).filter((m): m is string => Boolean(m)))),
@@ -77,8 +71,10 @@ function GastosCaja({ onBack }: GastosCajaProps) {
   const totalMes = gastos.filter((g) => claveDia(g.fecha).startsWith(mes)).reduce((s, g) => s + monto(g), 0)
   const ultimo = gastos[0] ?? null
 
+  if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
+
   return (
-    <section className="m-6">
+    <section className="min-w-0">
 
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
@@ -86,9 +82,9 @@ function GastosCaja({ onBack }: GastosCajaProps) {
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          title="Volver"
+          aria-label="Volver" title="Volver"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div>
           <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">Gastos menores</h1>
@@ -98,7 +94,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
         </div>
       </div>
 
-      {error && <p className="mb-4 rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-sm text-[var(--rojo)]">{error}</p>}
+      {error && <ErrorCarga texto={error} reintentar={cargar} />}
 
       {/* RESUMEN DE GASTOS */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -153,7 +149,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
             >
-              <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+              <ListFilter size={18} aria-hidden="true" />
               Filtrar
             </button>
 
@@ -209,9 +205,9 @@ function GastosCaja({ onBack }: GastosCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver gasto"
+                  aria-label="Ver gasto" title="Ver gasto"
                 >
-                  <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                  <Eye size={18} aria-hidden="true" />
                 </button>
               ),
             },

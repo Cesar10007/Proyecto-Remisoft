@@ -47,4 +47,6 @@ De igual forma, el sistema deberá generar de forma inmediata la factura asociad
 ## Inputs / Outputs
 
 **Input** (registrar pedido):
-{ "mesa_id": "integer", "productos": [ { "producto_id": "integer", "cantidad": "integer" } ] }
+`POST /api/salon/pedidos`: `{ "mesa": 1, "comensales": 2, "items": [{ "id_producto": 1, "cantidad": 2 }] }` → `201 { "id_pedido": 42 }`.
+
+[Guía del flujo implementado, contratos de edición, cobro y pruebas](../servicio-de-salon.md).

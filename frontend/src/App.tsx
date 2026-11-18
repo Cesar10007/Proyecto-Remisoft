@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import Landing from './pages/auth/Landing'
@@ -13,10 +13,11 @@ import Dashboard from './pages/superadmin/Dashboard/Dashboard'
 import GestionGerentes from './pages/superadmin/GestionGerentes/GestionGerentes'
 import Solicitudes from './pages/superadmin/Solicitudes/Solicitudes'
 import Gerente from './pages/gerente/Gerente'
-import Mesero from './pages/mesero/Mesero'
 import Repartidor from './pages/repartidor/Repartidor'
 import Cajero from './pages/cajero/Cajero'
 import Cocina from './pages/cocina/Cocina'
+
+const Mesero = lazy(() => import('./pages/mesero/Mesero'))
 
 function App() {
   const [modal, setModal] = useState<string | null>(null)
@@ -90,7 +91,7 @@ function App() {
           path="/mesero"
           element={
             <PrivateRoute rolRequerido="MESERO">
-              <Mesero />
+              <Suspense fallback={<p className="p-6" role="status">Cargando salón…</p>}><Mesero /></Suspense>
             </PrivateRoute>
           }
         />

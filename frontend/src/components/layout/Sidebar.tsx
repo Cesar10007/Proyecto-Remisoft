@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from 'react'
+import { ChevronLeft, LogOut, Menu, X } from 'lucide-react'
 import ThemeToggle from '../common/ThemeToggle'
 
 export interface SidebarMenuItem {
-  icon: string
+  icon: string | ReactElement
   label: string
   badge?: number
 }
@@ -24,8 +25,35 @@ interface SidebarProps {
 // Celular: barra superior con modo oscuro y menú, que abre un cajón.
 const CLAVE_PLEGADO = 'remisoft-sidebar'
 
-function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, footer, colapsable = true }: SidebarProps) {
+function Sidebar({
+  subtitulo,
+  menuItems,
+  vistaActual,
+  onNavigate,
+  onLogout,
+  footer,
+  colapsable = true,
+}: SidebarProps) {
   const [abierto, setAbierto] = useState(false)
+  const idMenu = useId()
+  const cerrarMovil = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!abierto) return
+    const origen = document.activeElement
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    cerrarMovil.current?.focus()
+    const pantalla = window.matchMedia('(min-width: 768px)')
+    const cerrarEnEscritorio = () => {
+      if (pantalla.matches) setAbierto(false)
+    }
+    pantalla.addEventListener('change', cerrarEnEscritorio)
+    return () => {
+      pantalla.removeEventListener('change', cerrarEnEscritorio)
+      document.body.style.overflow = previo
+      if (origen instanceof HTMLElement && origen.isConnected) origen.focus({ preventScroll: true })
+    }
+  }, [abierto])
   const [colapsado, setColapsado] = useState<boolean>(
     () => colapsable && localStorage.getItem(CLAVE_PLEGADO) === 'plegado',
   )
@@ -50,19 +78,42 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
         <button
           type="button"
           aria-label="Abrir menú"
+          aria-expanded={abierto}
+          aria-controls={idMenu}
           onClick={() => setAbierto(true)}
           className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-transparent text-[var(--texto)]"
         >
-          <span className="material-symbols-outlined">menu</span>
+          <Menu size={22} aria-hidden="true" />
         </button>
       </div>
 
-      {abierto && <div className="fixed inset-0 z-[99] bg-black/40 md:hidden" onClick={() => setAbierto(false)} />}
+      {abierto && (
+        <div className="fixed inset-0 z-[99] bg-black/40 md:hidden" onClick={() => setAbierto(false)} />
+      )}
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-all duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
+        id={idMenu}
+        role={abierto ? 'dialog' : undefined}
+        aria-modal={abierto || undefined}
+        aria-label={`Menú de ${subtitulo}`}
+        onKeyDown={(e) => {
+          if (!abierto) return
+          if (e.key === 'Escape') setAbierto(false)
+          if (e.key !== 'Tab') return
+          const controles = Array.from(
+            e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]'),
+          ).filter((el) => el.getClientRects().length > 0)
+          const primero = controles[0],
+            ultimo = controles[controles.length - 1]
+          if (e.shiftKey ? e.target === primero : e.target === ultimo) {
+            e.preventDefault()
+            const destino = e.shiftKey ? ultimo : primero
+            destino?.focus()
+          }
+        }}
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[240px] shrink-0 flex-col border-r border-[var(--borde)] bg-[var(--bg-card)] p-4 transition-[width,padding,translate] duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${
           compacto ? 'md:w-20 md:px-2' : 'md:w-[240px]'
-        } ${abierto ? 'translate-x-0' : '-translate-x-full'}`}
+        } md:visible ${abierto ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
       >
         {colapsable && (
           <button
@@ -71,9 +122,11 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
             title={colapsado ? 'Desplegar menú' : 'Plegar menú'}
             className="absolute -right-3 top-[88px] z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
           >
-            <span className={`material-symbols-outlined text-[16px] text-[var(--texto-muted)] transition-transform duration-300 ${compacto ? 'rotate-180' : ''}`}>
-              chevron_left
-            </span>
+            <ChevronLeft
+              size={16}
+              aria-hidden="true"
+              className={`transition-transform ${compacto ? 'rotate-180' : ''}`}
+            />
           </button>
         )}
 
@@ -82,10 +135,11 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
           <button
             type="button"
             aria-label="Cerrar menú"
+            ref={cerrarMovil}
             onClick={() => setAbierto(false)}
             className="flex h-9 w-9 items-center justify-center rounded-full border-none bg-transparent text-[var(--texto-muted)] md:hidden"
           >
-            <span className="material-symbols-outlined">close</span>
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
@@ -96,7 +150,9 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
               Remi<span className="text-[var(--amarillo)]">Soft</span>
             </span>
           </div>
-          <div className={`mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)] ${compacto ? 'md:hidden' : ''}`}>
+          <div
+            className={`mt-1 text-[0.7rem] uppercase tracking-[1.5px] text-[var(--texto-muted)] ${compacto ? 'md:hidden' : ''}`}
+          >
             {subtitulo}
           </div>
         </div>
@@ -108,6 +164,8 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
               <button
                 key={item.label}
                 type="button"
+                aria-label={item.label}
+                aria-current={activo ? 'page' : undefined}
                 title={compacto ? item.label : undefined}
                 onClick={() => navegar(item.label.toLowerCase())}
                 className={`flex items-center gap-3 rounded-[10px] border-r-[3px] px-3 py-2.5 text-left font-['DM_Sans'] text-[0.875rem] font-medium transition-all duration-150 ease-in-out ${
@@ -118,10 +176,18 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
                     : 'border-r-transparent bg-transparent text-[var(--texto-muted)]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                {typeof item.icon === 'string' ? (
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                ) : (
+                  item.icon
+                )}
                 <span className={compacto ? 'md:hidden' : ''}>{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className={`ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white ${compacto ? 'md:hidden' : ''}`}>
+                  <span
+                    className={`ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white ${compacto ? 'md:hidden' : ''}`}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -131,7 +197,14 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
         </nav>
 
         <div className="flex flex-col gap-1 border-t border-[var(--borde)] pt-4">
-          <div className={compacto ? 'md:hidden' : ''}>{footer}</div>
+          <div
+            className={compacto ? 'md:hidden' : ''}
+            onClick={(e) => {
+              if (e.target instanceof Element && e.target.closest('button,a')) setAbierto(false)
+            }}
+          >
+            {footer}
+          </div>
           <button
             type="button"
             onClick={onLogout}
@@ -140,7 +213,7 @@ function Sidebar({ subtitulo, menuItems, vistaActual, onNavigate, onLogout, foot
               compacto ? 'md:justify-center md:px-0' : ''
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <LogOut size={18} aria-hidden="true" />
             <span className={compacto ? 'md:hidden' : ''}>Cerrar sesión</span>
           </button>
         </div>

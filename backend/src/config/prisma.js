@@ -22,6 +22,7 @@ const adapter = new PrismaMariaDb({
   user: DB_USERNAME,
   password: DB_PASSWORD,
   database: DB_DATABASE,
+  charset: 'utf8mb4',
 });
 
 const prisma = new PrismaClient({ adapter });

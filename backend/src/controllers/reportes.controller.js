@@ -1,3 +1,4 @@
+import { Prisma } from '../generated/prisma/client.js';
 import prisma from '../config/prisma.js';
 
 const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
@@ -46,7 +47,19 @@ export async function ventasDiarias(req, res, next) {
       });
     }
 
-    const filasDia = await prisma.$queryRaw`
+    // La vista global no conserva la sede. En la consulta del mesero agrupamos
+    // después de filtrar el pedido por restaurante (incluidos los pedidos históricos).
+    const esMesero = req.user.rol === 'MESERO';
+    const unirSede = Prisma.sql`JOIN pedido pe ON pe.id_pedido = f.id_pedido LEFT JOIN usuario u ON u.id_usuario = pe.id_mesero`;
+    const sede = Prisma.sql`AND COALESCE(pe.id_restaurante, u.id_restaurante) <=> ${req.user.id_restaurante}`;
+    const diaLocal = Prisma.sql`DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00'))`;
+    const filasDia = esMesero ? await prisma.$queryRaw`
+      SELECT DATE_FORMAT(${diaLocal}, '%Y-%m-%d') AS fecha, COUNT(*) AS total_pedidos,
+             SUM(f.total + COALESCE(f.Descuento, 0)) AS ingresos_brutos, SUM(f.IVA) AS total_iva, SUM(f.Descuento) AS total_descuentos,
+             SUM(f.Propina) AS total_propinas, SUM(f.total) AS ingresos_netos
+      FROM Factura f ${unirSede} WHERE f.estado = 'PAGADA' ${sede}
+        AND ${diaLocal} BETWEEN ${desde} AND ${hasta} GROUP BY fecha ORDER BY fecha DESC
+    ` : await prisma.$queryRaw`
       SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS fecha, total_pedidos, ingresos_brutos, total_iva,
              total_descuentos, total_propinas, ingresos_netos
       FROM vista_resumen_ventas_diarias
@@ -58,13 +71,14 @@ export async function ventasDiarias(req, res, next) {
       SELECT p.id_producto,
              p.Nombre AS producto,
              SUM(fi.cantidad_facturada) AS unidades,
-             SUM(fi.cantidad_facturada * dp.Precio_unitario) AS ingresos
+             SUM(fi.cantidad_facturada * COALESCE(fi.precio_unitario, dp.Precio_unitario)) AS ingresos
       FROM Factura_item fi
       JOIN Factura f ON f.id_factura = fi.id_factura
-      JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido
+      JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido AND dp.id_pedido = f.id_pedido
       JOIN Producto p ON p.id_producto = dp.id_producto
-      WHERE f.estado = 'PAGADA'
-        AND DATE(f.Fecha_emision) BETWEEN ${desde} AND ${hasta}
+      ${esMesero ? unirSede : Prisma.empty}
+      WHERE f.estado = 'PAGADA' ${esMesero ? sede : Prisma.empty}
+        AND ${esMesero ? diaLocal : Prisma.sql`DATE(f.Fecha_emision)`} BETWEEN ${desde} AND ${hasta}
       GROUP BY p.id_producto, p.Nombre
       ORDER BY unidades DESC, ingresos DESC
       LIMIT 5
