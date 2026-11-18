@@ -1,4 +1,4 @@
-import Modal from '../../components/common/Modal'
+import { Dialogo } from './Elementos'
  
 interface DetalleModalProps {
   open: boolean
@@ -8,10 +8,11 @@ interface DetalleModalProps {
 }
  
 function DetalleModal({ open, title, rows, onClose }: DetalleModalProps) {
+  if (!open) return null
   return (
-    <Modal isOpen={open} onClose={onClose}>
+    <Dialogo kicker="Consulta de caja" titulo={title} onClose={onClose}>
       <div className="px-6 pb-6">
-        <h3 className="mb-5 font-bold">{title}</h3>
+
         <div className="flex flex-col gap-3">
           {rows.map((r, i) => (
             <div key={i} className="flex items-center justify-between border-b border-[var(--borde)] pb-2">
@@ -29,7 +30,7 @@ function DetalleModal({ open, title, rows, onClose }: DetalleModalProps) {
           </button>
         </div>
       </div>
-    </Modal>
+    </Dialogo>
   )
 }
  

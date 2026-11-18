@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import api from '../../../api/axios'
+import { ArrowLeft, CalendarDays, Landmark, ReceiptText, TrendingUp, Wallet } from 'lucide-react'
+import { useConsulta } from '../useConsulta'
+import { CargaCaja, ErrorCarga } from '../Elementos'
 import { DataTable } from '../../../components/common/DataTable'
 import { formatCOP } from '../utils'
 
@@ -34,24 +35,18 @@ const TOTALES_VACIOS: TotalesVentas = {
 }
 
 function ReportesCaja({ onBack }: ReportesCajaProps) {
-  const [reporte, setReporte] = useState<ReporteVentas | null>(null)
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, cargar, cargando } = useConsulta<{ data: ReporteVentas }>('/reportes/ventas-diarias')
+  const reporte = data?.data
 
-  useEffect(() => {
-    api
-      .get<{ data: ReporteVentas }>('/reportes/ventas-diarias')
-      .then(({ data }) => setReporte(data.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'No fue posible cargar el reporte de ventas.'))
-      .finally(() => setCargando(false))
-  }, [])
 
   const total = reporte?.total ?? TOTALES_VACIOS
   const ticketPromedio = total.total_pedidos > 0 ? total.ingresos_brutos / total.total_pedidos : 0
   const productos = reporte?.productos_top ?? []
 
+  if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
+
   return (
-    <section className="m-6">
+    <section className="min-w-0">
 
       {/* ENCABEZADO */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -60,9 +55,9 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
             type="button"
             onClick={onBack}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-            title="Volver"
+            aria-label="Volver" title="Volver"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeft size={18} aria-hidden="true" />
           </button>
           <div>
             <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">Reportes de ventas del día</h1>
@@ -74,20 +69,20 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
 
         <div className="rounded-[9px] border border-[var(--wa-border)] bg-white px-4 py-2">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[1.1rem]">calendar_today</span>
+            <CalendarDays size={18} aria-hidden="true" />
             <span className="text-sm font-semibold">{reporte ? reporte.desde : cargando ? 'Cargando…' : '—'}</span>
           </div>
         </div>
       </div>
 
-      {error && <p className="mb-4 rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-sm text-[var(--rojo)]">{error}</p>}
+      {error && <ErrorCarga texto={error} reintentar={cargar} />}
 
       {/* RESUMEN DE VENTAS */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ventas del día</span>
-            <span className="material-symbols-outlined text-[1.4rem]">point_of_sale</span>
+            <Wallet size={22} aria-hidden="true" />
           </div>
           <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_brutos)}</p>
           <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Ingresos brutos del día</p>
@@ -96,7 +91,7 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pedidos realizados</span>
-            <span className="material-symbols-outlined text-[1.4rem]">receipt_long</span>
+            <ReceiptText size={22} aria-hidden="true" />
           </div>
           <p className="text-[1.5rem] font-bold">{total.total_pedidos}</p>
           <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Pedidos del día</p>
@@ -105,7 +100,7 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ticket promedio</span>
-            <span className="material-symbols-outlined text-[1.4rem]">trending_up</span>
+            <TrendingUp size={22} aria-hidden="true" />
           </div>
           <p className="text-[1.5rem] font-bold">{formatCOP(ticketPromedio)}</p>
           <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Promedio por pedido</p>
@@ -114,7 +109,7 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ingresos netos</span>
-            <span className="material-symbols-outlined text-[1.4rem]">account_balance</span>
+            <Landmark size={22} aria-hidden="true" />
           </div>
           <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_netos)}</p>
           <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Después de descuentos</p>

@@ -1,0 +1,191 @@
+/* Funciona también en el dashboard Mesas original, sin contenedor de modales especial. */
+dialog.mesa-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: min(560px, calc(100% - 24px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  background: var(--bg-card);
+  color: var(--texto);
+  box-shadow: 0 20px 75px #21150c38;
+}
+.mesa-modal::backdrop {
+  background: rgb(28 23 20 / 64%);
+}
+.mesa-modal .sl-dialog-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--bg-card);
+}
+.mesa-modal .sl-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wa-primary, var(--rojo-dark));
+}
+.mesa-modal .sl-dialog-head h2 {
+  font-weight: 850;
+  font-size: 25px;
+}
+.mesa-modal .sl-dialog-head button {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--wa-surface-low, var(--bg));
+  cursor: pointer;
+  font-size: 22px;
+  border: 1px solid var(--borde);
+}
+.mm-cuerpo {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+.mm-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--wa-surface-low, var(--bg));
+  border-radius: 12px;
+}
+.mm-info dt,
+.mm-secundario {
+  color: var(--texto-muted);
+  font-size: 12px;
+}
+.mm-info dd {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.mm-estado,
+.mm-pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.mm-estado {
+  color: var(--sl-green, #00694c);
+}
+.mm-estado.ocupada {
+  color: var(--sl-gold, #855400);
+}
+.mm-estado i {
+  width: 7px;
+  height: 7px;
+  border-radius: 100%;
+  background: currentColor;
+}
+.mm-cuerpo h3 {
+  font-size: 17px;
+  font-weight: 800;
+}
+.mm-cuerpo h3 span,
+.mm-pastilla {
+  background: var(--wa-surface-low, var(--bg));
+  padding: 2px 7px;
+  border-radius: 7px;
+  font-weight: 650;
+  font-size: 12px;
+}
+.mm-vacio {
+  color: var(--texto-muted);
+  padding: 8px 0;
+}
+.mm-pedido {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.mm-consumo {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+.mm-consumo header,
+.mm-renglon,
+.mm-totales > div,
+.mm-total-mesa {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mm-consumo h4 {
+  font-weight: 800;
+  font-size: 16px;
+}
+.mm-consumo ul {
+  list-style: none;
+  padding: 0;
+}
+.mm-consumo li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+.mm-consumo li button {
+  justify-self: start;
+}
+.mm-consumo .mm-renglon strong,
+.mm-nota {
+  overflow-wrap: anywhere;
+}
+.mm-consumo .mm-renglon b {
+  white-space: nowrap;
+}
+.mm-nota {
+  font-size: 12px;
+  color: var(--texto-muted);
+}
+.mm-totales {
+  font-size: 13px;
+}
+.mm-totales > div:last-child,
+.mm-total-mesa {
+  font-size: 16px;
+  font-weight: 800;
+  border-top: 1px solid var(--borde);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+.mm-pedido .mm-gestionar {
+  margin: 0 14px 14px;
+}
+.mm-pedido .sl-note,
+.mm-pedido .sl-error {
+  margin: 0 14px 10px;
+}
+@media (max-width: 520px) {
+  .mm-cuerpo {
+    padding: 14px;
+  }
+  .mesa-modal .sl-dialog-head {
+    padding: 14px;
+  }
+}
+@media print {
+  dialog.mesa-modal[open] {
+    position: static;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+    border: 0;
+  }
+}

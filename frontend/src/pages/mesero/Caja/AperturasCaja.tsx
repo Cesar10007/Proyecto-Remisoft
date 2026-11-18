@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import api from '../../../api/axios'
+import { ArrowLeft, Banknote, CalendarDays, Clock3, Eye, ListFilter, UserRound } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useConsulta } from '../useConsulta'
+import { CargaCaja, ErrorCarga } from '../Elementos'
 import { DataTable } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
 import DetalleModal from '../DetalleModal'
@@ -33,9 +35,8 @@ const responsable = (u: AperturaApi['usuario']) => [u?.nombre, u?.apellido].filt
 const esActiva = (a: AperturaApi) => a.estado === 'ABIERTA'
 
 function AperturasCaja({ onBack }: AperturasCajaProps) {
-  const [aperturas, setAperturas] = useState<AperturaApi[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, cargar, cargando } = useConsulta<{ data: AperturaApi[] }>('/turnos/aperturas')
+  const aperturas = useMemo(() => data?.data ?? [], [data])
 
   const [openFiltro, setOpenFiltro] = useState(false)
   const [filtroEstado, setFiltroEstado] = useState('')
@@ -46,13 +47,6 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
     rows: [],
   })
 
-  useEffect(() => {
-    api
-      .get<{ data: AperturaApi[] }>('/turnos/aperturas')
-      .then(({ data }) => setAperturas(data.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'No fue posible cargar las aperturas.'))
-      .finally(() => setCargando(false))
-  }, [])
 
   const aperturaActiva = useMemo(() => aperturas.find(esActiva) ?? null, [aperturas])
 
@@ -61,8 +55,10 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
     return filtroEstado === 'ABIERTA' ? esActiva(a) : !esActiva(a)
   })
 
+  if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
+
   return (
-    <section className="m-6">
+    <section className="min-w-0">
 
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
@@ -70,9 +66,9 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          title="Volver"
+          aria-label="Volver" title="Volver"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div>
           <h1 className="text-[1.5rem] font-bold">Aperturas de caja</h1>
@@ -82,7 +78,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
         </div>
       </div>
 
-      {error && <p className="mb-4 rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-sm text-[var(--rojo)]">{error}</p>}
+      {error && <ErrorCarga texto={error} reintentar={cargar} />}
 
       {/* ESTADO ACTUAL */}
       <div className="mb-6 rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
@@ -107,7 +103,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">payments</span>
+                <Banknote size={18} aria-hidden="true" />
                 <span className="text-sm">Monto inicial</span>
               </div>
               <p className="text-[1.3rem] font-bold">{formatCOP(Number(aperturaActiva.efectivo_inicial ?? 0))}</p>
@@ -115,7 +111,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">person</span>
+                <UserRound size={18} aria-hidden="true" />
                 <span className="text-sm">Responsable</span>
               </div>
               <p className="font-bold">{responsable(aperturaActiva.usuario)}</p>
@@ -123,7 +119,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">calendar_today</span>
+                <CalendarDays size={18} aria-hidden="true" />
                 <span className="text-sm">Fecha</span>
               </div>
               <p className="font-bold">{fecha(aperturaActiva.fecha_apertura)}</p>
@@ -131,7 +127,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">schedule</span>
+                <Clock3 size={18} aria-hidden="true" />
                 <span className="text-sm">Hora de apertura</span>
               </div>
               <p className="font-bold">{hora(aperturaActiva.fecha_apertura)}</p>
@@ -154,7 +150,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
             >
-              <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+              <ListFilter size={18} aria-hidden="true" />
               Filtrar
             </button>
 
@@ -218,9 +214,9 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  title="Ver apertura"
+                  aria-label="Ver apertura" title="Ver apertura"
                 >
-                  <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                  <Eye size={18} aria-hidden="true" />
                 </button>
               ),
             },

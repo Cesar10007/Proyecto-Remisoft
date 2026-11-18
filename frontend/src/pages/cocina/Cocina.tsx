@@ -14,6 +14,7 @@ type EstadoItem = 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO'
 interface ItemComanda {
   id_detalle: number
   nombre: string
+  nota: string
   cantidad: number
   estado: EstadoItem
 }
@@ -79,7 +80,7 @@ export default function Cocina() {
 
   // Aplana las comandas en tarjetas por ítem, para mostrarlas en columnas por estado.
   const tarjetas: TarjetaItem[] = comandas.flatMap((comanda) =>
-    comanda.items.map((item) => ({ comanda, item })),
+    comanda.items.filter(i => i.estado !== 'ENTREGADO').map((item) => ({ comanda, item })),
   )
 
   async function avanzar(item: ItemComanda, siguiente: EstadoItem) {
@@ -123,11 +124,12 @@ export default function Cocina() {
               ? ` · actualizado ${ultimaActualizacion.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
               : ''
           }`}
-          acciones={
+          acciones={<>
+            {rol === 'MESERO' && <Link className="cocina__btn cocina__btn--ghost" to="/mesero">Volver al salón</Link>}
             <button type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
               <span className="material-symbols-outlined">refresh</span> Actualizar
             </button>
-          }
+          </>}
         />
 
       {error && <div className="cocina__alerta">{error}</div>}
@@ -169,6 +171,7 @@ export default function Cocina() {
                       Pedido #{comanda.id_pedido}
                       {comanda.nombre_mesero ? ` · ${comanda.nombre_mesero}` : ''}
                     </div>
+                    {item.nota && <div className="cocina__notas">Plato: {item.nota}</div>}
                     {comanda.notas && <div className="cocina__notas">Nota: {comanda.notas}</div>}
                     {col.siguiente && col.accion && (
                       <button

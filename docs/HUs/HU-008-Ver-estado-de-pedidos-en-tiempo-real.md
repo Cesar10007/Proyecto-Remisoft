@@ -14,7 +14,7 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 | **Título**        | Ver estado de pedidos en tiempo real       | 
 | **Módulo**        | Pedidos en salon                           |
 | **Prioridad**     | Alta                                       |
-| **Estado**        | NO Implementado                            |
+| **Estado**        | Implementado                               |
 | **RF asociados**  | RF-002                                     |
 
 ---

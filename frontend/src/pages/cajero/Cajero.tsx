@@ -242,7 +242,7 @@ export default function Cajero() {
                 <span className="cajero__tiempo">{tiempoTranscurrido(c.fecha_hora)}</span>
               </div>
               <div className="cajero__cuenta-sub">
-                Pedido #{c.id_pedido} · {c.items.length} ítem{c.items.length === 1 ? '' : 's'}
+                Pedido #{c.id_pedido} · {c.items.length} ítem{c.items.length === 1 ? '' : 's'}{c.estado === 'POR_COBRAR' ? ' · Cuenta solicitada' : ''}
               </div>
               <div className="cajero__cuenta-total">{formatoCOP(c.total)}</div>
             </button>

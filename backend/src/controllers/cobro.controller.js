@@ -1,70 +1,30 @@
-import prisma from '../config/prisma.js';
 import {
-  verificarStockSuficiente,
-  registrarSalidasPorConsumo,
-} from '../services/inventario.service.js';
+  formatCuenta,
+  conPago,
+  calcularTotales,
+  itemsFacturables,
+  round2,
+  deSede,
+  ESTADOS_EN_MESA,
+} from '../utils/salon.js';
+import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
+import prisma from '../config/prisma.js';
+import { verificarStockSuficiente, registrarSalidasPorConsumo } from '../services/inventario.service.js';
 
 // Flujo de cobro del tablero Cajero (RF-003 · HU-009, HU-011, HU-012).
 // Al cerrar una cuenta se crea la factura, sus ítems, el pago y el movimiento
 // de caja en una sola transacción, y el pedido pasa a CERRADO (la mesa queda libre).
 
 // Estados de pedido que siguen abiertos para la operación (salón y cocina).
-const ESTADOS_COBRABLES = ['ABIERTO', 'EN_PROCESO', 'EN_PREPARACION', 'LISTO'];
+const ESTADOS_COBRABLES = ESTADOS_EN_MESA;
 // id_pedido es único en Factura: una factura que no esté pagada se reutiliza
 // en lugar de crear una segunda para el mismo pedido.
 const ESTADOS_FACTURA_REUTILIZABLE = ['EMITIDA', 'ANULADA'];
 const METODOS_PAGO = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'];
-const IVA_TASA = Number(process.env.IVA_TASA ?? 0.19);
 
 function parseId(value) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function round2(value) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-function itemsFacturables(detalles) {
-  return detalles.filter(
-    (d) => d.estado_item !== 'CANCELADO' && Number(d.Cantidad ?? 0) > 0,
-  );
-}
-
-function calcularTotales(detalles) {
-  const subtotal = round2(
-    detalles.reduce(
-      (acc, d) => acc + Number(d.Cantidad ?? 0) * Number(d.Precio_unitario ?? 0),
-      0,
-    ),
-  );
-  const iva = round2(subtotal * IVA_TASA);
-  return { subtotal, iva, total: round2(subtotal + iva) };
-}
-
-function formatCuenta(pedido) {
-  const detalles = itemsFacturables(pedido.Detalle_pedido);
-  const totales = calcularTotales(detalles);
-
-  return {
-    id_pedido: pedido.id_pedido,
-    estado: pedido.estado,
-    mesa: pedido.Mesa_num,
-    tipo_pedido: pedido.Tipo_pedido ?? '',
-    fecha_hora: pedido.Fecha_hora,
-    nombre_mesero: pedido.usuario
-      ? `${pedido.usuario.nombre ?? ''} ${pedido.usuario.apellido ?? ''}`.trim()
-      : null,
-    items: detalles.map((d) => ({
-      id_detalle: d.id_detalle,
-      id_producto: d.id_producto,
-      nombre: d.Producto?.Nombre ?? `Producto ${d.id_producto}`,
-      cantidad: Number(d.Cantidad),
-      precio_unitario: Number(d.Precio_unitario ?? 0),
-      subtotal: round2(Number(d.Cantidad) * Number(d.Precio_unitario ?? 0)),
-    })),
-    ...totales,
-  };
 }
 
 // GET /api/cobro/pendientes
@@ -74,21 +34,24 @@ export async function pendientes(req, res, next) {
     const pedidos = await prisma.pedido.findMany({
       where: {
         estado: { in: ESTADOS_COBRABLES },
+        AND: [deSede(req.user), { OR: [{ version_salon: null }, { estado: 'POR_COBRAR' }] }],
         OR: [
           { Factura: { is: null } },
-          { Factura: { is: { estado: { in: ESTADOS_FACTURA_REUTILIZABLE } } } },
+          {
+            Factura: {
+              is: { estado: { in: ESTADOS_FACTURA_REUTILIZABLE }, pago: { none: { estado: 'APROBADO' } } },
+            },
+          },
         ],
       },
       include: {
         Detalle_pedido: { include: { Producto: true } },
-        usuario: true,
+        usuario: { select: { nombre: true, apellido: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
 
-    const cuentas = pedidos
-      .map(formatCuenta)
-      .filter((cuenta) => cuenta.items.length > 0);
+    const cuentas = pedidos.map(formatCuenta).filter((cuenta) => cuenta.items.length > 0);
 
     res.json(cuentas);
   } catch (err) {
@@ -105,36 +68,29 @@ export async function cerrarCuenta(req, res, next) {
       return res.status(422).json({ message: 'id_pedido debe ser un entero válido.' });
     }
 
-    const metodo =
-      typeof req.body?.metodo === 'string' ? req.body.metodo.trim().toUpperCase() : '';
+    const metodo = typeof req.body?.metodo === 'string' ? req.body.metodo.trim().toUpperCase() : '';
     if (!METODOS_PAGO.includes(metodo)) {
       return res.status(422).json({
         message: 'Debes seleccionar un método de pago: EFECTIVO, TARJETA o TRANSFERENCIA.',
       });
     }
 
-    const referencia = req.body?.referencia
-      ? String(req.body.referencia).trim().slice(0, 80) || null
-      : null;
+    const referencia = req.body?.referencia ? String(req.body.referencia).trim().slice(0, 80) || null : null;
 
     const idUsuario = req.user.id_usuario;
-    const turno = await prisma.turno_caja.findFirst({
-      where: { id_usuario_cajero: idUsuario, estado: 'ABIERTA' },
-      orderBy: { id_turno: 'desc' },
-    });
-
-    if (!turno) {
-      return res.status(409).json({
-        message: 'Debes tener un turno de caja abierto para cobrar.',
-      });
-    }
-
-    const resultado = await prisma.$transaction(async (tx) => {
-      const pedido = await tx.pedido.findUnique({
-        where: { id_pedido: idPedido },
+    const resultado = await transaccionSalon(async (tx) => {
+      // Serializa pagos de un mismo turno para no perder saldo ni cobrar en una caja cerrada.
+      const [turno] = await tx.$queryRaw`SELECT id_turno, efectivo_inicial FROM turno_caja
+        WHERE id_usuario_cajero = ${idUsuario} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
+      if (!turno) return { status: 409, message: 'Debes tener un turno de caja abierto para cobrar.' };
+      await bloquearPedido(tx, idPedido);
+      const pedido = await tx.pedido.findFirst({
+        where: { id_pedido: idPedido, ...deSede(req.user) },
         include: {
           Detalle_pedido: { include: { Producto: true } },
-          Factura: true,
+          Factura: {
+            include: { pago: { where: { estado: 'APROBADO' }, select: { id_pago: true }, take: 1 } },
+          },
         },
       });
 
@@ -143,11 +99,17 @@ export async function cerrarCuenta(req, res, next) {
       }
 
       const facturaExistente = pedido.Factura;
-      if (facturaExistente && !ESTADOS_FACTURA_REUTILIZABLE.includes(facturaExistente.estado)) {
+      if (
+        conPago(facturaExistente) ||
+        (facturaExistente && !ESTADOS_FACTURA_REUTILIZABLE.includes(facturaExistente.estado))
+      ) {
         return { status: 409, message: 'El pedido ya tiene una factura pagada.' };
       }
 
-      if (!ESTADOS_COBRABLES.includes(pedido.estado)) {
+      if (
+        !ESTADOS_COBRABLES.includes(pedido.estado) ||
+        (pedido.version_salon !== null && pedido.estado !== 'POR_COBRAR')
+      ) {
         return {
           status: 409,
           message: `El pedido está en estado ${pedido.estado} y no se puede cobrar.`,
@@ -165,13 +127,17 @@ export async function cerrarCuenta(req, res, next) {
       // Regla de negocio: no se cobra si no hay stock suficiente de los
       // ingredientes que consume la receta (réplica de la validación de
       // sp_registrar_movimiento_inventario).
-      const { requerimientos } = await verificarStockSuficiente(
-        tx,
-        detalles.map((d) => ({
-          id_producto: d.id_producto,
-          cantidad: Number(d.Cantidad ?? 0),
-        })),
-      );
+      // Las cuentas confirmadas por salón ya registraron su consumo.
+      const { requerimientos } =
+        pedido.version_salon !== null
+          ? { requerimientos: [] }
+          : await verificarStockSuficiente(
+              tx,
+              detalles.map((d) => ({
+                id_producto: d.id_producto,
+                cantidad: Number(d.Cantidad ?? 0),
+              })),
+            );
 
       const { subtotal, iva, total } = calcularTotales(detalles);
 
@@ -252,9 +218,7 @@ export async function cerrarCuenta(req, res, next) {
         where: { id_turno: turno.id_turno },
         orderBy: { id_flujo: 'desc' },
       });
-      const saldoAnterior = Number(
-        ultimoMovimiento?.saldo ?? turno.efectivo_inicial ?? 0,
-      );
+      const saldoAnterior = Number(ultimoMovimiento?.saldo ?? turno.efectivo_inicial ?? 0);
 
       await tx.flujo_caja.create({
         data: {

@@ -1,5 +1,5 @@
 import prisma from '../config/prisma.js';
-import { verificarStockIngredientes } from '../services/inventario.service.js';
+import { bloquearIngredientes, verificarStockIngredientes } from '../services/inventario.service.js';
 import { registrarAuditoria } from '../utils/auditoria.js';
 
 const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
@@ -241,6 +241,7 @@ export async function ajuste(req, res, next) {
     }
 
     const movimiento = await prisma.$transaction(async (tx) => {
+      await bloquearIngredientes(tx, [idIngrediente]);
       if (tipo === 'SALIDA') {
         await verificarStockIngredientes(tx, [
           { id_ingrediente: idIngrediente, requerido: cantidad },

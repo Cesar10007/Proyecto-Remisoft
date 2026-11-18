@@ -1,0 +1,419 @@
+/* Tarjetas del comedor original: número circular, disponible punteada y consumo en la ocupada. */
+.wa-comedor {
+  --com-fondo: #f6f3f2;
+  --com-circulo: #e5e2e1;
+  --com-insignia: #f0eded;
+  --com-texto: #1c1b1b;
+  --com-suave: #58423b;
+  --com-naranja: #a5360d;
+  display: grid;
+  gap: 32px;
+  color: var(--com-texto);
+}
+html[data-theme='dark'] .wa-comedor {
+  --com-fondo: var(--sl-soft);
+  --com-circulo: var(--sl-line);
+  --com-insignia: var(--sl-soft);
+  --com-texto: var(--sl-ink);
+  --com-suave: var(--sl-muted);
+  --com-naranja: var(--sl-accent);
+}
+.wa-comedor-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.wa-comedor-stats article,
+.wa-registrar,
+.wa-comedor-cocina,
+.wa-table-card {
+  border-radius: 20px;
+  background: var(--sl-card);
+}
+.wa-comedor-stats article {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 24px;
+  min-height: 128px;
+  box-shadow: 0 12px 32px -4px #1c1b1b08;
+}
+.wa-comedor-stats h2,
+.wa-table-card__empty-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--com-suave);
+}
+.wa-comedor-stats strong {
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.2;
+  font-weight: 850;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+.wa-comedor-stats small {
+  margin-left: 8px;
+  color: var(--sl-green);
+  font-weight: 750;
+}
+.wa-stat-pedidos {
+  border-left: 4px solid var(--sl-gold);
+}
+.wa-stat-pedidos strong {
+  color: var(--sl-gold);
+}
+.wa-registrar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(130deg, #a5360d, #c74d24);
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 12px 32px -4px #a5360d33;
+}
+.wa-comedor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(240px, 4fr);
+  gap: 32px;
+  align-items: start;
+}
+#sala-comedor {
+  font-size: 28px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+.wa-comedor-ayuda {
+  color: var(--com-suave);
+  font-weight: 550;
+}
+.wa-comedor-herramientas,
+.wa-leyenda,
+.wa-cocina-titulo,
+.wa-table-card__top,
+.wa-table-card__footer,
+.wa-comedor-feed button > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wa-comedor-herramientas {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 0 0 24px;
+}
+.wa-leyenda {
+  justify-content: flex-start;
+  gap: 5px;
+}
+.wa-leyenda button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 7px 11px;
+  color: var(--com-suave);
+  font-size: 10px;
+  font-weight: 750;
+  border: 1px solid transparent;
+}
+.wa-leyenda button:first-child {
+  color: var(--sl-green);
+  background: var(--sl-mint);
+}
+.wa-leyenda button:last-child {
+  color: var(--sl-gold);
+  background: var(--sl-cream);
+}
+.wa-leyenda button[aria-pressed='true'] {
+  border-color: currentColor;
+}
+.wa-leyenda i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.wa-table-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.wa-table-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 206px;
+  padding: 20px;
+  border: 2px solid transparent;
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.wa-table-card--available {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--com-fondo);
+  border: 2px dashed rgba(140, 113, 105, 0.3);
+  opacity: 0.82;
+}
+.wa-table-card--available:is(:hover, :focus-visible) {
+  opacity: 1;
+  border-color: var(--com-suave);
+}
+.wa-table-card--occupied:hover {
+  border-color: rgba(165, 54, 13, 0.1);
+  box-shadow: 0 18px 30px rgba(28, 27, 27, 0.08);
+}
+.wa-table-card__number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffb95d;
+  color: #2a1700;
+  font-size: 20px;
+  font-weight: 900;
+}
+.wa-table-card--available .wa-table-card__number {
+  background: var(--com-circulo);
+  color: var(--com-suave);
+}
+.wa-table-card__top {
+  margin-bottom: 16px;
+}
+.wa-table-card__badge {
+  background: var(--com-insignia);
+  color: var(--com-suave);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.wa-table-card--occupied strong {
+  font-weight: 800;
+  font-size: 16px;
+}
+.wa-table-card small {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--com-suave);
+}
+.wa-table-card__footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(224, 192, 182, 0.1);
+  color: var(--com-naranja);
+}
+.wa-table-card__footer b {
+  font-size: 16px;
+}
+.wa-comedor-cocina {
+  display: flex;
+  flex-direction: column;
+  min-height: min(650px, 65vh);
+  padding: 24px;
+  box-shadow: 0 2px 10px #1c1b1b0a;
+}
+.wa-cocina-titulo {
+  margin-bottom: 18px;
+  color: var(--sl-gold);
+}
+.wa-cocina-titulo h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--com-texto);
+}
+.wa-comedor-feed {
+  margin-bottom: 16px;
+  display: grid;
+  gap: 12px;
+  max-height: min(65vh, 640px);
+  overflow-y: auto;
+}
+.wa-comedor-feed button {
+  border-radius: 16px;
+  background: var(--com-fondo);
+  text-align: left;
+  padding: 16px;
+}
+.wa-comedor-feed button.listo {
+  background: var(--sl-mint);
+  border-left: 4px solid var(--sl-green);
+}
+.wa-comedor-feed b {
+  font-size: 10px;
+  color: var(--com-suave);
+  text-transform: uppercase;
+}
+.wa-comedor-feed strong {
+  display: block;
+  margin: 5px 0 1px;
+}
+.wa-comedor-feed small {
+  color: var(--com-suave);
+  font-size: 12px;
+}
+.wa-comedor-cocina > a {
+  margin-top: auto;
+  width: 100%;
+}
+@media (max-width: 1240px) {
+  .wa-comedor-layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 18px;
+  }
+  .wa-table-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 990px) {
+  .wa-comedor-cocina {
+    min-height: 0;
+  }
+  .wa-comedor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wa-comedor-stats {
+    gap: 12px;
+  }
+  .wa-comedor-stats article {
+    padding: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .wa-comedor {
+    gap: 20px;
+  }
+  .wa-comedor-stats,
+  .wa-table-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .wa-comedor-stats article {
+    min-height: 92px;
+  }
+  .wa-table-card {
+    padding: 14px;
+    min-height: 160px;
+  }
+}
+.mesa-ficha-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid var(--sl-line);
+}
+.mesa-ficha-acciones label {
+  margin-right: auto;
+  width: 145px;
+}
+.mesa-ficha-acciones input {
+  border: 1px solid var(--sl-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--sl-card);
+  color: var(--sl-ink);
+}
+
+@media (max-width: 520px) {
+  .mesa-ficha-acciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 15px;
+    gap: 10px;
+  }
+  .mesa-ficha-acciones label {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .mesa-ficha-acciones .sl-btn {
+    padding-inline: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-table-card {
+    transition: none;
+  }
+}
+.wa-encabezado {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--bg-card);
+}
+.wa-encabezado .sl-search {
+  border-radius: 999px;
+  padding: 10px 14px;
+  width: min(255px, 100%);
+}
+.wa-enlace-cabecera {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--texto-muted);
+}
+.wa-enlace-cabecera:first-child {
+  color: var(--sl-accent);
+}
+.wa-accion-rapida {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 12px 8px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a5360d, #c74d24);
+}
+.wa-table-card__more {
+  display: inline-grid;
+  place-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  letter-spacing: 1px;
+}
+@media (max-width: 767px) {
+  .wa-encabezado {
+    padding: 68px 15px 14px;
+  }
+  .wa-encabezado header {
+    gap: 8px;
+  }
+  .wa-encabezado .sl-search {
+    width: min(210px, 100%);
+  }
+  .wa-enlace-cabecera {
+    display: none;
+  }
+  #sala-comedor {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1150px) {
+  .wa-encabezado header {
+    flex-wrap: nowrap;
+  }
+  .wa-encabezado header > div:last-child {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+}

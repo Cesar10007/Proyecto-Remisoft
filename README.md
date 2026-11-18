@@ -382,11 +382,15 @@ El rol `CLIENTE` ya no es un usuario autenticable. La entidad `Cliente` se conse
 |--------|--------|---------------|-------------|
 | 1 | `SUPERADMIN` | `/superadmin` | Acceso total esperado |
 | 2 | `GERENTE` | `/gerente` | Administración del restaurante |
-| 3 | `CAJERO` | — | Gestión de caja y pagos |
+| 3 | `CAJERO` | `/cajero` | Gestión de caja y pagos |
 | 4 | `MESERO` | `/mesero` | Toma y gestión de pedidos |
 | 5 | `REPARTIDOR` | `/repartidor` | Entrega de pedidos |
 
 > El acceso efectivo por endpoint debe validarse con la matriz rol-permiso. No se debe asumir que la existencia de una ruta frontend equivale a autorización backend completa.
+
+### Servicio de salón
+
+En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y sus pedidos. El mesero puede ocuparla antes del primer pedido, tomar comandas, servir platos por ronda y enviar la precuenta a caja. Una mesa sin pedido se puede liberar desde su ficha; si hay consumo, sigue ocupada hasta que se cobre o se cancele válidamente el último pedido. [Guía de operación, API y pruebas](docs/servicio-de-salon.md).
 
 ### Flujo de autenticación
 
@@ -446,6 +450,9 @@ Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
 | Ingredientes | `/api/ingredientes` |
 | Cajas | `/api/cajas` |
 | Pedidos | `/api/pedidos` |
+| Servicio de mesero | `/api/salon` |
+| Comandas de cocina | `/api/cocina` |
+| Cierre de cuenta | `/api/cobro` |
 | Domicilios | `/api/domicilios` |
 | Compras | `/api/compras` |
 | Inventario | `/api/inventario` |
@@ -515,7 +522,8 @@ Reglas:
 |-----|------|
 | `SUPERADMIN` | `/superadmin` |
 | `GERENTE` | `/gerente` |
-| `MESERO` | `/mesero` |
+| `MESERO` | `/mesero` (también puede abrir `/cocina`) |
+| `CAJERO` | `/cajero` |
 | `REPARTIDOR` | `/repartidor` |
 | Público | `/`, `/forgot-password`, `/reset-password` |
 
@@ -543,7 +551,6 @@ Reglas:
 
 - Formalizar la matriz rol → permiso.
 - Aplicar y probar `requireRole` en todos los routers que lo necesitan.
-- Implementar RF-002: pedidos transaccionales, máquina de estados y descuento de inventario.
 - Consumir `vista_pedidos_activos` mediante `/api/pedidos/activos`.
 - Revisar los procedimientos y vistas SQL todavía no utilizados.
 - Fijar CVEs y dependencias con rangos abiertos.

@@ -1,3 +1,6 @@
+import { bloquearPedido, mesaDisponible, transaccionSalon } from '../services/salon.service.js';
+import { alcanceMesero } from '../utils/salon.js';
+import { operar } from './salon.controller.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString } from '../utils/validation.js';
 
@@ -115,6 +118,7 @@ function validarPedido(body, { creating = false } = {}) {
 export async function index(req, res, next) {
   try {
     const pedidos = await prisma.pedido.findMany({
+      where: alcanceMesero(req.user),
       include: {
         Cliente: true,
         usuario: true,
@@ -141,8 +145,8 @@ export async function show(req, res, next) {
       });
     }
 
-    const pedido = await prisma.pedido.findUnique({
-      where: { id_pedido: id },
+    const pedido = await prisma.pedido.findFirst({
+      where: { id_pedido: id, ...alcanceMesero(req.user) },
       include: {
         Cliente: true,
         usuario: true,
@@ -162,6 +166,12 @@ export async function show(req, res, next) {
 // POST /api/pedidos
 export async function crear(req, res, next) {
   try {
+    const fueraDeSalon =
+      ['DOMICILIO', 'LLEVAR'].includes(req.body?.Tipo_pedido) && !req.body?.Mesa_num && !req.body?.mesa;
+    if (req.user.rol === 'MESERO' && !fueraDeSalon) {
+      req.body = { ...req.body, mesa: req.body?.mesa ?? req.body?.Mesa_num };
+      return operar('abrir')(req, res, next);
+    }
     const { error, data } = validarPedido(req.body, { creating: true });
 
     if (error) {
@@ -170,9 +180,17 @@ export async function crear(req, res, next) {
 
     // Doble seguro: aunque validarPedido ya fuerza ABIERTO, se vuelve a
     // fijar aquí para que el cliente nunca pueda elegir el estado inicial.
-    await prisma.pedido.create({ data: { ...data, estado: 'ABIERTO' } });
+    if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
+    const creado = await transaccionSalon(async (tx) => {
+      data.id_restaurante = req.user.id_restaurante;
+      if (data.Mesa_num != null) {
+        const mesa = await mesaDisponible(tx, data.Mesa_num, data);
+        data.id_restaurante = mesa.id_restaurante;
+      }
+      return tx.pedido.create({ data });
+    });
 
-    res.status(201).json({ message: 'Pedido creado' });
+    res.status(201).json({ message: 'Pedido creado', id_pedido: creado.id_pedido });
   } catch (err) {
     if (err.code === 'P2003') {
       return res.status(422).json({
@@ -196,15 +214,22 @@ export async function actualizar(req, res, next) {
     }
 
     // Regla de negocio: solo se modifica un pedido ABIERTO.
-    const pedidoActual = await prisma.pedido.findUnique({
-      where: { id_pedido: id },
-      select: { estado: true },
+    const pedidoActual = await prisma.pedido.findFirst({
+      where: { id_pedido: id, ...alcanceMesero(req.user) },
+      select: { estado: true, version_salon: true, Mesa_num: true },
     });
 
     if (!pedidoActual) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
+    if (
+      req.user.rol === 'MESERO' &&
+      (pedidoActual.Mesa_num != null || req.body?.Mesa_num || req.body?.Tipo_pedido === 'MESA')
+    )
+      return operar('editar')(req, res, next);
+    if (pedidoActual.version_salon !== null)
+      return res.status(409).json({ message: 'Usa el flujo de salón para modificar esta cuenta.' });
     if (pedidoActual.estado !== 'ABIERTO') {
       return res.status(409).json({
         message: `El pedido está en estado ${pedidoActual.estado} y solo se puede modificar si está ABIERTO.`,
@@ -217,9 +242,22 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.pedido.update({
-      where: { id_pedido: id },
-      data,
+    if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
+    await transaccionSalon(async (tx) => {
+      await bloquearPedido(tx, id);
+      const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
+      if (data.Mesa_num !== undefined || data.id_mesero !== undefined) {
+        const actual = await tx.pedido.findFirstOrThrow({ where });
+        const destino = { ...actual, ...data };
+        if (
+          destino.Mesa_num != null &&
+          (destino.Mesa_num !== actual.Mesa_num || destino.id_mesero !== actual.id_mesero)
+        ) {
+          const mesa = await mesaDisponible(tx, destino.Mesa_num, destino, { excepto: id });
+          data.id_restaurante = mesa.id_restaurante;
+        }
+      }
+      await tx.pedido.update({ where, data });
     });
 
     res.json({ message: 'Pedido actualizado' });
@@ -253,15 +291,18 @@ export async function eliminar(req, res, next) {
     }
 
     // Regla de negocio: solo se cancela un pedido ABIERTO.
-    const pedidoActual = await prisma.pedido.findUnique({
-      where: { id_pedido: id },
-      select: { estado: true },
+    const pedidoActual = await prisma.pedido.findFirst({
+      where: { id_pedido: id, ...alcanceMesero(req.user) },
+      select: { estado: true, version_salon: true, Mesa_num: true },
     });
 
     if (!pedidoActual) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
+    if (req.user.rol === 'MESERO' && pedidoActual.Mesa_num != null) return operar('cancelar')(req, res, next);
+    if (pedidoActual.version_salon !== null)
+      return res.status(409).json({ message: 'Usa el flujo de salón para modificar esta cuenta.' });
     if (pedidoActual.estado !== 'ABIERTO') {
       return res.status(409).json({
         message: `El pedido está en estado ${pedidoActual.estado} y no se puede cancelar.`,
@@ -269,7 +310,7 @@ export async function eliminar(req, res, next) {
     }
 
     await prisma.pedido.update({
-      where: { id_pedido: id },
+      where: { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) },
       data: { estado: 'CANCELADO' },
     });
 

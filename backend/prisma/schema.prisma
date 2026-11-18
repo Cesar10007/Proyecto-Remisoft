@@ -23,6 +23,7 @@ model restaurante {
   orden_compra     orden_compra[]
   proveedor        proveedor[]
   lote_ingrediente lote_ingrediente[]
+  atenciones_mesa  mesa_atencion[]
 }
 
 model Cliente {
@@ -45,6 +46,7 @@ model Detalle_pedido {
   id_producto     Int
   Cantidad        Int?
   Precio_unitario Decimal?       @db.Decimal(10, 2)
+  nota            String?        @db.VarChar(200)
   estado_item     String?        @default("PENDIENTE") @db.VarChar(20)
   pedido          pedido         @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "Detalle_pedido_ibfk_1")
   Producto        Producto       @relation(fields: [id_producto], references: [id_producto], onUpdate: Restrict, map: "Detalle_pedido_ibfk_2")
@@ -280,6 +282,7 @@ model inventario_mov {
   usuario          usuario?          @relation(fields: [id_usuario], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_2")
   lote_ingrediente lote_ingrediente? @relation(fields: [id_lote], references: [id_lote], onDelete: Restrict, onUpdate: Restrict, map: "inventario_mov_ibfk_3")
 
+  @@index([origen_tipo, origen_id], map: "idx_consumo_pedido")
   @@index([id_restaurante], map: "idx_inventario_mov_restaurante")
   @@index([id_ingrediente], map: "id_ingrediente")
   @@index([id_lote], map: "id_lote")
@@ -332,9 +335,28 @@ model lote_ingrediente {
 }
 
 model mesa {
-  id_mesa   Int  @id @default(autoincrement())
-  numero    Int  @unique(map: "mesa_numero_key")
-  capacidad Int? @default(4)
+  id_mesa    Int             @id @default(autoincrement())
+  numero     Int             @unique(map: "mesa_numero_key")
+  capacidad  Int?            @default(4)
+  atenciones mesa_atencion[]
+}
+
+// Personas sentadas que aún no han hecho su primer pedido. El número de mesa
+// es compartido por las sedes; la atención, como la cuenta, pertenece a una sede.
+model mesa_atencion {
+  id_atencion    Int          @id @default(autoincrement())
+  numero         Int
+  id_restaurante Int?
+  id_mesero      Int
+  comensales     Int
+  desde          DateTime     @default(now()) @db.DateTime(0)
+  mesa           mesa         @relation(fields: [numero], references: [numero], onDelete: Restrict, onUpdate: Restrict)
+  restaurante    restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict)
+  mesero         usuario      @relation(fields: [id_mesero], references: [id_usuario], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([numero, id_restaurante], map: "mesa_atencion_numero_sede_key")
+  @@index([id_restaurante], map: "mesa_atencion_sede_idx")
+  @@index([id_mesero], map: "mesa_atencion_mesero_idx")
 }
 
 model migrations {
@@ -390,6 +412,8 @@ model password_reset_tokens {
 }
 
 model pedido {
+  version_salon  Int?
+  comensales     Int?
   id_pedido      Int              @id @default(autoincrement())
   id_restaurante Int?
   id_cliente     Int?
@@ -537,6 +561,7 @@ model usuario {
   orden_compra          orden_compra[]
   pago                  pago[]
   pedido                pedido[]
+  atenciones_mesa       mesa_atencion[]
   solicitudes_revisadas solicitud_registro[] @relation("solicitudes_revisadas")
   turno_caja            turno_caja[]
 

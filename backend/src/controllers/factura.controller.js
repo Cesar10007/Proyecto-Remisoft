@@ -1,3 +1,4 @@
+import { misPedidos } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
 
 /**
@@ -7,6 +8,7 @@ import prisma from '../config/prisma.js';
 export async function index(req, res, next) {
   try {
     const facturas = await prisma.Factura.findMany({
+      where: req.user.rol === 'MESERO' ? { pedido: misPedidos(req.user) } : undefined,
       orderBy: { id_factura: 'desc' },
       include: {
         pedido: true, // Relación con el pedido (Mesa_num, mesero)
@@ -32,10 +34,11 @@ export async function show(req, res, next) {
   try {
     const { id } = req.params;
 
-    const factura = await prisma.Factura.findUnique({
-      where: { id_factura: parseInt(id) },
+    const factura = await prisma.Factura.findFirst({
+      where: { id_factura: parseInt(id), ...(req.user.rol === 'MESERO' ? { pedido: misPedidos(req.user) } : {}) },
       include: {
-        pedido: true
+        pedido: true, pago: { select: { metodo: true, monto: true, estado: true } },
+        Factura_item: { include: { Detalle_pedido: { select: { id_pedido: true, Precio_unitario: true, Producto: { select: { Nombre: true } } } } } }
       }
     });
 
@@ -47,6 +50,7 @@ export async function show(req, res, next) {
       });
     }
 
+    factura.Factura_item = factura.Factura_item.filter(i => i.Detalle_pedido.id_pedido === factura.id_pedido);
     res.status(200).json({
       success: true,
       data: factura
@@ -85,6 +89,8 @@ export async function store(req, res, next) {
         code: 'INVALID_PEDIDO_ID'
       });
     }
+
+    if (pedido.version_salon != null) return res.status(409).json({ message: 'La factura de salón se emite al cerrar la cuenta en caja.' });
 
     // Verificar que el pedido no ya tenga factura
     const facturaExistente = await prisma.Factura.findUnique({
