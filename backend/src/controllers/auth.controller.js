@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
+import { registrarAuditoria, enmascararEmail } from '../utils/auditoria.js';
 
 function normalizeLaravelBcryptHash(hash) {
   if (!hash) return hash;
@@ -74,10 +75,27 @@ export async function login(req, res, next) {
     });
 
     if (!usuario || !usuario.contrasena_hash) {
+      // RNF-001.8 — LOGIN_FAILED con motivo y email enmascarado.
+      registrarAuditoria({
+        evento: 'LOGIN_FAILED',
+        ip: req.ip,
+        endpoint: req.originalUrl,
+        motivo: 'USUARIO_NO_EXISTE',
+        extra: { email: enmascararEmail(emailNormalizado) },
+      });
+
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
     if (usuario.activo === false) {
+      registrarAuditoria({
+        evento: 'LOGIN_FAILED',
+        id_usuario: usuario.id_usuario,
+        ip: req.ip,
+        endpoint: req.originalUrl,
+        motivo: 'USUARIO_INACTIVO',
+      });
+
       return res.status(403).json({ message: 'Usuario inactivo.' });
     }
 
@@ -85,10 +103,27 @@ export async function login(req, res, next) {
     const passwordOk = await bcrypt.compare(contrasena, hash);
 
     if (!passwordOk) {
+      registrarAuditoria({
+        evento: 'LOGIN_FAILED',
+        id_usuario: usuario.id_usuario,
+        ip: req.ip,
+        endpoint: req.originalUrl,
+        motivo: 'CONTRASENA_INVALIDA',
+      });
+
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
     const token = signJwt(usuario);
+
+    // RNF-001.8 — LOGIN_SUCCESS con id_usuario e IP.
+    registrarAuditoria({
+      evento: 'LOGIN_SUCCESS',
+      id_usuario: usuario.id_usuario,
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      motivo: `rol=${usuario.rol?.nombre ?? 'N/A'}`,
+    });
 
     return res.json({
       token,

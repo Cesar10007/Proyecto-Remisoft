@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import 'dotenv/config'
 
+import { registrarAuditoria } from './utils/auditoria.js'
 import { authRequired as authMiddleware } from './middleware/auth.js'
 import errorHandler from './middleware/errorHandler.js'
 
@@ -42,8 +43,18 @@ const authLimiter = rateLimit({
   limit: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: {
-    message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.',
+  // RNF-001.8 — RATE_LIMIT_HIT con endpoint e IP.
+  handler: (req, res) => {
+    registrarAuditoria({
+      evento: 'RATE_LIMIT_HIT',
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      motivo: 'LIMITE_DE_VELOCIDAD_ALCANZADO',
+    })
+
+    res.status(429).json({
+      message: 'Demasiados intentos. Intenta de nuevo en 15 minutos.',
+    })
   },
 })
 

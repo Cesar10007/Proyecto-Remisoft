@@ -314,7 +314,15 @@ INSERT INTO inventario_mov (id_ingrediente, id_usuario, tipo_movimiento, cantida
 (8, 6, 'SALIDA', 4.000, 450.00, 'Pedido #4 - 2 carbonaras', 'PEDIDO', 4, 8),
 (2, 9, 'ENTRADA', 50.000, 2500.00, 'Compra orden #6', 'ORDEN_COMPRA', 6, 2),
 (3, 9, 'ENTRADA', 10.000, 22000.00, 'Compra orden #2 (parcial)', 'ORDEN_COMPRA', 2, 3),
-(10, 9, 'ENTRADA', 20.000, 1800.00, 'Compra orden #9', 'ORDEN_COMPRA', 9, 10);
+(10, 9, 'ENTRADA', 20.000, 1800.00, 'Compra orden #9', 'ORDEN_COMPRA', 9, 10),
+-- Entradas que faltaban para los ingredientes usados en pedidos demo:
+-- sin ellas el stock calculado desde inventario_mov quedaba en negativo
+-- (pollo -0.250, espagueti -0.400, huevo -4.000 y limon 0.000), lo que
+-- impide cobrar los productos que los usan en la receta.
+(6, 9, 'ENTRADA', 15.000, 14000.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 6),
+(7, 9, 'ENTRADA', 20.000, 5500.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 7),
+(8, 9, 'ENTRADA', 120.000, 450.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 8),
+(9, 9, 'ENTRADA', 6.000, 3500.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 9);
 
 -- 24. IA
 INSERT INTO IA (Tipo_prediccion, Resultado_generado, Recomendaciones_generales, Nivel_confianza, periodo_inicio, periodo_fin) VALUES
