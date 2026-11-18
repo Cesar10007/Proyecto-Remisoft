@@ -69,10 +69,36 @@ function fechaBogota(desplazamientoDias = 0): string {
   return fecha.toISOString().slice(0, 10)
 }
 
+type PeriodoTendencia = 'dia' | 'semana' | 'mes' | 'anio'
+
+interface FiltroTendencia {
+  periodo: PeriodoTendencia
+  ancla: string
+  etiqueta: string
+}
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// Etiqueta corta para una fecha exacta: "18 nov 2026".
+function etiquetaFechaCorta(fecha: string): string {
+  const dia = Number(fecha.slice(8, 10))
+  const mes = MESES_CORTOS[Number(fecha.slice(5, 7)) - 1]
+  return `${dia} ${mes} ${fecha.slice(0, 4)}`
+}
+
+interface PuntoTendencia {
+  etiqueta: string
+  secundaria: string
+  detalle: string
+  desde: string
+  hasta: string
+  ingresos: number
+  facturas: number
+}
+
 interface ResumenDashboard {
   ingresosHoy: number
   pedidosActivos: number
-  tendencia: { dia: string; alto: number }[]
 }
 
 interface PedidoEnCurso {
@@ -188,22 +214,9 @@ function Gerente() {
         const ingresosPorDia = new Map<string, number>(
           dias.map(d => [d.fecha, Number(d.ingresos_brutos)] as [string, number]),
         )
-        const serie = Array.from({ length: 7 }, (_, i) => {
-          const fecha = fechaBogota(i - 6)
-          return { fecha, valor: ingresosPorDia.get(fecha) ?? 0 }
-        })
-        const maximo = Math.max(...serie.map(s => s.valor), 1)
         setResumenDashboard({
           ingresosHoy: ingresosPorDia.get(hasta) ?? 0,
           pedidosActivos: Number(pedidos.data.data.pedidos_activos),
-          tendencia: serie.map(s => ({
-            dia: new Date(`${s.fecha}T12:00:00Z`)
-              .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'UTC' })
-              .replace('.', '')
-              .slice(0, 3)
-              .toUpperCase(),
-            alto: Math.max(Math.round((s.valor / maximo) * 100), 2),
-          })),
         })
       })
       .catch(console.error)
@@ -233,7 +246,78 @@ function Gerente() {
     },
   ]
 
-  const tendenciaSemanal = resumenDashboard?.tendencia ?? []
+  const [filtroTendencia, setFiltroTendencia] = useState<FiltroTendencia>({
+    periodo: 'semana',
+    ancla: fechaBogota(0),
+    etiqueta: 'Esta semana',
+  })
+  const [menuTendencia, setMenuTendencia] = useState(false)
+  const [fechaExacta, setFechaExacta] = useState(fechaBogota(0))
+  const [puntosTendencia, setPuntosTendencia] = useState<PuntoTendencia[]>([])
+  const [tituloTendencia, setTituloTendencia] = useState('')
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú') return
+    let vigente = true
+    api.get('/reportes/tendencia', {
+      params: { periodo: filtroTendencia.periodo, ancla: filtroTendencia.ancla },
+    })
+      .then(({ data }) => {
+        if (!vigente) return
+        setPuntosTendencia(data.data.puntos)
+        setTituloTendencia(data.data.titulo ?? '')
+      })
+      .catch(console.error)
+    return () => { vigente = false }
+  }, [seccionActiva, filtroTendencia])
+
+  const maxTendencia = Math.max(...puntosTendencia.map(p => p.ingresos), 1)
+
+  const hoyTendencia = fechaBogota(0)
+  const anioTendencia = Number(hoyTendencia.slice(0, 4))
+
+  const opcionesTendencia: FiltroTendencia[] = [
+    { periodo: 'dia', ancla: hoyTendencia, etiqueta: 'Hoy' },
+    { periodo: 'semana', ancla: hoyTendencia, etiqueta: 'Esta semana' },
+    { periodo: 'mes', ancla: hoyTendencia, etiqueta: 'Este mes' },
+    { periodo: 'anio', ancla: hoyTendencia, etiqueta: 'Este año' },
+  ]
+
+  const aniosTendencia: FiltroTendencia[] = Array.from({ length: 4 }, (_, i) => {
+    const anio = anioTendencia + i + 1
+    return { periodo: 'anio' as const, ancla: `${anio}-01-01`, etiqueta: `Año ${anio}` }
+  })
+
+  const aplicarFechaExacta = (valor: string) => {
+    if (!valor) return
+    setFechaExacta(valor)
+    setFiltroTendencia({ periodo: 'dia', ancla: valor, etiqueta: etiquetaFechaCorta(valor) })
+  }
+
+  const itemTendencia = (opcion: FiltroTendencia) => {
+    const activo = filtroTendencia.etiqueta === opcion.etiqueta
+    return (
+      <button
+        key={opcion.etiqueta}
+        type="button"
+        onClick={() => {
+          setFiltroTendencia(opcion)
+          if (opcion.periodo === 'dia') setFechaExacta(opcion.ancla)
+          setMenuTendencia(false)
+        }}
+        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[0.78rem] font-medium transition-colors ${
+          activo
+            ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]'
+            : 'text-[var(--texto)] hover:bg-[var(--t-bg-f9f5f0,#f9f5f0)]'
+        }`}
+      >
+        {opcion.etiqueta}
+        {activo ? <span className="material-symbols-outlined text-[16px]">check</span> : null}
+      </button>
+    )
+  }
+
+  const subtituloTendencia = tituloTendencia || 'Ingresos del periodo'
 
   const [pedidosEnCurso, setPedidosEnCurso] = useState<PedidoEnCurso[]>([])
 
@@ -559,25 +643,57 @@ function Gerente() {
             </section>
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
-                <div className="mb-7 flex items-end justify-between">
+                <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia semanal</h3>
-                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Ingresos de los últimos 7 días</p>
+                    <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia de ingresos</h3>
+                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">{subtituloTendencia}</p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setMenuTendencia(v => !v)}
+                        className="flex items-center gap-1.5 rounded-full border border-[var(--borde)] px-3 py-1.5 text-[0.74rem] font-semibold text-[var(--texto)] transition-colors hover:border-[var(--rojo)]"
+                      >
+                        <span className="material-symbols-outlined text-[17px] text-[var(--texto-muted)]">filter_list</span>
+                        {filtroTendencia.etiqueta}
+                        <span className="material-symbols-outlined text-[18px] text-[var(--texto-muted)]">expand_more</span>
+                      </button>
+                      {menuTendencia ? (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setMenuTendencia(false)}></div>
+                          <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-1.5 shadow-[var(--sombra)]">
+                            {opcionesTendencia.map(itemTendencia)}
+                            <div className="my-1 border-t border-[var(--borde)]"></div>
+                            <p className="px-3 py-1 text-[0.64rem] font-bold uppercase tracking-wider text-[var(--texto-muted)]">Por año</p>
+                            {aniosTendencia.map(itemTendencia)}
+                            <div className="my-1 border-t border-[var(--borde)]"></div>
+                            <p className="px-3 py-1 text-[0.64rem] font-bold uppercase tracking-wider text-[var(--texto-muted)]">Fecha exacta</p>
+                            <input
+                              type="date"
+                              value={fechaExacta}
+                              onChange={e => aplicarFechaExacta(e.target.value)}
+                              className="w-full rounded-xl border border-[var(--borde)] bg-transparent px-3 py-1.5 text-[0.78rem] text-[var(--texto)] outline-none focus:border-[var(--rojo)]"
+                            />
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--amarillo)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Real
                     </span>
                   </div>
                 </div>
                 <div className="flex h-40 items-end justify-between gap-2">
-                  {tendenciaSemanal.map(b => (
-                    <div key={b.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+                  {puntosTendencia.map(p => (
+                    <div key={p.desde} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                       <div
                         className="w-full rounded-t-[6px] bg-[var(--rojo)] opacity-85 transition-[height] duration-300 ease-in-out"
-                        style={{ height: `${b.alto}%` }}
+                        style={{ height: `${Math.max(Math.round((p.ingresos / maxTendencia) * 100), 2)}%` }}
+                        title={`${p.detalle}: ${formatoCOP.format(p.ingresos)} (${p.facturas} facturas)`}
                       ></div>
-                      <span className="text-[0.65rem] font-semibold text-[var(--texto-muted)]">{b.dia}</span>
+                      <span className="whitespace-nowrap text-[0.65rem] font-semibold text-[var(--texto-muted)]">{p.etiqueta}</span>
+                      <span className="whitespace-nowrap text-[0.6rem] leading-none text-[var(--texto-muted)] opacity-70">{p.secundaria}</span>
                     </div>
                   ))}
                 </div>
