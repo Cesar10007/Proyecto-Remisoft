@@ -1,106 +1,237 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CheckCircle2, Plus, RefreshCw, X, Table2, ReceiptText, Wallet, FileText } from 'lucide-react'
 import { useAuth } from '../../store/hooks'
-import Mesas from './Mesas/Mesas'
-import Pedidos from './Pedidos/Pedidos'
-import Caja from './Caja/Caja'
-import Facturas from './Facturas/Facturas'
-import './Mesero.css'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
+import Mesas from './Mesas/Mesas'
+import Pedidos from './Pedidos/Pedidos'
+import EditorComanda from './Pedidos/EditorComanda'
+import FichaMesa from './Mesas/FichaMesa'
+import Caja from './Caja/Caja'
+import Facturas from './Facturas/Facturas'
+import { Buscador, Dialogo, ErrorCarga } from './Elementos'
+import { useConsulta } from './useConsulta'
+import { admitePedido, type Editor, type Salon } from './modelo'
+import './Mesero.css'
 
+const secciones = { mesas: 'Mesas', pedidos: 'Pedidos', caja: 'Caja', facturas: 'Facturas' } as const
+type Vista = keyof typeof secciones
 const navItems = [
-  { key: 'Mesas', icon: 'table_restaurant', label: 'Mesas' },
-  { key: 'Pedidos', icon: 'receipt_long', label: 'Pedidos' },
-  { key: 'Caja', icon: 'point_of_sale', label: 'Caja' },
-  { key: 'Facturas', icon: 'description', label: 'Facturas' },
+  { icon: <Table2 size={20} />, label: 'Mesas' },
+  { icon: <ReceiptText size={20} />, label: 'Pedidos' },
+  { icon: <Wallet size={20} />, label: 'Caja' },
+  { icon: <FileText size={20} />, label: 'Facturas' },
 ]
-
-function Mesero() {
-  const [activeItem, setActiveItem] = useState('Mesas')
-
+export default function Mesero() {
+  const [params, setParams] = useSearchParams()
+  const clave = params.get('vista') ?? 'mesas'
+  const vista: Vista = Object.prototype.hasOwnProperty.call(secciones, clave) ? (clave as Vista) : 'mesas'
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
-
-  const nombreUsuario = user?.nombre ?? 'Mesero'
-  const nombreCompleto = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Mesero'
-
+  const nombre = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Mesero'
+  const { data, error: errorRed, cargando, hora, cargar } = useConsulta<Salon>('/salon', 8000)
+  const salon = data?.mesas?.every((m) => Array.isArray(m.cuentas)) ? data : null
+  const error =
+    errorRed ||
+    (data && !salon
+      ? 'El backend no incluye los pedidos por mesa. Actualiza también el backend y vuelve a cargar el salón.'
+      : '')
+  const [buscar, setBuscar] = useState('')
+  const [editor, setEditor] = useState<Editor | null>(null)
+  const [seleccion, setSeleccion] = useState<{ mesa: number; pedido?: number } | null>(null)
+  const [aviso, setAviso] = useState('')
+  useEffect(() => {
+    if (aviso) {
+      const t = setTimeout(() => setAviso(''), 6500)
+      return () => clearTimeout(t)
+    }
+  }, [aviso])
+  function cambiar(v: Vista) {
+    setAviso('')
+    setParams(v === 'mesas' ? {} : { vista: v })
+  }
+  function abrirMesa(mesa: number, pedido?: number) {
+    setAviso('')
+    setSeleccion({ mesa, pedido })
+    // Abre con la última lectura y comprueba enseguida si cambió el servicio.
+    if (seleccion?.mesa !== mesa) void cargar()
+  }
+  function abrir(id: number) {
+    const p = salon?.pedidos.find((p) => p.id_pedido === id)
+    if (p) abrirMesa(p.mesa, id)
+  }
+  function venta() {
+    setAviso('')
+    setSeleccion(null)
+    setEditor({ modo: 'nuevo', mesa: null })
+  }
+  const permiteVenta = Boolean(!error && salon?.mesas.some(admitePedido))
+  const cuentas = salon?.pedidos.filter((p) => p.mesa === seleccion?.mesa) ?? []
+  // Una cuenta histórica puede referenciar un número que ya no esté en el plano.
+  const mesa =
+    salon?.mesas.find((m) => m.numero === seleccion?.mesa) ??
+    (cuentas.length
+      ? {
+          numero: cuentas[0].mesa,
+          ocupada: true,
+          capacidad: null,
+          atencion: null,
+          mesero: nombre,
+          fecha_hora: cuentas[0].fecha_hora,
+          comensales: cuentas[0].comensales,
+          cuentas,
+        }
+      : null)
   return (
-    <div
-      className="wa-wrapper flex min-h-screen font-['Manrope',_'DM_Sans',_sans-serif]"
-      style={{
-        background: 'var(--wa-bg)',
-        color: 'var(--wa-text)',
-      }}
-    >
-
-      {/* SIDEBAR */}
+    <div className="sl-app wa-wrapper">
       <Sidebar
         subtitulo="Mesero"
         colapsable
         menuItems={navItems}
-        vistaActual={activeItem.toLowerCase()}
-        onNavigate={(vista) => setActiveItem(navItems.find((item) => item.label.toLowerCase() === vista)?.key ?? activeItem)}
+        vistaActual={vista}
+        onNavigate={(v) => {
+          if (v in secciones) cambiar(v as Vista)
+        }}
         onLogout={() => {
           logout()
-          navigate('/')
+          navigate('/', { replace: true })
         }}
         footer={
-          <button
-            type="button"
-            onClick={() => setActiveItem('Pedidos')}
-            className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[var(--wa-primary)] to-[var(--wa-primary-container)] px-4 py-3 text-[0.9rem] font-extrabold text-white"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Acción Rápida
+          <button className="wa-accion-rapida" onClick={() => cambiar('pedidos')}>
+            <Plus size={17} /> Acción Rápida
           </button>
         }
       />
-
-
-      {/* CONTENIDO PRINCIPAL */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-surface-low)]">
-
-        {/* ENCABEZADO */}
-        <div className="border-b border-[var(--wa-border)] bg-[var(--bg-card)] px-4 py-4 pt-16 md:px-6 md:py-4 md:pt-4">
+      <main className="sl-main">
+        <div className="wa-encabezado">
           <Header
-            seccionActiva={activeItem}
-            nombreUsuario={nombreCompleto}
+            seccionActiva={secciones[vista]}
+            nombreUsuario={nombre}
             acciones={
               <>
-                <button type="button" onClick={() => setActiveItem('Mesas')} className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-primary)] md:block">
+                <button className="wa-enlace-cabecera" onClick={() => cambiar('mesas')}>
                   Plano del Piso
                 </button>
-                <button type="button" onClick={() => setActiveItem('Facturas')} className="hidden border-none bg-transparent text-[0.625rem] font-extrabold uppercase tracking-[0.18em] text-[var(--wa-text-muted)] md:block">
+                <button className="wa-enlace-cabecera" onClick={() => cambiar('caja')}>
                   Pago Rápido
                 </button>
-                <div className="relative w-full md:w-64">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-[var(--wa-text-muted)]">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Buscar mesas o artículos..."
-                    className="w-full rounded-full border border-[var(--wa-border)] bg-[var(--wa-surface)] py-2.5 pl-10 pr-4 text-[0.875rem] outline-none focus:border-[var(--wa-primary)]"
-                  />
-                </div>
+                {vista === 'mesas' && (
+                  <Buscador valor={buscar} cambiar={setBuscar} titulo="Buscar mesas o artículos..." />
+                )}
+                {vista === 'pedidos' && (
+                  <button className="sl-btn primary" onClick={venta} disabled={!permiteVenta}>
+                    <Plus size={16} />
+                    Nuevo pedido
+                  </button>
+                )}
               </>
             }
           />
         </div>
-
-        {/* CONTENIDO */}
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-6">
-          {activeItem === 'Mesas' && <Mesas />}
-          {activeItem === 'Pedidos' && <Pedidos />}
-          {activeItem === 'Caja' && <Caja nombreUsuario={nombreUsuario} />}
-          {activeItem === 'Facturas' && <Facturas nombreUsuario={nombreUsuario} />}
+        <div className="sl-content">
+          {error && (
+            <ErrorCarga
+              texto={`${error}${salon ? ' Se muestran los últimos datos recibidos.' : ''}`}
+              reintentar={cargar}
+            />
+          )}
+          {vista === 'facturas' ? (
+            <Facturas
+              pedidos={salon?.pedidos ?? null}
+              tasa={salon?.tasa_iva ?? 0}
+              errorSalon={error}
+              cargarSalon={cargar}
+            />
+          ) : !salon ? (
+            !error && (
+              <div className="sl-empty sl-panel" role="status">
+                Cargando salón…
+              </div>
+            )
+          ) : vista === 'mesas' ? (
+            <Mesas
+              salon={salon}
+              buscar={buscar}
+              abrir={abrirMesa}
+              venta={venta}
+              permiteVenta={permiteVenta}
+            />
+          ) : vista === 'pedidos' ? (
+            <Pedidos pedidos={salon.pedidos} abrir={abrir} />
+          ) : (
+            <>
+              <Pedidos enCaja pedidos={salon.pedidos} abrir={abrir} />
+              <Caja />
+            </>
+          )}
+          {vista !== 'facturas' && salon && (
+            <div className="sl-sync">
+              <span>
+                {salon.sede} <b>·</b>{' '}
+                {hora &&
+                  `Última lectura ${hora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })}`}
+              </span>
+              <button onClick={cargar} disabled={cargando}>
+                <RefreshCw size={13} /> Actualizar salón
+              </button>
+            </div>
+          )}
         </div>
-
       </main>
+      <div id="sl-dialog-layer" />
+      {seleccion &&
+        !editor &&
+        salon &&
+        (mesa ? (
+          <FichaMesa
+            key={mesa.numero}
+            mesa={mesa}
+            sede={salon.sede}
+            pedidos={cuentas}
+            pedidoId={seleccion.pedido}
+            seleccionar={(id) => abrirMesa(mesa.numero, id)}
+            facturar={(p) => {
+              setSeleccion(null)
+              setParams(
+                p.id_factura != null
+                  ? { vista: 'facturas', factura: String(p.id_factura) }
+                  : { vista: 'facturas', generar: '1', pedido: String(p.id_pedido) },
+              )
+            }}
+            editar={setEditor}
+            cerrar={() => setSeleccion(null)}
+            aviso={aviso}
+            avisar={setAviso}
+            errorLectura={error}
+            actualizar={cargar}
+          />
+        ) : (
+          <Dialogo titulo="Mesa no disponible" kicker="Salón" onClose={() => setSeleccion(null)}>
+            <p className="sl-detail">La mesa ya no figura en el salón.</p>
+          </Dialogo>
+        ))}
+      {editor && salon && (
+        <EditorComanda
+          editor={editor}
+          salon={salon}
+          cerrar={() => setEditor(null)}
+          actualizar={cargar}
+          guardado={(id, numero, msg) => {
+            setEditor(null)
+            setSeleccion({ mesa: numero, pedido: id })
+            setAviso(msg)
+          }}
+        />
+      )}
+      {aviso && !seleccion && !editor && (
+        <div className="sl-toast" role="status">
+          <CheckCircle2 size={18} /> {aviso}
+          <button aria-label="Ocultar aviso" onClick={() => setAviso('')}>
+            <X size={15} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
-
-export default Mesero

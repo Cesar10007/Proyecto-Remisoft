@@ -1,10 +1,23 @@
-export default function errorHandler(err, req, res, next) {
-  console.error('[ErrorHandler]', err);
+import { ErrorSalon } from '../utils/salon.js';
 
+export default function errorHandler(err, req, res, next) {
   if (res.headersSent) {
     return next(err);
   }
 
+  if (err instanceof ErrorSalon) return res.status(err.status).json({ message: err.message });
+  if (err.code === 'P2034') return res.status(409).json({ message: 'Otra operación cambió la cuenta. Actualiza e inténtalo de nuevo.' });
+
+  if (err.code === 'STOCK_INSUFICIENTE') {
+    return res.status(409).json({
+      success: false,
+      message: err.message,
+      code: 'STOCK_INSUFICIENTE',
+      detalles: err.detalles ?? [],
+    });
+  }
+
+  console.error('[ErrorHandler]', err);
   if (err.code === 'P2002') {
     const field = err.meta?.target
       ? err.meta.target.join(', ')
@@ -23,15 +36,6 @@ export default function errorHandler(err, req, res, next) {
       message:
         'No se puede completar la operación porque existen registros relacionados',
       code: 'FOREIGN_KEY_CONSTRAINT',
-    });
-  }
-
-  if (err.code === 'STOCK_INSUFICIENTE') {
-    return res.status(409).json({
-      success: false,
-      message: err.message,
-      code: 'STOCK_INSUFICIENTE',
-      detalles: err.detalles ?? [],
     });
   }
 

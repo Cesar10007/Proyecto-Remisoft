@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Sun, Moon } from 'lucide-react'
 import { cambiarTema, escucharTema, temaGuardado, type Tema } from '../../utils/tema'
 import './ThemeToggle.css'
 
@@ -26,9 +27,7 @@ function ThemeToggle({ flotante = false, compacto = false }: ThemeToggleProps) {
       aria-label={etiqueta}
       title={etiqueta}
     >
-      <span className="material-symbols-outlined tema-toggle__icono" aria-hidden="true">
-        {oscuro ? 'light_mode' : 'dark_mode'}
-      </span>
+      {oscuro ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
       <span className="tema-toggle__texto">{etiqueta}</span>
     </button>
   )

@@ -3,8 +3,10 @@
  * "12 min" si es menos de una hora, "3 h" si es menos de un día,
  * y "28 días" en otro caso.
  */
-export function tiempoTranscurrido(fecha: string): string {
-  const minutos = Math.max(0, Math.floor((Date.now() - new Date(fecha).getTime()) / 60000))
+export function tiempoTranscurrido(fecha: string | null): string {
+  const inicio = fecha ? Date.parse(fecha) : NaN
+  if (!Number.isFinite(inicio)) return 'Sin fecha'
+  const minutos = Math.max(0, Math.floor((Date.now() - inicio) / 60000))
 
   if (minutos < 60) return `${minutos} min`
 

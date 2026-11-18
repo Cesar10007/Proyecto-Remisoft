@@ -9,6 +9,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE IA_PRODUCTO;
 TRUNCATE TABLE IA_INGREDIENTE;
 TRUNCATE TABLE IA;
+TRUNCATE TABLE mesa_atencion;
 TRUNCATE TABLE inventario_mov;
 TRUNCATE TABLE Factura_item;
 TRUNCATE TABLE domicilio;
@@ -257,6 +258,12 @@ INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VAL
 (7, 7, 2),
 (8, 8, 1),
 (8, 9, 1);
+
+-- Congelar el detalle de las facturas de demostración igual que al generarlas por API.
+UPDATE Factura_item fi JOIN Factura f ON f.id_factura = fi.id_factura
+JOIN Detalle_pedido d ON d.id_detalle = fi.id_detalle_pedido AND d.id_pedido = f.id_pedido
+JOIN Producto p ON p.id_producto = d.id_producto
+SET fi.nombre_producto = p.Nombre, fi.precio_unitario = d.Precio_unitario;
 
 -- 19. DOMICILIO
 INSERT INTO domicilio (id_pedido, direccion, coordenadas_gps, estado, fecha_entrega, id_repartidor) VALUES

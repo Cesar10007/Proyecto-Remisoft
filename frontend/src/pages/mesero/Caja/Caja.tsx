@@ -7,11 +7,7 @@ import ArqueosCaja from './ArqueosCaja'
 import GastosCaja from './GastosCaja'
 import './Caja.css'
 
-interface CajaProps {
-  nombreUsuario: string
-}
-
-function Caja(_: CajaProps) {
+function Caja() {
   const [vista, setVista] = useState('resumen')
 
   const volver = () => setVista('resumen')

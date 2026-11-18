@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 // Réplica en la API de la validación de sp_registrar_movimiento_inventario:
 // antes de una SALIDA se verifica que haya stock suficiente.
@@ -30,6 +31,14 @@ export class StockInsuficienteError extends Error {
   }
 }
 
+// Mismo orden de bloqueo para cada operación que consume/devuelve ingredientes:
+// entre una lectura de stock y su movimiento no puede intercalarse otra salida.
+export async function bloquearIngredientes(tx, ids) {
+  if (ids.length) {
+    await tx.$queryRaw`SELECT id_ingrediente FROM Ingrediente WHERE id_ingrediente IN (${Prisma.join([...new Set(ids)])}) ORDER BY id_ingrediente FOR UPDATE`;
+  }
+}
+
 /**
  * Verifica stock contra una lista ya calculada de requerimientos
  * [{ id_ingrediente, requerido }].
@@ -43,9 +52,10 @@ export async function verificarStockIngredientes(tx, requerimientos) {
   const cliente = tx ?? prisma;
   const ids = [...new Set(requerimientos.map((r) => r.id_ingrediente))];
 
-  const movimientos = await cliente.inventario_mov.findMany({
+  const movimientos = await cliente.inventario_mov.groupBy({
+    by: ['id_ingrediente', 'tipo_movimiento'],
     where: { id_ingrediente: { in: ids } },
-    select: { id_ingrediente: true, tipo_movimiento: true, cantidad: true },
+    _sum: { cantidad: true },
   });
 
   const stock = new Map(ids.map((id) => [id, 0]));
@@ -54,9 +64,9 @@ export async function verificarStockIngredientes(tx, requerimientos) {
     const actual = stock.get(mov.id_ingrediente) ?? 0;
 
     if (TIPOS_SUMA.has(mov.tipo_movimiento)) {
-      stock.set(mov.id_ingrediente, actual + numero(mov.cantidad));
+      stock.set(mov.id_ingrediente, actual + numero(mov._sum.cantidad));
     } else if (TIPOS_RESTA.has(mov.tipo_movimiento)) {
-      stock.set(mov.id_ingrediente, actual - numero(mov.cantidad));
+      stock.set(mov.id_ingrediente, actual - numero(mov._sum.cantidad));
     }
   }
 
@@ -69,7 +79,13 @@ export async function verificarStockIngredientes(tx, requerimientos) {
     .filter((r) => r.disponible < r.requerido);
 
   if (faltantes.length > 0) {
-    throw new StockInsuficienteError(faltantes);
+    const ingredientes = await cliente.ingrediente.findMany({
+      where: { id_ingrediente: { in: faltantes.map((f) => f.id_ingrediente) } },
+      select: { id_ingrediente: true, nombre: true, unidad_medida: true },
+    });
+    throw new StockInsuficienteError(
+      faltantes.map((f) => ({ ...f, ...ingredientes.find((i) => i.id_ingrediente === f.id_ingrediente) })),
+    );
   }
 
   return faltantes;
@@ -138,6 +154,10 @@ export async function verificarStockSuficiente(tx, items) {
     return { requerimientos };
   }
 
+  await bloquearIngredientes(
+    tx,
+    requerimientos.map((r) => r.id_ingrediente),
+  );
   await verificarStockIngredientes(tx, requerimientos);
 
   return { requerimientos };

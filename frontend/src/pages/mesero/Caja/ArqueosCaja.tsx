@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import api from '../../../api/axios'
+import { ArrowLeft, Calculator, Eye, ListFilter, TrendingUp, UserRound, Wallet } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useConsulta } from '../useConsulta'
+import { CargaCaja, ErrorCarga } from '../Elementos'
 import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
@@ -53,9 +55,8 @@ const COLOR_ESTADO: Record<ReturnType<typeof estadoDe>, string> = {
 }
 
 function ArqueosCaja({ onBack }: ArqueosCajaProps) {
-  const [arqueos, setArqueos] = useState<ArqueoApi[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, cargar, cargando } = useConsulta<{ data: ArqueoApi[] }>('/turnos/arqueos')
+  const arqueos = useMemo(() => data?.data ?? [], [data])
 
   const [openFiltro, setOpenFiltro] = useState(false)
   const [filtroEstado, setFiltroEstado] = useState('')
@@ -66,20 +67,15 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
     rows: [],
   })
 
-  useEffect(() => {
-    api
-      .get<{ data: ArqueoApi[] }>('/turnos/arqueos')
-      .then(({ data }) => setArqueos(data.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'No fue posible cargar los arqueos.'))
-      .finally(() => setCargando(false))
-  }, [])
 
   const arqueoActual = useMemo(() => arqueos.find(estaAbierto) ?? null, [arqueos])
 
   const arqueosFiltrados = arqueos.filter((a) => (filtroEstado ? estadoDe(a) === filtroEstado : true))
 
+  if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
+
   return (
-    <section className="m-6">
+    <section className="min-w-0">
 
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
@@ -87,9 +83,9 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          title="Volver"
+          aria-label="Volver" title="Volver"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div>
           <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">Arqueos de caja</h1>
@@ -99,7 +95,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
         </div>
       </div>
 
-      {error && <p className="mb-4 rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-sm text-[var(--rojo)]">{error}</p>}
+      {error && <ErrorCarga texto={error} reintentar={cargar} />}
 
       {/* ARQUEO ACTUAL */}
       <div className="mb-6 rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
@@ -118,7 +114,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">calculate</span>
+                <Calculator size={18} aria-hidden="true" />
                 <span className="text-sm">Monto esperado</span>
               </div>
               <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">{dinero(arqueoActual.esperado)}</p>
@@ -126,7 +122,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">point_of_sale</span>
+                <Wallet size={18} aria-hidden="true" />
                 <span className="text-sm">Monto contado</span>
               </div>
               <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">Pendiente</p>
@@ -135,7 +131,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">trending_up</span>
+                <TrendingUp size={18} aria-hidden="true" />
                 <span className="text-sm">Movimientos</span>
               </div>
               <p className="font-bold text-[var(--wa-text)]">
@@ -145,7 +141,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">person</span>
+                <UserRound size={18} aria-hidden="true" />
                 <span className="text-sm">Responsable</span>
               </div>
               <p className="font-bold text-[var(--wa-text)]">{responsable(arqueoActual.usuario)}</p>
@@ -168,7 +164,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
             >
-              <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+              <ListFilter size={18} aria-hidden="true" />
               Filtrar
             </button>
 
@@ -245,9 +241,9 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       })
                     }
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                    title="Ver arqueo"
+                    aria-label="Ver arqueo" title="Ver arqueo"
                   >
-                    <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                    <Eye size={18} aria-hidden="true" />
                   </button>
                 </div>
               ),

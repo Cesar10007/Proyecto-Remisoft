@@ -1,3 +1,5 @@
+import { alcanceMesero, ErrorSalon, indicadorPago, consumoSellado } from '../utils/salon.js';
+import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
 import { parseId } from '../utils/validation.js';
 
@@ -16,12 +18,19 @@ function parseCantidad(value) {
   return Number.isInteger(cantidad) && cantidad > 0 ? cantidad : null;
 }
 
-function respuestaPedidoNoAbierto(res) {
-  return res.status(409).json({
-    success: false,
-    message: 'No se puede modificar un pedido que no está ABIERTO.',
-    code: 'PEDIDO_NO_ABIERTO',
+// Estos endpoints siguen sirviendo a pedidos no gestionados por salón. Tomar el mismo
+// bloqueo del pedido evita añadir renglones mientras cocina lo empieza o caja lo cobra.
+async function permitirDetalle(tx, id, user) {
+  await bloquearPedido(tx, id);
+  const p = await tx.pedido.findFirst({
+    where: { id_pedido: id, ...alcanceMesero(user) },
+    select: { estado: true, version_salon: true, Mesa_num: true, Factura: indicadorPago },
   });
+  if (!p) throw new ErrorSalon(404, 'Pedido no encontrado.');
+  if (consumoSellado(p.Factura)) throw new ErrorSalon(409, 'El consumo ya está facturado.');
+  if (p.version_salon !== null || (user.rol === 'MESERO' && p.Mesa_num !== null))
+    throw new ErrorSalon(409, 'Modifica la comanda completa desde el salón.');
+  if (p.estado !== PEDIDO_EDITABLE) throw new ErrorSalon(409, 'Solo se puede modificar un pedido abierto.');
 }
 
 // GET /api/detalle-pedido?id_pedido=1
@@ -43,6 +52,7 @@ export async function index(req, res, next) {
       where = { id_pedido: idPedido };
     }
 
+    if (req.user.rol === 'MESERO') where.pedido = alcanceMesero(req.user);
     const items = await prisma.detalle_pedido.findMany({
       where,
       include: RELACIONES,
@@ -68,8 +78,8 @@ export async function show(req, res, next) {
       });
     }
 
-    const item = await prisma.detalle_pedido.findUnique({
-      where: { id_detalle: id },
+    const item = await prisma.detalle_pedido.findFirst({
+      where: { id_detalle: id, pedido: alcanceMesero(req.user) },
       include: RELACIONES,
     });
 
@@ -116,23 +126,6 @@ export async function store(req, res, next) {
       });
     }
 
-    const pedido = await prisma.pedido.findUnique({
-      where: { id_pedido: idPedido },
-      select: { id_pedido: true, estado: true },
-    });
-
-    if (!pedido) {
-      return res.status(404).json({
-        success: false,
-        message: 'El pedido no existe.',
-        code: 'PEDIDO_NOT_FOUND',
-      });
-    }
-
-    if (pedido.estado !== PEDIDO_EDITABLE) {
-      return respuestaPedidoNoAbierto(res);
-    }
-
     const producto = await prisma.producto.findUnique({
       where: { id_producto: idProducto },
       select: { id_producto: true, precio_venta: true, Estado: true },
@@ -154,17 +147,19 @@ export async function store(req, res, next) {
       });
     }
 
-    const item = await prisma.detalle_pedido.create({
-      data: {
-        id_pedido: idPedido,
-        id_producto: idProducto,
-        Cantidad: cantidad,
-        // El precio SIEMPRE se toma del servidor: nunca del cliente.
-        Precio_unitario: producto.precio_venta,
-      },
-      include: RELACIONES,
+    const item = await transaccionSalon(async (tx) => {
+      await permitirDetalle(tx, idPedido, req.user);
+      return tx.detalle_pedido.create({
+        data: {
+          id_pedido: idPedido,
+          id_producto: idProducto,
+          Cantidad: cantidad,
+          // El precio SIEMPRE se toma del servidor: nunca del cliente.
+          Precio_unitario: producto.precio_venta,
+        },
+        include: RELACIONES,
+      });
     });
-
     res.status(201).json({ success: true, message: 'Creado', data: item });
   } catch (error) {
     if (error.code === 'P2003') {
@@ -198,7 +193,7 @@ export async function update(req, res, next) {
 
     const actual = await prisma.detalle_pedido.findUnique({
       where: { id_detalle: id },
-      select: { id_detalle: true, pedido: { select: { estado: true } } },
+      select: { id_pedido: true },
     });
 
     if (!actual) {
@@ -207,10 +202,6 @@ export async function update(req, res, next) {
         message: 'No encontrado',
         code: 'NOT_FOUND',
       });
-    }
-
-    if (actual.pedido?.estado !== PEDIDO_EDITABLE) {
-      return respuestaPedidoNoAbierto(res);
     }
 
     const data = {};
@@ -229,12 +220,14 @@ export async function update(req, res, next) {
       data.Cantidad = cantidad;
     }
 
-    const item = await prisma.detalle_pedido.update({
-      where: { id_detalle: id },
-      data,
-      include: RELACIONES,
+    const item = await transaccionSalon(async (tx) => {
+      await permitirDetalle(tx, actual.id_pedido, req.user);
+      return tx.detalle_pedido.update({
+        where: { id_detalle: id },
+        data,
+        include: RELACIONES,
+      });
     });
-
     res.status(200).json({ success: true, message: 'Actualizado', data: item });
   } catch (error) {
     next(error);
@@ -259,7 +252,7 @@ export async function destroy(req, res, next) {
 
     const actual = await prisma.detalle_pedido.findUnique({
       where: { id_detalle: id },
-      select: { id_detalle: true, pedido: { select: { estado: true } } },
+      select: { id_pedido: true },
     });
 
     if (!actual) {
@@ -270,11 +263,10 @@ export async function destroy(req, res, next) {
       });
     }
 
-    if (actual.pedido?.estado !== PEDIDO_EDITABLE) {
-      return respuestaPedidoNoAbierto(res);
-    }
-
-    await prisma.detalle_pedido.delete({ where: { id_detalle: id } });
+    await transaccionSalon(async (tx) => {
+      await permitirDetalle(tx, actual.id_pedido, req.user);
+      await tx.detalle_pedido.delete({ where: { id_detalle: id } });
+    });
 
     res.status(200).json({ success: true, message: 'Eliminado' });
   } catch (error) {

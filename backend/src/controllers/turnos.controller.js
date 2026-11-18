@@ -1,3 +1,4 @@
+import { deSede } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
 
 const turnoInclude = {
@@ -347,6 +348,7 @@ export async function cerrar(req, res, next) {
 export async function aperturas(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
+      where: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
       select: {
         id_turno: true,
         fecha_apertura: true,
@@ -381,6 +383,7 @@ export async function gastos(req, res, next) {
     const movimientos = await prisma.flujo_caja.findMany({
       where: {
         egresos: { gt: 0 },
+        turno_caja: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
       },
       select: {
         id_flujo: true,
@@ -419,6 +422,7 @@ export async function arqueos(req, res, next) {
   try {
     const [turnos, movimientos] = await Promise.all([
       prisma.turno_caja.findMany({
+        where: req.user.rol === 'MESERO' ? deSede(req.user) : undefined,
         select: {
           id_turno: true,
           fecha_apertura: true,
@@ -437,6 +441,7 @@ export async function arqueos(req, res, next) {
       }),
       prisma.flujo_caja.groupBy({
         by: ['id_turno'],
+        where: req.user.rol === 'MESERO' ? { turno_caja: deSede(req.user) } : undefined,
         _sum: { ingresos: true, egresos: true },
       }),
     ]);

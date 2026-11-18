@@ -3,7 +3,7 @@ import { store } from '../store/store'
 import { clearCredentials } from '../store/authSlice'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })
 
