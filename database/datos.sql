@@ -259,6 +259,12 @@ INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VAL
 (8, 8, 1),
 (8, 9, 1);
 
+-- Congelar el detalle de las facturas de demostración igual que al generarlas por API.
+UPDATE Factura_item fi JOIN Factura f ON f.id_factura = fi.id_factura
+JOIN Detalle_pedido d ON d.id_detalle = fi.id_detalle_pedido AND d.id_pedido = f.id_pedido
+JOIN Producto p ON p.id_producto = d.id_producto
+SET fi.nombre_producto = p.Nombre, fi.precio_unitario = d.Precio_unitario;
+
 -- 19. DOMICILIO
 INSERT INTO domicilio (id_pedido, direccion, coordenadas_gps, estado, fecha_entrega, id_repartidor) VALUES
 (3, 'Av. 68 # 22-10', '4.6300,-74.0900', 'ENTREGADO', '2025-01-15 13:45:00', 5),

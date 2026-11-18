@@ -390,7 +390,7 @@ El rol `CLIENTE` ya no es un usuario autenticable. La entidad `Cliente` se conse
 
 ### Servicio de salón
 
-En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y sus pedidos. El mesero puede ocuparla antes del primer pedido, tomar comandas, servir platos por ronda y enviar la precuenta a caja. Una mesa sin pedido se puede liberar desde su ficha; si hay consumo, sigue ocupada hasta que se cobre o se cancele válidamente el último pedido. [Guía de operación, API y pruebas](docs/servicio-de-salon.md).
+En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y sus pedidos. El mesero puede ocuparla antes del primer pedido, tomar comandas, servir platos por ronda y enviar la precuenta a caja. Una mesa sin pedido se puede liberar desde su ficha; si hay consumo, sigue ocupada hasta que se cobre o se cancele válidamente el último pedido. Desde **Facturas**, el mesero puede generar una factura pendiente para una cuenta en caja y ajustar el receptor, descuento y propina. Al pagar, queda de solo lectura en el historial de MariaDB. [Guía de operación, API y pruebas](docs/servicio-de-salon.md).
 
 ### Flujo de autenticación
 

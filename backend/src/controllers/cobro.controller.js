@@ -1,19 +1,13 @@
-import {
-  formatCuenta,
-  conPago,
-  calcularTotales,
-  itemsFacturables,
-  round2,
-  deSede,
-  ESTADOS_EN_MESA,
-} from '../utils/salon.js';
+import { consumoFacturado, esBorrador } from '../utils/facturacion.js';
+import { guardarConsumo, lineasDeFactura, origenDeFactura } from '../services/facturacion.service.js';
+import { formatCuenta, conPago, itemsFacturables, round2, deSede, ESTADOS_EN_MESA } from '../utils/salon.js';
 import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
 import { verificarStockSuficiente, registrarSalidasPorConsumo } from '../services/inventario.service.js';
 
 // Flujo de cobro del tablero Cajero (RF-003 · HU-009, HU-011, HU-012).
-// Al cerrar una cuenta se crea la factura, sus ítems, el pago y el movimiento
-// de caja en una sola transacción, y el pedido pasa a CERRADO (la mesa queda libre).
+// Al cerrar una cuenta se crea o confirma su factura, se registra el pago
+// y el pedido pasa a CERRADO en una sola transacción.
 
 // Estados de pedido que siguen abiertos para la operación (salón y cocina).
 const ESTADOS_COBRABLES = ESTADOS_EN_MESA;
@@ -28,7 +22,27 @@ function parseId(value) {
 }
 
 // GET /api/cobro/pendientes
-// Cuentas abiertas que todavía no tienen factura.
+// La vista y la transacción de pago usan la misma fuente del importe. Si hay borrador,
+// mandan sus renglones y ajustes guardados, no la suma sin descuento de la comanda.
+function cuentaParaCobro(pedido) {
+  const cuenta = formatCuenta(pedido);
+  const f = pedido.Factura;
+  if (!esBorrador(f)) return { ...cuenta, descuento: 0, propina: 0, version_factura: null };
+  const items = consumoFacturado(f).map((i) => ({ ...i, subtotal: round2(i.cantidad * i.precio_unitario) }));
+  return {
+    ...cuenta,
+    items,
+    subtotal: round2(items.reduce((s, i) => s + i.subtotal, 0)),
+    iva: Number(f.IVA),
+    total: Number(f.total),
+    descuento: Number(f.Descuento),
+    propina: Number(f.Propina),
+    receptor: f.receptor,
+    consecutivo: f.consecutivo,
+    version_factura: f.version_edicion,
+  };
+}
+
 export async function pendientes(req, res, next) {
   try {
     const pedidos = await prisma.pedido.findMany({
@@ -39,19 +53,26 @@ export async function pendientes(req, res, next) {
           { Factura: { is: null } },
           {
             Factura: {
-              is: { estado: { in: ESTADOS_FACTURA_REUTILIZABLE }, pago: { none: { estado: 'APROBADO' } } },
+              is: {
+                OR: [
+                  { estado: { in: ESTADOS_FACTURA_REUTILIZABLE } },
+                  { estado: 'PENDIENTE', tasa_iva: { not: null }, total: { not: null } },
+                ],
+                pago: { none: { estado: 'APROBADO' } },
+              },
             },
           },
         ],
       },
       include: {
         Detalle_pedido: { include: { Producto: true } },
+        Factura: { include: { Factura_item: lineasDeFactura } },
         usuario: { select: { nombre: true, apellido: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
 
-    const cuentas = pedidos.map(formatCuenta).filter((cuenta) => cuenta.items.length > 0);
+    const cuentas = pedidos.map(cuentaParaCobro).filter((cuenta) => cuenta.items.length > 0);
 
     res.json(cuentas);
   } catch (err) {
@@ -60,7 +81,7 @@ export async function pendientes(req, res, next) {
 }
 
 // POST /api/cobro/cerrar-cuenta
-// Body: { id_pedido, metodo: 'EFECTIVO'|'TARJETA'|'TRANSFERENCIA', monto_recibido?, referencia? }
+// Para un borrador, version_factura debe ser la revisión vista por caja en /pendientes.
 export async function cerrarCuenta(req, res, next) {
   try {
     const idPedido = parseId(req.body?.id_pedido);
@@ -87,9 +108,12 @@ export async function cerrarCuenta(req, res, next) {
       const pedido = await tx.pedido.findFirst({
         where: { id_pedido: idPedido, ...deSede(req.user) },
         include: {
-          Detalle_pedido: { include: { Producto: true } },
+          ...origenDeFactura,
           Factura: {
-            include: { pago: { where: { estado: 'APROBADO' }, select: { id_pago: true }, take: 1 } },
+            include: {
+              Factura_item: lineasDeFactura,
+              pago: { where: { estado: 'APROBADO' }, select: { estado: true }, take: 1 },
+            },
           },
         },
       });
@@ -99,11 +123,15 @@ export async function cerrarCuenta(req, res, next) {
       }
 
       const facturaExistente = pedido.Factura;
-      if (
-        conPago(facturaExistente) ||
-        (facturaExistente && !ESTADOS_FACTURA_REUTILIZABLE.includes(facturaExistente.estado))
-      ) {
+      if (conPago(facturaExistente))
         return { status: 409, message: 'El pedido ya tiene una factura pagada.' };
+      const conBorrador = esBorrador(facturaExistente);
+      if (
+        facturaExistente &&
+        !conBorrador &&
+        !ESTADOS_FACTURA_REUTILIZABLE.includes(facturaExistente.estado)
+      ) {
+        return { status: 409, message: 'Esta factura no se puede cobrar. Revisa su estado y sus importes.' };
       }
 
       if (
@@ -116,8 +144,14 @@ export async function cerrarCuenta(req, res, next) {
         };
       }
 
+      const cuenta = cuentaParaCobro(pedido);
+      if ((req.body.version_factura ?? null) !== cuenta.version_factura)
+        return {
+          status: 409,
+          message: 'La factura cambió. Actualiza y confirma el importe antes de cobrar.',
+        };
       const detalles = itemsFacturables(pedido.Detalle_pedido);
-      if (detalles.length === 0) {
+      if (cuenta.items.length === 0 || detalles.length === 0) {
         return {
           status: 422,
           message: 'No se puede cerrar una cuenta sin productos consumidos.',
@@ -139,7 +173,7 @@ export async function cerrarCuenta(req, res, next) {
               })),
             );
 
-      const { subtotal, iva, total } = calcularTotales(detalles);
+      const { subtotal, iva, total, descuento, propina } = cuenta;
 
       let montoRecibido = total;
       let cambio = 0;
@@ -161,46 +195,13 @@ export async function cerrarCuenta(req, res, next) {
         cambio = round2(montoRecibido - total);
       }
 
-      const datosFactura = {
-        Fecha_emision: new Date(),
-        IVA: iva,
-        Descuento: 0,
-        Propina: 0,
-        total,
-        estado: 'PAGADA',
-      };
-
-      let factura;
-      if (facturaExistente) {
-        await tx.Factura_item.deleteMany({
-          where: { id_factura: facturaExistente.id_factura },
-        });
-        factura = await tx.Factura.update({
-          where: { id_factura: facturaExistente.id_factura },
-          data: datosFactura,
-        });
-      } else {
-        factura = await tx.Factura.create({
-          data: { ...datosFactura, id_pedido: idPedido },
-        });
-      }
-
-      let consecutivo = factura.consecutivo;
-      if (!consecutivo) {
-        consecutivo = `FAC-${new Date().getFullYear()}-${String(factura.id_factura).padStart(4, '0')}`;
-        await tx.Factura.update({
-          where: { id_factura: factura.id_factura },
-          data: { consecutivo },
-        });
-      }
-
-      await tx.Factura_item.createMany({
-        data: detalles.map((d) => ({
-          id_factura: factura.id_factura,
-          id_detalle_pedido: d.id_detalle,
-          cantidad_facturada: d.Cantidad,
-        })),
-      });
+      const factura = conBorrador
+        ? await tx.factura.update({
+            where: { id_factura: facturaExistente.id_factura },
+            data: { estado: 'PAGADA', Fecha_emision: new Date() },
+          })
+        : await guardarConsumo(tx, pedido, {}, 'PAGADA', facturaExistente);
+      const consecutivo = factura.consecutivo;
 
       const pago = await tx.pago.create({
         data: {
@@ -258,11 +259,10 @@ export async function cerrarCuenta(req, res, next) {
           metodo,
           monto_recibido: montoRecibido,
           cambio,
-          items: detalles.map((d) => ({
-            nombre: d.Producto?.Nombre ?? `Producto ${d.id_producto}`,
-            cantidad: Number(d.Cantidad),
-            precio_unitario: Number(d.Precio_unitario ?? 0),
-          })),
+          items: cuenta.items,
+          receptor: factura.receptor,
+          descuento,
+          propina,
           fecha_emision: factura.Fecha_emision,
         },
       };
@@ -273,7 +273,7 @@ export async function cerrarCuenta(req, res, next) {
     }
 
     return res.status(201).json({
-      message: 'Cuenta cerrada y factura emitida. La mesa quedó libre.',
+      message: 'Cuenta cerrada y factura pagada.',
       factura: resultado.data,
     });
   } catch (err) {

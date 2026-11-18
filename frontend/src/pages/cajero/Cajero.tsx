@@ -21,7 +21,14 @@ interface ItemCuenta {
   subtotal: number
 }
 
-interface Cuenta {
+interface AjustesFactura {
+  descuento: number
+  propina: number
+  receptor?: string | null
+}
+interface Cuenta extends AjustesFactura {
+  version_factura: number | null
+  consecutivo?: string | null
   id_pedido: number
   estado: string
   mesa: number | null
@@ -34,7 +41,7 @@ interface Cuenta {
   total: number
 }
 
-interface FacturaEmitida {
+interface FacturaEmitida extends AjustesFactura {
   id_factura: number
   consecutivo: string
   mesa: number | null
@@ -64,7 +71,7 @@ interface ProductoCarta {
 }
 
 const formatoCOP = (valor: number) =>
-  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(valor)
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(valor)
 
 function mensajeError(err: unknown, fallback: string) {
   const respuesta = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -136,7 +143,7 @@ export default function Cajero() {
     setMontoRecibido('')
     setReferencia('')
     setErrorCobro(null)
-  }, [seleccionada])
+  }, [seleccionada, cuenta?.version_factura])
 
   const cambio = useMemo(() => {
     if (!cuenta || metodo !== 'EFECTIVO') return null
@@ -146,17 +153,17 @@ export default function Cajero() {
   }, [cuenta, metodo, montoRecibido])
 
   const puedeCobrar = useMemo(() => {
-    if (!cuenta || !metodo || enviando) return false
+    if (!cuenta || !metodo || enviando || error) return false
     if (metodo === 'EFECTIVO') return cambio !== null && cambio >= 0
     return true
-  }, [cuenta, metodo, enviando, cambio])
+  }, [cuenta, metodo, enviando, cambio, error])
 
   async function cerrarCuenta() {
     if (!cuenta || !metodo) return
     setEnviando(true)
     setErrorCobro(null)
     try {
-      const body: Record<string, unknown> = { id_pedido: cuenta.id_pedido, metodo }
+      const body: Record<string, unknown> = { id_pedido: cuenta.id_pedido, metodo, version_factura: cuenta.version_factura }
       if (metodo === 'EFECTIVO') body.monto_recibido = Number(montoRecibido)
       if (metodo !== 'EFECTIVO' && referencia.trim()) body.referencia = referencia.trim()
 
@@ -164,6 +171,7 @@ export default function Cajero() {
       setFactura(data.factura)
       await cargarCuentas()
     } catch (err) {
+      await cargarCuentas()
       setErrorCobro(mensajeError(err, 'No fue posible cerrar la cuenta.'))
     } finally {
       setEnviando(false)
@@ -253,12 +261,13 @@ export default function Cajero() {
           {factura ? (
             <div className="cajero__factura" id="comprobante">
               <div className="cajero__alerta cajero__alerta--ok no-print">
-                Cuenta cerrada. La mesa quedó libre.
+                Pago registrado. La factura quedó en el historial.
               </div>
               <h2>Factura {factura.consecutivo}</h2>
               <p className="cajero__muted">
                 {new Date(factura.fecha_emision).toLocaleString('es-CO')}
                 {factura.mesa ? ` · Mesa ${factura.mesa}` : ''}
+                {factura.receptor && ` · ${factura.receptor}`}
               </p>
               <table className="cajero__tabla">
                 <thead>
@@ -282,7 +291,9 @@ export default function Cajero() {
               </table>
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(factura.subtotal)}</dd></div>
+                {factura.descuento > 0 && <div><dt>Descuento</dt><dd>− {formatoCOP(factura.descuento)}</dd></div>}
                 <div><dt>IVA</dt><dd>{formatoCOP(factura.iva)}</dd></div>
+                {factura.propina > 0 && <div><dt>Propina</dt><dd>{formatoCOP(factura.propina)}</dd></div>}
                 <div className="cajero__total-final"><dt>Total</dt><dd>{formatoCOP(factura.total)}</dd></div>
                 <div><dt>Método</dt><dd>{factura.metodo}</dd></div>
                 {factura.metodo === 'EFECTIVO' && (
@@ -313,6 +324,8 @@ export default function Cajero() {
               </h2>
               <p className="cajero__muted">
                 {cuenta.nombre_mesero ? `Atendió: ${cuenta.nombre_mesero}` : 'Sin mesero asignado'}
+                {cuenta.consecutivo && ` · ${cuenta.consecutivo}`}
+                {cuenta.receptor && ` · ${cuenta.receptor}`}
               </p>
 
               <table className="cajero__tabla">
@@ -338,7 +351,9 @@ export default function Cajero() {
 
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(cuenta.subtotal)}</dd></div>
+                {cuenta.descuento > 0 && <div><dt>Descuento</dt><dd>− {formatoCOP(cuenta.descuento)}</dd></div>}
                 <div><dt>IVA</dt><dd>{formatoCOP(cuenta.iva)}</dd></div>
+                {cuenta.propina > 0 && <div><dt>Propina</dt><dd>{formatoCOP(cuenta.propina)}</dd></div>}
                 <div className="cajero__total-final"><dt>Total</dt><dd>{formatoCOP(cuenta.total)}</dd></div>
               </dl>
 
@@ -366,7 +381,8 @@ export default function Cajero() {
                     label="Monto recibido"
                     type="number"
                     min={cuenta.total}
-                    inputMode="numeric"
+                    step="0.01"
+                    inputMode="decimal"
                     value={montoRecibido}
                     onChange={(e) => setMontoRecibido(e.target.value)}
                     placeholder={String(cuenta.total)}

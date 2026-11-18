@@ -8,6 +8,8 @@ export const admitePedido = (m: Mesa) => !m.ocupada || !!m.atencion
 export type Pedido = Consumo & {
   version: number
   pago_registrado: boolean
+  id_factura: number | null
+  total_factura_pendiente: number | null
   id_cliente: number | null
   cliente: string
 }

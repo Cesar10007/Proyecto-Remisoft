@@ -13,6 +13,7 @@ type Props = {
   pedidoId?: number
   seleccionar: (id?: number) => void
   editar: (e: Editor) => void
+  facturar: (p: Pedido) => void
   cerrar: () => void
   aviso: string
   avisar: (s: string) => void
@@ -27,6 +28,7 @@ export default function FichaMesa({
   pedidoId,
   seleccionar,
   editar,
+  facturar,
   cerrar,
   aviso,
   avisar,
@@ -73,6 +75,7 @@ export default function FichaMesa({
       key={p.id_pedido}
       pedido={p}
       editar={editar}
+      facturar={facturar}
       avisar={avisar}
       actualizar={actualizar}
       ocupado={bloqueado}

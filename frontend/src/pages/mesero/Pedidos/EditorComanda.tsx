@@ -14,7 +14,7 @@ import {
   type Salon,
 } from '../modelo'
 import { useConsulta } from '../useConsulta'
-import { formatCOP } from '../utils'
+import { formatCOP, ivaEnCentavos } from '../utils'
 
 type Linea = {
   clave: number
@@ -77,8 +77,9 @@ export default function EditorComanda({
         actual.version !== pedido?.version ||
         actual.estado === 'POR_COBRAR' ||
         (modo === 'editar' && !editable(actual))
-  const subtotal = Math.round(lineas.reduce((s, l) => s + l.precio * l.cantidad, 0) * 100) / 100
-  const iva = Math.round(subtotal * salon.tasa_iva * 100) / 100
+  const centavos = lineas.reduce((s, l) => s + Math.round(l.precio * 100) * l.cantidad, 0)
+  const subtotal = centavos / 100
+  const iva = ivaEnCentavos(centavos, salon.tasa_iva) / 100
   const categorias = [...new Set(carta?.productos.map((p) => p.categoria))].sort()
   const productos =
     carta?.productos.filter(

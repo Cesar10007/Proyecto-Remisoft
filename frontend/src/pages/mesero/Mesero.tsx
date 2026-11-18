@@ -137,7 +137,12 @@ export default function Mesero() {
             />
           )}
           {vista === 'facturas' ? (
-            <Facturas />
+            <Facturas
+              pedidos={salon?.pedidos ?? null}
+              tasa={salon?.tasa_iva ?? 0}
+              errorSalon={error}
+              cargarSalon={cargar}
+            />
           ) : !salon ? (
             !error && (
               <div className="sl-empty sl-panel" role="status">
@@ -186,6 +191,14 @@ export default function Mesero() {
             pedidos={cuentas}
             pedidoId={seleccion.pedido}
             seleccionar={(id) => abrirMesa(mesa.numero, id)}
+            facturar={(p) => {
+              setSeleccion(null)
+              setParams(
+                p.id_factura != null
+                  ? { vista: 'facturas', factura: String(p.id_factura) }
+                  : { vista: 'facturas', generar: '1', pedido: String(p.id_pedido) },
+              )
+            }}
             editar={setEditor}
             cerrar={() => setSeleccion(null)}
             aviso={aviso}

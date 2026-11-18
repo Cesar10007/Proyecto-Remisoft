@@ -57,25 +57,30 @@ model Detalle_pedido {
 }
 
 model Factura {
-  id_factura    Int            @id @default(autoincrement())
-  id_pedido     Int            @unique(map: "id_pedido")
-  Fecha_emision DateTime?      @default(now()) @db.DateTime(0)
-  consecutivo   String?        @db.VarChar(40)
-  CUFE          String?        @db.VarChar(80)
-  IVA           Decimal?       @db.Decimal(10, 2)
-  Descuento     Decimal?       @default(0.00) @db.Decimal(10, 2)
-  Propina       Decimal?       @default(0.00) @db.Decimal(10, 2)
-  total         Decimal?       @db.Decimal(10, 2)
-  estado        String?        @default("EMITIDA") @db.VarChar(20)
-  pedido        pedido         @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "Factura_ibfk_1")
-  Factura_item  Factura_item[]
-  pago          pago[]
+  id_factura      Int            @id @default(autoincrement())
+  id_pedido       Int            @unique(map: "id_pedido")
+  Fecha_emision   DateTime?      @default(now()) @db.DateTime(0)
+  consecutivo     String?        @db.VarChar(40)
+  CUFE            String?        @db.VarChar(80)
+  receptor        String?        @db.VarChar(120)
+  tasa_iva        Decimal?       @db.Decimal(7, 6)
+  version_edicion Int            @default(0)
+  IVA             Decimal?       @db.Decimal(10, 2)
+  Descuento       Decimal?       @default(0.00) @db.Decimal(10, 2)
+  Propina         Decimal?       @default(0.00) @db.Decimal(10, 2)
+  total           Decimal?       @db.Decimal(10, 2)
+  estado          String?        @default("EMITIDA") @db.VarChar(20)
+  pedido          pedido         @relation(fields: [id_pedido], references: [id_pedido], onUpdate: Restrict, map: "Factura_ibfk_1")
+  Factura_item    Factura_item[]
+  pago            pago[]
 }
 
 model Factura_item {
   id_factura         Int
   id_detalle_pedido  Int
   cantidad_facturada Int?
+  nombre_producto    String?        @db.VarChar(50)
+  precio_unitario    Decimal?       @db.Decimal(10, 2)
   Factura            Factura        @relation(fields: [id_factura], references: [id_factura], onUpdate: Restrict, map: "Factura_item_ibfk_1")
   Detalle_pedido     Detalle_pedido @relation(fields: [id_detalle_pedido], references: [id_detalle], onUpdate: Restrict, map: "Factura_item_ibfk_2")
 

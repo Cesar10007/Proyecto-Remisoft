@@ -18,6 +18,8 @@ export function Dialogo({
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const id = useId()
+  // En un enlace directo a una factura la capa puede montarse después del primer render.
+  const capa = document.getElementById('sl-dialog-layer')
   useLayoutEffect(() => {
     const el = ref.current!
     const previo = document.body.style.overflow
@@ -29,7 +31,7 @@ export function Dialogo({
       document.body.style.overflow = previo
       if (origen instanceof HTMLElement && origen.isConnected) origen.focus({ preventScroll: true })
     }
-  }, [])
+  }, [capa])
   const contenido = (
     <dialog
       ref={ref}
@@ -57,6 +59,5 @@ export function Dialogo({
       {children}
     </dialog>
   )
-  const capa = document.getElementById('sl-dialog-layer')
   return capa ? createPortal(contenido, capa) : contenido
 }

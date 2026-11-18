@@ -1,4 +1,11 @@
-import { ESTADOS_EN_COCINA, estadoSegunItems, ErrorSalon, deSede } from '../utils/salon.js';
+import {
+  ESTADOS_EN_COCINA,
+  estadoSegunItems,
+  ErrorSalon,
+  deSede,
+  indicadorPago,
+  consumoSellado,
+} from '../utils/salon.js';
 import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
 
@@ -28,7 +35,20 @@ export async function comandas(req, res, next) {
   try {
     const pedidos = await prisma.pedido.findMany({
       where: {
-        AND: [alcance(req.user), { OR: [{ estado: null }, { estado: { in: ESTADOS_EN_COCINA } }] }],
+        AND: [
+          alcance(req.user),
+          {
+            OR: [
+              { Factura: { is: null } },
+              {
+                Factura: {
+                  is: { estado: { notIn: ['PAGADA', 'PENDIENTE'] }, pago: { none: { estado: 'APROBADO' } } },
+                },
+              },
+            ],
+          },
+          { OR: [{ estado: null }, { estado: { in: ESTADOS_EN_COCINA } }] },
+        ],
         Detalle_pedido: {
           some: { OR: [{ estado_item: null }, { estado_item: { in: ESTADOS_ITEM_EN_COCINA } }] },
         },
@@ -85,10 +105,13 @@ export async function avanzarItem(req, res, next) {
       await bloquearPedido(tx, item.id_pedido);
       const p = await tx.pedido.findFirst({
         where: { id_pedido: item.id_pedido, ...alcance(req.user) },
-        include: { Detalle_pedido: { include: { Producto: { select: { Nombre: true } } } } },
+        include: {
+          Factura: indicadorPago,
+          Detalle_pedido: { include: { Producto: { select: { Nombre: true } } } },
+        },
       });
       if (!p) throw new ErrorSalon(404, 'Comanda no encontrada.');
-      if (!ESTADOS_EN_COCINA.includes(p.estado ?? 'ABIERTO'))
+      if (consumoSellado(p.Factura) || !ESTADOS_EN_COCINA.includes(p.estado ?? 'ABIERTO'))
         throw new ErrorSalon(409, 'El pedido ya no está en cocina.');
       const d = p.Detalle_pedido.find((d) => d.id_detalle === idDetalle);
       if (!d) throw new ErrorSalon(404, 'Ítem no encontrado.');

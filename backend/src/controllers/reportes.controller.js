@@ -55,8 +55,8 @@ export async function ventasDiarias(req, res, next) {
     const diaLocal = Prisma.sql`DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00'))`;
     const filasDia = esMesero ? await prisma.$queryRaw`
       SELECT DATE_FORMAT(${diaLocal}, '%Y-%m-%d') AS fecha, COUNT(*) AS total_pedidos,
-             SUM(f.total) AS ingresos_brutos, SUM(f.IVA) AS total_iva, SUM(f.Descuento) AS total_descuentos,
-             SUM(f.Propina) AS total_propinas, SUM(f.total - f.Descuento) AS ingresos_netos
+             SUM(f.total + COALESCE(f.Descuento, 0)) AS ingresos_brutos, SUM(f.IVA) AS total_iva, SUM(f.Descuento) AS total_descuentos,
+             SUM(f.Propina) AS total_propinas, SUM(f.total) AS ingresos_netos
       FROM Factura f ${unirSede} WHERE f.estado = 'PAGADA' ${sede}
         AND ${diaLocal} BETWEEN ${desde} AND ${hasta} GROUP BY fecha ORDER BY fecha DESC
     ` : await prisma.$queryRaw`
@@ -71,7 +71,7 @@ export async function ventasDiarias(req, res, next) {
       SELECT p.id_producto,
              p.Nombre AS producto,
              SUM(fi.cantidad_facturada) AS unidades,
-             SUM(fi.cantidad_facturada * dp.Precio_unitario) AS ingresos
+             SUM(fi.cantidad_facturada * COALESCE(fi.precio_unitario, dp.Precio_unitario)) AS ingresos
       FROM Factura_item fi
       JOIN Factura f ON f.id_factura = fi.id_factura
       JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido AND dp.id_pedido = f.id_pedido

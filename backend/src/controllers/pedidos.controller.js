@@ -1,5 +1,5 @@
 import { bloquearPedido, mesaDisponible, transaccionSalon } from '../services/salon.service.js';
-import { alcanceMesero } from '../utils/salon.js';
+import { alcanceMesero, consumoSellado, indicadorPago, ErrorSalon } from '../utils/salon.js';
 import { operar } from './salon.controller.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString } from '../utils/validation.js';
@@ -246,8 +246,9 @@ export async function actualizar(req, res, next) {
     await transaccionSalon(async (tx) => {
       await bloquearPedido(tx, id);
       const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
+      const actual = await tx.pedido.findFirstOrThrow({ where, include: { Factura: indicadorPago } });
+      if (consumoSellado(actual.Factura)) throw new ErrorSalon(409, 'El pedido ya está facturado.');
       if (data.Mesa_num !== undefined || data.id_mesero !== undefined) {
-        const actual = await tx.pedido.findFirstOrThrow({ where });
         const destino = { ...actual, ...data };
         if (
           destino.Mesa_num != null &&
@@ -309,9 +310,12 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await prisma.pedido.update({
-      where: { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) },
-      data: { estado: 'CANCELADO' },
+    await transaccionSalon(async (tx) => {
+      await bloquearPedido(tx, id);
+      const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
+      const p = await tx.pedido.findFirstOrThrow({ where, select: { Factura: indicadorPago } });
+      if (consumoSellado(p.Factura)) throw new ErrorSalon(409, 'El pedido ya está facturado.');
+      await tx.pedido.update({ where, data: { estado: 'CANCELADO' } });
     });
 
     res.json({ message: 'Pedido cancelado' });

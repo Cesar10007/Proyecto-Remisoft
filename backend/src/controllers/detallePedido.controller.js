@@ -1,4 +1,4 @@
-import { alcanceMesero, ErrorSalon } from '../utils/salon.js';
+import { alcanceMesero, ErrorSalon, indicadorPago, consumoSellado } from '../utils/salon.js';
 import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
 import { parseId } from '../utils/validation.js';
@@ -24,9 +24,10 @@ async function permitirDetalle(tx, id, user) {
   await bloquearPedido(tx, id);
   const p = await tx.pedido.findFirst({
     where: { id_pedido: id, ...alcanceMesero(user) },
-    select: { estado: true, version_salon: true, Mesa_num: true },
+    select: { estado: true, version_salon: true, Mesa_num: true, Factura: indicadorPago },
   });
   if (!p) throw new ErrorSalon(404, 'Pedido no encontrado.');
+  if (consumoSellado(p.Factura)) throw new ErrorSalon(409, 'El consumo ya está facturado.');
   if (p.version_salon !== null || (user.rol === 'MESERO' && p.Mesa_num !== null))
     throw new ErrorSalon(409, 'Modifica la comanda completa desde el salón.');
   if (p.estado !== PEDIDO_EDITABLE) throw new ErrorSalon(409, 'Solo se puede modificar un pedido abierto.');

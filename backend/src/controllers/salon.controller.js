@@ -49,6 +49,8 @@ export async function tablero(req, res, next) {
         ...consumosPorId.get(p.id_pedido),
         version: p.version_salon ?? 0,
         pago_registrado: conPago(p.Factura),
+        id_factura: p.Factura?.id_factura ?? null,
+        total_factura_pendiente: p.Factura?.estado === 'PENDIENTE' ? Number(p.Factura.total) : null,
         id_cliente: p.id_cliente,
         cliente: [p.Cliente?.Nombre, p.Cliente?.Apellido].filter(Boolean).join(' '),
       })),

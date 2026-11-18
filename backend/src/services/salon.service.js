@@ -15,7 +15,7 @@ import {
   leerLineas,
   itemsFacturables,
   indicadorPago,
-  conPago,
+  consumoSellado,
   estadoSegunItems,
 } from '../utils/salon.js';
 
@@ -226,7 +226,7 @@ export function cambiarComanda(user, id, body, accion) {
     });
     if (!p) throw new ErrorSalon(404, 'No se encontró la cuenta entre tus mesas.');
     const estado = p.estado ?? 'ABIERTO';
-    if (!ESTADOS_EN_MESA.includes(estado) || p.estado === 'POR_COBRAR' || conPago(p.Factura))
+    if (!ESTADOS_EN_MESA.includes(estado) || p.estado === 'POR_COBRAR' || consumoSellado(p.Factura))
       throw new ErrorSalon(409, 'La cuenta ya no admite cambios.');
     const version = p.version_salon ?? 0;
     if (body?.version !== version)

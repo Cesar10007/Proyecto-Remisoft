@@ -1,205 +1,94 @@
-import { misPedidos } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
+import {
+  alcanceFacturacion,
+  generarFactura,
+  editarFactura,
+  lineasDeFactura,
+} from '../services/facturacion.service.js';
+import { consumoFacturado, esBorrador } from '../utils/facturacion.js';
+import { conPago, entero, ErrorSalon } from '../utils/salon.js';
+import { registrarAuditoria } from '../utils/auditoria.js';
 
-/**
- * GET /api/facturas
- * Listar todas las facturas con sus pedidos relacionados
- */
+function presentar(f) {
+  const pagada = conPago(f);
+  return { ...f, pagada, editable: !pagada && esBorrador(f) };
+}
+const alcance = (req) => ({ pedido: alcanceFacturacion(req.user) });
+const idFactura = (req) => entero(Number(req.params.id), 'La factura');
+
 export async function index(req, res, next) {
   try {
-    const facturas = await prisma.Factura.findMany({
-      where: req.user.rol === 'MESERO' ? { pedido: misPedidos(req.user) } : undefined,
+    const facturas = await prisma.factura.findMany({
+      where: alcance(req),
       orderBy: { id_factura: 'desc' },
-      include: {
-        pedido: true, // Relación con el pedido (Mesa_num, mesero)
-        pago: true,   // Pagos registrados (método, monto, fecha)
-      }
+      include: { pedido: true, pago: true },
     });
-
-    res.status(200).json({
-      success: true,
-      data: facturas,
-      count: facturas.length
-    });
-  } catch (error) {
-    next(error);
+    res.json({ success: true, data: facturas.map(presentar), count: facturas.length });
+  } catch (err) {
+    next(err);
   }
 }
-
-/**
- * GET /api/facturas/:id
- * Obtener una factura por ID
- */
 export async function show(req, res, next) {
   try {
-    const { id } = req.params;
-
-    const factura = await prisma.Factura.findFirst({
-      where: { id_factura: parseInt(id), ...(req.user.rol === 'MESERO' ? { pedido: misPedidos(req.user) } : {}) },
+    const f = await prisma.factura.findFirst({
+      where: { id_factura: idFactura(req), ...alcance(req) },
       include: {
-        pedido: true, pago: { select: { metodo: true, monto: true, estado: true } },
-        Factura_item: { include: { Detalle_pedido: { select: { id_pedido: true, Precio_unitario: true, Producto: { select: { Nombre: true } } } } } }
-      }
+        pedido: true,
+        pago: { select: { metodo: true, monto: true, estado: true, fecha_pago: true } },
+        Factura_item: lineasDeFactura,
+      },
     });
-
-    if (!factura) {
-      return res.status(404).json({
-        success: false,
-        message: 'Factura no encontrada',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    factura.Factura_item = factura.Factura_item.filter(i => i.Detalle_pedido.id_pedido === factura.id_pedido);
-    res.status(200).json({
-      success: true,
-      data: factura
-    });
-  } catch (error) {
-    next(error);
+    if (!f) throw new ErrorSalon(404, 'Factura no encontrada.');
+    const items = consumoFacturado(f);
+    // Los consumidores antiguos del detalle también ven el precio y nombre históricos.
+    const Factura_item = items.map((i) => ({
+      id_factura: f.id_factura,
+      id_detalle_pedido: i.id_detalle,
+      cantidad_facturada: i.cantidad,
+      nombre_producto: i.nombre,
+      precio_unitario: i.precio_unitario,
+      Detalle_pedido: {
+        id_pedido: f.id_pedido,
+        Precio_unitario: i.precio_unitario,
+        Producto: { Nombre: i.nombre },
+      },
+    }));
+    res.json({ success: true, data: { ...presentar(f), Factura_item, items } });
+  } catch (err) {
+    next(err);
   }
 }
-
-/**
- * POST /api/facturas
- * Crear una nueva factura
- */
+function registrada(req, res, f, creada) {
+  registrarAuditoria({
+    evento: creada ? 'FACTURA_GENERADA' : 'FACTURA_EDITADA',
+    id_usuario: req.user.id_usuario,
+    extra: { id_factura: f.id_factura, id_pedido: f.id_pedido, version: f.version_edicion },
+  });
+  res.status(creada ? 201 : 200).json({ success: true, data: f });
+}
 export async function store(req, res, next) {
   try {
-    const { id_pedido, Fecha_emision } = req.body;
-
-    // Validaciones básicas
-    if (!id_pedido) {
-      return res.status(400).json({
-        success: false,
-        message: 'El ID del pedido es requerido',
-        code: 'MISSING_PEDIDO_ID'
-      });
-    }
-
-    // Verificar que el pedido existe
-    const pedido = await prisma.pedido.findUnique({
-      where: { id_pedido: parseInt(id_pedido) }
-    });
-
-    if (!pedido) {
-      return res.status(400).json({
-        success: false,
-        message: 'El pedido especificado no existe',
-        code: 'INVALID_PEDIDO_ID'
-      });
-    }
-
-    if (pedido.version_salon != null) return res.status(409).json({ message: 'La factura de salón se emite al cerrar la cuenta en caja.' });
-
-    // Verificar que el pedido no ya tenga factura
-    const facturaExistente = await prisma.Factura.findUnique({
-      where: { id_pedido: parseInt(id_pedido) }
-    });
-
-    if (facturaExistente) {
-      return res.status(409).json({
-        success: false,
-        message: 'El pedido ya tiene una factura asociada',
-        code: 'DUPLICATE_INVOICE'
-      });
-    }
-
-    // Crear la factura
-    const factura = await prisma.Factura.create({
-      data: {
-        id_pedido: parseInt(id_pedido),
-        Fecha_emision: Fecha_emision ? new Date(Fecha_emision) : new Date()
-      },
-      include: {
-        pedido: true
-      }
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Factura creada exitosamente',
-      data: factura
-    });
-  } catch (error) {
-    next(error);
+    registrada(req, res, await generarFactura(req.user, req.body), true);
+  } catch (err) {
+    next(err);
   }
 }
-
-/**
- * PUT /api/facturas/:id
- * Actualizar una factura existente
- */
 export async function update(req, res, next) {
   try {
-    const { id } = req.params;
-    const { Fecha_emision } = req.body;
-
-    // Verificar que la factura existe
-    const facturaExistente = await prisma.Factura.findUnique({
-      where: { id_factura: parseInt(id) }
-    });
-
-    if (!facturaExistente) {
-      return res.status(404).json({
-        success: false,
-        message: 'Factura no encontrada',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Actualizar
-    const factura = await prisma.Factura.update({
-      where: { id_factura: parseInt(id) },
-      data: {
-        Fecha_emision: Fecha_emision ? new Date(Fecha_emision) : undefined
-      },
-      include: {
-        pedido: true
-      }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Factura actualizada exitosamente',
-      data: factura
-    });
-  } catch (error) {
-    next(error);
+    registrada(req, res, await editarFactura(req.user, idFactura(req), req.body), false);
+  } catch (err) {
+    next(err);
   }
 }
-
-/**
- * DELETE /api/facturas/:id
- * Eliminar una factura (solo borrado lógico - el pedido sigue existiendo)
- */
 export async function destroy(req, res, next) {
   try {
-    const { id } = req.params;
-
-    // Verificar que la factura existe
-    const factura = await prisma.Factura.findUnique({
-      where: { id_factura: parseInt(id) }
+    const f = await prisma.factura.findFirst({
+      where: { id_factura: idFactura(req), ...alcance(req) },
+      select: { id_factura: true },
     });
-
-    if (!factura) {
-      return res.status(404).json({
-        success: false,
-        message: 'Factura no encontrada',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Eliminar la factura
-    await prisma.Factura.delete({
-      where: { id_factura: parseInt(id) }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Factura eliminada exitosamente'
-    });
-  } catch (error) {
-    next(error);
+    if (!f) throw new ErrorSalon(404, 'Factura no encontrada.');
+    throw new ErrorSalon(409, 'Las facturas se conservan en el historial. No se permite eliminarlas.');
+  } catch (err) {
+    next(err);
   }
 }

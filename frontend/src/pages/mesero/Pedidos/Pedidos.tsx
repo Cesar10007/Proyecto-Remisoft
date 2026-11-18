@@ -75,7 +75,7 @@ export default function Pedidos({
                 </small>
               </span>
               <Estado valor={p.estado} />
-              <b>{formatCOP(p.total)}</b>
+              <b>{formatCOP(p.total_factura_pendiente ?? p.total)}</b>
               <ArrowUpRight size={16} />
             </button>
           ))}

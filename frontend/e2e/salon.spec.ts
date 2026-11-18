@@ -84,7 +84,7 @@ test('desde una mesa libre hasta el comprobante del cajero en el celular del mes
   await expect(detalle.getByText('1 × Limonada Natural')).toBeVisible()
   await boton('Cerrar ventana').click()
   await prepararYServir('Limonada Natural')
-  const total = await detalle
+  const sinAjustes = await detalle
     .locator('dl')
     .getByText('Total', { exact: true })
     .locator('..')
@@ -99,15 +99,63 @@ test('desde una mesa libre hasta el comprobante del cajero en el celular del mes
   await expect(ficha.getByText('Ocupada', { exact: true })).toBeVisible()
   await expect(boton('Liberar mesa')).toHaveCount(0)
 
+  // Generar desde la mesa conserva sus líneas y no cobra. El historial permite volver a editar.
+  await ficha.getByRole('button', { name: 'Generar factura' }).click()
+  let formulario = page.getByRole('dialog', { name: 'Generar factura' })
+  await expect(formulario.getByLabel('Pedido a facturar')).toHaveValue(pedido)
+  await formulario.getByRole('button', { name: 'Cancelar' }).click()
+  await boton('Generar factura').click()
+  await formulario.getByLabel('Pedido a facturar').selectOption(pedido)
+  await formulario.getByLabel('A nombre de').fill('Almuerzo de prueba')
+  await formulario.getByRole('button', { name: 'Guardar factura' }).click()
+  await expect(detalle.getByText('Pendiente', { exact: true })).toBeVisible()
+  const consecutivo = await detalle.getByRole('heading', { level: 2 }).innerText()
+  await boton('Cerrar ventana').click()
+  await page.reload()
+  await page.getByLabel('Estado de factura').selectOption('PENDIENTE')
+  await page.getByRole('button', { name: new RegExp(consecutivo) }).click()
+  await boton('Editar factura').click()
+  formulario = page.getByRole('dialog', { name: 'Editar factura' })
+  await expect(formulario.getByLabel('A nombre de')).toHaveValue('Almuerzo de prueba')
+  await formulario.getByLabel('A nombre de').fill('Equipo del salón')
+  await formulario.getByLabel('Descuento antes de IVA (COP)').fill('1000')
+  await formulario.getByLabel('Propina voluntaria (COP)').fill('1500')
+  const total = await formulario
+    .locator('dl')
+    .getByText('Total', { exact: true })
+    .locator('..')
+    .locator('dd')
+    .innerText()
+  expect(total).not.toBe(sinAjustes)
+  await formulario.getByRole('button', { name: 'Guardar cambios' }).click()
+  await expect(detalle.getByText('Cambios guardados.')).toBeVisible()
+  await expect(detalle.locator('dl').getByText(total, { exact: true })).toBeVisible()
+  // Dejar otro dispositivo editando: el pago debe retirar los controles incluso sin cerrar el diálogo.
+  const otroMesero = await page.context().newPage()
+  await otroMesero.goto(page.url())
+  await otroMesero.getByRole('button', { name: 'Editar factura' }).click()
+  await boton('Cerrar ventana').click()
+  await boton('Mesas').click()
+  await mesaOcupada.click()
+  await expect(ficha.getByRole('button', { name: 'Ver factura' })).toBeVisible()
+
   const caja = await browser.newPage()
   try {
     await entrar(caja, 'andres.torres@resto.com')
     await caja.getByRole('button', { name: new RegExp(`Pedido #${pedido} ·`) }).click()
+    await expect(caja.getByText(new RegExp(`Atendió:.*${consecutivo}.*Equipo del salón`))).toBeVisible()
     await caja.getByRole('button', { name: /Tarjeta/i }).click()
     await caja.getByRole('button', { name: /Cerrar cuenta y facturar/ }).click()
     const comprobante = caja.locator('#comprobante h2')
     await expect(comprobante).toContainText('FAC-')
     const numero = (await comprobante.innerText()).replace(/^Factura /, '')
+    expect(numero).toBe(consecutivo)
+    await otroMesero.bringToFront()
+    await expect(otroMesero.getByRole('dialog').getByText('Factura pagada.', { exact: false })).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(otroMesero.getByRole('button', { name: 'Guardar cambios' })).toHaveCount(0)
+    await page.bringToFront()
     // Se refresca la misma ficha: el pago cierra la cuenta, no el modal.
     await expect(ficha.getByText('Disponible', { exact: true })).toBeVisible({ timeout: 15_000 })
     await expect(ficha.getByText('Sin pedidos abiertos.')).toBeVisible()
@@ -123,11 +171,14 @@ test('desde una mesa libre hasta el comprobante del cajero en el celular del mes
     await expect(detalle.getByText('1 × Hamburguesa Clásica')).toBeVisible()
     await expect(detalle.getByText('1 × Limonada Natural')).toBeVisible()
     await expect(detalle.getByText(total, { exact: true })).toBeVisible()
+    await expect(detalle.getByRole('button', { name: 'Editar factura' })).toHaveCount(0)
+    await expect(detalle.getByText('A nombre de: Equipo del salón', { exact: false })).toBeVisible()
     await page.emulateMedia({ media: 'print' })
     await expect(detalle).toBeVisible()
     await expect(page.getByRole('main')).toBeHidden()
   } finally {
     await caja.close()
+    await otroMesero.close()
   }
 })
 

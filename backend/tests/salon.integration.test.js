@@ -23,7 +23,8 @@ test(
       db.usuario.create({ data: { ...sitio, id_rol: (await rol(nombre)).id_rol, nombre } });
     const mesero = await usuario('MESERO'),
       colega = await usuario('MESERO'),
-      cajero = await usuario('CAJERO');
+      cajero = await usuario('CAJERO'),
+      gerente = await usuario('GERENTE');
     const caja = await db.caja.create({ data: { ...sitio, nombre: 'Prueba' } });
     const ingrediente = await db.ingrediente.create({ data: { nombre: 'Insumo de prueba' } });
     const insumo = { id_ingrediente: ingrediente.id_ingrediente };
@@ -146,6 +147,7 @@ test(
     assert.equal(await stock(), 3);
     const info = async () =>
       (await espera(200, mesero, 'GET', '/salon')).pedidos.find((p) => p.id_pedido === id);
+    await espera(409, mesero, 'POST', '/facturas', { id_pedido: id }); // todavía se está atendiendo
     let p = await info();
     assert.equal(p.estado, 'ABIERTO');
     assert.equal((await espera(200, colega, 'GET', '/salon')).pedidos.length, 0);
@@ -157,7 +159,15 @@ test(
         assert.equal(vista.items[0].nombre, 'Plato de prueba');
         assert.equal(vista.items[0].cantidad, 2);
         assert.equal(vista.total, 2380);
-        for (const campo of ['id_cliente', 'cliente', 'Factura', 'version', 'pago_registrado'])
+        for (const campo of [
+          'id_cliente',
+          'cliente',
+          'Factura',
+          'version',
+          'pago_registrado',
+          'id_factura',
+          'total_factura_pendiente',
+        ])
           assert.equal(campo in vista, false);
         const plano = (await espera(200, colega, 'GET', '/mesas')).data;
         assert.deepEqual(plano.find((m) => m.numero === mesa.numero).cuentas, [vista]);
@@ -253,6 +263,14 @@ test(
     await db.pedido.update({ where: { id_pedido: id }, data: { estado: 'ABIERTO', version_salon: null } });
     await db.factura.update({ where: { id_factura: factura.id_factura }, data: { estado: 'EMITIDA' } });
     assert.equal((await info()).pago_registrado, true);
+    assert.equal((await espera(200, mesero, 'GET', `/facturas/${factura.id_factura}`)).data.editable, false);
+    await espera(409, gerente, 'PUT', `/facturas/${factura.id_factura}`, {
+      receptor: 'Otro',
+      version_edicion: 0,
+    });
+    await espera(409, gerente, 'DELETE', `/facturas/${factura.id_factura}`);
+    await espera(409, gerente, 'PUT', `/pedidos/${id}`, { Mesa_num: segundaMesa.numero });
+    await espera(409, gerente, 'PUT', `/detalle-pedido/${detalle}`, { cantidad: 20 });
     assert.equal(
       (await espera(200, cajero, 'GET', '/cobro/pendientes')).some((c) => c.id_pedido === id),
       false,
@@ -298,5 +316,140 @@ test(
       await espera(200, colega, 'DELETE', `${base}/${b.id_pedido}`, { version: 0 });
       assert.equal((await leerMesa(mesero)).ocupada, false);
     });
+
+    await t.test(
+      'generar → editar → cobrar la misma factura: persistencia, alcance y pago inmutable',
+      async () => {
+        // La comanda de salón ya descontó stock; generar/editar/cobrar no vuelve a descontarlo.
+        const orden = await db.pedido.create({
+          data: {
+            ...sitio,
+            id_mesero: mesero.id_usuario,
+            estado: 'POR_COBRAR',
+            version_salon: 2,
+            Mesa_num: mesa.numero,
+            Detalle_pedido: {
+              create: [
+                { ...productoId, Cantidad: 2, Precio_unitario: 1000.5, estado_item: 'ENTREGADO' },
+                { ...productoId, Cantidad: 3, Precio_unitario: 10000, estado_item: 'CANCELADO' },
+              ],
+            },
+          },
+        });
+        const ventas = async () =>
+          (await espera(200, mesero, 'GET', '/reportes/ventas-diarias?desde=2000-01-01&hasta=2099-12-31'))
+            .data.total;
+        const antes = await ventas();
+        const alta = { id_pedido: orden.id_pedido, receptor: 'Grupo del almuerzo' };
+        const previo = await stock();
+        await espera(404, colega, 'POST', '/facturas', alta);
+        await espera(422, mesero, 'POST', '/facturas', { ...alta, total: 1 });
+        await espera(422, mesero, 'POST', '/facturas', { ...alta, descuento: 2002 });
+        const altas = await Promise.all([1, 2].map(() => pedir(mesero, 'POST', '/facturas', alta)));
+        assert.deepEqual(altas.map((r) => r.status).sort(), [201, 409]);
+        const f = altas.find((r) => r.status === 201).data.data,
+          url = `/facturas/${f.id_factura}`;
+        const vista = async () => (await espera(200, mesero, 'GET', url)).data;
+        assert.equal(f.estado, 'PENDIENTE');
+        assert.equal(Number(f.total), 2381.19);
+        assert.equal((await vista()).items.length, 1);
+        assert.equal((await vista()).editable, true);
+        const cambios = {
+          version_edicion: 0,
+          receptor: 'Consumo del equipo',
+          descuento: 201,
+          propina: 100.25,
+        };
+        await espera(404, colega, 'PUT', url, cambios);
+        const otra = await db.restaurante.create({ data: { nombre: `Fuera de sede ${tag}` } });
+        try {
+          await db.usuario.update({
+            where: { id_usuario: gerente.id_usuario },
+            data: { id_restaurante: otra.id_restaurante },
+          });
+          await espera(404, gerente, 'GET', url);
+          await espera(404, gerente, 'PUT', url, cambios);
+          assert.equal(
+            (await espera(200, gerente, 'GET', '/facturas')).data.some((v) => v.id_factura === f.id_factura),
+            false,
+          );
+        } finally {
+          await db.usuario.update({ where: { id_usuario: gerente.id_usuario }, data: sitio });
+          await db.restaurante.delete({ where: { id_restaurante: otra.id_restaurante } });
+        }
+        await espera(422, mesero, 'PUT', url, { ...cambios, estado: 'PAGADA' });
+        await espera(422, mesero, 'PUT', url, { ...cambios, propina: -20 });
+        await espera(422, mesero, 'PUT', url, { ...cambios, descuento: 0.001 });
+        await espera(200, mesero, 'PUT', url, cambios);
+        await espera(409, mesero, 'PUT', url, cambios); // versión antigua
+        await db.producto.update({
+          where: productoId,
+          data: { Nombre: 'Nombre posterior', precio_venta: 9000 },
+        });
+        const editada = await vista();
+        assert.equal(editada.receptor, cambios.receptor);
+        assert.equal(editada.items[0].nombre, 'Plato de prueba');
+        assert.equal(editada.items[0].precio_unitario, 1000.5);
+        assert.equal(Number(editada.IVA), 342);
+        assert.equal(Number(editada.total), 2242.25);
+        assert.equal(await db.pago.count({ where: { id_factura: f.id_factura } }), 0);
+        assert.deepEqual(await ventas(), antes); // Un borrador no es un ingreso.
+        const bandeja = (await espera(200, cajero, 'GET', '/cobro/pendientes')).find(
+          (v) => v.id_pedido === orden.id_pedido,
+        );
+        assert.equal(bandeja.total, 2242.25);
+        assert.equal(bandeja.version_factura, 1);
+        assert.equal(bandeja.items[0].nombre, 'Plato de prueba');
+        const pagar = {
+          id_pedido: orden.id_pedido,
+          metodo: 'EFECTIVO',
+          monto_recibido: 3000,
+          version_factura: 1,
+        };
+        await espera(409, cajero, 'POST', '/cobro/cerrar-cuenta', { ...pagar, version_factura: 0 });
+        await espera(422, cajero, 'POST', '/cobro/cerrar-cuenta', { ...pagar, monto_recibido: 1 });
+        // Caja y un formulario ya abierto compiten: solo se acepta la revisión que se confirmó.
+        const [pago, edicion] = await Promise.all([
+          pedir(cajero, 'POST', '/cobro/cerrar-cuenta', pagar),
+          pedir(mesero, 'PUT', url, { version_edicion: 1, propina: 200.25 }),
+        ]);
+        assert.deepEqual([pago.status, edicion.status], pago.status === 201 ? [201, 409] : [409, 200]);
+        const cobrada =
+          pago.status === 201
+            ? pago.data.factura
+            : (await espera(201, cajero, 'POST', '/cobro/cerrar-cuenta', { ...pagar, version_factura: 2 }))
+                .factura;
+        const valor = pago.status === 201 ? 2242.25 : 2342.25;
+        const despues = await ventas();
+        assert.equal(despues.ingresos_netos - antes.ingresos_netos, valor);
+        assert.equal(despues.ingresos_brutos - antes.ingresos_brutos, valor + 201);
+        assert.equal(despues.total_pedidos - antes.total_pedidos, 1);
+        assert.equal(cobrada.total, valor);
+        assert.equal(cobrada.cambio, 3000 - valor);
+        assert.equal(cobrada.id_factura, f.id_factura);
+        assert.equal(cobrada.consecutivo, f.consecutivo);
+        const final = await vista();
+        assert.equal(final.estado, 'PAGADA');
+        assert.equal(final.editable, false);
+        assert.equal(Number(final.pago[0].monto), valor);
+        assert.equal(final.items[0].nombre, 'Plato de prueba');
+        assert.equal(await stock(), previo);
+        assert.equal((await leerMesa(mesero)).ocupada, false);
+        assert.equal(await db.factura.count({ where: { id_pedido: orden.id_pedido } }), 1);
+        await espera(409, mesero, 'PUT', url, {
+          version_edicion: final.version_edicion,
+          receptor: 'Nuevo nombre',
+        });
+        await espera(409, gerente, 'DELETE', url);
+        await espera(409, cajero, 'POST', '/cobro/cerrar-cuenta', pagar);
+        assert.deepEqual(await vista(), final);
+        assert.equal(
+          (await espera(200, mesero, 'GET', '/facturas')).data.find((v) => v.id_factura === f.id_factura)
+            .pagada,
+          true,
+        );
+        assert.equal(await db.flujo_caja.count({ where: { pago: { id_factura: f.id_factura } } }), 1);
+      },
+    );
   },
 );

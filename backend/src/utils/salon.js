@@ -2,7 +2,11 @@
 export const ESTADOS_EN_COCINA = ['ABIERTO', 'EN_PROCESO', 'EN_PREPARACION', 'LISTO'];
 export const ESTADOS_EN_MESA = [...ESTADOS_EN_COCINA, 'ENTREGADO', 'POR_COBRAR'];
 export const CUENTA_ABIERTA = { OR: [{ estado: null }, { estado: { notIn: ['CERRADO', 'CANCELADO'] } }] };
-export const IVA_TASA = Number(process.env.IVA_TASA ?? 0.19);
+// Misma precisión que Factura.tasa_iva (DECIMAL(7,6)); no perder medio centavo al multiplicar floats.
+const ESCALA_TASA = 1_000_000;
+export const IVA_TASA = Math.round(Number(process.env.IVA_TASA ?? 0.19) * ESCALA_TASA) / ESCALA_TASA;
+export const ivaEnCentavos = (base, tasa = IVA_TASA) =>
+  Math.round((base * Math.round(tasa * ESCALA_TASA)) / ESCALA_TASA);
 export const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 export class ErrorSalon extends Error {
@@ -35,16 +39,27 @@ export function misPedidos(user) {
 
 // Algunas facturas históricas conservan el estado EMITIDA aunque ya tengan un pago aprobado.
 export const indicadorPago = {
-  select: { estado: true, pago: { where: { estado: 'APROBADO' }, select: { id_pago: true }, take: 1 } },
+  select: {
+    id_factura: true,
+    estado: true,
+    total: true,
+    pago: { where: { estado: 'APROBADO' }, select: { estado: true }, take: 1 },
+  },
 };
-export const conPago = (factura) => factura?.estado === 'PAGADA' || Boolean(factura?.pago?.length);
+export const conPago = (factura) =>
+  factura?.estado === 'PAGADA' || Boolean(factura?.pago?.some((p) => p.estado === 'APROBADO'));
+
+export const consumoSellado = (factura) => conPago(factura) || factura?.estado === 'PENDIENTE';
 
 export const itemsFacturables = (detalles) =>
   detalles.filter((d) => d.estado_item !== 'CANCELADO' && Number(d.Cantidad) > 0);
 export function calcularTotales(detalles) {
-  const subtotal = round2(detalles.reduce((s, d) => s + Number(d.Cantidad) * Number(d.Precio_unitario), 0));
-  const iva = round2(subtotal * IVA_TASA);
-  return { subtotal, iva, total: round2(subtotal + iva) };
+  const centavos = detalles.reduce(
+    (s, d) => s + Number(d.Cantidad) * Math.round(Number(d.Precio_unitario) * 100),
+    0,
+  );
+  const iva = ivaEnCentavos(centavos);
+  return { subtotal: centavos / 100, iva: iva / 100, total: (centavos + iva) / 100 };
 }
 export function estadoSegunItems(estados) {
   if (estados.length && estados.every((e) => e === 'ENTREGADO')) return 'ENTREGADO';

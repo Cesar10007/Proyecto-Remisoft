@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, CheckCheck, Pencil, Plus, Printer, Send, Trash2 } from 'lucide-react'
+import { Banknote, CheckCheck, Pencil, Plus, Printer, ReceiptText, Send, Trash2 } from 'lucide-react'
 import api from '../../../api/axios'
 import { ErrorCarga } from '../Elementos'
 import { editable, entregado, mensajeError, type Editor, type Pedido } from '../modelo'
@@ -9,6 +9,7 @@ import { ConsumoPedido } from '../Mesas/ModalMesa'
 export default function CuentaMesa({
   pedido: p,
   editar,
+  facturar,
   ocupado,
   setOcupado,
   actualizar,
@@ -16,6 +17,7 @@ export default function CuentaMesa({
 }: {
   pedido: Pedido
   editar: (e: Editor) => void
+  facturar: (p: Pedido) => void
   ocupado: boolean
   setOcupado: (v: boolean) => void
   actualizar: () => Promise<void>
@@ -42,7 +44,7 @@ export default function CuentaMesa({
       else await api.delete(url, { data: { version: confirmar?.version }, timeout: 20000 })
       avisar(
         accion === 'cuenta'
-          ? 'Cuenta enviada a caja. La mesa se libera al cobrar.'
+          ? 'Cuenta enviada a caja. La mesa se libera al cerrar su última cuenta.'
           : accion === 'servir'
             ? 'Entrega registrada.'
             : `Pedido #${p.id_pedido} cancelado.`,
@@ -81,7 +83,9 @@ export default function CuentaMesa({
       )}
       {enCaja && !p.pago_registrado && (
         <div className="sl-note">
-          <Banknote size={16} /> Cuenta en caja. La mesa sigue ocupada hasta registrar el pago.
+          <Banknote size={16} /> Cuenta en caja. La mesa sigue ocupada hasta cerrar su última cuenta.{' '}
+          {p.total_factura_pendiente != null &&
+            `Total de la factura: ${formatCOP(p.total_factura_pendiente)}.`}
         </div>
       )}
       {error && <ErrorCarga texto={error} />}
@@ -116,6 +120,11 @@ export default function CuentaMesa({
           <button className="sl-btn" disabled={ocupado} onClick={() => window.print()}>
             <Printer size={15} /> Precuenta
           </button>
+          {enCaja && !p.pago_registrado && (
+            <button className="sl-btn primary" disabled={ocupado} onClick={() => facturar(p)}>
+              <ReceiptText size={16} /> {p.id_factura == null ? 'Generar factura' : 'Ver factura'}
+            </button>
+          )}
           {editable(p) && (
             <button
               className="sl-btn danger"
