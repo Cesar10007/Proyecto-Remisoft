@@ -394,17 +394,17 @@ function Repartidor() {
               <div className="grid grid-cols-1 gap-4.5 md:grid-cols-3">
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border-transparent bg-gradient-to-br from-[#d85a30] to-[#b34725] p-5.5 text-white">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-white/82">Ganancias del día</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold">{formatoPesos(resumen?.ganancias_hoy ?? 0)}</span>
+                  <span className="font-number-light text-[2rem]">{formatoPesos(resumen?.ganancias_hoy ?? 0)}</span>
                   <span className="text-[0.8rem] font-semibold text-white/82">Facturas de tus entregas de hoy</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregas completadas</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold text-[var(--rd-success)]">{entregadasHoy}</span>
+                  <span className="font-number-light text-[2rem] text-[var(--rd-success)]">{entregadasHoy}</span>
                   <span className="text-[0.8rem] font-semibold text-[var(--rd-success)]">{pendientesCola} pendientes en cola</span>
                 </div>
                 <div className="flex min-h-[140px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Tiempo de turno</span>
-                  <span className="font-['Syne'] text-[2rem] font-extrabold">6h 14m</span>
+                  <span className="font-number-light text-[2rem]">6h 14m</span>
                   <span className="text-[0.65rem] font-bold uppercase text-[var(--rd-text-muted)]">Demo</span>
                   <span className="text-[0.8rem] font-semibold text-[var(--rd-text-muted)]">Inicio: 11:30 AM (Demo)</span>
                 </div>
@@ -431,7 +431,7 @@ function Repartidor() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="mb-1.5 text-[0.7rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Cliente actual</p>
-                        <p className="font-['Syne'] text-[1.5rem] font-extrabold">{resumen?.actual?.cliente ?? 'Sin entrega asignada'}</p>
+                        <p className="text-[1.5rem] font-bold">{resumen?.actual?.cliente ?? 'Sin entrega asignada'}</p>
                         <div className="mt-2 flex items-center gap-1.5 text-[var(--rd-text-muted)]">
                           <span className="material-symbols-outlined text-[18px] text-[var(--rd-primary)]">location_on</span>
                           <span>{resumen?.actual?.direccion ?? '—'}</span>
@@ -463,7 +463,7 @@ function Repartidor() {
                           <li key={idx} className="flex justify-between gap-3 font-bold"><span>{it.cantidad}x {it.nombre}</span><span>{formatoPesos(it.subtotal)}</span></li>
                         ))}
                         <li className="mt-1.5 flex justify-between gap-3 border-t border-[var(--t-brd-ebe4df,#ebe4df)] pt-3.5 text-[1rem] font-bold">
-                          <span>Total</span><span className="text-[var(--rd-primary-dark)]">{formatoPesos(resumen?.actual?.total ?? 0)}</span>
+                          <span>Total</span><span className="font-number-light text-[var(--rd-primary-dark)]">{formatoPesos(resumen?.actual?.total ?? 0)}</span>
                         </li>
                       </ul>
                     </div>
@@ -724,17 +724,17 @@ function Repartidor() {
               <div className="grid grid-cols-1 gap-4.5 md:grid-cols-3">
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Ganado (entregadas)</span>
-                  <span className="font-['Syne'] text-[1.7rem] font-extrabold text-[var(--rd-success)]">
+                  <span className="font-number-light text-[1.7rem] text-[var(--rd-success)]">
                     —
                   </span>
                 </div>
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Entregadas</span>
-                  <span className="font-['Syne'] text-[1.7rem] font-extrabold">{totalEntregadas}</span>
+                  <span className="font-number-light text-[1.7rem]">{totalEntregadas}</span>
                 </div>
                 <div className="flex min-h-[110px] flex-col justify-between rounded-[22px] border border-[var(--rd-border)] bg-[var(--rd-card)] p-5.5">
                   <span className="text-[0.72rem] font-bold uppercase tracking-[1.4px] text-[var(--rd-text-muted)]">Canceladas</span>
-                  <span className="font-['Syne'] text-[1.7rem] font-extrabold text-[var(--rd-danger)]">{totalCanceladas}</span>
+                  <span className="font-number-light text-[1.7rem] text-[var(--rd-danger)]">{totalCanceladas}</span>
                 </div>
               </div>
 
