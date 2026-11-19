@@ -4,14 +4,13 @@ import { index, show, store, update, destroy } from '../controllers/factura.cont
 
 const router = Router();
 
-const lectura = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO');
-const crear = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO');
+const facturacion = requireRole('SUPERADMIN', 'GERENTE', 'CAJERO', 'MESERO');
 const escritura = requireRole('SUPERADMIN', 'GERENTE');
 
-router.get('/', lectura, index);
-router.get('/:id', lectura, show);
-router.post('/', crear, store);
-router.put('/:id', escritura, update);
+router.get('/', facturacion, index);
+router.get('/:id', facturacion, show);
+router.post('/', facturacion, store);
+router.put('/:id', facturacion, update);
 router.delete('/:id', escritura, destroy);
 
 export default router;

@@ -16,6 +16,8 @@ backend/bootstrap/cache/*
 # ── React / Vite ──────────────────────
 frontend/node_modules/
 frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
 frontend/.env
 frontend/.env.local
 
@@ -43,3 +45,6 @@ Thumbs.db
 # Backups y dumps sueltos en backend/ - nunca deben subirse
 /backend/*.sql
 /backend/backup_*
+
+# Logs de auditoría generados en runtime
+backend/logs/

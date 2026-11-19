@@ -1,12 +1,30 @@
-export default function errorHandler(err, req, res, next) {
-  console.error('[ErrorHandler]', err);
+import { SistemaCerrado } from '../services/sistema.service.js';
+import { ErrorSalon } from '../utils/salon.js';
+import { CORREO_INVALIDO, esConflictoCorreo } from '../utils/validation.js';
 
+export default function errorHandler(err, req, res, next) {
   if (res.headersSent) {
     return next(err);
   }
 
+  if (err instanceof SistemaCerrado) return res.status(423).json({ code: 'SISTEMA_CERRADO', message: err.message });
+  if (err instanceof ErrorSalon) return res.status(err.status).json({ message: err.message });
+  if (err.code === 'P2034') return res.status(409).json({ message: 'Otra operación cambió la cuenta. Actualiza e inténtalo de nuevo.' });
+
+  if (err.code === 'STOCK_INSUFICIENTE') {
+    return res.status(409).json({
+      success: false,
+      message: err.message,
+      code: 'STOCK_INSUFICIENTE',
+      detalles: err.detalles ?? [],
+    });
+  }
+
+  if (esConflictoCorreo(err)) return res.status(422).json({ message: CORREO_INVALIDO });
+
+  console.error('[ErrorHandler]', err);
   if (err.code === 'P2002') {
-    const field = err.meta?.target
+    const field = Array.isArray(err.meta?.target)
       ? err.meta.target.join(', ')
       : 'campo';
 

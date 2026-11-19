@@ -14,7 +14,7 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 | **Título**        | Registrar pedido por mesa       | 
 | **Módulo**        | Pedidos en salon                |
 | **Prioridad**     | Alta                            |
-| **Estado**        | No Implementada                 |
+| **Estado**        | Implementada                    |
 | **RF asociados**  | RF-002                          |
 
 ---

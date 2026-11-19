@@ -5,6 +5,7 @@ export async function listarRestaurantes(req, res, next) {
     const restaurantes = await prisma.restaurante.findMany({
       where: {
         activo: true,
+        ...(req.user.rol === 'SUPERADMIN' ? {} : { id_restaurante: req.user.id_restaurante }),
       },
       orderBy: {
         nombre: 'asc',

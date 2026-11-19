@@ -1,11 +1,15 @@
+import TablaConsumo from './TablaConsumo'
+import { useVistaURL } from '../../hook/useVistaURL'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import Button from '../../components/common/Button'
 import type { RootState } from '../../store/store'
 import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
+import { Calculator, Utensils } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { DataTable } from '../../components/common/DataTable'
@@ -21,7 +25,14 @@ interface ItemCuenta {
   subtotal: number
 }
 
-interface Cuenta {
+interface AjustesFactura {
+  descuento: number
+  propina: number
+  receptor?: string | null
+}
+interface Cuenta extends AjustesFactura {
+  version_factura: number | null
+  consecutivo?: string | null
   id_pedido: number
   estado: string
   mesa: number | null
@@ -34,7 +45,7 @@ interface Cuenta {
   total: number
 }
 
-interface FacturaEmitida {
+interface FacturaEmitida extends AjustesFactura {
   id_factura: number
   consecutivo: string
   mesa: number | null
@@ -64,7 +75,7 @@ interface ProductoCarta {
 }
 
 const formatoCOP = (valor: number) =>
-  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(valor)
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(valor)
 
 function mensajeError(err: unknown, fallback: string) {
   const respuesta = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -88,7 +99,7 @@ export default function Cajero() {
   const [errorCobro, setErrorCobro] = useState<string | null>(null)
   const [factura, setFactura] = useState<FacturaEmitida | null>(null)
   // Vista del menú lateral: cobro o carta de platos (productos de la base).
-  const [vista, setVista] = useState<'cobro' | 'menu'>('cobro')
+  const [vista, setVista] = useVistaURL('vista', 'cobro', ['cobro', 'menu'])
   const [productos, setProductos] = useState<ProductoCarta[]>([])
   const [cargandoProductos, setCargandoProductos] = useState(false)
   const [errorProductos, setErrorProductos] = useState<string | null>(null)
@@ -136,7 +147,7 @@ export default function Cajero() {
     setMontoRecibido('')
     setReferencia('')
     setErrorCobro(null)
-  }, [seleccionada])
+  }, [seleccionada, cuenta?.version_factura])
 
   const cambio = useMemo(() => {
     if (!cuenta || metodo !== 'EFECTIVO') return null
@@ -146,17 +157,17 @@ export default function Cajero() {
   }, [cuenta, metodo, montoRecibido])
 
   const puedeCobrar = useMemo(() => {
-    if (!cuenta || !metodo || enviando) return false
+    if (!cuenta || !metodo || enviando || error) return false
     if (metodo === 'EFECTIVO') return cambio !== null && cambio >= 0
     return true
-  }, [cuenta, metodo, enviando, cambio])
+  }, [cuenta, metodo, enviando, cambio, error])
 
   async function cerrarCuenta() {
     if (!cuenta || !metodo) return
     setEnviando(true)
     setErrorCobro(null)
     try {
-      const body: Record<string, unknown> = { id_pedido: cuenta.id_pedido, metodo }
+      const body: Record<string, unknown> = { id_pedido: cuenta.id_pedido, metodo, version_factura: cuenta.version_factura }
       if (metodo === 'EFECTIVO') body.monto_recibido = Number(montoRecibido)
       if (metodo !== 'EFECTIVO' && referencia.trim()) body.referencia = referencia.trim()
 
@@ -164,6 +175,7 @@ export default function Cajero() {
       setFactura(data.factura)
       await cargarCuentas()
     } catch (err) {
+      await cargarCuentas()
       setErrorCobro(mensajeError(err, 'No fue posible cerrar la cuenta.'))
     } finally {
       setEnviando(false)
@@ -179,8 +191,8 @@ export default function Cajero() {
       <Sidebar
         subtitulo="Cajero"
         menuItems={[
-          { icon: 'point_of_sale', label: 'Cobro' },
-          { icon: 'restaurant_menu', label: 'Menú' },
+          { icon: <Calculator />, label: 'Cobro' },
+          { icon: <Utensils />, label: 'Menú' },
         ]}
         vistaActual={vista === 'menu' ? 'menú' : 'cobro'}
         onNavigate={(v) => setVista(v === 'menú' ? 'menu' : 'cobro')}
@@ -190,7 +202,7 @@ export default function Cajero() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to="/gerente">
+            <Link aria-description="Regresa a tu panel de administración." className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined
@@ -205,7 +217,7 @@ export default function Cajero() {
             subtitulo={`${rol ?? ''} · ${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} abierta${cuentas.length === 1 ? '' : 's'}`}
             acciones={
               vista === 'cobro' ? (
-                <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
+                <button aria-description="Vuelve a consultar las cuentas pendientes de cobro." type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
                   <span className="material-symbols-outlined">refresh</span> Actualizar
                 </button>
               ) : undefined
@@ -229,6 +241,7 @@ export default function Cajero() {
 
           {cuentas.map((c) => (
             <button
+              aria-description={`Consulta el consumo del pedido #${c.id_pedido}.`}
               key={c.id_pedido}
               type="button"
               className={`cajero__cuenta ${c.id_pedido === seleccionada ? 'cajero__cuenta--activa' : ''}`}
@@ -242,7 +255,7 @@ export default function Cajero() {
                 <span className="cajero__tiempo">{tiempoTranscurrido(c.fecha_hora)}</span>
               </div>
               <div className="cajero__cuenta-sub">
-                Pedido #{c.id_pedido} · {c.items.length} ítem{c.items.length === 1 ? '' : 's'}
+                Pedido #{c.id_pedido} · {c.items.length} ítem{c.items.length === 1 ? '' : 's'}{c.estado === 'POR_COBRAR' ? ' · Cuenta solicitada' : ''}
               </div>
               <div className="cajero__cuenta-total">{formatoCOP(c.total)}</div>
             </button>
@@ -253,36 +266,20 @@ export default function Cajero() {
           {factura ? (
             <div className="cajero__factura" id="comprobante">
               <div className="cajero__alerta cajero__alerta--ok no-print">
-                Cuenta cerrada. La mesa quedó libre.
+                Pago registrado. La factura quedó en el historial.
               </div>
               <h2>Factura {factura.consecutivo}</h2>
               <p className="cajero__muted">
                 {new Date(factura.fecha_emision).toLocaleString('es-CO')}
                 {factura.mesa ? ` · Mesa ${factura.mesa}` : ''}
+                {factura.receptor && ` · ${factura.receptor}`}
               </p>
-              <table className="cajero__tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {factura.items.map((it, i) => (
-                    <tr key={i}>
-                      <td>{it.nombre}</td>
-                      <td>{it.cantidad}</td>
-                      <td>{formatoCOP(it.precio_unitario)}</td>
-                      <td>{formatoCOP(it.cantidad * it.precio_unitario)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TablaConsumo key={factura.id_factura} items={factura.items} moneda={formatoCOP} comprobante />
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(factura.subtotal)}</dd></div>
+                {factura.descuento > 0 && <div><dt>Descuento</dt><dd>− {formatoCOP(factura.descuento)}</dd></div>}
                 <div><dt>IVA</dt><dd>{formatoCOP(factura.iva)}</dd></div>
+                {factura.propina > 0 && <div><dt>Propina</dt><dd>{formatoCOP(factura.propina)}</dd></div>}
                 <div className="cajero__total-final"><dt>Total</dt><dd>{formatoCOP(factura.total)}</dd></div>
                 <div><dt>Método</dt><dd>{factura.metodo}</dd></div>
                 {factura.metodo === 'EFECTIVO' && (
@@ -293,12 +290,10 @@ export default function Cajero() {
                 )}
               </dl>
               <div className="cajero__acciones no-print">
-                <button type="button" className="cajero__btn cajero__btn--ghost" onClick={() => window.print()}>
+                <button aria-description="Abre la vista de impresión del comprobante." type="button" className="cajero__btn cajero__btn--ghost" onClick={() => window.print()}>
                   <span className="material-symbols-outlined">print</span> Imprimir
                 </button>
-                <button type="button" className="cajero__btn cajero__btn--primario" onClick={nuevaCuenta}>
-                  Siguiente cuenta
-                </button>
+                <Button aria-description="Vuelve a las cuentas pendientes de cobro." onClick={nuevaCuenta}>Siguiente cuenta</Button>
               </div>
             </div>
           ) : !cuenta ? (
@@ -313,32 +308,17 @@ export default function Cajero() {
               </h2>
               <p className="cajero__muted">
                 {cuenta.nombre_mesero ? `Atendió: ${cuenta.nombre_mesero}` : 'Sin mesero asignado'}
+                {cuenta.consecutivo && ` · ${cuenta.consecutivo}`}
+                {cuenta.receptor && ` · ${cuenta.receptor}`}
               </p>
 
-              <table className="cajero__tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cuenta.items.map((it) => (
-                    <tr key={it.id_detalle}>
-                      <td>{it.nombre}</td>
-                      <td>{it.cantidad}</td>
-                      <td>{formatoCOP(it.precio_unitario)}</td>
-                      <td>{formatoCOP(it.subtotal)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TablaConsumo key={cuenta.id_pedido} items={cuenta.items} moneda={formatoCOP} />
 
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(cuenta.subtotal)}</dd></div>
+                {cuenta.descuento > 0 && <div><dt>Descuento</dt><dd>− {formatoCOP(cuenta.descuento)}</dd></div>}
                 <div><dt>IVA</dt><dd>{formatoCOP(cuenta.iva)}</dd></div>
+                {cuenta.propina > 0 && <div><dt>Propina</dt><dd>{formatoCOP(cuenta.propina)}</dd></div>}
                 <div className="cajero__total-final"><dt>Total</dt><dd>{formatoCOP(cuenta.total)}</dd></div>
               </dl>
 
@@ -347,6 +327,7 @@ export default function Cajero() {
                 <div className="cajero__metodos">
                   {METODOS.map((m) => (
                     <button
+                      aria-description={`Selecciona ${m.label.toLowerCase()} como medio de pago.`}
                       key={m.id}
                       type="button"
                       aria-pressed={metodo === m.id}
@@ -362,11 +343,13 @@ export default function Cajero() {
                 {metodo === 'EFECTIVO' && (
                   <>
                   <InputField
+                    aria-description="Indica cuánto efectivo entregó el cliente para calcular el cambio."
                     id="monto-recibido"
                     label="Monto recibido"
                     type="number"
                     min={cuenta.total}
-                    inputMode="numeric"
+                    step="0.01"
+                    inputMode="decimal"
                     value={montoRecibido}
                     onChange={(e) => setMontoRecibido(e.target.value)}
                     placeholder={String(cuenta.total)}
@@ -378,6 +361,7 @@ export default function Cajero() {
 
                 {metodo && metodo !== 'EFECTIVO' && (
                   <InputField
+                    aria-description="Anota el número que identifica la transacción."
                     id="referencia"
                     label="Referencia (opcional)"
                     type="text"
@@ -391,14 +375,14 @@ export default function Cajero() {
 
               {errorCobro && <div className="cajero__alerta cajero__alerta--error">{errorCobro}</div>}
 
-              <button
-                type="button"
-                className="cajero__btn cajero__btn--primario cajero__btn--grande"
+              <Button
+                aria-description="Registra el pago y cierra la cuenta con su factura."
+                className="cajero__btn--grande"
                 disabled={!puedeCobrar}
                 onClick={cerrarCuenta}
               >
                 {enviando ? 'Procesando…' : `Cerrar cuenta y facturar ${formatoCOP(cuenta.total)}`}
-              </button>
+              </Button>
               {!metodo && <p className="cajero__muted">Selecciona un método de pago para continuar.</p>}
             </>
           )}

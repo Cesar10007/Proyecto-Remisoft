@@ -1,5 +1,9 @@
+import { exigirSedeAbierta } from '../services/sistema.service.js';
+import { escritura } from '../services/actividad.service.js';
+import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
+import { CORREO_INVALIDO, esConflictoCorreo, validateEmail } from '../utils/validation.js';
 
 function texto(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -36,6 +40,14 @@ function puedeGestionarSolicitud(usuario, solicitud) {
   return false;
 }
 
+function solicitudInvalida(res, errors) {
+  return res.status(422).json({
+    success: false,
+    message: errors.email?.[0],
+    errors,
+  });
+}
+
 export async function crearSolicitud(req, res, next) {
   try {
     const {
@@ -55,11 +67,8 @@ export async function crearSolicitud(req, res, next) {
 
     const emailNormalizado = texto(email).toLowerCase();
 
-    if (!emailNormalizado) {
-      errores.email = ['El email es requerido.'];
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
-      errores.email = ['El email no es válido.'];
-    }
+    const errorCorreo = validateEmail(emailNormalizado, { required: true });
+    if (errorCorreo) errores.email = [errorCorreo];
 
     if (typeof contrasena !== 'string' || contrasena.length < 8) {
       errores.contrasena = [
@@ -87,11 +96,14 @@ export async function crearSolicitud(req, res, next) {
       errores.id_restaurante = ['El restaurante no es válido.'];
     }
 
+    const nombreEstablecimiento = texto(req.body.nombre_establecimiento);
+    if (nombreEstablecimiento.length > 100) errores.nombre_establecimiento = ['Máximo 100 caracteres.'];
+    if (![2, 3, 4, 5].includes(idRol)) errores.id_rol_solicitado = ['El rol no se puede solicitar.'];
+    if (idRol !== 2 && !idRestaurante) errores.id_restaurante = ['Indica el restaurante para el personal operativo.'];
+    if (idRol === 2 && idRestaurante !== null) errores.id_restaurante = ['Al aprobar un gerente se crea un establecimiento nuevo.'];
+
     if (Object.keys(errores).length > 0) {
-      return res.status(422).json({
-        success: false,
-        errors: errores,
-      });
+      return solicitudInvalida(res, errores);
     }
 
     const rol = await prisma.rol.findUnique({
@@ -122,13 +134,18 @@ export async function crearSolicitud(req, res, next) {
       }
     }
 
-    const solicitud = await prisma.solicitud_registro.create({
+    const cuenta = await prisma.usuario.findUnique({ where: { email: emailNormalizado }, select: { id_usuario: true } });
+    if (cuenta) return solicitudInvalida(res, { email: [CORREO_INVALIDO] });
+
+    const hash = await bcrypt.hash(contrasena, 12);
+    const solicitud = await escritura(req.user, tx => tx.solicitud_registro.create({
       data: {
         nombre: texto(nombre),
         apellido: texto(apellido),
         email: emailNormalizado,
         telefono: texto(telefono) || null,
-        contrasena_hash: await bcrypt.hash(contrasena, 12),
+        contrasena_hash: hash,
+        nombre_establecimiento: idRol === 2 ? nombreEstablecimiento || null : null,
         id_rol_solicitado: idRol,
         id_restaurante: idRestaurante,
       },
@@ -140,7 +157,7 @@ export async function crearSolicitud(req, res, next) {
         estado: true,
         fecha_solicitud: true,
       },
-    });
+    }), { sedes: [idRestaurante] });
 
     return res.status(201).json({
       success: true,
@@ -148,13 +165,7 @@ export async function crearSolicitud(req, res, next) {
       data: solicitud,
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya existe una solicitud con ese email.',
-        code: 'DUPLICATE_EMAIL',
-      });
-    }
+    if (esConflictoCorreo(err)) return solicitudInvalida(res, { email: [CORREO_INVALIDO] });
 
     next(err);
   }
@@ -300,7 +311,7 @@ export async function aprobarSolicitud(req, res, next) {
       });
     }
 
-    const resultado = await prisma.$transaction(async (tx) => {
+    const resultado = await escritura(req.user, async (tx) => {
       const solicitud = await tx.solicitud_registro.findUnique({
         where: { id_solicitud: idSolicitud },
       });
@@ -325,23 +336,16 @@ export async function aprobarSolicitud(req, res, next) {
         throw error;
       }
 
-      const usuarioExistente = await tx.usuario.findUnique({
-        where: { email: solicitud.email },
-        select: { id_usuario: true },
-      });
-
-      if (usuarioExistente) {
-        const error = new Error(
-          'El email de la solicitud ya pertenece a un usuario.',
-        );
-        error.status = 409;
-        throw error;
-      }
-
+      if (solicitud.id_restaurante !== req.user.id_restaurante) await exigirSedeAbierta(tx, solicitud.id_restaurante);
+      // Tampoco una solicitud antigua puede adjudicar al gerente una sede ajena.
+      const idRestaurante = solicitud.id_rol_solicitado === 2
+        ? (await crearEstablecimiento(tx, solicitud.nombre_establecimiento || `Restaurante de ${solicitud.nombre}`)).id_restaurante
+        : req.user.id_restaurante;
+      // Si el correo ya no es válido al aprobar, el índice rechaza el alta y se revierte la transacción.
       const usuario = await tx.usuario.create({
         data: {
           id_rol: solicitud.id_rol_solicitado,
-          id_restaurante: solicitud.id_restaurante,
+          id_restaurante: idRestaurante,
           nombre: solicitud.nombre,
           apellido: solicitud.apellido,
           email: solicitud.email,
@@ -360,6 +364,7 @@ export async function aprobarSolicitud(req, res, next) {
       const solicitudActualizada = await tx.solicitud_registro.update({
         where: { id_solicitud: idSolicitud },
         data: {
+          id_restaurante: idRestaurante,
           estado: 'APROBADA',
           fecha_revision: new Date(),
           revisado_por: idRevisor,
@@ -390,12 +395,7 @@ export async function aprobarSolicitud(req, res, next) {
       });
     }
 
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        success: false,
-        message: 'El email ya está registrado.',
-      });
-    }
+    if (esConflictoCorreo(err)) return solicitudInvalida(res, { email: [CORREO_INVALIDO] });
 
     next(err);
   }
@@ -453,7 +453,7 @@ export async function rechazarSolicitud(req, res, next) {
       });
     }
 
-    const actualizada = await prisma.solicitud_registro.update({
+    const actualizada = await escritura(req.user, tx => tx.solicitud_registro.update({
       where: { id_solicitud: idSolicitud },
       data: {
         estado: 'RECHAZADA',
@@ -467,7 +467,7 @@ export async function rechazarSolicitud(req, res, next) {
         motivo_rechazo: true,
         fecha_revision: true,
       },
-    });
+    }), { sedes: [solicitud.id_restaurante] });
 
     return res.json({
       success: true,

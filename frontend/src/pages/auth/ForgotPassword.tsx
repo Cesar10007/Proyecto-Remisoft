@@ -52,9 +52,10 @@ function ForgotPassword() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form aria-description="Solicita un enlace para recuperar tu cuenta." onSubmit={handleSubmit}>
               <div className="relative mb-3.5">
                 <InputField
+                  aria-description="Escribe el correo con el que inicias sesión."
                   label="Correo electrónico"
                   className={`bg-[#fdfaf7] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)] ${
                     error
@@ -80,12 +81,13 @@ function ForgotPassword() {
                 )}
               </div>
 
-              <Button type="submit" fullWidth disabled={loading} className="mt-1">
+              <Button aria-description="Envía un enlace de recuperación a ese correo." type="submit" fullWidth disabled={loading} className="mt-1">
                 {loading ? 'Enviando...' : 'Enviar enlace'}
               </Button>
             </form>
 
             <button
+              aria-description="Regresa al inicio sin solicitar el enlace."
               className="w-full cursor-pointer border-none bg-transparent px-0 py-1 text-center text-[0.82rem] text-[var(--rojo)] underline underline-offset-[3px]"
               onClick={() => navigate('/')}
             >
@@ -103,7 +105,7 @@ function ForgotPassword() {
             <p className="text-[0.88rem] leading-[1.6] text-[var(--texto-muted)]">
               Te hemos enviado las instrucciones a tu correo.
             </p>
-            <Button onClick={() => navigate('/')} className="mt-1 w-full">
+            <Button aria-description="Regresa a la página de inicio." onClick={() => navigate('/')} className="mt-1 w-full">
               Volver al inicio
             </Button>
           </div>

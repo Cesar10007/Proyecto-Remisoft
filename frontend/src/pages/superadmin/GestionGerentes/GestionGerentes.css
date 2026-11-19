@@ -140,61 +140,6 @@
 .sa-table-message--error {
   color: var(--rojo);
 }
-.sa-manager-modal-backdrop {
-  align-items: center;
-  background: rgba(29, 24, 21, 0.45);
-  display: flex;
-  inset: 0;
-  justify-content: center;
-  padding: 24px;
-  position: fixed;
-  z-index: 1000;
-}
-
-.sa-manager-modal {
-  background: var(--t-bg-ffffff, #ffffff);
-  border-radius: 18px;
-  box-shadow: 0 24px 80px rgba(50, 35, 25, 0.25);
-  max-height: 90vh;
-  max-width: 720px;
-  overflow-y: auto;
-  width: 100%;
-}
-
-.sa-manager-modal__header {
-  align-items: flex-start;
-  border-bottom: 1px solid var(--t-brd-eee2db, #eee2db);
-  display: flex;
-  justify-content: space-between;
-  padding: 24px 28px;
-}
-
-.sa-manager-modal__header h3 {
-  color: var(--t-txt-9f3f18, #9f3f18);
-  font-size: 24px;
-  margin: 0;
-}
-
-.sa-manager-modal__header p {
-  color: var(--t-txt-766a62, #766a62);
-  margin: 6px 0 0;
-}
-
-.sa-manager-modal__close {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--t-txt-766a62, #766a62);
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  padding: 4px;
-}
-
-.sa-manager-form {
-  padding: 24px 28px 28px;
-}
-
 .sa-manager-form__grid {
   display: grid;
   gap: 18px;
@@ -235,6 +180,7 @@
 
 .sa-manager-form__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 24px;
@@ -286,17 +232,11 @@
 
 @media (max-width: 680px) {
   .sa-manager-form__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sa-manager-form__field--full {
     grid-column: auto;
-  }
-
-  .sa-manager-modal__header,
-  .sa-manager-form {
-    padding-left: 20px;
-    padding-right: 20px;
   }
 }
 .sa-manager-form select {
@@ -318,8 +258,7 @@
   cursor: not-allowed;
 }
 .sa-password-field {
-  align-items: center;
-  display: flex;
+  min-width: 0;
   position: relative;
 }
 

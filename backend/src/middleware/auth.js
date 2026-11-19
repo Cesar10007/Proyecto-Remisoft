@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { filtroRestaurante } from '../utils/restaurante.js';
 import prisma from '../config/prisma.js';
 
 
@@ -19,6 +20,7 @@ function buildUserPayload(usuario) {
     id_rol: usuario.id_rol,
     rol: usuario.rol?.nombre ?? null,
     id_restaurante: usuario.id_restaurante ?? null,
+    nombre_establecimiento: usuario.restaurante?.nombre ?? null,
   };
 }
 
@@ -62,7 +64,7 @@ async function authenticateWithJwt(token) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario: idUsuario },
-    include: { rol: true },
+    include: { rol: true, restaurante: { select: { nombre: true } } },
   });
 
 
@@ -119,7 +121,7 @@ async function authenticateWithSanctum(token) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario: Number(tokenRow.tokenable_id) },
-    include: { rol: true },
+    include: { rol: true, restaurante: { select: { nombre: true } } },
   });
 
 
@@ -158,10 +160,11 @@ export async function authRequired(req, res, next) {
     }
 
 
+    filtroRestaurante(req.user); // también en las rutas administrativas de personal y solicitudes
     next();
   } catch (err) {
-    if (err.statusCode) {
-      return res.status(err.statusCode).json({ message: err.message });
+    if (err.statusCode || err.status) {
+      return res.status(err.statusCode || err.status).json({ message: err.message });
     }
 
 

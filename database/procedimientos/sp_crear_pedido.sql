@@ -23,7 +23,17 @@ CREATE PROCEDURE sp_crear_pedido(
     OUT p_id_pedido    INT
 )
 BEGIN
+    DECLARE v_sede INT;
+    SELECT id_restaurante INTO v_sede FROM usuario WHERE id_usuario = p_id_mesero;
+    IF v_sede IS NULL OR (p_id_cliente IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM Cliente WHERE id_cliente = p_id_cliente AND id_restaurante = v_sede
+    )) OR (p_mesa_num IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM mesa WHERE numero = p_mesa_num AND id_restaurante = v_sede
+    )) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Mesero, cliente o mesa no válidos para el establecimiento.';
+    END IF;
     INSERT INTO pedido (
+        id_restaurante,
         id_cliente,
         id_mesero,
         Fecha_hora,
@@ -32,6 +42,7 @@ BEGIN
         Mesa_num,
         notas
     ) VALUES (
+        v_sede,
         p_id_cliente,
         p_id_mesero,
         NOW(),

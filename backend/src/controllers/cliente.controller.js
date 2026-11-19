@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
@@ -37,6 +38,7 @@ function validarCliente(body) {
 export async function index(req, res, next) {
   try {
     const clientes = await prisma.cliente.findMany({
+      where: req.sede,
       orderBy: {
         id_cliente: 'asc',
       },
@@ -61,6 +63,7 @@ export async function buscarPorTelefono(req, res, next) {
 
     const clientes = await prisma.cliente.findMany({
       where: {
+        ...req.sede,
         Telefono: telefono.trim(),
       },
       orderBy: {
@@ -87,6 +90,7 @@ export async function show(req, res, next) {
 
     const cliente = await prisma.cliente.findUnique({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
     });
@@ -114,20 +118,14 @@ export async function crear(req, res, next) {
       });
     }
 
-    await prisma.cliente.create({
-      data,
-    });
+    await escritura(req.user, tx => tx.cliente.create({
+      data: { ...data, ...req.sede },
+    }));
 
     res.status(201).json({
       message: 'Cliente creado',
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del cliente ya está registrado',
-      });
-    }
-
     next(err);
   }
 }
@@ -151,23 +149,18 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    await prisma.cliente.update({
+    await escritura(req.user, tx => tx.cliente.update({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
       data,
-    });
+    }));
 
     res.json({
       message: 'Cliente actualizado',
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del cliente ya está registrado',
-      });
-    }
-
     if (err.code === 'P2025') {
       return res.status(404).json({
         message: 'Cliente no encontrado',
@@ -189,11 +182,12 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await prisma.cliente.delete({
+    await escritura(req.user, tx => tx.cliente.delete({
       where: {
+        ...req.sede,
         id_cliente: id,
       },
-    });
+    }));
 
     res.json({
       message: 'Cliente eliminado',

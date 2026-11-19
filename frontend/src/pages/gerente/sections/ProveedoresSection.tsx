@@ -1,3 +1,4 @@
+import Button from '../../../components/common/Button'
 import type { Proveedor } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
@@ -44,18 +45,8 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
       header: 'Acciones',
       render: (p) => (
         <div className="flex gap-2">
-          <button
-            className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#ede5dc]"
-            onClick={() => onEdit(p)}
-          >
-            Editar
-          </button>
-          <button
-            className="rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#f2ece6]"
-            onClick={() => onToggle(p.id_proveedor, p.estado)}
-          >
-            {p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
-          </button>
+          <Button aria-description={`Abre la ficha de ${p.nombre} para modificarla.`} size="small" variant="outline" onClick={() => onEdit(p)}>Editar</Button>
+          <Button aria-description={p.estado === 'ACTIVO' ? 'Marca al proveedor como inactivo.' : 'Vuelve a activar al proveedor.'} size="small" variant="ghost" onClick={() => onToggle(p.id_proveedor, p.estado)}>{p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</Button>
         </div>
       ),
     },
@@ -69,14 +60,7 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
         data={proveedores}
         emptyMessage="No hay proveedores disponibles"
         keyExtractor={(p) => p.id_proveedor}
-        actionButton={
-          <button
-            className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white transition-opacity hover:opacity-90"
-            onClick={onCreate}
-          >
-            + Nuevo Proveedor
-          </button>
-        }
+        actionButton={<Button aria-description="Abre el formulario para registrar un proveedor." onClick={onCreate}>+ Nuevo Proveedor</Button>}
       />
     </div>
   )

@@ -119,27 +119,8 @@ log "⚠️  MAILTRAP_USER y MAILTRAP_PASS quedaron vacíos en backend/.env — 
 cd "$BACKEND_DIR"
 CI=true corepack pnpm install --frozen-lockfile
 corepack pnpm rebuild @prisma/engines prisma || true
-corepack pnpm exec prisma generate
-corepack pnpm exec prisma migrate deploy
-
-# Cargar datos iniciales si la tabla Producto está vacía
-PRODUCTOS=$(mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" -N -s remisoft -e "SELECT COUNT(*) FROM Producto;" 2>/dev/null || echo "0")
-if [ "$PRODUCTOS" = "0" ] && [ -f "$PROJECT_DIR/database/datos.sql" ]; then
-  log "Cargando datos iniciales..."
-  mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" --default-character-set=utf8mb4 remisoft < "$PROJECT_DIR/database/datos.sql"
-else
-  echo "La base ya contiene datos; no se vuelve a importar datos.sql."
-fi
-
-# Cargar vistas
-for f in "$PROJECT_DIR"/database/vistas/*.sql; do
-  [ -f "$f" ] && mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" --default-character-set=utf8mb4 remisoft < "$f"
-done
-
-# Cargar procedimientos
-for f in "$PROJECT_DIR"/database/procedimientos/*.sql; do
-  [ -f "$f" ] && mariadb -h "$DB_HOST" -P "$DB_PORT" -u root -p"$DB_ROOT_PASSWORD" --default-character-set=utf8mb4 remisoft < "$f"
-done
+DB_HOST="$DB_HOST" DB_PORT="$DB_PORT" DB_DATABASE=remisoft DB_USERNAME=remisoft DB_PASSWORD=remisoft_pass \
+  DATABASE_URL="mysql://remisoft:remisoft_pass@${DB_HOST}:${DB_PORT}/remisoft" bash prisma/setup-prisma.sh
 
 log "Instalando dependencias de React..."
 cd "$FRONTEND_DIR"

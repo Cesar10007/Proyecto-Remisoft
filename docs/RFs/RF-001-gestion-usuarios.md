@@ -33,7 +33,7 @@ Además, el sistema deberá asignar roles con permisos claramente definidos seg�
 
 | ID     | Regla |
 | ------ | ----- |
-| RN-001 | El campo `email` debe tener formato válido y ser único en el sistema. |
+| RN-001 | El correo de la cuenta debe tener formato válido y ser único en todo el sistema. Ante un formato inválido o un conflicto de correo, la API responde `422` con el mismo mensaje: «Correo inválido, ingrese otro.» |
 | RN-002 | La contraseña debe almacenarse cifrada (hash), nunca en texto plano. |
 | RN-003 | Los roles permitidos son: Administrador, Mesero, Cajero, Repartidor y Cliente. |
 | RN-004 | Un usuario solo puede tener un rol activo a la vez. |

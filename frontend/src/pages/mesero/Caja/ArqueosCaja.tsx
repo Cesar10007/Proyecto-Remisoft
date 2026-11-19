@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import api from '../../../api/axios'
+import { ArrowLeft, Calculator, Eye, ListFilter, TrendingUp, UserRound, Wallet } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useConsulta } from '../useConsulta'
+import { CargaCaja, ErrorCarga } from '../Elementos'
 import { DataTable } from '../../../components/common/DataTable'
 import DetalleModal from '../DetalleModal'
 import { formatCOP } from '../utils'
@@ -53,9 +55,8 @@ const COLOR_ESTADO: Record<ReturnType<typeof estadoDe>, string> = {
 }
 
 function ArqueosCaja({ onBack }: ArqueosCajaProps) {
-  const [arqueos, setArqueos] = useState<ArqueoApi[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, cargar, cargando } = useConsulta<{ data: ArqueoApi[] }>('/turnos/arqueos')
+  const arqueos = useMemo(() => data?.data ?? [], [data])
 
   const [openFiltro, setOpenFiltro] = useState(false)
   const [filtroEstado, setFiltroEstado] = useState('')
@@ -66,30 +67,26 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
     rows: [],
   })
 
-  useEffect(() => {
-    api
-      .get<{ data: ArqueoApi[] }>('/turnos/arqueos')
-      .then(({ data }) => setArqueos(data.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'No fue posible cargar los arqueos.'))
-      .finally(() => setCargando(false))
-  }, [])
 
   const arqueoActual = useMemo(() => arqueos.find(estaAbierto) ?? null, [arqueos])
 
-  const arqueosFiltrados = arqueos.filter((a) => (filtroEstado ? estadoDe(a) === filtroEstado : true))
+  const arqueosFiltrados = arqueos.filter(a => filtroEstado === 'En curso' ? estaAbierto(a) : a.estado === 'CERRADA' && (!filtroEstado || estadoDe(a) === filtroEstado))
+
+  if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
 
   return (
-    <section className="m-6">
+    <section className="min-w-0">
 
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          title="Volver"
+          aria-label="Volver"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div>
           <h1 className="text-[1.5rem] font-bold text-[var(--wa-text)]">Arqueos de caja</h1>
@@ -99,7 +96,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
         </div>
       </div>
 
-      {error && <p className="mb-4 rounded-md bg-[rgba(239,68,68,0.08)] px-3 py-2 text-sm text-[var(--rojo)]">{error}</p>}
+      {error && <ErrorCarga texto={error} reintentar={cargar} />}
 
       {/* ARQUEO ACTUAL */}
       <div className="mb-6 rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
@@ -107,7 +104,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Arqueo actual</h2>
           <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
             {arqueoActual
-              ? 'Efectivo esperado del turno abierto: inicial más ingresos menos egresos.'
+              ? 'Efectivo esperado del turno abierto: fondo inicial más entradas menos salidas en efectivo. No incluye pagos electrónicos.'
               : cargando
                 ? 'Cargando…'
                 : 'No hay caja abierta en este momento.'}
@@ -118,7 +115,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">calculate</span>
+                <Calculator size={18} aria-hidden="true" />
                 <span className="text-sm">Monto esperado</span>
               </div>
               <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">{dinero(arqueoActual.esperado)}</p>
@@ -126,7 +123,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">point_of_sale</span>
+                <Wallet size={18} aria-hidden="true" />
                 <span className="text-sm">Monto contado</span>
               </div>
               <p className="text-[1.3rem] font-bold text-[var(--wa-text)]">Pendiente</p>
@@ -135,7 +132,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">trending_up</span>
+                <TrendingUp size={18} aria-hidden="true" />
                 <span className="text-sm">Movimientos</span>
               </div>
               <p className="font-bold text-[var(--wa-text)]">
@@ -145,7 +142,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
             <div className="rounded-[12px] bg-[var(--wa-surface-low)] p-4">
               <div className="mb-2 flex items-center gap-2 text-[var(--wa-text-muted)]">
-                <span className="material-symbols-outlined text-[1.2rem]">person</span>
+                <UserRound size={18} aria-hidden="true" />
                 <span className="text-sm">Responsable</span>
               </div>
               <p className="font-bold text-[var(--wa-text)]">{responsable(arqueoActual.usuario)}</p>
@@ -158,17 +155,18 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
       <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Historial de arqueos</h2>
+            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">{filtroEstado === 'En curso' ? 'Arqueos de turnos activos' : 'Historial de arqueos cerrados'}</h2>
             <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Un arqueo por cada turno de caja.</p>
           </div>
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta las opciones de estado del arqueo.' : 'Filtra los arqueos por su resultado o estado.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
             >
-              <span className="material-symbols-outlined text-[1.1rem]">filter_list</span>
+              <ListFilter size={18} aria-hidden="true" />
               Filtrar
             </button>
 
@@ -176,6 +174,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {['', 'En curso', 'Cuadrado', 'Sobrante', 'Faltante'].map((op) => (
                   <button
+                    aria-description={op ? `Muestra los arqueos con estado «${op}».` : 'Muestra todos los arqueos de turnos cerrados.'}
                     key={op || 'todos'}
                     type="button"
                     onClick={() => {
@@ -186,7 +185,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       filtroEstado === op ? 'font-bold text-[var(--wa-primary)]' : ''
                     }`}
                   >
-                    {op || 'Todos'}
+                    {op || 'Todos los cerrados'}
                   </button>
                 ))}
               </div>
@@ -194,7 +193,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           </div>
         </div>
 
-        <DataTable
+        <DataTable key={filtroEstado}
           columns={[
             { header: 'Fecha', render: (a) => <span className="text-sm">{fecha(a.fecha_apertura)}</span> },
             { header: 'Hora', render: (a) => <span className="text-sm">{hora(a.fecha_apertura)}</span> },
@@ -225,6 +224,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               render: (a) => (
                 <div className="flex justify-end">
                   <button
+                    aria-description="Consulta el efectivo esperado y contado en este arqueo."
                     type="button"
                     onClick={() =>
                       setDetalle({
@@ -245,9 +245,9 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       })
                     }
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                    title="Ver arqueo"
+                    aria-label="Ver arqueo"
                   >
-                    <span className="material-symbols-outlined text-[1.2rem]">visibility</span>
+                    <Eye size={18} aria-hidden="true" />
                   </button>
                 </div>
               ),

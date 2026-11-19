@@ -3,43 +3,12 @@
 -- Compatible con MySQL / MariaDB
 -- ============================================================
 
-SET FOREIGN_KEY_CHECKS = 0;
+-- Solo para una base de demostración recién migrada. No borra tablas ni se ejecuta
+-- al dar de alta un gerente. La operación de ejemplo pertenece únicamente a Principal.
+SET @sede_demo = 1;
 
--- Limpieza completa de datos dependientes y maestros.
-TRUNCATE TABLE IA_PRODUCTO;
-TRUNCATE TABLE IA_INGREDIENTE;
-TRUNCATE TABLE IA;
-TRUNCATE TABLE inventario_mov;
-TRUNCATE TABLE Factura_item;
-TRUNCATE TABLE domicilio;
-TRUNCATE TABLE flujo_caja;
-TRUNCATE TABLE pago;
-TRUNCATE TABLE Factura;
-TRUNCATE TABLE Detalle_pedido;
-TRUNCATE TABLE pedido;
-TRUNCATE TABLE detalle_orden_compra;
-TRUNCATE TABLE orden_compra;
-TRUNCATE TABLE proveedor_ingrediente;
-TRUNCATE TABLE Receta;
-TRUNCATE TABLE lote_ingrediente;
-TRUNCATE TABLE Ingrediente;
-TRUNCATE TABLE Producto;
-TRUNCATE TABLE proveedor;
-TRUNCATE TABLE turno_caja;
-TRUNCATE TABLE caja;
-TRUNCATE TABLE Cliente;
-TRUNCATE TABLE solicitud_registro;
-TRUNCATE TABLE usuario;
-TRUNCATE TABLE restaurante;
-TRUNCATE TABLE rol;
-
--- 1. ROL
-INSERT INTO rol (id_rol, nombre, descripcion) VALUES
-(1, 'SUPERADMIN', 'Acceso total al sistema'),
-(2, 'GERENTE', 'Administrador del restaurante'),
-(3, 'CAJERO', 'Gestión de caja y pagos'),
-(4, 'MESERO', 'Toma y gestión de pedidos en mesa'),
-(5, 'REPARTIDOR', 'Entrega de pedidos a domicilio');
+-- Los roles del sistema provienen de las migraciones, aun sin demo.
+START TRANSACTION;
 
 -- 2. RESTAURANTE
 INSERT INTO restaurante (
@@ -52,7 +21,7 @@ INSERT INTO restaurante (
 INSERT INTO solicitud_registro (
     nombre,apellido,email,telefono,contrasena_hash,id_rol_solicitado,id_restaurante,estado
 ) VALUES
-('Prueba','Gerente','solicitud.gerente.prueba@example.com','3002001001','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',2,1,'PENDIENTE'),
+('Prueba','Gerente','solicitud.gerente.prueba@example.com','3002001001','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',2,NULL,'PENDIENTE'),
 ('Prueba','Cajero','solicitud.cajero.prueba@example.com','3002001002','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',3,1,'PENDIENTE'),
 ('Prueba','Mesero','solicitud.mesero.prueba@example.com','3002001003','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',4,2,'PENDIENTE'),
 ('Prueba','Repartidor','solicitud.repartidor.prueba@example.com','3002001004','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',5,2,'PENDIENTE');
@@ -73,99 +42,104 @@ INSERT INTO usuario (
 (9, 2, 2, '1009', 'Sebastián', 'Díaz', 'sebastian.diaz@resto.com', '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
 
+-- Plano de la sede de demo, no de los restaurantes que se creen posteriormente.
+INSERT INTO mesa (numero, capacidad, id_restaurante) VALUES
+(1,4,@sede_demo), (2,4,@sede_demo), (3,4,@sede_demo), (4,4,@sede_demo),
+(5,4,@sede_demo), (6,4,@sede_demo), (7,4,@sede_demo), (8,4,@sede_demo),
+(9,4,@sede_demo), (10,4,@sede_demo), (11,4,@sede_demo), (12,4,@sede_demo);
+
 -- 5. CLIENTE
-INSERT INTO Cliente (
-    Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps,tipo_documento, Num_documento
+INSERT INTO Cliente (id_restaurante, Nombre, Apellido, Email, Telefono, Direccion, coordenadas_gps,tipo_documento, Num_documento
 ) VALUES
-('Pedro', 'Sánchez', 'pedro.sanchez@gmail.com', '3101234567', 'Calle 45 # 12-30', '4.6097,-74.0817', 'CC', '80123456'),
-('Ana', 'Ruiz', 'ana.ruiz@gmail.com', '3209876543', 'Carrera 7 # 60-15', '4.6200,-74.0700', 'CC', '52654321'),
-('Luis', 'Peña', 'luis.pena@gmail.com', '3151112223', 'Av. 68 # 22-10', '4.6300,-74.0900', 'CE', 'E1234567'),
-('María', 'Flores', 'maria.flores@gmail.com', '3004445556', 'Calle 100 # 15-05', '4.6800,-74.0500', 'CC', '43876543'),
-('Jorge', 'Medina', 'jorge.medina@gmail.com', '3157778889', 'Carrera 15 # 80-25', '4.6650,-74.0600', 'CC', '79456789'),
-('Natalia', 'Reyes', 'natalia.reyes@gmail.com', '3003334445', 'Calle 72 # 9-40', '4.6550,-74.0650', 'CC', '53789012'),
-('Diego', 'Ortiz', 'diego.ortiz@gmail.com', '3111115556', 'Kr 19 # 100-20', '4.6900,-74.0450', 'CC', '91234567'),
-('Paola', 'Jiménez', 'paola.jimenez@gmail.com', '3206667778', 'Calle 26 # 30-55', '4.6150,-74.0750', 'TI', '1098765432'),
-('Felipe', 'Aguilar', 'felipe.aguilar@gmail.com', '3158889990', 'Carrera 30 # 45-10', '4.6400,-74.0800', 'CC', '88345678'),
-('Sandra', 'Vega', 'sandra.vega@gmail.com', '3002221113', 'Calle 53 # 20-35', '4.6480,-74.0720', 'CC', '64987654');
+(@sede_demo, 'Pedro', 'Sánchez', 'pedro.sanchez@gmail.com', '3101234567', 'Calle 45 # 12-30', '4.6097,-74.0817', 'CC', '80123456'),
+(@sede_demo, 'Ana', 'Ruiz', 'ana.ruiz@gmail.com', '3209876543', 'Carrera 7 # 60-15', '4.6200,-74.0700', 'CC', '52654321'),
+(@sede_demo, 'Luis', 'Peña', 'luis.pena@gmail.com', '3151112223', 'Av. 68 # 22-10', '4.6300,-74.0900', 'CE', 'E1234567'),
+(@sede_demo, 'María', 'Flores', 'maria.flores@gmail.com', '3004445556', 'Calle 100 # 15-05', '4.6800,-74.0500', 'CC', '43876543'),
+(@sede_demo, 'Jorge', 'Medina', 'jorge.medina@gmail.com', '3157778889', 'Carrera 15 # 80-25', '4.6650,-74.0600', 'CC', '79456789'),
+(@sede_demo, 'Natalia', 'Reyes', 'natalia.reyes@gmail.com', '3003334445', 'Calle 72 # 9-40', '4.6550,-74.0650', 'CC', '53789012'),
+(@sede_demo, 'Diego', 'Ortiz', 'diego.ortiz@gmail.com', '3111115556', 'Kr 19 # 100-20', '4.6900,-74.0450', 'CC', '91234567'),
+(@sede_demo, 'Paola', 'Jiménez', 'paola.jimenez@gmail.com', '3206667778', 'Calle 26 # 30-55', '4.6150,-74.0750', 'TI', '1098765432'),
+(@sede_demo, 'Felipe', 'Aguilar', 'felipe.aguilar@gmail.com', '3158889990', 'Carrera 30 # 45-10', '4.6400,-74.0800', 'CC', '88345678'),
+(@sede_demo, 'Sandra', 'Vega', 'sandra.vega@gmail.com', '3002221113', 'Calle 53 # 20-35', '4.6480,-74.0720', 'CC', '64987654');
 
 -- 6. CAJA
-INSERT INTO caja (nombre, estado) VALUES
-('Caja Principal', 'ACTIVA'),
-('Caja Secundaria', 'ACTIVA'),
-('Caja Bar', 'ACTIVA'),
-('Caja Domicilios', 'ACTIVA'),
-('Caja Terraza', 'INACTIVA'),
-('Caja Eventos', 'INACTIVA'),
-('Caja Express', 'ACTIVA'),
-('Caja VIP', 'ACTIVA'),
-('Caja Reserva 1', 'INACTIVA'),
-('Caja Reserva 2', 'INACTIVA');
+INSERT INTO caja (id_restaurante, nombre, estado) VALUES
+(@sede_demo, 'Caja Principal', 'ACTIVA'),
+(@sede_demo, 'Caja Secundaria', 'ACTIVA'),
+(@sede_demo, 'Caja Bar', 'ACTIVA'),
+(@sede_demo, 'Caja Domicilios', 'ACTIVA'),
+(@sede_demo, 'Caja Terraza', 'INACTIVA'),
+(@sede_demo, 'Caja Eventos', 'INACTIVA'),
+(@sede_demo, 'Caja Express', 'ACTIVA'),
+(@sede_demo, 'Caja VIP', 'ACTIVA'),
+(@sede_demo, 'Caja Reserva 1', 'INACTIVA'),
+(@sede_demo, 'Caja Reserva 2', 'INACTIVA');
 
 -- 7. TURNO_CAJA
-INSERT INTO turno_caja (id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,notas, estado
+INSERT INTO turno_caja (id_restaurante, id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,efectivo_inicial, efectivo_esperado, efectivo_real, diferencia,notas, estado
 ) VALUES
-(1, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 200000.00, 850000.00, 845000.00, -5000.00, 'Turno mañana normal', 'CERRADA'),
-(2, 7, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 150000.00, 620000.00, 620000.00, 0.00, 'Sin novedades', 'CERRADA'),
-(1, 3, '2025-01-15 16:00:00', '2025-01-15 23:59:00', 200000.00, 970000.00, 972000.00, 2000.00, 'Turno noche OK', 'CERRADA'),
-(3, 7, '2025-01-16 08:00:00', NULL, 100000.00, NULL, NULL, NULL, 'Turno activo bar', 'ABIERTA'),
-(2, 3, '2025-01-16 08:00:00', NULL, 150000.00, NULL, NULL, NULL, 'Turno activo caja 2', 'ABIERTA'),
-(1, 7, '2025-01-14 08:00:00', '2025-01-14 16:00:00', 200000.00, 730000.00, 728000.00, -2000.00, 'Diferencia mínima', 'CERRADA'),
-(4, 3, '2025-01-14 08:00:00', '2025-01-14 20:00:00', 50000.00, 480000.00, 480000.00, 0.00, 'Domicilios normales', 'CERRADA'),
-(1, 7, '2025-01-13 08:00:00', '2025-01-13 16:00:00', 200000.00, 910000.00, 915000.00, 5000.00, 'Sobrante pequeño', 'CERRADA'),
-(2, 3, '2025-01-13 16:00:00', '2025-01-13 23:59:00', 150000.00, 540000.00, 540000.00, 0.00, 'Todo cuadrado', 'CERRADA'),
-(7, 7, '2025-01-16 10:00:00', NULL, 80000.00, NULL, NULL, NULL, 'Turno express activo', 'ABIERTA');
+(@sede_demo, 1, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 200000.00, 850000.00, 845000.00, -5000.00, 'Turno mañana normal', 'CERRADA'),
+(@sede_demo, 2, 3, '2025-01-15 08:00:00', '2025-01-15 16:00:00', 150000.00, 620000.00, 620000.00, 0.00, 'Sin novedades', 'CERRADA'),
+(@sede_demo, 1, 3, '2025-01-15 16:00:00', '2025-01-15 23:59:00', 200000.00, 970000.00, 972000.00, 2000.00, 'Turno noche OK', 'CERRADA'),
+(@sede_demo, 3, 3, '2025-01-16 08:00:00', NULL, 100000.00, NULL, NULL, NULL, 'Turno activo bar', 'ABIERTA'),
+(@sede_demo, 2, 3, '2025-01-16 08:00:00', NULL, 150000.00, NULL, NULL, NULL, 'Turno activo caja 2', 'ABIERTA'),
+(@sede_demo, 1, 3, '2025-01-14 08:00:00', '2025-01-14 16:00:00', 200000.00, 730000.00, 728000.00, -2000.00, 'Diferencia mínima', 'CERRADA'),
+(@sede_demo, 4, 3, '2025-01-14 08:00:00', '2025-01-14 20:00:00', 50000.00, 480000.00, 480000.00, 0.00, 'Domicilios normales', 'CERRADA'),
+(@sede_demo, 1, 3, '2025-01-13 08:00:00', '2025-01-13 16:00:00', 200000.00, 910000.00, 915000.00, 5000.00, 'Sobrante pequeño', 'CERRADA'),
+(@sede_demo, 2, 3, '2025-01-13 16:00:00', '2025-01-13 23:59:00', 150000.00, 540000.00, 540000.00, 0.00, 'Todo cuadrado', 'CERRADA'),
+(@sede_demo, 7, 3, '2025-01-16 10:00:00', NULL, 80000.00, NULL, NULL, NULL, 'Turno express activo', 'ABIERTA');
 
 -- 8. PROVEEDOR
-INSERT INTO proveedor (nombre, nombre_contacto, telefono, email, direccion, nit, tipo_proveedor, estado) VALUES
-('Frigorífico Central S.A.', 'Roberto Muñoz', '6012345678', 'ventas@frigocentral.com', 'Zona Industrial Km 5', '900123456-1', 'CARNES', 'ACTIVO'),
-('Distribuidora Lácteos del Valle', 'Carmen Pedraza', '6029876543', 'pedidos@lacteosvalle.com', 'Carrera 80 # 20-15', '800234567-2', 'LACTEOS', 'ACTIVO'),
-('Verduras Express Ltda.', 'Hernando Gil', '3101234000', 'contacto@verdurasexpress.com', 'Plaza de Mercado Local 45', '700345678-3', 'VERDURAS', 'ACTIVO'),
-('Bebidas y Licores El Barril', 'Sandra Uribe', '3209870000', 'compras@elbarril.com', 'Calle 13 # 45-20', '600456789-4', 'BEBIDAS', 'ACTIVO'),
-('Insumos de Cocina Pro', 'Felipe Arango', '3151110000', 'ventas@insumospro.com', 'Av. Boyacá # 60-30', '500567890-5', 'INSUMOS', 'ACTIVO'),
-('Panadería Industrial Norte', 'Gloria Niño', '3004440000', 'pedidos@panorte.com', 'Transversal 93 # 80-10', '400678901-6', 'PANADERIA', 'ACTIVO'),
-('Salsas y Condimentos S.A.S.', 'Mauricio Salinas', '3157770000', 'info@salsasycond.com', 'Parque Industrial Sur', '300789012-7', 'CONDIMENTOS', 'ACTIVO'),
-('Aceites y Grasas Naturales', 'Luz Marina Cano', '3003330000', 'ventas@aceitesnat.com', 'Zona Franca Bod. 12', '200890123-8', 'ACEITES', 'ACTIVO'),
-('Mariscos del Pacífico', 'Armando Pino', '3111118000', 'pedidos@mariscospac.com', 'Central Mayorista B-20', '100901234-9', 'MARISCOS', 'ACTIVO'),
-('Frutas Tropicales S.A.', 'Esperanza Luna', '3206660000', 'frutas@tropicales.com', 'Carrera 50 # 12-88', '900012345-0', 'FRUTAS', 'ACTIVO');
+INSERT INTO proveedor (id_restaurante, nombre, nombre_contacto, telefono, email, direccion, nit, tipo_proveedor, estado) VALUES
+(@sede_demo, 'Frigorífico Central S.A.', 'Roberto Muñoz', '6012345678', 'ventas@frigocentral.com', 'Zona Industrial Km 5', '900123456-1', 'CARNES', 'ACTIVO'),
+(@sede_demo, 'Distribuidora Lácteos del Valle', 'Carmen Pedraza', '6029876543', 'pedidos@lacteosvalle.com', 'Carrera 80 # 20-15', '800234567-2', 'LACTEOS', 'ACTIVO'),
+(@sede_demo, 'Verduras Express Ltda.', 'Hernando Gil', '3101234000', 'contacto@verdurasexpress.com', 'Plaza de Mercado Local 45', '700345678-3', 'VERDURAS', 'ACTIVO'),
+(@sede_demo, 'Bebidas y Licores El Barril', 'Sandra Uribe', '3209870000', 'compras@elbarril.com', 'Calle 13 # 45-20', '600456789-4', 'BEBIDAS', 'ACTIVO'),
+(@sede_demo, 'Insumos de Cocina Pro', 'Felipe Arango', '3151110000', 'ventas@insumospro.com', 'Av. Boyacá # 60-30', '500567890-5', 'INSUMOS', 'ACTIVO'),
+(@sede_demo, 'Panadería Industrial Norte', 'Gloria Niño', '3004440000', 'pedidos@panorte.com', 'Transversal 93 # 80-10', '400678901-6', 'PANADERIA', 'ACTIVO'),
+(@sede_demo, 'Salsas y Condimentos S.A.S.', 'Mauricio Salinas', '3157770000', 'info@salsasycond.com', 'Parque Industrial Sur', '300789012-7', 'CONDIMENTOS', 'ACTIVO'),
+(@sede_demo, 'Aceites y Grasas Naturales', 'Luz Marina Cano', '3003330000', 'ventas@aceitesnat.com', 'Zona Franca Bod. 12', '200890123-8', 'ACEITES', 'ACTIVO'),
+(@sede_demo, 'Mariscos del Pacífico', 'Armando Pino', '3111118000', 'pedidos@mariscospac.com', 'Central Mayorista B-20', '100901234-9', 'MARISCOS', 'ACTIVO'),
+(@sede_demo, 'Frutas Tropicales S.A.', 'Esperanza Luna', '3206660000', 'frutas@tropicales.com', 'Carrera 50 # 12-88', '900012345-0', 'FRUTAS', 'ACTIVO');
 
 -- 9. PRODUCTO
-INSERT INTO Producto (Nombre, Descripcion, precio_venta, Categoria, Tiempo_preparacion, Estado) VALUES
-('Hamburguesa Clásica', 'Carne de res, lechuga, tomate, queso cheddar', 18000.00, 'HAMBURGUESAS', '00:12:00', 1),
-('Pizza Margherita', 'Salsa de tomate, mozzarella, albahaca fresca', 32000.00, 'PIZZAS', '00:20:00', 1),
-('Ensalada César', 'Lechuga romana, pollo, crutones, aderezo césar', 14000.00, 'ENSALADAS', '00:08:00', 1),
-('Limonada Natural', 'Limón fresco, azúcar, agua, hielo', 6000.00, 'BEBIDAS', '00:03:00', 1),
-('Papas Fritas', 'Papas a la francesa crujientes con sal', 7000.00, 'ACOMPAÑAMIENTOS', '00:10:00', 1),
-('Pollo a la Plancha', 'Pechuga de pollo marinada con especias', 22000.00, 'PLATOS FUERTES', '00:15:00', 1),
-('Pasta Carbonara', 'Espagueti, tocino, huevo, queso parmesano', 24000.00, 'PASTAS', '00:18:00', 1),
-('Brownie con Helado', 'Brownie de chocolate con helado de vainilla', 12000.00, 'POSTRES', '00:05:00', 1),
-('Sopa del Día', 'Varía según disponibilidad', 9000.00, 'SOPAS', '00:10:00', 1),
-('Jugo Natural', 'Frutas de temporada', 7000.00, 'BEBIDAS', '00:04:00', 1);
+INSERT INTO Producto (id_restaurante, Nombre, Descripcion, precio_venta, Categoria, Tiempo_preparacion, Estado) VALUES
+(@sede_demo, 'Hamburguesa Clásica', 'Carne de res, lechuga, tomate, queso cheddar', 18000.00, 'HAMBURGUESAS', '00:12:00', 1),
+(@sede_demo, 'Pizza Margherita', 'Salsa de tomate, mozzarella, albahaca fresca', 32000.00, 'PIZZAS', '00:20:00', 1),
+(@sede_demo, 'Ensalada César', 'Lechuga romana, pollo, crutones, aderezo césar', 14000.00, 'ENSALADAS', '00:08:00', 1),
+(@sede_demo, 'Limonada Natural', 'Limón fresco, azúcar, agua, hielo', 6000.00, 'BEBIDAS', '00:03:00', 1),
+(@sede_demo, 'Papas Fritas', 'Papas a la francesa crujientes con sal', 7000.00, 'ACOMPAÑAMIENTOS', '00:10:00', 1),
+(@sede_demo, 'Pollo a la Plancha', 'Pechuga de pollo marinada con especias', 22000.00, 'PLATOS FUERTES', '00:15:00', 1),
+(@sede_demo, 'Pasta Carbonara', 'Espagueti, tocino, huevo, queso parmesano', 24000.00, 'PASTAS', '00:18:00', 1),
+(@sede_demo, 'Brownie con Helado', 'Brownie de chocolate con helado de vainilla', 12000.00, 'POSTRES', '00:05:00', 1),
+(@sede_demo, 'Sopa del Día', 'Varía según disponibilidad', 9000.00, 'SOPAS', '00:10:00', 1),
+(@sede_demo, 'Jugo Natural', 'Frutas de temporada', 7000.00, 'BEBIDAS', '00:04:00', 1);
 
 -- 10. INGREDIENTE
-INSERT INTO Ingrediente (nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo) VALUES
-('Carne de Res Molida', 'Carne molida especial para hamburguesas', 'KG', 18000.00, 5.00),
-('Harina de Trigo', 'Harina especial para masas', 'KG', 2500.00, 10.00),
-('Queso Mozzarella', 'Queso para pizza y pastas', 'KG', 22000.00, 3.00),
-('Lechuga Romana', 'Lechuga fresca para ensaladas', 'KG', 4000.00, 2.00),
-('Tomate Chonto', 'Tomate fresco para salsas y ensaladas', 'KG', 3000.00, 3.00),
-('Pechuga de Pollo', 'Pechuga entera sin hueso', 'KG', 14000.00, 4.00),
-('Espagueti', 'Pasta seca importada', 'KG', 5500.00, 5.00),
-('Huevo', 'Huevo fresco AA', 'UNIDAD', 450.00, 30.00),
-('Limón Tahití', 'Limón para bebidas y aderezos', 'KG', 3500.00, 2.00),
-('Papa Pastusa', 'Papa para freír y preparaciones', 'KG', 1800.00, 8.00);
+INSERT INTO Ingrediente (id_restaurante, nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo) VALUES
+(@sede_demo, 'Carne de Res Molida', 'Carne molida especial para hamburguesas', 'KG', 18000.00, 5.00),
+(@sede_demo, 'Harina de Trigo', 'Harina especial para masas', 'KG', 2500.00, 10.00),
+(@sede_demo, 'Queso Mozzarella', 'Queso para pizza y pastas', 'KG', 22000.00, 3.00),
+(@sede_demo, 'Lechuga Romana', 'Lechuga fresca para ensaladas', 'KG', 4000.00, 2.00),
+(@sede_demo, 'Tomate Chonto', 'Tomate fresco para salsas y ensaladas', 'KG', 3000.00, 3.00),
+(@sede_demo, 'Pechuga de Pollo', 'Pechuga entera sin hueso', 'KG', 14000.00, 4.00),
+(@sede_demo, 'Espagueti', 'Pasta seca importada', 'KG', 5500.00, 5.00),
+(@sede_demo, 'Huevo', 'Huevo fresco AA', 'UNIDAD', 450.00, 30.00),
+(@sede_demo, 'Limón Tahití', 'Limón para bebidas y aderezos', 'KG', 3500.00, 2.00),
+(@sede_demo, 'Papa Pastusa', 'Papa para freír y preparaciones', 'KG', 1800.00, 8.00);
 
 -- 11. LOTE_INGREDIENTE
-INSERT INTO lote_ingrediente (id_ingrediente, numero_lote, fecha_ingreso, fecha_vencimiento, stock_inicial, stock_actual, costo_promedio, observaciones) VALUES
-(1, 'LOTE-CARNE-001', '2025-01-10', '2025-01-17', 20.000, 15.500, 18000.00, 'Lote fresco frigorífico central'),
-(2, 'LOTE-HARINA-001', '2025-01-05', '2025-04-05', 50.000, 42.000, 2500.00, 'Harina de primera calidad'),
-(3, 'LOTE-MOZZ-001', '2025-01-12', '2025-01-26', 10.000, 8.200, 22000.00, 'Mozzarella bloque'),
-(4, 'LOTE-LECHUGA-001', '2025-01-14', '2025-01-19', 5.000, 4.100, 4000.00, 'Lechuga fresca del día'),
-(5, 'LOTE-TOMATE-001', '2025-01-13', '2025-01-20', 8.000, 6.500, 3000.00, 'Tomate maduro selecto'),
-(6, 'LOTE-POLLO-001', '2025-01-12', '2025-01-16', 15.000, 3.500, 14000.00, 'Pollo refrigerado'),
-(7, 'LOTE-ESPAG-001', '2025-01-01', '2026-01-01', 20.000, 0.000, 5500.00, 'Pasta seca larga vida'),
-(8, 'LOTE-HUEVO-001', '2025-01-13', '2025-01-27', 120.000, 25.000, 450.00, 'Huevos AA bandeja'),
-(9, 'LOTE-LIMON-001', '2025-01-14', '2025-01-21', 6.000, 5.200, 3500.00, 'Limón verde fresco'),
-(10, 'LOTE-PAPA-001', '2025-01-10', '2025-01-24', 25.000, 20.000, 1800.00, 'Papa pastusa cosecha nueva');
+INSERT INTO lote_ingrediente (id_restaurante, id_ingrediente, numero_lote, fecha_ingreso, fecha_vencimiento, stock_inicial, stock_actual, costo_promedio, observaciones) VALUES
+(@sede_demo, 1, 'LOTE-CARNE-001', '2025-01-10', '2025-01-17', 20.000, 15.500, 18000.00, 'Lote fresco frigorífico central'),
+(@sede_demo, 2, 'LOTE-HARINA-001', '2025-01-05', '2025-04-05', 50.000, 42.000, 2500.00, 'Harina de primera calidad'),
+(@sede_demo, 3, 'LOTE-MOZZ-001', '2025-01-12', '2025-01-26', 10.000, 8.200, 22000.00, 'Mozzarella bloque'),
+(@sede_demo, 4, 'LOTE-LECHUGA-001', '2025-01-14', '2025-01-19', 5.000, 4.100, 4000.00, 'Lechuga fresca del día'),
+(@sede_demo, 5, 'LOTE-TOMATE-001', '2025-01-13', '2025-01-20', 8.000, 6.500, 3000.00, 'Tomate maduro selecto'),
+(@sede_demo, 6, 'LOTE-POLLO-001', '2025-01-12', '2025-01-16', 15.000, 3.500, 14000.00, 'Pollo refrigerado'),
+(@sede_demo, 7, 'LOTE-ESPAG-001', '2025-01-01', '2026-01-01', 20.000, 0.000, 5500.00, 'Pasta seca larga vida'),
+(@sede_demo, 8, 'LOTE-HUEVO-001', '2025-01-13', '2025-01-27', 120.000, 25.000, 450.00, 'Huevos AA bandeja'),
+(@sede_demo, 9, 'LOTE-LIMON-001', '2025-01-14', '2025-01-21', 6.000, 5.200, 3500.00, 'Limón verde fresco'),
+(@sede_demo, 10, 'LOTE-PAPA-001', '2025-01-10', '2025-01-24', 25.000, 20.000, 1800.00, 'Papa pastusa cosecha nueva');
 
 -- 12. RECETA
 INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VALUES
@@ -181,17 +155,17 @@ INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VAL
 (7, 8, 2.000, 'UNIDAD');
 
 -- 13. PEDIDO
-INSERT INTO pedido (id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
-(1, 4, 'CERRADO', 'MESA', 3, 'Sin cebolla por favor'),
-(2, 6, 'CERRADO', 'MESA', 7, NULL),
-(3, 4, 'CERRADO', 'DOMICILIO', NULL, 'Entregar en portería'),
-(4, 6, 'EN_PREPARACION', 'MESA', 1, 'Alergia al gluten - informar cocina'),
-(5, 4, 'ABIERTO', 'MESA', 5, NULL),
-(6, 6, 'CERRADO', 'DOMICILIO', NULL, 'Llamar antes de llegar'),
-(7, 4, 'CERRADO', 'MESA', 2, NULL),
-(8, 6, 'LISTO', 'MESA', 4, 'Extra salsa BBQ'),
-(9, 4, 'CERRADO', 'DOMICILIO', NULL, NULL),
-(10, 6, 'ABIERTO', 'MESA', 8, 'Mesa de cumpleaños');
+INSERT INTO pedido (id_restaurante, id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
+(@sede_demo, 1, 4, 'CERRADO', 'MESA', 3, 'Sin cebolla por favor'),
+(@sede_demo, 2, 4, 'CERRADO', 'MESA', 7, NULL),
+(@sede_demo, 3, 4, 'CERRADO', 'DOMICILIO', NULL, 'Entregar en portería'),
+(@sede_demo, 4, 4, 'EN_PREPARACION', 'MESA', 1, 'Alergia al gluten - informar cocina'),
+(@sede_demo, 5, 4, 'ABIERTO', 'MESA', 5, NULL),
+(@sede_demo, 6, 4, 'CERRADO', 'DOMICILIO', NULL, 'Llamar antes de llegar'),
+(@sede_demo, 7, 4, 'CERRADO', 'MESA', 2, NULL),
+(@sede_demo, 8, 4, 'LISTO', 'MESA', 4, 'Extra salsa BBQ'),
+(@sede_demo, 9, 4, 'CERRADO', 'DOMICILIO', NULL, NULL),
+(@sede_demo, 10, 4, 'ABIERTO', 'MESA', 8, 'Mesa de cumpleaños');
 
 -- 14. DETALLE_PEDIDO
 INSERT INTO Detalle_pedido (id_pedido, id_producto, Cantidad, Precio_unitario, estado_item) VALUES
@@ -223,13 +197,13 @@ INSERT INTO Factura (id_pedido, consecutivo, CUFE, IVA, Descuento, Propina, tota
 INSERT INTO pago (id_factura, id_usuario_cajero, metodo, monto, referencia, estado, id_turno) VALUES
 (1, 3, 'EFECTIVO', 59360.00, NULL, 'APROBADO', 1),
 (2, 3, 'TARJETA_CREDITO', 47360.00, 'REF-TC-00234', 'APROBADO', 1),
-(3, 7, 'NEQUI', 34510.00, 'NEQ-8845612', 'APROBADO', 2),
+(3, 3, 'NEQUI', 34510.00, 'NEQ-8845612', 'APROBADO', 2),
 (4, 3, 'EFECTIVO', 64240.00, NULL, 'APROBADO', 3),
-(5, 7, 'DAVIPLATA', 39000.00, 'DAV-9923411', 'APROBADO', 2),
+(5, 3, 'DAVIPLATA', 39000.00, 'DAV-9923411', 'APROBADO', 2),
 (6, 3, 'TARJETA_DEBITO', 42840.00, 'REF-TD-00891', 'APROBADO', 1),
-(7, 7, 'EFECTIVO', 57120.00, NULL, 'APROBADO', 4),
+(7, 3, 'EFECTIVO', 57120.00, NULL, 'APROBADO', 4),
 (8, 3, 'TARJETA_CREDITO', 33320.00, 'REF-TC-00567', 'APROBADO', 5),
-(9, 7, 'EFECTIVO', 21420.00, NULL, 'RECHAZADO', 2),
+(9, 3, 'EFECTIVO', 21420.00, NULL, 'RECHAZADO', 2),
 (10, 3, 'PSE', 14000.00, 'PSE-441231', 'APROBADO', 3);
 
 -- 17. FLUJO_CAJA
@@ -258,24 +232,30 @@ INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada) VAL
 (8, 8, 1),
 (8, 9, 1);
 
+-- Congelar el detalle de las facturas de demostración igual que al generarlas por API.
+UPDATE Factura_item fi JOIN Factura f ON f.id_factura = fi.id_factura
+JOIN Detalle_pedido d ON d.id_detalle = fi.id_detalle_pedido AND d.id_pedido = f.id_pedido
+JOIN Producto p ON p.id_producto = d.id_producto
+SET fi.nombre_producto = p.Nombre, fi.precio_unitario = d.Precio_unitario;
+
 -- 19. DOMICILIO
 INSERT INTO domicilio (id_pedido, direccion, coordenadas_gps, estado, fecha_entrega, id_repartidor) VALUES
 (3, 'Av. 68 # 22-10', '4.6300,-74.0900', 'ENTREGADO', '2025-01-15 13:45:00', 5),
-(6, 'Calle 72 # 9-40', '4.6550,-74.0650', 'ENTREGADO', '2025-01-15 20:30:00', 8),
+(6, 'Calle 72 # 9-40', '4.6550,-74.0650', 'ENTREGADO', '2025-01-15 20:30:00', 5),
 (9, 'Carrera 30 # 45-10', '4.6400,-74.0800', 'ENTREGADO', '2025-01-14 19:00:00', 5);
 
 -- 20. ORDEN_COMPRA
-INSERT INTO orden_compra (id_proveedor, id_usuario, fecha_entrega_esperada, fecha_entrega_real, estado, observaciones) VALUES
-(1, 9, '2025-01-17', '2025-01-17', 'RECIBIDA', 'Pedido urgente de carnes'),
-(2, 9, '2025-01-18', NULL, 'PENDIENTE', 'Reposición lácteos'),
-(3, 9, '2025-01-16', '2025-01-16', 'RECIBIDA', 'Verduras frescas semana'),
-(4, 9, '2025-01-20', NULL, 'APROBADA', 'Bebidas para el fin de semana'),
-(5, 9, '2025-01-19', NULL, 'PENDIENTE', 'Insumos varios'),
-(1, 2, '2025-01-14', '2025-01-14', 'RECIBIDA', 'Compra semanal carnes'),
-(3, 2, '2025-01-13', '2025-01-13', 'RECIBIDA', 'Verduras lunes'),
-(6, 9, '2025-01-21', NULL, 'PENDIENTE', 'Pan artesanal'),
-(9, 2, '2025-01-15', '2025-01-15', 'RECIBIDA', 'Mariscos frescos'),
-(10, 9, '2025-01-18', NULL, 'APROBADA', 'Frutas tropicales');
+INSERT INTO orden_compra (id_restaurante, id_proveedor, id_usuario, fecha_entrega_esperada, fecha_entrega_real, estado, observaciones) VALUES
+(@sede_demo, 1, 2, '2025-01-17', '2025-01-17', 'RECIBIDA', 'Pedido urgente de carnes'),
+(@sede_demo, 2, 2, '2025-01-18', NULL, 'PENDIENTE', 'Reposición lácteos'),
+(@sede_demo, 3, 2, '2025-01-16', '2025-01-16', 'RECIBIDA', 'Verduras frescas semana'),
+(@sede_demo, 4, 2, '2025-01-20', NULL, 'APROBADA', 'Bebidas para el fin de semana'),
+(@sede_demo, 5, 2, '2025-01-19', NULL, 'PENDIENTE', 'Insumos varios'),
+(@sede_demo, 1, 2, '2025-01-14', '2025-01-14', 'RECIBIDA', 'Compra semanal carnes'),
+(@sede_demo, 3, 2, '2025-01-13', '2025-01-13', 'RECIBIDA', 'Verduras lunes'),
+(@sede_demo, 6, 2, '2025-01-21', NULL, 'PENDIENTE', 'Pan artesanal'),
+(@sede_demo, 9, 2, '2025-01-15', '2025-01-15', 'RECIBIDA', 'Mariscos frescos'),
+(@sede_demo, 10, 2, '2025-01-18', NULL, 'APROBADA', 'Frutas tropicales');
 
 -- 21. DETALLE_ORDEN_COMPRA
 INSERT INTO detalle_orden_compra (id_orden_compra, id_ingrediente, cantidad_solicitada, cantidad_recibida, precio_unitario) VALUES
@@ -304,30 +284,38 @@ INSERT INTO proveedor_ingrediente (id_proveedor, id_ingrediente, precio_acordado
 (10, 10, 1800.00, 1, 4.4, 1, '2025-01-10 10:00:00');
 
 -- 23. INVENTARIO_MOV
-INSERT INTO inventario_mov (id_ingrediente, id_usuario, tipo_movimiento, cantidad, costo_unitario, observaciones, origen_tipo, origen_id, id_lote) VALUES
-(1, 9, 'ENTRADA', 20.000, 18000.00, 'Compra orden #1', 'ORDEN_COMPRA', 1, 1),
-(4, 9, 'ENTRADA', 5.000, 4000.00, 'Compra orden #3', 'ORDEN_COMPRA', 3, 4),
-(5, 9, 'ENTRADA', 8.000, 3000.00, 'Compra orden #3', 'ORDEN_COMPRA', 3, 5),
-(1, 4, 'SALIDA', 0.400, 18000.00, 'Pedido #1 - 2 hamburguesas', 'PEDIDO', 1, 1),
-(6, 6, 'SALIDA', 0.250, 14000.00, 'Pedido #3 - pollo plancha', 'PEDIDO', 3, 6),
-(7, 6, 'SALIDA', 0.400, 5500.00, 'Pedido #4 - 2 carbonaras', 'PEDIDO', 4, 7),
-(8, 6, 'SALIDA', 4.000, 450.00, 'Pedido #4 - 2 carbonaras', 'PEDIDO', 4, 8),
-(2, 9, 'ENTRADA', 50.000, 2500.00, 'Compra orden #6', 'ORDEN_COMPRA', 6, 2),
-(3, 9, 'ENTRADA', 10.000, 22000.00, 'Compra orden #2 (parcial)', 'ORDEN_COMPRA', 2, 3),
-(10, 9, 'ENTRADA', 20.000, 1800.00, 'Compra orden #9', 'ORDEN_COMPRA', 9, 10);
+INSERT INTO inventario_mov (id_restaurante, id_ingrediente, id_usuario, tipo_movimiento, cantidad, costo_unitario, observaciones, origen_tipo, origen_id, id_lote) VALUES
+(@sede_demo, 1, 2, 'ENTRADA', 20.000, 18000.00, 'Compra orden #1', 'ORDEN_COMPRA', 1, 1),
+(@sede_demo, 4, 2, 'ENTRADA', 5.000, 4000.00, 'Compra orden #3', 'ORDEN_COMPRA', 3, 4),
+(@sede_demo, 5, 2, 'ENTRADA', 8.000, 3000.00, 'Compra orden #3', 'ORDEN_COMPRA', 3, 5),
+(@sede_demo, 1, 4, 'SALIDA', 0.400, 18000.00, 'Pedido #1 - 2 hamburguesas', 'PEDIDO', 1, 1),
+(@sede_demo, 6, 4, 'SALIDA', 0.250, 14000.00, 'Pedido #3 - pollo plancha', 'PEDIDO', 3, 6),
+(@sede_demo, 7, 4, 'SALIDA', 0.400, 5500.00, 'Pedido #4 - 2 carbonaras', 'PEDIDO', 4, 7),
+(@sede_demo, 8, 4, 'SALIDA', 4.000, 450.00, 'Pedido #4 - 2 carbonaras', 'PEDIDO', 4, 8),
+(@sede_demo, 2, 2, 'ENTRADA', 50.000, 2500.00, 'Compra orden #6', 'ORDEN_COMPRA', 6, 2),
+(@sede_demo, 3, 2, 'ENTRADA', 10.000, 22000.00, 'Compra orden #2 (parcial)', 'ORDEN_COMPRA', 2, 3),
+(@sede_demo, 10, 2, 'ENTRADA', 20.000, 1800.00, 'Compra orden #9', 'ORDEN_COMPRA', 9, 10),
+-- Entradas que faltaban para los ingredientes usados en pedidos demo:
+-- sin ellas el stock calculado desde inventario_mov quedaba en negativo
+-- (pollo -0.250, espagueti -0.400, huevo -4.000 y limon 0.000), lo que
+-- impide cobrar los productos que los usan en la receta.
+(@sede_demo, 6, 2, 'ENTRADA', 15.000, 14000.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 6),
+(@sede_demo, 7, 2, 'ENTRADA', 20.000, 5500.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 7),
+(@sede_demo, 8, 2, 'ENTRADA', 120.000, 450.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 8),
+(@sede_demo, 9, 2, 'ENTRADA', 6.000, 3500.00, 'Stock inicial demo (cuadre con lote)', 'AJUSTE', NULL, 9);
 
 -- 24. IA
-INSERT INTO IA (Tipo_prediccion, Resultado_generado, Recomendaciones_generales, Nivel_confianza, periodo_inicio, periodo_fin) VALUES
-('DEMANDA_SEMANAL', 'Alta demanda proyectada para hamburguesas y pizzas', 'Aumentar stock de carne y mozzarella', 0.872, '2025-01-20', '2025-01-26'),
-('DEMANDA_MENSUAL', 'Incremento esperado del 15% en ventas de bebidas', 'Revisar stock de limones y jugos', 0.831, '2025-02-01', '2025-02-28'),
-('STOCK_CRITICO', 'Riesgo de desabasto en pollo y lechuga', 'Realizar orden de compra urgente', 0.915, '2025-01-15', '2025-01-16'),
-('PREDICCION_INGRESOS', 'Ingresos estimados $4.2M semana siguiente', 'Mantener turnos completos viernes y sábado', 0.768, '2025-01-20', '2025-01-26'),
-('TENDENCIA_PRODUCTOS', 'Ensalada César con crecimiento sostenido', 'Destacar en menú digital', 0.790, '2025-01-01', '2025-01-15'),
-('DEMANDA_SEMANAL', 'Baja demanda proyectada para sopas', 'Reducir preparación de sopas lunes-martes', 0.843, '2025-01-13', '2025-01-19'),
-('STOCK_CRITICO', 'Ingrediente huevo próximo a stock mínimo', 'Generar orden de compra proveedor 6', 0.900, '2025-01-16', '2025-01-17'),
-('DEMANDA_FIN_SEMANA', 'Picos de demanda sábado 12:00-15:00', 'Asignar mesero adicional en ese horario', 0.855, '2025-01-18', '2025-01-19'),
-('TENDENCIA_CLIENTES', 'Fidelización alta en clientes 1, 5 y 8', 'Ofrecer descuento especial a clientes frecuentes', 0.720, '2025-01-01', '2025-01-15'),
-('DESPERDICIO', 'Merma elevada en lechuga y tomate', 'Ajustar porciones o renegociar cantidad con proveedor', 0.810, '2025-01-01', '2025-01-15');
+INSERT INTO IA (id_restaurante, Tipo_prediccion, Resultado_generado, Recomendaciones_generales, Nivel_confianza, periodo_inicio, periodo_fin) VALUES
+(@sede_demo, 'DEMANDA_SEMANAL', 'Alta demanda proyectada para hamburguesas y pizzas', 'Aumentar stock de carne y mozzarella', 0.872, '2025-01-20', '2025-01-26'),
+(@sede_demo, 'DEMANDA_MENSUAL', 'Incremento esperado del 15% en ventas de bebidas', 'Revisar stock de limones y jugos', 0.831, '2025-02-01', '2025-02-28'),
+(@sede_demo, 'STOCK_CRITICO', 'Riesgo de desabasto en pollo y lechuga', 'Realizar orden de compra urgente', 0.915, '2025-01-15', '2025-01-16'),
+(@sede_demo, 'PREDICCION_INGRESOS', 'Ingresos estimados $4.2M semana siguiente', 'Mantener turnos completos viernes y sábado', 0.768, '2025-01-20', '2025-01-26'),
+(@sede_demo, 'TENDENCIA_PRODUCTOS', 'Ensalada César con crecimiento sostenido', 'Destacar en menú digital', 0.790, '2025-01-01', '2025-01-15'),
+(@sede_demo, 'DEMANDA_SEMANAL', 'Baja demanda proyectada para sopas', 'Reducir preparación de sopas lunes-martes', 0.843, '2025-01-13', '2025-01-19'),
+(@sede_demo, 'STOCK_CRITICO', 'Ingrediente huevo próximo a stock mínimo', 'Generar orden de compra proveedor 6', 0.900, '2025-01-16', '2025-01-17'),
+(@sede_demo, 'DEMANDA_FIN_SEMANA', 'Picos de demanda sábado 12:00-15:00', 'Asignar mesero adicional en ese horario', 0.855, '2025-01-18', '2025-01-19'),
+(@sede_demo, 'TENDENCIA_CLIENTES', 'Fidelización alta en clientes 1, 5 y 8', 'Ofrecer descuento especial a clientes frecuentes', 0.720, '2025-01-01', '2025-01-15'),
+(@sede_demo, 'DESPERDICIO', 'Merma elevada en lechuga y tomate', 'Ajustar porciones o renegociar cantidad con proveedor', 0.810, '2025-01-01', '2025-01-15');
 
 -- 25. IA_INGREDIENTE
 INSERT INTO IA_INGREDIENTE (id_IA, id_ingrediente, Demanda_predicha_ingrediente, Nivel_confianza, Ingrediente_critico) VALUES
@@ -355,6 +343,8 @@ INSERT INTO IA_PRODUCTO (id_IA, id_producto, demanda_predicho_producto, nivel_co
 (9, 6, 90.00, 0.720, 0, 'Ofrecer en menú del día para clientes frecuentes'),
 (3, 6, 40.00, 0.910, 1, 'Solicitar pedido urgente al proveedor 9');
 
+COMMIT;
+
 -- Validaciones finales: no debe existir el rol de usuario CLIENTE.
 SELECT id_rol, nombre, descripcion
 FROM rol
@@ -372,5 +362,3 @@ WHERE id_rol = 6
 SELECT COUNT(*) AS solicitudes_pendientes
 FROM solicitud_registro
 WHERE estado = 'PENDIENTE';
-
-SET FOREIGN_KEY_CHECKS = 1;

@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import Button from '../../components/common/Button'
 import type { RootState } from '../../store/store'
 import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
+import { Soup } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 
@@ -14,6 +16,7 @@ type EstadoItem = 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO'
 interface ItemComanda {
   id_detalle: number
   nombre: string
+  nota: string
   cantidad: number
   estado: EstadoItem
 }
@@ -79,7 +82,7 @@ export default function Cocina() {
 
   // Aplana las comandas en tarjetas por ítem, para mostrarlas en columnas por estado.
   const tarjetas: TarjetaItem[] = comandas.flatMap((comanda) =>
-    comanda.items.map((item) => ({ comanda, item })),
+    comanda.items.filter(i => i.estado !== 'ENTREGADO').map((item) => ({ comanda, item })),
   )
 
   async function avanzar(item: ItemComanda, siguiente: EstadoItem) {
@@ -98,7 +101,7 @@ export default function Cocina() {
     <div className="cocina">
       <Sidebar
         subtitulo="Cocina"
-        menuItems={[{ icon: 'soup_kitchen', label: 'Comandas' }]}
+        menuItems={[{ icon: <Soup />, label: 'Comandas' }]}
         vistaActual="comandas"
         onNavigate={() => {}}
         onLogout={() => {
@@ -107,7 +110,7 @@ export default function Cocina() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to="/gerente">
+            <Link aria-description="Regresa a tu panel de administración." className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined
@@ -123,11 +126,12 @@ export default function Cocina() {
               ? ` · actualizado ${ultimaActualizacion.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
               : ''
           }`}
-          acciones={
-            <button type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
+          acciones={<>
+            {rol === 'MESERO' && <Link aria-description="Vuelve a la vista de mesas del salón." className="cocina__btn cocina__btn--ghost" to="/mesero">Volver al salón</Link>}
+            <button aria-description="Vuelve a consultar las comandas de cocina." type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
               <span className="material-symbols-outlined">refresh</span> Actualizar
             </button>
-          }
+          </>}
         />
 
       {error && <div className="cocina__alerta">{error}</div>}
@@ -169,16 +173,15 @@ export default function Cocina() {
                       Pedido #{comanda.id_pedido}
                       {comanda.nombre_mesero ? ` · ${comanda.nombre_mesero}` : ''}
                     </div>
+                    {item.nota && <div className="cocina__notas">Plato: {item.nota}</div>}
                     {comanda.notas && <div className="cocina__notas">Nota: {comanda.notas}</div>}
                     {col.siguiente && col.accion && (
-                      <button
-                        type="button"
-                        className="cocina__btn cocina__btn--primario"
+                      <Button aria-description={col.siguiente === 'PREPARANDO' ? 'Indica que comenzaste a preparar el plato.' : col.siguiente === 'LISTO' ? 'Avisa que el plato está listo para servir.' : 'Registra que el plato fue entregado.'} fullWidth
                         disabled={ocupado === item.id_detalle}
                         onClick={() => avanzar(item, col.siguiente as EstadoItem)}
                       >
                         {col.accion}
-                      </button>
+                      </Button>
                     )}
                   </article>
                 ))}

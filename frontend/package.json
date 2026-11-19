@@ -7,11 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vista:rama": "vite build && vite preview",
+    "test:e2e:salon": "playwright test salon.spec.ts"
   },
   "dependencies": {
+    "@floating-ui/dom": "1.8.0",
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "@fontsource-variable/syne": "5.3.0",
     "@reduxjs/toolkit": "2.12.0",
     "axios": "1.20.0",
+    "lucide-react": "0.577.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-redux": "9.3.0",
@@ -19,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "25.9.3",
     "@types/react": "19.2.14",

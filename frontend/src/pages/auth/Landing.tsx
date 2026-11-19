@@ -30,6 +30,7 @@ function Landing({ onLogin }: LandingProps) {
 
           <div className="hero-actions">
             <button
+              aria-description="Abre el formulario de acceso a RemiSoft."
               type="button"
               className="btn btn-primary"
               onClick={onLogin}
@@ -38,6 +39,7 @@ function Landing({ onLogin }: LandingProps) {
             </button>
 
             <button
+              aria-description="Ve a la descripción de las funciones de RemiSoft."
               type="button"
               className="btn btn-ghost"
               onClick={() =>

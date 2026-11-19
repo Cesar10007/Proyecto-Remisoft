@@ -1,9 +1,16 @@
+import { escritura } from '../services/actividad.service.js';
+import { relacionDeSede } from '../utils/restaurante.js';
+import { entero, ErrorSalon } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
 
 const turnoInclude = {
   caja: true,
-  usuario: true,
+  usuario: { select: { id_usuario: true, nombre: true, apellido: true, id_restaurante: true } },
 };
+
+function presentarTurno(t) {
+  return { ...t, caja: relacionDeSede(t.caja, t.id_restaurante), usuario: relacionDeSede(t.usuario, t.id_restaurante) };
+}
 
 function parseId(value) {
   const id = Number.parseInt(value, 10);
@@ -13,6 +20,7 @@ function parseId(value) {
 export async function index(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
+      where: req.sede,
       include: turnoInclude,
       orderBy: {
         fecha_apertura: 'desc',
@@ -21,7 +29,7 @@ export async function index(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turnos,
+      data: turnos.map(presentarTurno),
       count: turnos.length,
     });
   } catch (error) {
@@ -43,6 +51,7 @@ export async function show(req, res, next) {
 
     const turno = await prisma.turno_caja.findUnique({
       where: {
+        ...req.sede,
         id_turno: idTurno,
       },
       include: turnoInclude,
@@ -58,11 +67,20 @@ export async function show(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
   }
+}
+
+async function validarReferenciasTurno(tx, sede, idCaja, idCajero, activo, idTurno) {
+  const id = entero(Number(idCaja), 'La caja');
+  const [caja] = await tx.$queryRaw`SELECT estado FROM caja WHERE id_caja=${id} AND id_restaurante=${sede.id_restaurante} FOR UPDATE`;
+  if (!caja) throw new ErrorSalon(422, 'La caja no pertenece al establecimiento.');
+  if (activo && caja.estado !== 'ACTIVA') throw new ErrorSalon(409, 'La caja está inactiva.');
+  if (activo && await tx.turno_caja.count({ where: { ...sede, id_caja: id, estado: 'ABIERTA', ...(idTurno && { id_turno: { not: idTurno } }) } })) throw new ErrorSalon(409, 'La caja ya tiene un turno activo.');
+  if (idCajero !== undefined && !(await tx.usuario.count({ where: { ...sede, id_usuario: entero(Number(idCajero), 'El cajero'), ...(activo && { activo: true }) } }))) throw new ErrorSalon(422, 'El cajero no está disponible en este establecimiento.');
 }
 
 export async function store(req, res, next) {
@@ -108,38 +126,43 @@ export async function store(req, res, next) {
       });
     }
 
-    const turno = await prisma.turno_caja.create({
-      data: {
-        id_caja: Number.parseInt(id_caja, 10),
-        id_usuario_cajero: Number.parseInt(id_usuario_cajero, 10),
-        fecha_apertura: fechaApertura,
-        fecha_cierre: fecha_cierre ? new Date(fecha_cierre) : null,
-        efectivo_inicial:
-          efectivo_inicial !== undefined
-            ? Number(efectivo_inicial)
-            : 0,
-        efectivo_esperado:
-          efectivo_esperado !== undefined
-            ? Number(efectivo_esperado)
-            : null,
-        efectivo_real:
-          efectivo_real !== undefined
-            ? Number(efectivo_real)
-            : null,
-        diferencia:
-          diferencia !== undefined
-            ? Number(diferencia)
-            : null,
-        notas: notas || null,
-        estado: estado || 'ABIERTA',
-      },
-      include: turnoInclude,
-    });
+    if (estado !== undefined && estado !== 'ABIERTA') throw new ErrorSalon(422, 'Abre el turno antes de realizar su arqueo y cierre.');
+    const turno = await escritura(req.user, async tx => {
+      await validarReferenciasTurno(tx, req.sede, id_caja, id_usuario_cajero, true);
+      return tx.turno_caja.create({
+        data: {
+          ...req.sede,
+          id_caja: Number.parseInt(id_caja, 10),
+          id_usuario_cajero: Number.parseInt(id_usuario_cajero, 10),
+          fecha_apertura: fechaApertura,
+          fecha_cierre: fecha_cierre ? new Date(fecha_cierre) : null,
+          efectivo_inicial:
+            efectivo_inicial !== undefined
+              ? Number(efectivo_inicial)
+              : 0,
+          efectivo_esperado:
+            efectivo_esperado !== undefined
+              ? Number(efectivo_esperado)
+              : null,
+          efectivo_real:
+            efectivo_real !== undefined
+              ? Number(efectivo_real)
+              : null,
+          diferencia:
+            diferencia !== undefined
+              ? Number(diferencia)
+              : null,
+          notas: notas || null,
+          estado: estado || 'ABIERTA',
+        },
+        include: turnoInclude,
+      });
+    }, { isolationLevel: 'ReadCommitted' });
 
     res.status(201).json({
       success: true,
       message: 'Turno creado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -234,18 +257,24 @@ export async function update(req, res, next) {
       data.estado = estado;
     }
 
-    const turno = await prisma.turno_caja.update({
-      where: {
-        id_turno: idTurno,
-      },
-      data,
-      include: turnoInclude,
-    });
+    const turno = await escritura(req.user, async tx => {
+      const original = await tx.turno_caja.findUniqueOrThrow({ where: { id_turno: idTurno, ...req.sede } });
+      if (estado !== undefined && estado !== original.estado) throw new ErrorSalon(422, 'Usa el cierre con arqueo o abre un nuevo turno.');
+      await validarReferenciasTurno(tx, req.sede, id_caja ?? original.id_caja, id_usuario_cajero, original.estado === 'ABIERTA', idTurno);
+      return tx.turno_caja.update({
+        where: {
+          ...req.sede,
+          id_turno: idTurno,
+        },
+        data,
+        include: turnoInclude,
+      });
+    }, { isolationLevel: 'ReadCommitted' });
 
     res.status(200).json({
       success: true,
       message: 'Actualizado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -264,11 +293,12 @@ export async function destroy(req, res, next) {
       });
     }
 
-    await prisma.turno_caja.delete({
+    await escritura(req.user, tx => tx.turno_caja.delete({
       where: {
+        ...req.sede,
         id_turno: idTurno,
       },
-    });
+    }));
 
     res.status(200).json({
       success: true,
@@ -281,7 +311,7 @@ export async function destroy(req, res, next) {
 
 // POST /api/turnos/:id/cerrar
 // Cierra el turno con el procedimiento de la base sp_cerrar_turno_caja, que calcula
-// el efectivo esperado (inicial + ingresos - egresos de flujo_caja) y la diferencia.
+// el efectivo esperado (fondo inicial + movimientos en efectivo) y la diferencia.
 export async function cerrar(req, res, next) {
   try {
     const idTurno = parseId(req.params.id);
@@ -308,7 +338,7 @@ export async function cerrar(req, res, next) {
     const notasCierre = notas ? String(notas).trim().slice(0, 500) || null : null;
 
     try {
-      await prisma.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre})`;
+      await escritura(req.user, tx => tx.$executeRaw`CALL sp_cerrar_turno_caja(${idTurno}, ${efectivoReal}, ${notasCierre}, ${req.sede.id_restaurante})`);
     } catch (error) {
       const mensaje = String(error?.message ?? '');
       if (mensaje.includes('no existe')) {
@@ -329,14 +359,14 @@ export async function cerrar(req, res, next) {
     }
 
     const turno = await prisma.turno_caja.findUnique({
-      where: { id_turno: idTurno },
+      where: { id_turno: idTurno, ...req.sede },
       include: turnoInclude,
     });
 
     res.status(200).json({
       success: true,
       message: 'Turno cerrado',
-      data: turno,
+      data: presentarTurno(turno),
     });
   } catch (error) {
     next(error);
@@ -347,7 +377,9 @@ export async function cerrar(req, res, next) {
 export async function aperturas(req, res, next) {
   try {
     const turnos = await prisma.turno_caja.findMany({
+      where: req.sede,
       select: {
+        id_restaurante: true,
         id_turno: true,
         fecha_apertura: true,
         fecha_cierre: true,
@@ -357,8 +389,8 @@ export async function aperturas(req, res, next) {
         diferencia: true,
         notas: true,
         estado: true,
-        caja: { select: { nombre: true } },
-        usuario: { select: { nombre: true, apellido: true } },
+        caja: { select: { nombre: true, id_restaurante: true } },
+        usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
       },
       orderBy: {
         fecha_apertura: 'desc',
@@ -367,7 +399,7 @@ export async function aperturas(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: turnos,
+      data: turnos.map(presentarTurno),
       count: turnos.length,
     });
   } catch (error) {
@@ -381,6 +413,7 @@ export async function gastos(req, res, next) {
     const movimientos = await prisma.flujo_caja.findMany({
       where: {
         egresos: { gt: 0 },
+        turno_caja: req.sede,
       },
       select: {
         id_flujo: true,
@@ -391,9 +424,10 @@ export async function gastos(req, res, next) {
         referencia: true,
         turno_caja: {
           select: {
+            id_restaurante: true,
             fecha_apertura: true,
-            caja: { select: { nombre: true } },
-            usuario: { select: { nombre: true, apellido: true } },
+            caja: { select: { nombre: true, id_restaurante: true } },
+            usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
           },
         },
       },
@@ -404,7 +438,7 @@ export async function gastos(req, res, next) {
 
     res.status(200).json({
       success: true,
-      data: movimientos,
+      data: movimientos.map(m => ({ ...m, turno_caja: presentarTurno(m.turno_caja) })),
       count: movimientos.length,
     });
   } catch (error) {
@@ -413,13 +447,24 @@ export async function gastos(req, res, next) {
 }
 
 // Arqueos para Mesero > Caja. Para turnos abiertos, el esperado se calcula como
-// inicial + ingresos - egresos de flujo_caja (misma fórmula de sp_cerrar_turno_caja).
+// en la misma vista que usa sp_cerrar_turno_caja, sin sumar pagos electrónicos al cajón.
 // Para turnos cerrados, usa lo que guardó el cierre.
+async function cajaConsultada(req) {
+  if (req.query.id_caja === undefined) return null;
+  const id = entero(Number(req.query.id_caja), 'La caja');
+  if (!await prisma.caja.count({ where: { ...req.sede, id_caja: id } })) throw new ErrorSalon(404, 'Caja no encontrada.');
+  return id;
+}
+
 export async function arqueos(req, res, next) {
   try {
-    const [turnos, movimientos] = await Promise.all([
+    const caja = await cajaConsultada(req);
+    const sede = req.sede.id_restaurante ?? null;
+    const [turnos, movimientos] = await prisma.$transaction([
       prisma.turno_caja.findMany({
+        where: { ...req.sede, ...(caja && { id_caja: caja }) },
         select: {
+          id_restaurante: true,
           id_turno: true,
           fecha_apertura: true,
           fecha_cierre: true,
@@ -428,28 +473,25 @@ export async function arqueos(req, res, next) {
           efectivo_real: true,
           diferencia: true,
           estado: true,
-          caja: { select: { nombre: true } },
-          usuario: { select: { nombre: true, apellido: true } },
+          caja: { select: { nombre: true, id_restaurante: true } },
+          usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
         },
         orderBy: {
           fecha_apertura: 'desc',
         },
       }),
-      prisma.flujo_caja.groupBy({
-        by: ['id_turno'],
-        _sum: { ingresos: true, egresos: true },
-      }),
-    ]);
+      prisma.$queryRaw`SELECT id_turno, ingresos, egresos, efectivo_esperado FROM vista_arqueo_turno v
+        WHERE (${sede} IS NULL OR id_restaurante = ${sede}) AND (${caja} IS NULL OR EXISTS (SELECT 1 FROM turno_caja t WHERE t.id_turno=v.id_turno AND t.id_caja=${caja}))`,
+    ], { isolationLevel: 'RepeatableRead' });
 
-    const sumas = new Map(movimientos.map((m) => [m.id_turno, m._sum]));
-
+    const sumas = new Map(movimientos.map(m => [m.id_turno, m]));
     const data = turnos.map((t) => {
       const suma = sumas.get(t.id_turno);
       const ingresos = Number(suma?.ingresos ?? 0);
       const egresos = Number(suma?.egresos ?? 0);
       const abierto = t.estado === 'ABIERTA';
       const esperado = abierto
-        ? Number(t.efectivo_inicial ?? 0) + ingresos - egresos
+        ? Number(suma.efectivo_esperado)
         : t.efectivo_esperado === null ? null : Number(t.efectivo_esperado);
 
       return {
@@ -461,8 +503,8 @@ export async function arqueos(req, res, next) {
         efectivo_real: t.efectivo_real === null ? null : Number(t.efectivo_real),
         diferencia: t.diferencia === null ? null : Number(t.diferencia),
         estado: t.estado,
-        caja: t.caja,
-        usuario: t.usuario,
+        caja: relacionDeSede(t.caja, t.id_restaurante),
+        usuario: relacionDeSede(t.usuario, t.id_restaurante),
         ingresos,
         egresos,
       };
@@ -476,4 +518,18 @@ export async function arqueos(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+// Libro de caja: no confundir el saldo de todos los medios con el efectivo físico del arqueo.
+export async function movimientos(req, res, next) {
+  try {
+    const caja = await cajaConsultada(req);
+    const antes = req.query.antes === undefined ? null : entero(Number(req.query.antes), 'El cursor');
+    const filas = await prisma.flujo_caja.findMany({ where: { turno_caja: { ...req.sede, ...(caja && { id_caja: caja }) }, ...(antes && { id_flujo: { lt: antes } }) },
+      select: { id_flujo: true, id_turno: true, id_pago: true, fecha: true, concepto: true, metodo: true, ingresos: true, egresos: true, saldo: true,
+        turno_caja: { select: { id_restaurante: true, caja: { select: { nombre: true, id_restaurante: true } } } } },
+      orderBy: { id_flujo: 'desc' }, take: 26 });
+    const data = filas.slice(0, 25).map(({ turno_caja, ...m }) => ({ ...m, caja: relacionDeSede(turno_caja.caja, turno_caja.id_restaurante)?.nombre ?? null }));
+    res.json({ data, siguiente: filas.length > 25 ? data.at(-1).id_flujo : null });
+  } catch (err) { next(err); }
 }

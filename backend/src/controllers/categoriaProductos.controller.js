@@ -2,9 +2,10 @@ import prisma from '../config/prisma.js';
 import { parseId } from '../utils/validation.js';
 
 // GET /api/categorias
-export async function index(_req, res, next) {
+export async function index(req, res, next) {
   try {
     const categorias = await prisma.categoria_productos.findMany({
+      where: req.sede,
       orderBy: { nombre: 'asc' },
     });
 
@@ -32,7 +33,7 @@ export async function show(req, res, next) {
     }
 
     const categoria = await prisma.categoria_productos.findUnique({
-      where: { id_categoria: id },
+      where: { id_categoria: id, ...req.sede },
     });
 
     if (!categoria) {

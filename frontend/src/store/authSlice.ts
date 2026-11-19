@@ -5,6 +5,7 @@ export type AuthUser = {
   id_usuario?: number
   id_rol?: number
   id_restaurante?: number | null
+  nombre_establecimiento?: string | null
   nombre: string
   apellido?: string
   email: string

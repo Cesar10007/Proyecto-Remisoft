@@ -1,10 +1,23 @@
+import { relacionDeSede } from '../utils/restaurante.js';
+import {
+  ESTADOS_EN_COCINA,
+  estadoSegunItems,
+  ErrorSalon,
+  deSede,
+  indicadorPago,
+  consumoSellado,
+} from '../utils/salon.js';
+import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
 
 // Tablero de cocina (RF-002 · HU-008, HU-010).
 // Cada ítem de pedido avanza solo hacia adelante:
 // PENDIENTE → PREPARANDO → LISTO → ENTREGADO.
 
-const ESTADOS_PEDIDO_ACTIVO = ['ABIERTO', 'EN_PROCESO', 'EN_PREPARACION', 'LISTO'];
+const alcance = (user) => ({
+  ...deSede(user),
+  ...(user.rol === 'MESERO' ? { id_mesero: user.id_usuario } : {}),
+});
 const ESTADOS_ITEM_EN_COCINA = ['PENDIENTE', 'PREPARANDO', 'LISTO'];
 const SIGUIENTE_ESTADO_ITEM = {
   PENDIENTE: 'PREPARANDO',
@@ -17,50 +30,37 @@ function parseId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-// Mantiene el estado del pedido alineado con sus ítems:
-// si algún ítem ya se está preparando el pedido pasa a EN_PREPARACION,
-// y si todos están listos o entregados pasa a LISTO.
-async function sincronizarEstadoPedido(idPedido) {
-  const items = await prisma.Detalle_pedido.findMany({
-    where: { id_pedido: idPedido, estado_item: { not: 'CANCELADO' } },
-    select: { estado_item: true },
-  });
-
-  const estados = items.map((i) => i.estado_item ?? 'PENDIENTE');
-  let nuevoEstado = null;
-
-  if (estados.length > 0 && estados.every((e) => e === 'LISTO' || e === 'ENTREGADO')) {
-    nuevoEstado = 'LISTO';
-  } else if (estados.some((e) => e !== 'PENDIENTE')) {
-    nuevoEstado = 'EN_PREPARACION';
-  }
-
-  if (nuevoEstado) {
-    await prisma.pedido.updateMany({
-      where: { id_pedido: idPedido, estado: { in: ESTADOS_PEDIDO_ACTIVO } },
-      data: { estado: nuevoEstado },
-    });
-  }
-}
-
 // GET /api/cocina/comandas
 // Pedidos activos con al menos un ítem que todavía no se entregó.
 export async function comandas(req, res, next) {
   try {
     const pedidos = await prisma.pedido.findMany({
       where: {
-        estado: { in: ESTADOS_PEDIDO_ACTIVO },
+        AND: [
+          alcance(req.user),
+          {
+            OR: [
+              { Factura: { is: null } },
+              {
+                Factura: {
+                  is: { estado: { notIn: ['PAGADA', 'PENDIENTE'] }, pago: { none: { estado: 'APROBADO' } } },
+                },
+              },
+            ],
+          },
+          { OR: [{ estado: null }, { estado: { in: ESTADOS_EN_COCINA } }] },
+        ],
         Detalle_pedido: {
-          some: { estado_item: { in: ESTADOS_ITEM_EN_COCINA } },
+          some: { OR: [{ estado_item: null }, { estado_item: { in: ESTADOS_ITEM_EN_COCINA } }] },
         },
       },
       include: {
         Detalle_pedido: {
-          where: { estado_item: { not: 'CANCELADO' } },
+          where: { OR: [{ estado_item: null }, { estado_item: { not: 'CANCELADO' } }] },
           include: { Producto: true },
           orderBy: { id_detalle: 'asc' },
         },
-        usuario: true,
+        usuario: { where: req.sede, select: { nombre: true, apellido: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
@@ -72,14 +72,13 @@ export async function comandas(req, res, next) {
         tipo_pedido: p.Tipo_pedido ?? '',
         notas: p.notas ?? '',
         fecha_hora: p.Fecha_hora,
-        nombre_mesero: p.usuario
-          ? `${p.usuario.nombre ?? ''} ${p.usuario.apellido ?? ''}`.trim()
-          : null,
+        nombre_mesero: p.usuario ? `${p.usuario.nombre ?? ''} ${p.usuario.apellido ?? ''}`.trim() : null,
         items: p.Detalle_pedido.map((d) => ({
           id_detalle: d.id_detalle,
-          nombre: d.Producto?.Nombre ?? `Producto ${d.id_producto}`,
+          nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre ?? `Producto ${d.id_producto}`,
           cantidad: Number(d.Cantidad ?? 0),
           estado: d.estado_item ?? 'PENDIENTE',
+          nota: d.nota ?? '',
         })),
       })),
     );
@@ -98,48 +97,41 @@ export async function avanzarItem(req, res, next) {
       return res.status(422).json({ message: 'El id del ítem debe ser un entero válido.' });
     }
 
-    const detalle = await prisma.Detalle_pedido.findUnique({
-      where: { id_detalle: idDetalle },
-      include: { pedido: true, Producto: true },
+    const item = await prisma.detalle_pedido.findUnique({
+      where: { id_detalle: idDetalle, pedido: alcance(req.user) },
+      select: { id_pedido: true },
     });
-
-    if (!detalle) {
-      return res.status(404).json({ message: 'Ítem no encontrado.' });
-    }
-
-    if (!ESTADOS_PEDIDO_ACTIVO.includes(detalle.pedido.estado)) {
-      return res.status(409).json({
-        message: `El pedido está en estado ${detalle.pedido.estado} y ya no se puede modificar.`,
+    if (!item) throw new ErrorSalon(404, 'Ítem no encontrado.');
+    const resultado = await transaccionSalon(req.user, async (tx) => {
+      await bloquearPedido(tx, item.id_pedido, req.sede.id_restaurante);
+      const p = await tx.pedido.findFirst({
+        where: { id_pedido: item.id_pedido, ...alcance(req.user) },
+        include: {
+          Factura: indicadorPago,
+          Detalle_pedido: { include: { Producto: { select: { Nombre: true, id_restaurante: true } } } },
+        },
       });
-    }
-
-    const actual = detalle.estado_item ?? 'PENDIENTE';
-    const siguiente = SIGUIENTE_ESTADO_ITEM[actual];
-
-    if (!siguiente) {
-      return res.status(409).json({ message: `El ítem ya está en estado ${actual}.` });
-    }
-
-    const solicitado = req.body?.estado_item;
-    if (solicitado !== undefined && solicitado !== siguiente) {
-      return res.status(422).json({
-        message: `Transición no válida: de ${actual} solo se puede pasar a ${siguiente}.`,
+      if (!p) throw new ErrorSalon(404, 'Comanda no encontrada.');
+      if (consumoSellado(p.Factura) || !ESTADOS_EN_COCINA.includes(p.estado ?? 'ABIERTO'))
+        throw new ErrorSalon(409, 'El pedido ya no está en cocina.');
+      const d = p.Detalle_pedido.find((d) => d.id_detalle === idDetalle);
+      if (!d) throw new ErrorSalon(404, 'Ítem no encontrado.');
+      const siguiente = SIGUIENTE_ESTADO_ITEM[d.estado_item ?? 'PENDIENTE'];
+      if (!siguiente || (req.body?.estado_item !== undefined && req.body.estado_item !== siguiente))
+        throw new ErrorSalon(409, 'El plato cambió de estado. Actualiza la comanda.');
+      // El pase a mesa es una entrega del salón, aunque comparta el endpoint del tablero.
+      if (siguiente === 'ENTREGADO') await tx.$executeRaw`UPDATE contexto_actividad SET area='MESEROS' WHERE conexion=CONNECTION_ID()`;
+      await tx.detalle_pedido.update({ where: { id_detalle: idDetalle }, data: { estado_item: siguiente } });
+      const estados = p.Detalle_pedido.filter((i) => i.estado_item !== 'CANCELADO').map((i) =>
+        i.id_detalle === idDetalle ? siguiente : i.estado_item,
+      );
+      await tx.pedido.update({
+        where: { id_pedido: p.id_pedido },
+        data: { estado: estadoSegunItems(estados) },
       });
-    }
-
-    const actualizado = await prisma.Detalle_pedido.update({
-      where: { id_detalle: idDetalle },
-      data: { estado_item: siguiente },
-    });
-
-    await sincronizarEstadoPedido(detalle.id_pedido);
-
-    res.json({
-      id_detalle: actualizado.id_detalle,
-      id_pedido: actualizado.id_pedido,
-      nombre: detalle.Producto?.Nombre ?? `Producto ${detalle.id_producto}`,
-      estado: actualizado.estado_item,
-    });
+      return { id_detalle: idDetalle, id_pedido: p.id_pedido, nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre, estado: siguiente };
+    }, 'COCINA');
+    res.json(resultado);
   } catch (err) {
     next(err);
   }

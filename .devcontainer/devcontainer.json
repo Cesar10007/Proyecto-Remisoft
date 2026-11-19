@@ -8,11 +8,16 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "forwardPorts": [3000, 3306, 5173],
+  "forwardPorts": [3000, 3306, 4173, 5173],
   "portsAttributes": {
     "3000": {
       "label": "Express API + Prisma",
       "onAutoForward": "silent",
+      "visibility": "private"
+    },
+    "4173": {
+      "label": "RemiSoft · compilación de esta rama",
+      "onAutoForward": "notify",
       "visibility": "private"
     },
     "5173": {

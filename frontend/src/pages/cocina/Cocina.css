@@ -121,7 +121,7 @@
 }
 
 .cocina__cantidad {
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
 }
 
 .cocina__meta {
@@ -161,7 +161,7 @@
   border-radius: 10px;
   margin-bottom: 14px;
   background: var(--rojo-light);
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
   font-size: 0.9rem;
 }
 
@@ -179,18 +179,6 @@
   border: 1px solid var(--borde);
   background: var(--t-bg-ffffff, #fff);
   color: var(--texto);
-}
-
-.cocina__btn--primario {
-  background: var(--rojo);
-  border-color: var(--rojo);
-  color: #fff;
-  width: 100%;
-}
-
-.cocina__btn--primario:disabled {
-  opacity: 0.5;
-  cursor: wait;
 }
 
 @media (max-width: 860px) {

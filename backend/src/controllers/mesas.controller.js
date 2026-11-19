@@ -1,72 +1,79 @@
+import { escritura } from '../services/actividad.service.js';
+import { mesaDisponible, transaccionSalon } from '../services/salon.service.js';
+import { entero, ErrorSalon } from '../utils/salon.js';
 import prisma from '../config/prisma.js';
+import {
+  pedidosDelComedor,
+  atencionesDelComedor,
+  datosDelConsumo,
+  consumoPublico,
+  presentarMesas,
+} from '../utils/lecturaMesas.js';
 
-const ESTADOS_CERRADOS = ['CERRADO', 'CANCELADO'];
-
-/**
- * GET /api/mesas
- * Lista las mesas con su estado según los pedidos en curso.
- * Una mesa está ocupada si tiene al menos un pedido que no esté CERRADO ni CANCELADO.
- */
+// GET /api/mesas: las tarjetas y sus fichas salen de la misma lectura consistente.
 export async function index(req, res, next) {
   try {
-    const mesas = await prisma.mesa.findMany({ orderBy: { numero: 'asc' } });
+    const [catalogo, pedidos] = await prisma.$transaction(
+      [
+        prisma.mesa.findMany({ where: req.sede, orderBy: { numero: 'asc' }, include: atencionesDelComedor(req.user) }),
+        prisma.pedido.findMany({
+          where: pedidosDelComedor(req.user),
+          include: datosDelConsumo,
+          orderBy: { id_pedido: 'asc' },
+        }),
+      ],
+      { isolationLevel: 'RepeatableRead' },
+    );
+    res.json({ success: true, data: presentarMesas(catalogo, pedidos.map(consumoPublico), req.user) });
+  } catch (err) {
+    next(err);
+  }
+}
 
-    const pedidos = await prisma.pedido.findMany({
-      where: {
-        Mesa_num: { not: null },
-        OR: [{ estado: null }, { estado: { notIn: ESTADOS_CERRADOS } }],
-      },
-      include: { usuario: true, Detalle_pedido: true },
-      orderBy: { Fecha_hora: 'asc' },
-    });
-
-    const pedidosPorMesa = new Map();
-    for (const pedido of pedidos) {
-      const grupo = pedidosPorMesa.get(pedido.Mesa_num) ?? [];
-      grupo.push(pedido);
-      pedidosPorMesa.set(pedido.Mesa_num, grupo);
+// Las sedes nuevas no heredan el plano de la demo.
+export async function crear(req, res, next) {
+  try {
+    const { numero, capacidad } = req.body ?? {};
+    if (![numero, capacidad].every(n => Number.isInteger(n) && n > 0 && n <= 2147483647)) {
+      return res.status(422).json({ message: 'Número y capacidad deben ser enteros positivos.' });
     }
+    const mesa = await escritura(req.user, tx => tx.mesa.create({ data: { ...req.sede, numero, capacidad } }));
+    res.status(201).json({ success: true, data: mesa });
+  } catch (err) {
+    if (err.code === 'P2002') return res.status(409).json({ message: 'Ya existe una mesa con ese número en el establecimiento.' });
+    next(err);
+  }
+}
 
-    const data = mesas.map((mesa) => {
-      const grupo = pedidosPorMesa.get(mesa.numero) ?? [];
-
-      if (grupo.length === 0) {
-        return {
-          numero: mesa.numero,
-          capacidad: mesa.capacidad,
-          estado: 'available',
-          pedidos: 0,
-          articulos: 0,
-          total: 0,
-          id_pedido: null,
-          mesero: null,
-          fecha_hora: null,
-        };
-      }
-
-      const detalles = grupo.flatMap((pedido) =>
-        pedido.Detalle_pedido.filter((d) => d.estado_item !== 'CANCELADO'),
-      );
-      const primero = grupo[0];
-
-      return {
-        numero: mesa.numero,
-        capacidad: mesa.capacidad,
-        estado: 'occupied',
-        pedidos: grupo.length,
-        articulos: detalles.reduce((acc, d) => acc + Number(d.Cantidad ?? 0), 0),
-        total: detalles.reduce(
-          (acc, d) => acc + Number(d.Cantidad ?? 0) * Number(d.Precio_unitario ?? 0),
-          0,
-        ),
-        id_pedido: primero.id_pedido,
-        mesero: primero.usuario?.nombre ?? null,
-        fecha_hora: primero.Fecha_hora,
-      };
+// DELETE /api/mesas/:numero. Mismo bloqueo que sentar comensales o abrir una cuenta.
+// El número del pedido es histórico: retirar la mesa del plano no modifica pedidos ni facturas.
+export async function eliminar(req, res, next) {
+  try {
+    const numero = entero(Number(req.params.numero), 'La mesa');
+    await transaccionSalon(req.user, async (tx) => {
+      await mesaDisponible(tx, numero, req.sede);
+      await tx.mesa.delete({ where: { numero_id_restaurante: { numero, id_restaurante: req.sede.id_restaurante } } });
     });
+    res.json({ message: 'Mesa eliminada del plano.' });
+  } catch (err) { next(err); }
+}
 
-    return res.status(200).json({ success: true, data });
-  } catch (error) {
-    next(error);
+export async function editar(req, res, next) {
+  try {
+    const numero = entero(Number(req.params.numero), 'La mesa');
+    const nuevo = entero(req.body.numero ?? numero, 'El número de mesa');
+    const capacidad = entero(req.body.capacidad, 'La capacidad');
+    const data = await transaccionSalon(req.user, async tx => {
+      const mesa = await mesaDisponible(tx, numero, req.sede);
+      if ((req.body.id_mesa !== undefined && mesa.id_mesa !== req.body.id_mesa) ||
+        (req.body.capacidad_esperada !== undefined && req.body.capacidad_esperada !== mesa.capacidad)) {
+        throw new ErrorSalon(409, 'El plano cambió. Vuelve a abrir la mesa.');
+      }
+      return tx.mesa.update({ where: { numero_id_restaurante: { numero, ...req.sede } }, data: { numero: nuevo, capacidad } });
+    });
+    res.json({ data });
+  } catch (err) {
+    if (err.code === 'P2002') return res.status(409).json({ message: 'Ese número de mesa ya está en uso.' });
+    next(err);
   }
 }

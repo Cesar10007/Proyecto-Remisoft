@@ -1,10 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
 @import "tailwindcss";
+@import "../components/common/tables.css";
+
+@font-face {
+  font-family: 'DM Sans Local';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-display: swap;
+}
+
+/* Syne original, sin depender de la red. Compartir el descriptor de peso con
+   la cara numérica permite que el navegador combine ambas por unicode-range.
+   El archivo de letras de Syne limita su eje real a 400–800. */
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('@fontsource-variable/syne/files/syne-greek-wght-normal.woff2') format('woff2');
+  unicode-range: U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF;
+}
+
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('@fontsource-variable/syne/files/syne-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('@fontsource-variable/syne/files/syne-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-002F,U+003A-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Los dígitos en etiquetas mixtas (Mesa 01, FAC-12, etc.) usan los mismos glifos
+   locales incluso cuando el resto del título usa otra familia o no hay red. */
+@font-face {
+  font-family: 'Syne';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
+  font-display: swap;
+}
 
 @layer base {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 }
 :root {
+    --fuente-lectura: 'DM Sans Local', system-ui, sans-serif;
     --rojo: #D85A30;
     --rojo-dark: #993C1D;
     --rojo-light: #FAECE7;
@@ -17,15 +81,25 @@
     --texto-muted: #5F5E5A;
     --bg: #FDFAF7;
     --bg-card: #ffffff;
+    /* El texto y el fondo de las acciones sólidas cambian como pareja. */
+    --accion-primaria: #ae4625;
+    --accion-primaria-hover: #923719;
+    --accion-exito: #146b4f;
+    --accion-exito-hover: #10553f;
+    --sobre-accion: #fff;
+    --borde-accion: #8c7b70;
+    --texto-acento: var(--rojo-dark);
+    --table-row-hover: rgba(240, 237, 237, 0.5);
     --borde: rgba(0,0,0,0.09);
+    --fila-hover: #faf6f2;
     --sombra: 0 2px 24px rgba(216,90,48,0.08), 0 1px 4px rgba(0,0,0,0.06);
-    --font-numeros: 'Montserrat', sans-serif;
+    --font-numeros: var(--fuente-lectura);
 }
 
 .font-number,
 .font-numeric {
     font-family: var(--font-numeros);
-    font-weight: 400;
+    font-variant-numeric: tabular-nums;
 }
 
 html { scroll-behavior: smooth; }
@@ -34,6 +108,12 @@ body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--texto);
+    font-variant-numeric: tabular-nums;
     min-height: 100vh;
     overflow-x: hidden;
+}
+
+.font-number-light {
+    font-family: var(--font-numeros);
+    font-weight: 300;
 }

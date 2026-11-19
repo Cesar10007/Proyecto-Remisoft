@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireRole } from '../middleware/requireRole.js';
-import { gastosDelMes, pedidosActivos, ventasDiarias } from '../controllers/reportes.controller.js';
+import { gastosDelMes, pedidosActivos, tendenciaVentas, ventasDiarias } from '../controllers/reportes.controller.js';
 
 const router = Router();
 
@@ -16,5 +16,8 @@ router.get('/pedidos-activos', gerencia, pedidosActivos);
 
 // GET /api/reportes/gastos-del-mes
 router.get('/gastos-del-mes', gerencia, gastosDelMes);
+
+// GET /api/reportes/tendencia?periodo=semana|mes|anio
+router.get('/tendencia', gerencia, tendenciaVentas);
 
 export default router;

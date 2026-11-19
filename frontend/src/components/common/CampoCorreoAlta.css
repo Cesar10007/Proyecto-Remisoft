@@ -1,0 +1,28 @@
+/* Rojo de error, distinto del terracota de las acciones normales de RemiSoft. */
+.aviso-correo-invalido {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .65rem .85rem;
+  border: 1px solid #aa1730;
+  border-radius: .625rem;
+  background: #b41630;
+  color: #fff;
+  font: 700 .9375rem/1.4 var(--fuente-lectura);
+}
+.aviso-correo-invalido svg { flex: none; }
+.campo-correo-alta { min-width: 0; scroll-margin-block: .75rem; }
+.campo-correo-alta .aviso-correo-invalido { margin-top: .4rem; }
+.campo-correo-alta input[aria-invalid='true'] {
+  border: 2px solid var(--borde-correo-invalido, #b41630);
+}
+.campo-correo-alta input[aria-invalid='true']:focus {
+  border-color: var(--borde-correo-invalido, #b41630);
+  outline: 2px solid var(--borde-correo-invalido, #b41630);
+  outline-offset: 2px;
+}
+html[data-theme='dark'] .campo-correo-alta { --borde-correo-invalido: #ff667b; }
+html[data-theme='dark'] .aviso-correo-invalido {
+  background: #a81832;
+  border-color: #ff667b;
+}
