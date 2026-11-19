@@ -14,7 +14,12 @@ export function useAuth() {
   const login = (newToken: string, newRol: string, newUser: AuthUser) =>
     dispatch(setCredentials({ token: newToken, rol: newRol, user: newUser }))
 
-  const logout = () => dispatch(clearCredentials())
+  const logout = () => {
+    if (token) void fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/logout`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}` }, keepalive: true,
+    }).catch(() => { /* Sin red también debe cerrarse la sesión local. */ })
+    dispatch(clearCredentials())
+  }
 
   return { token, rol, user, login, logout }
 }

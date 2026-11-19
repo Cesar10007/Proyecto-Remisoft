@@ -114,14 +114,23 @@ function validarPedido(body, { creating = false } = {}) {
   return { data };
 }
 
+async function validarReferencias(tx, sede, data) {
+  if (data.id_cliente && !await tx.cliente.count({ where: { ...sede, id_cliente: data.id_cliente } })) {
+    throw new ErrorSalon(422, 'El cliente no pertenece al establecimiento.');
+  }
+  if (data.id_mesero && !await tx.usuario.count({ where: { ...sede, id_usuario: data.id_mesero } })) {
+    throw new ErrorSalon(422, 'El mesero no pertenece al establecimiento.');
+  }
+}
+
 // GET /api/pedidos
 export async function index(req, res, next) {
   try {
     const pedidos = await prisma.pedido.findMany({
       where: alcanceMesero(req.user),
       include: {
-        Cliente: true,
-        usuario: true,
+        Cliente: { where: req.sede, select: { Nombre: true } },
+        usuario: { where: req.sede, select: { nombre: true } },
       },
       orderBy: {
         id_pedido: 'asc',
@@ -148,8 +157,8 @@ export async function show(req, res, next) {
     const pedido = await prisma.pedido.findFirst({
       where: { id_pedido: id, ...alcanceMesero(req.user) },
       include: {
-        Cliente: true,
-        usuario: true,
+        Cliente: { where: req.sede, select: { Nombre: true } },
+        usuario: { where: req.sede, select: { nombre: true } },
       },
     });
 
@@ -181,8 +190,9 @@ export async function crear(req, res, next) {
     // Doble seguro: aunque validarPedido ya fuerza ABIERTO, se vuelve a
     // fijar aquí para que el cliente nunca pueda elegir el estado inicial.
     if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
-    const creado = await transaccionSalon(async (tx) => {
-      data.id_restaurante = req.user.id_restaurante;
+    const creado = await transaccionSalon(req.user, async (tx) => {
+      await validarReferencias(tx, req.sede, data);
+      data.id_restaurante = req.sede.id_restaurante;
       if (data.Mesa_num != null) {
         const mesa = await mesaDisponible(tx, data.Mesa_num, data);
         data.id_restaurante = mesa.id_restaurante;
@@ -243,11 +253,12 @@ export async function actualizar(req, res, next) {
     }
 
     if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
-    await transaccionSalon(async (tx) => {
-      await bloquearPedido(tx, id);
+    await transaccionSalon(req.user, async (tx) => {
+      await bloquearPedido(tx, id, req.sede.id_restaurante);
       const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
       const actual = await tx.pedido.findFirstOrThrow({ where, include: { Factura: indicadorPago } });
       if (consumoSellado(actual.Factura)) throw new ErrorSalon(409, 'El pedido ya está facturado.');
+      await validarReferencias(tx, req.sede, data);
       if (data.Mesa_num !== undefined || data.id_mesero !== undefined) {
         const destino = { ...actual, ...data };
         if (
@@ -310,8 +321,8 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await transaccionSalon(async (tx) => {
-      await bloquearPedido(tx, id);
+    await transaccionSalon(req.user, async (tx) => {
+      await bloquearPedido(tx, id, req.sede.id_restaurante);
       const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
       const p = await tx.pedido.findFirstOrThrow({ where, select: { Factura: indicadorPago } });
       if (consumoSellado(p.Factura)) throw new ErrorSalon(409, 'El pedido ya está facturado.');

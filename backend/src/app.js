@@ -6,8 +6,10 @@ import 'dotenv/config'
 
 import { registrarAuditoria } from './utils/auditoria.js'
 import { authRequired as authMiddleware } from './middleware/auth.js'
+import { contextoEstablecimiento } from './middleware/establecimiento.js'
 import errorHandler from './middleware/errorHandler.js'
 
+import sistemaRoutes, { bloquearSistemaCerrado } from './routes/sistema.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import passwordResetRoutes from './routes/passwordReset.routes.js'
 import cajasRoutes from './routes/cajas.routes.js'
@@ -30,6 +32,8 @@ import cobroRoutes from './routes/cobro.routes.js'
 import cocinaRoutes from './routes/cocina.routes.js'
 import reportesRoutes from './routes/reportes.routes.js'
 import salonRoutes from './routes/salon.routes.js'
+import iaRoutes from './routes/ia.routes.js'
+import historialRoutes from './routes/historial.routes.js'
 import mesasRoutes from './routes/mesas.routes.js'
 
 const app = express()
@@ -84,8 +88,18 @@ app.use('/api/auth', authRoutes)
 app.use('/api/auth', passwordResetRoutes)
 
 app.use(authMiddleware)
+app.use('/api/sistema', contextoEstablecimiento, sistemaRoutes)
+app.use(bloquearSistemaCerrado)
 
 app.use('/api/solicitudes', solicitudRegistroRoutes)
+app.use('/api/roles', rolRoutes)
+app.use('/api/usuarios', usuariosRoutes)
+app.use('/api/restaurantes', restaurantesRoutes)
+
+app.use(contextoEstablecimiento)
+// El superadmin puede seleccionar una sede operativa aunque no esté asociado a ella.
+app.use((req, res, next) => req.user.rol === 'SUPERADMIN' ? bloquearSistemaCerrado(req, res, next) : next())
+app.use('/api/historial', historialRoutes)
 app.use('/api/cajas', cajasRoutes)
 app.use('/api/cobro', cobroRoutes)
 app.use('/api/cocina', cocinaRoutes)
@@ -99,13 +113,11 @@ app.use('/api/domicilios', domiciliosRoutes)
 app.use('/api/facturas', facturaRoutes)
 app.use('/api/ingredientes', ingredientesRoutes)
 app.use('/api/inventario', inventarioRoutes)
+app.use('/api/ia', iaRoutes)
 app.use('/api/pedidos', pedidosRoutes)
 app.use('/api/productos', productosRoutes)
 app.use('/api/proveedores', proveedorRoutes)
-app.use('/api/roles', rolRoutes)
 app.use('/api/turnos', turnosRoutes)
-app.use('/api/usuarios', usuariosRoutes)
-app.use('/api/restaurantes', restaurantesRoutes)
 
 app.use((req, res) => {
   res.status(404).json({

@@ -1,14 +1,15 @@
+import { relacionDeSede } from './restaurante.js';
 import { ErrorSalon, IVA_TASA, ivaEnCentavos } from './salon.js';
 
 // Un documento antiguo sin importes no se convierte implícitamente en un cobro de cero pesos.
 export const esBorrador = (f) => f?.estado === 'PENDIENTE' && f.tasa_iva != null && f.total != null;
 
 // La factura conserva cantidades, nombres y precios: cambiar la carta después de cobrar no altera un comprobante.
-export function consumoFacturado(f) {
+export function consumoFacturado(f, idRestaurante) {
   return f.Factura_item.filter((i) => i.Detalle_pedido.id_pedido === f.id_pedido).map((i) => ({
     id_detalle: i.id_detalle_pedido,
     cantidad: Number(i.cantidad_facturada),
-    nombre: i.nombre_producto ?? i.Detalle_pedido.Producto?.Nombre ?? 'Producto sin nombre',
+    nombre: i.nombre_producto ?? relacionDeSede(i.Detalle_pedido.Producto, idRestaurante)?.Nombre ?? 'Producto sin nombre',
     precio_unitario: Number(i.precio_unitario ?? i.Detalle_pedido.Precio_unitario ?? 0),
   }));
 }

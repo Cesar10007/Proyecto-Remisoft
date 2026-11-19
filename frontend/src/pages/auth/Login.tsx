@@ -1,8 +1,7 @@
+import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
 import api from '../../api/axios'
-import { setCredentials } from '../../store/authSlice'
 import { useAuth } from '../../store/hooks'
 import Button from '../../components/common/Button'
 import { InputField } from '../../components/common/InputField'
@@ -19,7 +18,6 @@ function Login({ onClose }: LoginProps) {
   const [loading, setLoading] = useState(false)
 
   const navigate = useNavigate()
-  const dispatch = useDispatch()
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,38 +34,31 @@ function Login({ onClose }: LoginProps) {
       const { token, user, rol } = response.data
       const rolNormalizado = String(rol).toUpperCase()
 
-      dispatch(
-        setCredentials({
-          token,
-          rol: rolNormalizado,
-          user,
-        }),
-      )
-
       login(token, rolNormalizado, user)
 
       onClose?.()
 
       if (rolNormalizado === 'SUPERADMIN') {
-        navigate('/superadmin')
+        navigate('/superadmin', { replace: true })
       } else if (rolNormalizado === 'GERENTE') {
-        navigate('/gerente')
+        navigate('/gerente', { replace: true })
       } else if (rolNormalizado === 'CAJERO') {
-        navigate('/cajero')
+        navigate('/cajero', { replace: true })
       } else if (rolNormalizado === 'MESERO') {
-        navigate('/mesero')
+        navigate('/mesero', { replace: true })
       } else if (rolNormalizado === 'REPARTIDOR') {
-        navigate('/repartidor')
+        navigate('/repartidor', { replace: true })
       } else {
         navigate('/')
       }
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err) {
+      const response = isAxiosError<{ message?: string }>(err) ? err.response : undefined
+      if (response?.status === 401) {
         setError('Credenciales incorrectas')
-      } else if (err.response?.status === 422) {
+      } else if (response?.status === 422) {
         setError('Revisa los datos ingresados')
-      } else if (err.response?.status === 403) {
-        setError('El usuario está inactivo')
+      } else if (response?.status === 403) {
+        setError(response?.data?.message ?? 'Acceso denegado')
       } else {
         setError('Error al conectar con el servidor')
       }
@@ -77,19 +68,15 @@ function Login({ onClose }: LoginProps) {
   }
 
   return (
-    <div className="flex min-w-[300px] flex-col gap-2 px-1 py-2">
-      <div className="mb-2">
-        <h2 className="mb-1 font-['Syne'] text-[1.4rem] font-bold tracking-[-0.4px] text-[var(--texto)]">
-          Bienvenido
-        </h2>
-        <p className="text-[0.85rem] text-[var(--texto-muted)]">
-          Ingresa tus credenciales para continuar
-        </p>
-      </div>
+    <div className="flex min-w-0 flex-col gap-2">
+      <p className="mb-2 text-[0.85rem] text-[var(--texto-muted)]">
+        Ingresa tus credenciales para continuar
+      </p>
 
-      <form onSubmit={handleSubmit}>
+      <form aria-description="Accede con el correo y la contraseña de tu cuenta." onSubmit={handleSubmit}>
         <div className="mb-3.5">
           <InputField
+            aria-description="Escribe el correo registrado en tu cuenta."
             label="Correo electrónico"
             id="login-email"
             className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
@@ -104,6 +91,7 @@ function Login({ onClose }: LoginProps) {
         <div className="mb-3.5">
           <div className="relative">
             <InputField
+              aria-description="Escribe la contraseña de tu cuenta."
               label="Contraseña"
               id="login-password"
               className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
@@ -115,6 +103,7 @@ function Login({ onClose }: LoginProps) {
             />
 
             <button
+              aria-description={showPassword ? 'Oculta los caracteres de la contraseña.' : 'Muestra la contraseña para que puedas revisarla.'}
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
@@ -137,11 +126,12 @@ function Login({ onClose }: LoginProps) {
           </p>
         )}
 
-        <Button type="submit" fullWidth disabled={loading} className="mt-1">
+        <Button aria-description="Envía tus datos para iniciar sesión." type="submit" fullWidth disabled={loading} className="mt-1">
           {loading ? 'Ingresando...' : 'Ingresar'}
         </Button>
 
         <button
+          aria-description="Abre el formulario de recuperación de contraseña."
           type="button"
           className="w-full cursor-pointer border-none bg-transparent px-0 py-1 text-center text-[0.82rem] text-[var(--rojo)] underline underline-offset-[3px]"
           onClick={() => {

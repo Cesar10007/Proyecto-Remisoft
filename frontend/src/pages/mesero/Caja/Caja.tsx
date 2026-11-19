@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useVistaURL } from '../../../hook/useVistaURL'
 import ResumenCaja from './ResumenCaja'
 import AperturasCaja from './AperturasCaja'
 import CierresCaja from './CierresCaja'
@@ -8,7 +8,7 @@ import GastosCaja from './GastosCaja'
 import './Caja.css'
 
 function Caja() {
-  const [vista, setVista] = useState('resumen')
+  const [vista, setVista] = useVistaURL('caja', 'resumen', ['resumen', 'aperturas', 'cierres', 'reportes', 'arqueos', 'gastos'])
 
   const volver = () => setVista('resumen')
 

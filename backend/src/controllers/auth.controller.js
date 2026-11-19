@@ -1,3 +1,4 @@
+import { actividadSesion } from '../services/actividad.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
@@ -19,6 +20,8 @@ function publicUser(usuario) {
   return {
     id_usuario: usuario.id_usuario,
     id_rol: usuario.id_rol,
+    id_restaurante: usuario.id_restaurante,
+    nombre_establecimiento: usuario.restaurante?.nombre ?? null,
     identificacion: usuario.identificacion,
     nombre: usuario.nombre,
     apellido: usuario.apellido,
@@ -40,6 +43,7 @@ function signJwt(usuario) {
       id_usuario: usuario.id_usuario,
       id_rol: usuario.id_rol,
       rol: usuario.rol?.nombre ?? null,
+      id_restaurante: usuario.id_restaurante,
       email: usuario.email,
     },
     process.env.JWT_SECRET,
@@ -71,7 +75,7 @@ export async function login(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: { email: emailNormalizado },
-      include: { rol: true },
+      include: { rol: true, restaurante: { select: { nombre: true } } },
     });
 
     if (!usuario || !usuario.contrasena_hash) {
@@ -114,7 +118,12 @@ export async function login(req, res, next) {
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
+    if (!usuario.id_restaurante && usuario.rol?.nombre !== 'SUPERADMIN') {
+      return res.status(403).json({ message: 'Tu usuario no tiene un establecimiento asignado.' });
+    }
+
     const token = signJwt(usuario);
+    await actividadSesion(usuario, 'Inicio de sesión');
 
     // RNF-001.8 — LOGIN_SUCCESS con id_usuario e IP.
     registrarAuditoria({
@@ -146,7 +155,8 @@ export async function me(req, res) {
 
 // POST /api/auth/logout
 // JWT no guarda sesión de servidor; el cliente debe eliminar token y datos locales.
-export async function logout(_req, res) {
+export async function logout(req, res, next) {
+  try { await actividadSesion(req.user, 'Cierre de sesión'); } catch (err) { return next(err); }
   return res.json({
     message: 'Sesión cerrada. Elimina el token JWT del cliente.',
   });

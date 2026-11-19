@@ -14,7 +14,7 @@ export async function tablero(req, res, next) {
   try {
     const [mesas, pedidos, privados, sede] = await prisma.$transaction(
       [
-        prisma.mesa.findMany({ orderBy: { numero: 'asc' }, include: atencionesDelComedor(req.user) }),
+        prisma.mesa.findMany({ where: req.sede, orderBy: { numero: 'asc' }, include: atencionesDelComedor(req.user) }),
         prisma.pedido.findMany({
           where: pedidosDelComedor(req.user),
           include: datosDelConsumo,
@@ -27,7 +27,7 @@ export async function tablero(req, res, next) {
             id_cliente: true,
             version_salon: true,
             Factura: indicadorPago,
-            Cliente: { select: { Nombre: true, Apellido: true } },
+            Cliente: { where: req.sede, select: { Nombre: true, Apellido: true } },
           },
           orderBy: { id_pedido: 'asc' },
         }),
@@ -60,22 +60,23 @@ export async function tablero(req, res, next) {
   }
 }
 
-export async function carta(_req, res, next) {
+export async function carta(req, res, next) {
   try {
     const [productos, clientes] = await Promise.all([
       prisma.producto.findMany({
-        where: { Estado: 1, precio_venta: { not: null } },
+        where: { ...req.sede, Estado: 1, precio_venta: { not: null } },
         select: {
           id_producto: true,
           Nombre: true,
           Descripcion: true,
           precio_venta: true,
           Categoria: true,
-          categoria: { select: { nombre: true } },
+          categoria: { where: req.sede, select: { nombre: true } },
         },
         orderBy: { Nombre: 'asc' },
       }),
       prisma.cliente.findMany({
+        where: req.sede,
         select: { id_cliente: true, Nombre: true, Apellido: true },
         orderBy: { Nombre: 'asc' },
       }),

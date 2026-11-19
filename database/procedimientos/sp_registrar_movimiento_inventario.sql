@@ -33,6 +33,15 @@ CREATE PROCEDURE sp_registrar_movimiento_inventario(
 BEGIN
     DECLARE v_stock_actual DECIMAL(10,3);
 
+    DECLARE v_sede INT;
+    SELECT u.id_restaurante INTO v_sede
+    FROM usuario u JOIN Ingrediente i ON i.id_restaurante = u.id_restaurante
+    JOIN lote_ingrediente l ON l.id_ingrediente = i.id_ingrediente AND l.id_restaurante = i.id_restaurante
+    WHERE u.id_usuario = p_id_usuario AND i.id_ingrediente = p_id_ingrediente AND l.id_lote = p_id_lote;
+    IF v_sede IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El lote, el ingrediente y el usuario deben pertenecer al mismo establecimiento.';
+    END IF;
+
     -- Verificar stock disponible si es una SALIDA
     IF p_tipo_movimiento = 'SALIDA' THEN
         SELECT stock_actual INTO v_stock_actual
@@ -47,6 +56,7 @@ BEGIN
 
     -- Registrar el movimiento
     INSERT INTO inventario_mov (
+        id_restaurante,
         id_ingrediente,
         id_usuario,
         fecha_hora,
@@ -58,6 +68,7 @@ BEGIN
         origen_id,
         id_lote
     ) VALUES (
+        v_sede,
         p_id_ingrediente,
         p_id_usuario,
         NOW(),

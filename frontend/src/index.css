@@ -41,11 +41,11 @@
 .btn-ghost:hover { background: var(--t-bg-f0ebe5, #f0ebe5); color: var(--texto); border-color: #c0b8b0; }
 
 .btn-primary {
-    background: var(--rojo);
-    color: #fff;
-    border: 1.5px solid var(--rojo);
+    background: var(--accion-primaria);
+    color: var(--sobre-accion);
+    border: 1.5px solid var(--accion-primaria);
 }
-.btn-primary:hover { background: var(--rojo-dark); border-color: var(--rojo-dark); transform: translateY(-1px); }
+.btn-primary:hover { background: var(--accion-primaria-hover); border-color: var(--accion-primaria-hover); transform: translateY(-1px); }
 
 /* ── HERO ── */
 .hero {

@@ -104,7 +104,7 @@ export default function FichaMesa({
         onClose={cerrarFicha}
       >
         <div className="sl-detail no-print">
-          <button className="sl-btn" disabled={procesando} onClick={() => seleccionar()}>
+          <button aria-description="Muestra todos los pedidos de esta mesa." className="sl-btn" disabled={procesando} onClick={() => seleccionar()}>
             Volver a todos los pedidos de la mesa
           </button>
           {mensajes}
@@ -127,6 +127,7 @@ export default function FichaMesa({
           <>
             <ConsumoPedido pedido={orden} />
             <button
+              aria-description="Abre el consumo y las acciones de este pedido."
               className="sl-btn mm-gestionar"
               disabled={bloqueado}
               onClick={() => seleccionar(propio.id_pedido)}
@@ -140,11 +141,12 @@ export default function FichaMesa({
         ajena ? (
           <p className="sl-detail">Esta mesa la atiende {mesa.mesero || 'otro mesero'}.</p>
         ) : (
-          <form className="mesa-ficha-acciones" onSubmit={cambiarEstado}>
+          <form aria-description={mesa.ocupada ? 'Gestiona la atención de esta mesa ocupada.' : 'Indica cuántas personas vas a sentar en la mesa.'} className="mesa-ficha-acciones" onSubmit={cambiarEstado}>
             {!mesa.ocupada && (
               <label className="sl-field">
                 Comensales a sentar
                 <input
+                  aria-description="Escribe cuántas personas van a ocupar la mesa."
                   type="number"
                   min={1}
                   max={mesa.capacidad ?? 99}
@@ -155,11 +157,12 @@ export default function FichaMesa({
                 />
               </label>
             )}
-            <button type="submit" disabled={bloqueado} className={`sl-btn ${mesa.ocupada ? '' : 'primary'}`}>
+            <button aria-description={mesa.ocupada ? 'Termina la atención y deja la mesa disponible.' : 'Registra la ocupación de la mesa con esos comensales.'} type="submit" disabled={bloqueado} className={`sl-btn ${mesa.ocupada ? '' : 'primary'}`}>
               {mesa.ocupada ? <Armchair size={16} /> : <UsersRound size={16} />}
               {procesando ? 'Guardando…' : mesa.ocupada ? 'Liberar mesa' : 'Ocupar mesa'}
             </button>
             <button
+              aria-description="Abre una comanda para tomar el pedido de esta mesa."
               type="button"
               className={`sl-btn ${mesa.ocupada ? 'primary' : ''}`}
               disabled={bloqueado}

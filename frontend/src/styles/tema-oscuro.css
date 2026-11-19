@@ -5,6 +5,14 @@ html[data-theme='dark'] {
   color-scheme: dark;
   --bg: #151210;
   --bg-card: #201b18;
+  --accion-primaria: #f0997b;
+  --accion-primaria-hover: #ffb398;
+  --accion-exito: #85d6b3;
+  --accion-exito-hover: #a8e7cd;
+  --sobre-accion: #291b16;
+  --borde-accion: #8c796e;
+  --texto-acento: #f4a183;
+  --table-row-hover: rgba(36, 32, 30, 0.5);
   --texto: #f2ece7;
   --texto-muted: #b9aca3;
   --borde: rgba(255, 255, 255, 0.10);
@@ -39,7 +47,6 @@ html[data-theme='dark'] {
   --t-bg-fff0e8: #3f2518;
   --t-bg-fff8f7: #3f1d18;
   --t-bg-ffffff: #24201e;
-  --t-bg-rgba_240_237_237_0_5: rgba(36, 32, 30, 0.50);
   --t-bg-rgba_252_249_248_0_8: rgba(52, 39, 35, 0.80);
   --t-bg-rgba_252_249_248_0_9: rgba(52, 39, 35, 0.90);
   --t-bg-rgba_253_250_247_0_88: rgba(56, 43, 30, 0.88);
@@ -130,8 +137,8 @@ html[data-theme='dark'] {
 html[data-theme='dark'] .bg-white { background-color: var(--bg-card); }
 
 /* --rojo-dark se usa como texto (logo, enlaces) y como fondo de hover de botones: solo se aclara el texto. */
-html[data-theme='dark'] .text-\[var\(--rojo-dark\)\] { color: #f4a183; }
-html[data-theme='dark'] .nav-logo { color: #f4a183; }
+html[data-theme='dark'] .text-\[var\(--rojo-dark\)\] { color: var(--texto-acento); }
+html[data-theme='dark'] .nav-logo { color: var(--texto-acento); }
 
 html[data-theme='dark'] .wa-wrapper { --wa-primary-light: #3f2118; }
 html[data-theme='dark'] .wa-wrapper { --wa-secondary-light: #3f2c18; }

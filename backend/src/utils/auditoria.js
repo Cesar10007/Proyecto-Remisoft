@@ -79,3 +79,13 @@ export function registrarAuditoria({
 
   return registro;
 }
+
+// Tanto una entrada/salida explícita como un conteo se auditan después del commit.
+export function auditarAjusteInventario(req, movimiento, nombre) {
+  registrarAuditoria({
+    evento: 'INVENTARIO_AJUSTE_MANUAL', id_usuario: movimiento.id_usuario,
+    ip: req.ip, endpoint: req.originalUrl,
+    motivo: `${movimiento.tipo_movimiento} ${movimiento.cantidad} de ${nombre ?? movimiento.id_ingrediente}: ${movimiento.observaciones}`,
+    extra: { id_movimiento: movimiento.id_movimiento, id_ingrediente: movimiento.id_ingrediente },
+  });
+}

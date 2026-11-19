@@ -173,13 +173,14 @@ export default function EditorComanda({
       onClose={salir}
       amplio
     >
-      <form onSubmit={enviar} className="sl-order-form">
+      <form aria-description="Reúne los platos, cantidades e indicaciones de la comanda." onSubmit={enviar} className="sl-order-form">
         <fieldset disabled={ocupado || descartar}>
           {modo !== 'ronda' && (
             <div className="sl-order-fields">
               <label>
                 Mesa
                 <select
+                  aria-description="Elige la mesa a la que se llevará el pedido."
                   aria-label="Mesa"
                   value={mesa}
                   disabled={editor.mesa !== null}
@@ -205,6 +206,7 @@ export default function EditorComanda({
               <label>
                 Comensales
                 <input
+                  aria-description="Indica cuántas personas se atenderán en esta mesa."
                   type="number"
                   min="1"
                   max={mesaActual?.capacidad ?? 99}
@@ -219,6 +221,7 @@ export default function EditorComanda({
               <label>
                 Cliente
                 <select
+                  aria-description="Elige el cliente del pedido o deja «Consumidor final»."
                   aria-label="Cliente"
                   value={cliente}
                   onChange={(e) => {
@@ -249,6 +252,7 @@ export default function EditorComanda({
               </div>
               <Buscador valor={buscar} cambiar={setBuscar} titulo="Buscar un plato…" />
               <select
+                aria-description="Filtra los platos de la carta por categoría."
                 aria-label="Categoría de la carta"
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
@@ -268,6 +272,7 @@ export default function EditorComanda({
                 <div className="sl-menu-items">
                   {productos.map((p) => (
                     <button
+                      aria-description={`Agrega ${p.nombre} a la comanda.`}
                       type="button"
                       className="sl-menu-item"
                       key={p.id}
@@ -303,6 +308,7 @@ export default function EditorComanda({
                     <div className="sl-line-head">
                       <strong>{l.nombre}</strong>
                       <button
+                        aria-description={`Quita la línea de ${l.nombre} de la comanda.`}
                         type="button"
                         className="sl-iconbtn"
                         aria-label={`Quitar ${l.nombre}`}
@@ -317,6 +323,7 @@ export default function EditorComanda({
                     <div className="sl-line-head">
                       <div className="sl-stepper">
                         <button
+                          aria-description={`Resta una unidad de ${l.nombre}.`}
                           type="button"
                           aria-label={`Restar ${l.nombre}`}
                           disabled={l.cantidad <= 1}
@@ -326,6 +333,7 @@ export default function EditorComanda({
                         </button>
                         <span>{l.cantidad}</span>
                         <button
+                          aria-description={`Suma una unidad de ${l.nombre}.`}
                           type="button"
                           aria-label={`Sumar ${l.nombre}`}
                           disabled={l.cantidad >= 99}
@@ -337,6 +345,7 @@ export default function EditorComanda({
                       <b>{formatCOP(l.precio * l.cantidad)}</b>
                     </div>
                     <input
+                      aria-description="Escribe las indicaciones de cocina para este plato."
                       className="sl-item-note"
                       aria-label={`Indicaciones para ${l.nombre}`}
                       placeholder="Indicación para este plato (opcional)"
@@ -353,6 +362,7 @@ export default function EditorComanda({
                     <ChefHat size={14} /> Nota general para cocina
                   </span>
                   <textarea
+                    aria-description="Añade instrucciones para toda la comanda."
                     maxLength={500}
                     rows={2}
                     placeholder="Ej.: servir las entradas primero"
@@ -381,19 +391,20 @@ export default function EditorComanda({
         {descartar ? (
           <div className="sl-confirm">
             <strong>¿Descartar los cambios sin enviar?</strong>
-            <button type="button" className="sl-btn" onClick={() => setDescartar(false)}>
+            <button aria-description="Conserva el borrador para continuar con la comanda." type="button" className="sl-btn" onClick={() => setDescartar(false)}>
               Seguir editando
             </button>
-            <button type="button" className="sl-btn danger" onClick={cerrar}>
+            <button aria-description="Descarta los cambios que no se han enviado." type="button" className="sl-btn danger" onClick={cerrar}>
               Descartar
             </button>
           </div>
         ) : (
           <div className="sl-dialog-actions">
-            <button type="button" className="sl-btn" onClick={salir} disabled={ocupado}>
+            <button aria-description="Sal del editor de la comanda." type="button" className="sl-btn" onClick={salir} disabled={ocupado}>
               Volver
             </button>
             <button
+              aria-description={modo === 'editar' ? 'Guarda los cambios de la comanda.' : modo === 'ronda' ? 'Envía los platos de esta ronda a cocina.' : 'Envía la nueva comanda a cocina.'}
               className="sl-btn primary"
               type="submit"
               disabled={ocupado || !lineas.length || conflicto || !carta}

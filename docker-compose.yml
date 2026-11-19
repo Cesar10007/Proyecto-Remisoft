@@ -33,6 +33,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
       DB_DATABASE: remisoft
       DATABASE_URL: "mysql://remisoft:${DB_PASSWORD:-remisoft_pass}@db:3306/remisoft"
+      CARGAR_DEMO: ${CARGAR_DEMO:-1}
       JWT_SECRET: ${JWT_SECRET:-remisoft_jwt_secret}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       MAILTRAP_HOST: ${MAILTRAP_HOST:-smtp.mailtrap.io}

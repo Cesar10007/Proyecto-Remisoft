@@ -89,6 +89,7 @@ function ResetPassword() {
         </div>
 
         <form
+          aria-description="Define una nueva contraseña para tu cuenta."
           onSubmit={(event) => {
             event.preventDefault()
             void handleReset()
@@ -97,6 +98,7 @@ function ResetPassword() {
           <div className="mb-3.5">
             <div className="relative">
               <InputField
+                aria-description="Elige una contraseña de al menos ocho caracteres."
                 label="Nueva contraseña"
                 className="bg-[#fdfaf7] py-2.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
                 type={showPassword ? 'text' : 'password'}
@@ -107,6 +109,7 @@ function ResetPassword() {
                 required
               />
               <button
+                aria-description={showPassword ? 'Oculta los caracteres de la nueva contraseña.' : 'Muestra la nueva contraseña para revisarla.'}
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
@@ -122,6 +125,7 @@ function ResetPassword() {
           <div className="mb-3.5">
             <div className="relative">
               <InputField
+                aria-description="Repite la nueva contraseña para confirmarla."
                 label="Confirmar contraseña"
                 className="bg-[#fdfaf7] py-2.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] placeholder:text-[#b0a9a2] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
                 type={showConfirm ? 'text' : 'password'}
@@ -131,6 +135,7 @@ function ResetPassword() {
                 required
               />
               <button
+                aria-description={showConfirm ? 'Oculta la contraseña de confirmación.' : 'Muestra la contraseña de confirmación.'}
                 type="button"
                 onClick={() => setShowConfirm((p) => !p)}
                 className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
@@ -149,7 +154,7 @@ function ResetPassword() {
             </p>
           )}
 
-          <Button type="submit" disabled={loading} fullWidth className="mt-1">
+          <Button aria-description="Guarda la nueva contraseña de tu cuenta." type="submit" disabled={loading} fullWidth className="mt-1">
             {loading ? 'Actualizando...' : 'Actualizar contraseña'}
           </Button>
         </form>

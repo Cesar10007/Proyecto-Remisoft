@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import Button from '../../components/common/Button'
 import type { RootState } from '../../store/store'
 import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
+import { Soup } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 
@@ -99,7 +101,7 @@ export default function Cocina() {
     <div className="cocina">
       <Sidebar
         subtitulo="Cocina"
-        menuItems={[{ icon: 'soup_kitchen', label: 'Comandas' }]}
+        menuItems={[{ icon: <Soup />, label: 'Comandas' }]}
         vistaActual="comandas"
         onNavigate={() => {}}
         onLogout={() => {
@@ -108,7 +110,7 @@ export default function Cocina() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to="/gerente">
+            <Link aria-description="Regresa a tu panel de administración." className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined
@@ -125,8 +127,8 @@ export default function Cocina() {
               : ''
           }`}
           acciones={<>
-            {rol === 'MESERO' && <Link className="cocina__btn cocina__btn--ghost" to="/mesero">Volver al salón</Link>}
-            <button type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
+            {rol === 'MESERO' && <Link aria-description="Vuelve a la vista de mesas del salón." className="cocina__btn cocina__btn--ghost" to="/mesero">Volver al salón</Link>}
+            <button aria-description="Vuelve a consultar las comandas de cocina." type="button" className="cocina__btn cocina__btn--ghost" onClick={cargarComandas}>
               <span className="material-symbols-outlined">refresh</span> Actualizar
             </button>
           </>}
@@ -174,14 +176,12 @@ export default function Cocina() {
                     {item.nota && <div className="cocina__notas">Plato: {item.nota}</div>}
                     {comanda.notas && <div className="cocina__notas">Nota: {comanda.notas}</div>}
                     {col.siguiente && col.accion && (
-                      <button
-                        type="button"
-                        className="cocina__btn cocina__btn--primario"
+                      <Button aria-description={col.siguiente === 'PREPARANDO' ? 'Indica que comenzaste a preparar el plato.' : col.siguiente === 'LISTO' ? 'Avisa que el plato está listo para servir.' : 'Registra que el plato fue entregado.'} fullWidth
                         disabled={ocupado === item.id_detalle}
                         onClick={() => avanzar(item, col.siguiente as EstadoItem)}
                       >
                         {col.accion}
-                      </button>
+                      </Button>
                     )}
                   </article>
                 ))}

@@ -79,10 +79,11 @@ function GastosCaja({ onBack }: GastosCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -145,6 +146,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta los medios de pago.' : 'Filtra los gastos por medio de pago.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -157,6 +159,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-56 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {['', ...metodos].map((metodo) => (
                   <button
+                    aria-description={metodo ? `Muestra los gastos con el medio de pago «${metodo}».` : 'Muestra los gastos de todos los medios de pago.'}
                     key={metodo || 'todos'}
                     type="button"
                     onClick={() => {
@@ -188,6 +191,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
               header: 'Acción',
               render: (g) => (
                 <button
+                  aria-description="Consulta el concepto y el importe del gasto."
                   type="button"
                   onClick={() =>
                     setDetalle({
@@ -205,7 +209,7 @@ function GastosCaja({ onBack }: GastosCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  aria-label="Ver gasto" title="Ver gasto"
+                  aria-label="Ver gasto"
                 >
                   <Eye size={18} aria-hidden="true" />
                 </button>

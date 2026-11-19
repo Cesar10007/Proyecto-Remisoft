@@ -1,9 +1,3 @@
-@font-face {
-  font-family: 'Salon Sans';
-  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
-  font-weight: 100 1000;
-  font-display: swap;
-}
 .sl-app {
   --sl-bg: #f6f3f2;
   --sl-card: #fff;
@@ -37,10 +31,7 @@
   min-height: 100dvh;
   background: var(--sl-bg);
   color: var(--sl-ink);
-  font:
-    14px/1.45 'Salon Sans',
-    system-ui,
-    sans-serif;
+  font: 14px/1.45 var(--fuente-lectura);
 }
 html[data-theme='dark'] .sl-app {
   --sl-bg: #191d1a;
@@ -383,13 +374,8 @@ html[data-theme='dark'] .sl-app {
   display: block;
 }
 .sl-dialog {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  width: min(545px, calc(100% - 24px));
-  max-height: calc(100dvh - 40px);
+  --dialog-width: 545px;
   padding: 0;
-  overflow: auto;
   border: 1px solid var(--sl-line);
   border-radius: 15px;
   color: var(--sl-ink);
@@ -397,7 +383,7 @@ html[data-theme='dark'] .sl-app {
   box-shadow: 0 24px 85px #1326173b;
 }
 .sl-dialog-wide {
-  width: min(900px, calc(100% - 24px));
+  --dialog-width: 900px;
 }
 .sl-dialog::backdrop {
   background: #17201cc4;
@@ -678,9 +664,6 @@ html[data-theme='dark'] .sl-app {
   }
   .sl-basket-lines {
     max-height: none;
-  }
-  .sl-dialog {
-    max-height: 94dvh;
   }
   .sl-dialog-head,
   .sl-order-form fieldset,

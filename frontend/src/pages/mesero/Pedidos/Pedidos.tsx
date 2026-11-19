@@ -36,7 +36,7 @@ export default function Pedidos({
       <div className="sl-tools">
         <Buscador valor={buscar} cambiar={setBuscar} titulo="Buscar mesa, pedido o plato" />
         {!enCaja && (
-          <select aria-label="Filtrar por estado" value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <select aria-description="Muestra solo los pedidos del estado elegido." aria-label="Filtrar por estado" value={estado} onChange={(e) => setEstado(e.target.value)}>
             <option value="">Todos los estados</option>
             {['Pendiente', 'En preparación', 'Listo', 'Entregado', 'En caja'].map((e) => (
               <option key={e}>{e}</option>
@@ -63,7 +63,7 @@ export default function Pedidos({
       ) : (
         <div className="sl-list">
           {visibles.map((p) => (
-            <button key={p.id_pedido} className="sl-order-row" onClick={() => abrir(p.id_pedido)}>
+            <button aria-description="Abre el consumo y las acciones de este pedido." key={p.id_pedido} className="sl-order-row" onClick={() => abrir(p.id_pedido)}>
               <span className="sl-tile-num">{mesaN(p.mesa)}</span>
               <span className="sl-row-body">
                 <strong>

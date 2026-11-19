@@ -1,0 +1,38 @@
+.app-button {
+  --btn-bg: var(--accion-primaria);
+  --btn-ink: var(--sobre-accion);
+  --btn-hover: var(--accion-primaria-hover);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .375rem;
+  border: 1.5px solid var(--btn-border, transparent);
+  border-radius: 999px;
+  padding: .5rem 1.25rem;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.app-button--small { padding: .375rem .75rem; border-radius: 10px; font-size: .8rem; }
+.app-button--outline, .app-button--ghost {
+  --btn-ink: var(--texto);
+  --btn-hover: var(--t-bg-ede5dc, #ede5dc);
+}
+.app-button--outline {
+  --btn-bg: var(--t-bg-f9f5f0, #f9f5f0);
+  --btn-border: var(--borde-accion);
+}
+.app-button--ghost { --btn-bg: transparent; }
+.app-button--success { --btn-bg: var(--accion-exito); --btn-hover: var(--accion-exito-hover); }
+@media (any-hover: hover) {
+  .app-button:hover:not(:disabled) { background: var(--btn-hover); }
+}
+.app-button:focus-visible { outline: 2px solid var(--texto-acento); outline-offset: 2px; }
+.app-button:disabled {
+  border: 1.5px dashed var(--borde-accion);
+  background: var(--bg-card);
+  color: var(--texto-muted);
+  cursor: not-allowed;
+}

@@ -70,7 +70,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
   const arqueoActual = useMemo(() => arqueos.find(estaAbierto) ?? null, [arqueos])
 
-  const arqueosFiltrados = arqueos.filter((a) => (filtroEstado ? estadoDe(a) === filtroEstado : true))
+  const arqueosFiltrados = arqueos.filter(a => filtroEstado === 'En curso' ? estaAbierto(a) : a.estado === 'CERRADA' && (!filtroEstado || estadoDe(a) === filtroEstado))
 
   if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
 
@@ -80,10 +80,11 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -103,7 +104,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Arqueo actual</h2>
           <p className="mt-1 text-sm text-[var(--wa-text-muted)]">
             {arqueoActual
-              ? 'Efectivo esperado del turno abierto: inicial más ingresos menos egresos.'
+              ? 'Efectivo esperado del turno abierto: fondo inicial más entradas menos salidas en efectivo. No incluye pagos electrónicos.'
               : cargando
                 ? 'Cargando…'
                 : 'No hay caja abierta en este momento.'}
@@ -154,12 +155,13 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
       <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Historial de arqueos</h2>
+            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">{filtroEstado === 'En curso' ? 'Arqueos de turnos activos' : 'Historial de arqueos cerrados'}</h2>
             <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Un arqueo por cada turno de caja.</p>
           </div>
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta las opciones de estado del arqueo.' : 'Filtra los arqueos por su resultado o estado.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -172,6 +174,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {['', 'En curso', 'Cuadrado', 'Sobrante', 'Faltante'].map((op) => (
                   <button
+                    aria-description={op ? `Muestra los arqueos con estado «${op}».` : 'Muestra todos los arqueos de turnos cerrados.'}
                     key={op || 'todos'}
                     type="button"
                     onClick={() => {
@@ -182,7 +185,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       filtroEstado === op ? 'font-bold text-[var(--wa-primary)]' : ''
                     }`}
                   >
-                    {op || 'Todos'}
+                    {op || 'Todos los cerrados'}
                   </button>
                 ))}
               </div>
@@ -190,7 +193,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           </div>
         </div>
 
-        <DataTable
+        <DataTable key={filtroEstado}
           columns={[
             { header: 'Fecha', render: (a) => <span className="text-sm">{fecha(a.fecha_apertura)}</span> },
             { header: 'Hora', render: (a) => <span className="text-sm">{hora(a.fecha_apertura)}</span> },
@@ -221,6 +224,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               render: (a) => (
                 <div className="flex justify-end">
                   <button
+                    aria-description="Consulta el efectivo esperado y contado en este arqueo."
                     type="button"
                     onClick={() =>
                       setDetalle({
@@ -241,7 +245,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       })
                     }
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                    aria-label="Ver arqueo" title="Ver arqueo"
+                    aria-label="Ver arqueo"
                   >
                     <Eye size={18} aria-hidden="true" />
                   </button>

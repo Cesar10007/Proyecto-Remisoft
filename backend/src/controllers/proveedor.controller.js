@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
@@ -37,6 +38,7 @@ function validarProveedor(body) {
 export async function index(req, res, next) {
   try {
     const proveedores = await prisma.proveedor.findMany({
+      where: req.sede,
       orderBy: { id_proveedor: 'asc' },
     });
 
@@ -58,7 +60,7 @@ export async function show(req, res, next) {
     }
 
     const proveedor = await prisma.proveedor.findUnique({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
     });
 
     if (!proveedor) {
@@ -80,7 +82,7 @@ export async function store(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.proveedor.create({ data });
+    await escritura(req.user, tx => tx.proveedor.create({ data: { ...data, ...req.sede } }));
 
     res.status(201).json({ message: 'Proveedor creado' });
   } catch (err) {
@@ -105,10 +107,10 @@ export async function update(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.proveedor.update({
-      where: { id_proveedor: id },
+    await escritura(req.user, tx => tx.proveedor.update({
+      where: { id_proveedor: id, ...req.sede },
       data,
-    });
+    }));
 
     res.json({ message: 'Proveedor actualizado' });
   } catch (err) {
@@ -138,7 +140,7 @@ export async function destroy(req, res, next) {
     }
 
     const proveedor = await prisma.proveedor.findUnique({
-      where: { id_proveedor: id },
+      where: { id_proveedor: id, ...req.sede },
     });
 
     if (!proveedor) {
@@ -147,10 +149,10 @@ export async function destroy(req, res, next) {
 
     const nuevoEstado = proveedor.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
-    await prisma.proveedor.update({
-      where: { id_proveedor: id },
+    await escritura(req.user, tx => tx.proveedor.update({
+      where: { id_proveedor: id, ...req.sede },
       data: { estado: nuevoEstado },
-    });
+    }));
 
     res.json({
       message: nuevoEstado === 'ACTIVO' ? 'Proveedor activado' : 'Proveedor desactivado',

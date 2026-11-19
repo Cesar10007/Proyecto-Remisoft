@@ -5,10 +5,10 @@ interface BadgeProps {
 }
 
 const styles = {
-  active: 'bg-[var(--verde-light)] text-[var(--verde)] border-[#bbf0dc]',
-  inactive: 'bg-[var(--rojo-light)] text-[var(--rojo)] border-[#f7c2b5]',
-  pending: 'bg-[var(--amarillo-light)] text-[var(--amarillo)] border-[#fde5bc]',
-  warning: 'bg-orange-100 text-orange-700 border-orange-200',
+  active: 'bg-[var(--verde-light)] text-[var(--t-txt-0f6e56,#0f6e56)] border-[var(--t-brd-bbf0dc,#bbf0dc)]',
+  inactive: 'bg-[var(--rojo-light)] text-[var(--texto-acento)] border-[var(--t-brd-f7c2b5,#f7c2b5)]',
+  pending: 'bg-[var(--amarillo-light)] text-[var(--t-txt-854f0b,#854f0b)] border-[var(--t-brd-fde5bc,#fde5bc)]',
+  warning: 'bg-[var(--amarillo-light)] text-[var(--t-txt-854f0b,#854f0b)] border-[var(--t-brd-fde5bc,#fde5bc)]',
 }
 
 export function Badge({ status, label }: BadgeProps) {

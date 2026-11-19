@@ -9,6 +9,7 @@ export default function TarjetaMesa({ mesa, abrir }: { mesa: MesaLectura; abrir:
   const enCaja = primero && mesa.cuentas.every((p) => p.estado === 'POR_COBRAR')
   return (
     <button
+      aria-description={`Consulta el estado y los pedidos de la mesa ${numero}.`}
       type="button"
       className={`wa-table-card wa-table-card--${mesa.ocupada ? 'occupied' : 'available'}`}
       aria-haspopup="dialog"
