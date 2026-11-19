@@ -1,5 +1,5 @@
 // El mismo mensaje público se usa para el formato y para los conflictos de correo.
-export const CORREO_INVALIDO = 'Correo inválido, verifique que esté bien escrito o ingrese otro.';
+export const CORREO_INVALIDO = 'Correo inválido, ingrese otro.';
 
 // Si el adaptador solo informa el modelo, estas tablas no tienen otra clave de negocio.
 // En Cliente, el índice del correo incluye también la sede.

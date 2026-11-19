@@ -382,3 +382,73 @@ for (const tema of ['claro', 'oscuro']) {
     await expect(abrir).toBeFocused()
   })
 }
+
+// El texto antiguo venía del POST (no del HTML). Comprobar también despliegues mixtos.
+for (const rol of ['GERENTE', 'SUPERADMIN'] as const) {
+  test(`el correo rechazado tiene un único aviso rojo sin revelar el mensaje de una API anterior (${rol})`, async ({ page }) => {
+    await abrirPanel(page, rol)
+    const esPersonal = rol === 'GERENTE'
+    if (esPersonal) await boton(page, 'Modo oscuro').click()
+    await ir(page, esPersonal ? 'Personal' : 'Gestión de Gerentes')
+    if (!esPersonal) {
+      await page.getByRole('button', { name: /Agregar gerente/ }).click()
+      await page.setViewportSize({ width: 390, height: 700 })
+    }
+    const guardar = boton(page, esPersonal ? 'Crear Personal' : 'Crear gerente')
+    const form = page.locator('form').filter({ has: guardar })
+    await form.getByLabel(esPersonal ? 'Nombre' : 'Nombre *', { exact: true }).fill('Lina')
+    await form.getByLabel('Apellido').fill('López')
+    if (esPersonal) await form.getByLabel('Rol').selectOption('4')
+    else await form.getByLabel('Nombre Establecimiento *').fill('Sede de prueba')
+    await form.getByLabel(esPersonal ? 'Contraseña' : 'Contraseña *', { exact: true }).fill('Prueba!2026')
+
+    let envios = 0
+    const anterior = 'El email del usuario ya está registrado.'
+    const otroError = 'La contraseña debe incluir al menos un número'
+    await page.route('**/api/usuarios', route => {
+      if (route.request().method() !== 'POST') return route.fallback()
+      return route.fulfill(++envios === 1 ? { status: 409, json: { message: anterior } } : { status: 422, json: { message: otroError } })
+    })
+    const correo = form.locator('input[type=email]'), aviso = form.getByRole('alert')
+    const esperado = 'Correo inválido, ingrese otro.'
+    await correo.fill('sin-arroba'); await guardar.click()
+    await expect(aviso).toHaveText(esperado)
+    expect(envios).toBe(0)
+    await correo.fill('empleado@example.test'); await guardar.click()
+    await expect(aviso).toHaveText(esperado)
+    expect(envios).toBe(1)
+    await expect(page.getByText(anterior, { exact: true })).toHaveCount(0)
+    await expect(correo).toBeFocused()
+    await expect(correo).toHaveAccessibleDescription(esperado)
+    await expect(aviso).toBeInViewport({ ratio: 1 })
+    await expect(aviso).toHaveCSS('background-color', esPersonal ? 'rgb(168, 24, 50)' : 'rgb(180, 22, 48)')
+    expect(await contraste(aviso)).toBeGreaterThanOrEqual(4.5)
+    await form.getByLabel('Apellido').fill('Pérez')
+    await expect(aviso).toHaveText(esperado)
+    await correo.fill('otro@example.test')
+    await expect(aviso).toHaveCount(0)
+    await expect(correo).toHaveAttribute('aria-invalid', 'false')
+    await guardar.click()
+    await expect(aviso).toHaveText(otroError) // No encubrir errores ajenos al correo.
+  })
+}
+
+test('aprobar una solicitud protege el correo sin convertir todos los conflictos en errores de correo', async ({ page }) => {
+  await abrirPanel(page, 'SUPERADMIN')
+  await page.route('**/api/solicitudes', route => route.fulfill({ json: { data: [{
+    id_solicitud: 1, nombre: 'Lina', apellido: 'López', email: 'lina@example.test', id_rol_solicitado: 2,
+  }] } }))
+  await ir(page, 'Solicitudes')
+  page.on('dialog', dialog => dialog.accept())
+  const neutro = 'Correo inválido, ingrese otro.'
+  for (const [respuesta, esperado] of [
+    [{ message: 'El email de la solicitud ya pertenece a un usuario.' }, neutro],
+    [{ code: 'DUPLICATE_ENTRY', message: 'Ya existe un registro con ese campo' }, neutro],
+    [{ code: 'DUPLICATE_ENTRY', message: 'Ya existe un registro con ese folio' }, 'Ya existe un registro con ese folio'],
+    [{ message: 'La solicitud ya fue revisada.' }, 'La solicitud ya fue revisada.'],
+  ] as const) {
+    await page.route('**/api/solicitudes/1/aprobar', route => route.fulfill({ status: 409, json: respuesta }), { times: 1 })
+    await boton(page, 'Aprobar').click()
+    await expect(page.getByRole('alert')).toHaveText(esperado)
+  }
+})

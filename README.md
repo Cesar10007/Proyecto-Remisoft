@@ -209,7 +209,11 @@ Para usar **Stock actual** en **Inventario → Nuevo Ingrediente** o **Editar**,
 
 **Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 compáralo con el `src` del `<script type="module">` de `docker compose exec -T frontend cat /usr/share/nginx/html/index.html`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
 
-**Si «Nuevo Ingrediente» termina en «Stock mínimo»:** [así se ve el formulario vacío con «Stock actual»](docs/imagenes/nuevo-ingrediente-vacio.png). No hace falta escribir el nombre ni entrar en Editar. El alta con stock se incorporó en `d627665` del [PR #270](https://github.com/Cesar10007/Proyecto-Remisoft/pull/270). Reconstruir contenedores no descarga la rama del PR. Para probarla en una instalación Compose ya en marcha, ejecuta estos pasos en la **misma carpeta** con la que la iniciaste. Si Git informa cambios locales incompatibles, detente; no los descartes.
+**Si «Nuevo Ingrediente» termina en «Stock mínimo»:** [así se ve el formulario vacío con «Stock actual»](docs/imagenes/nuevo-ingrediente-vacio.png). No hace falta escribir el nombre ni entrar en Editar. El alta con stock se incorporó en `d627665` del [PR #270](https://github.com/Cesar10007/Proyecto-Remisoft/pull/270).
+
+**Correo en Personal y Agregar gerente:** [así se ve el aviso bajo el campo en modo oscuro](docs/imagenes/personal-correo-invalido.png). Debe decir solo «Correo inválido, ingrese otro.» Si el aviso de correo aparece por encima de la tabla de personal, la pestaña está ejecutando una interfaz anterior. Actualiza tanto el frontend como el backend para que también la respuesta HTTP use el mensaje breve.
+
+**Actualizar la instalación Compose:** reconstruir contenedores no descarga la rama del PR. Para probarla en una instalación Compose ya en marcha, ejecuta estos pasos en la **misma carpeta** con la que la iniciaste. Si Git informa cambios locales incompatibles, detente; no los descartes.
 
 ```bash
 git fetch origin

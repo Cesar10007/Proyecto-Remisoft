@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import api from '../../../api/axios'
 import { SelectField } from '../../../components/common/SelectField'
+import { AvisoCorreoInvalido } from '../../../components/common/CampoCorreoAlta'
+import { CORREO_INVALIDO, mensajeErrorAlta } from '../../../utils/correoAlta'
 import './Solicitudes.css'
 
 interface Solicitud {
@@ -133,7 +135,7 @@ function Solicitudes() {
         'Solicitud aprobada y usuario creado correctamente.',
       )
     } catch (err) {
-      setError(obtenerMensajeError(err))
+      setError(mensajeErrorAlta(err))
     } finally {
       setProcesando(null)
     }
@@ -235,7 +237,7 @@ function Solicitudes() {
         </div>
       )}
 
-      {error && (
+      {error === CORREO_INVALIDO ? <AvisoCorreoInvalido /> : error && (
         <p role="alert" className="sa-request-error">
           {error}
         </p>

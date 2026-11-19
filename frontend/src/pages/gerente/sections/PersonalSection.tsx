@@ -4,6 +4,8 @@ import { DataTable, Column } from '../../../components/common/DataTable'
 import Button from '../../../components/common/Button'
 import { Badge } from '../../../components/common/Badge'
 import { InputField } from '../../../components/common/InputField'
+import { CampoCorreoAlta } from '../../../components/common/CampoCorreoAlta'
+import { CORREO_INVALIDO } from '../../../utils/correoAlta'
 import { SelectField } from '../../../components/common/SelectField'
 export type { Personal } from '../types'
 
@@ -38,6 +40,7 @@ function PersonalSection({
   cargandoPersonal, mostrarContrasena, onFormSubmit, onFormChange, onEdit,
   onDelete, onCancelEdit, onTogglePassword,
 }: PersonalSectionProps) {
+  const errorFormulario = errorPersonal?.origen === 'formulario' ? errorPersonal.mensaje : null
   const columns: Column<Personal>[] = [
     {
       header: 'Nombre',
@@ -125,13 +128,13 @@ function PersonalSection({
             onChange={(event) => onFormChange('apellido', event.target.value)}
             required
           />
-          <InputField
+          <CampoCorreoAlta
             label="Email"
-            type="email"
             placeholder="Email"
             value={formData.email}
             onChange={(event) => onFormChange('email', event.target.value)}
-            required
+            rechazado={errorFormulario === CORREO_INVALIDO}
+            disabled={guardandoPersonal}
           />
           <SelectField
             label="Rol"
@@ -169,8 +172,8 @@ function PersonalSection({
               </button>
             </div>
           )}
-          {errorPersonal?.origen === 'formulario' && (
-            <p role="alert" className="md:col-span-2 text-sm text-[var(--rojo-dark)]">{errorPersonal.mensaje}</p>
+          {errorFormulario && errorFormulario !== CORREO_INVALIDO && (
+            <p role="alert" className="md:col-span-2 text-sm text-[var(--rojo-dark)]">{errorFormulario}</p>
           )}
           <div className="flex gap-2 md:col-span-2 mt-2">
             {usuarioEditando && (

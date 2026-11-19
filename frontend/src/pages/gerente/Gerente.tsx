@@ -1,5 +1,6 @@
 import './Gerente.css'
 import { mensajeError } from '../../utils/mensajeError'
+import { CORREO_INVALIDO, mensajeErrorAlta } from '../../utils/correoAlta'
 import { useState } from 'react'
 import { Banknote, Boxes, Clock3, History, Landmark, ShoppingCart, Sparkles, Table2, Truck, Users, Utensils } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -218,7 +219,7 @@ function Gerente() {
       setMostrarContrasena(false)
       await datos.usuarios.cargar()
     } catch (err) {
-      setErrorPersonal({ origen: 'formulario', mensaje: mensajeError(err) })
+      setErrorPersonal({ origen: 'formulario', mensaje: mensajeErrorAlta(err) })
     } finally { setGuardandoPersonal(false) }
   }
   const abrirCrearProducto = () => { setModoEdicionProducto(false); setProductoActual(productoVacio); setIdEditandoProducto(null); setErrorProducto(null); setModalProducto(true) }
@@ -624,7 +625,7 @@ function Gerente() {
             mostrarContrasena={mostrarContrasena}
             onFormSubmit={handleSubmit}
             onFormChange={(field, value) => {
-              setErrorPersonal(null)
+              if (field === 'email' || errorPersonal?.mensaje !== CORREO_INVALIDO) setErrorPersonal(null)
               setFormData(current => ({ ...current, [field]: value }))
             }}
             onEdit={editarUsuario}

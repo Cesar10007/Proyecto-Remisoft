@@ -4,6 +4,8 @@ import { DataTable, Column } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
 import Modal from '../../../components/common/Modal'
 import { InputField } from '../../../components/common/InputField'
+import { CampoCorreoAlta } from '../../../components/common/CampoCorreoAlta'
+import { CORREO_INVALIDO, mensajeErrorAlta } from '../../../utils/correoAlta'
 import './GestionGerentes.css'
 
 interface Usuario {
@@ -99,7 +101,7 @@ function GestionGerentes() {
     campo: keyof FormularioGerente,
     valor: string,
   ) => {
-    setError(null)
+    if (campo === 'email' || error !== CORREO_INVALIDO) setError(null)
     setFormulario((actual) => ({
       ...actual,
       [campo]: valor,
@@ -157,7 +159,7 @@ function GestionGerentes() {
       await cargarGerentes()
       window.alert('Gerente y establecimiento creados correctamente.')
     } catch (requestError) {
-      setError(obtenerMensajeError(requestError))
+      setError(mensajeErrorAlta(requestError))
     } finally {
       setGuardando(false)
     }
@@ -376,14 +378,14 @@ function GestionGerentes() {
             />
 
             <div className="sa-manager-form__field--full">
-              <InputField
+              <CampoCorreoAlta
                 label="Correo electrónico *"
-                type="email"
+                rechazado={error === CORREO_INVALIDO}
+                disabled={guardando}
                 value={formulario.email}
                 onChange={(event) =>
                   cambiarCampo('email', event.target.value)
                 }
-                required
               />
             </div>
 
@@ -441,7 +443,7 @@ function GestionGerentes() {
             establecimiento se genera automáticamente.
           </p>
 
-          {error && <p role="alert" className="mt-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
+          {error && error !== CORREO_INVALIDO && <p role="alert" className="mt-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
           <div className="sa-manager-form__actions">
             <button
               type="button"

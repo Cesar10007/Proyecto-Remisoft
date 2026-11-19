@@ -10,7 +10,11 @@ async function comprobarYCorregirCorreo(form: Locator) {
   await correo.fill('CARLOS.RAMIREZ@RESTO.COM')
   await form.locator('button[type=submit]').click()
   const aviso = form.getByRole('alert')
-  await expect(aviso).toHaveText('Correo inválido, verifique que esté bien escrito o ingrese otro.')
+  const mensaje = 'Correo inválido, ingrese otro.'
+  await expect(aviso).toHaveText(mensaje)
+  await expect(correo).toBeFocused()
+  await expect(correo).toHaveAttribute('aria-invalid', 'true')
+  await expect(correo).toHaveAccessibleDescription(mensaje)
   await expect(aviso).toBeInViewport({ ratio: 1 })
   await correo.fill(nuevo)
   await expect(aviso).toHaveCount(0)

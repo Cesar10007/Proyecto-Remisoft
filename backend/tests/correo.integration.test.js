@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import db from '../src/config/prisma.js';
 import { escenarioEstablecimiento } from './fixtures/establecimiento.js';
 
-const message = 'Correo inválido, verifique que esté bien escrito o ingrese otro.';
+const message = 'Correo inválido, ingrese otro.';
 
 test('privacidad del correo en altas, ediciones y solicitudes',
   { skip: process.env.ESTABLECIMIENTO_DB_TEST !== '1' }, async (t) => {
