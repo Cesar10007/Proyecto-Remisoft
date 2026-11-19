@@ -222,7 +222,17 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
       await abrir.click()
       const dialogo = page.getByRole('dialog', { name: titulo })
       await comprobarFormulario(dialogo)
-      if (titulo === 'Nuevo Ingrediente') await expect(dialogo.getByLabel('Stock actual')).toHaveValue('0')
+      if (titulo === 'Nuevo Ingrediente') {
+        // Tiene que poder escribirse desde que se abre el alta, sin nombre ni datos previos.
+        await expect(dialogo.getByLabel('Nombre', { exact: true })).toHaveValue('')
+        const stock = dialogo.getByRole('spinbutton', { name: 'Stock actual', exact: true })
+        await expect(stock).toBeVisible()
+        await expect(stock).toBeEditable()
+        await expect(stock).toHaveValue('0')
+        if (viewport.width === 1440) await expect(stock).toBeInViewport({ ratio: 1 })
+        await stock.fill('3.125')
+        await expect(dialogo.getByLabel('Stock mínimo')).toHaveValue('0')
+      }
       const cancelar = dialogo.getByRole('button', { name: 'Cancelar' })
       await cancelar.scrollIntoViewIfNeeded()
       await expect(cancelar).toBeInViewport({ ratio: 1 })

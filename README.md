@@ -207,7 +207,19 @@ Abrir frontend:
 
 Para usar **Stock actual** en **Inventario → Nuevo Ingrediente** o **Editar**, actualiza **también la API**: con Compose ejecuta `docker compose up -d --build backend frontend` desde la raíz; si usas Vite, reinicia el backend con el código actualizado. El conteo no requiere una nueva columna ni reiniciar la base de datos.
 
-**Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 se puede contrastar con `docker compose exec frontend ls /usr/share/nginx/html/assets`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
+**Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 compáralo con el `src` del `<script type="module">` de `docker compose exec -T frontend cat /usr/share/nginx/html/index.html`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
+
+**Si «Nuevo Ingrediente» termina en «Stock mínimo»:** [así se ve el formulario vacío con «Stock actual»](docs/imagenes/nuevo-ingrediente-vacio.png). No hace falta escribir el nombre ni entrar en Editar. El alta con stock se incorporó en `d627665` del [PR #270](https://github.com/Cesar10007/Proyecto-Remisoft/pull/270). Reconstruir contenedores no descarga la rama del PR. Para probarla en una instalación Compose ya en marcha, ejecuta estos pasos en la **misma carpeta** con la que la iniciaste. Si Git informa cambios locales incompatibles, detente; no los descartes.
+
+```bash
+git fetch origin
+git switch arena/8509438c-proyecto-remisoft
+git pull --ff-only origin arena/8509438c-proyecto-remisoft
+docker compose up -d --build --no-deps --force-recreate backend frontend
+docker compose port frontend 80
+```
+
+Abre de nuevo el puerto publicado (en Codespaces, desde **Puertos**). Esto recrea la API y la interfaz, no la base ni sus volúmenes. Si **Interfaz** no coincide con el script del contenedor, comprueba el puerto y recarga la pestaña con **Ctrl + Shift + R**; no uses `docker compose down -v`.
 
 ### Logs
 
