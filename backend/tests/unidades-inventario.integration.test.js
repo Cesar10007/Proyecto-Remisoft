@@ -64,11 +64,12 @@ test('unidad base del ingrediente: catálogo, edición y cantidades históricas'
       const [{ id_producto }] = await api(token,'/productos');
       const ruta = `/productos/${id_producto}/receta`;
       await api(token,ruta,'PUT',{ ingredientes:[{ id_ingrediente:id,cantidad:2,unidad_esperada:'pza' }] });
-      const antes = await leer(id);
+      const libro = async () => (await api(token, `/historial?grupo=INVENTARIO&id_ingrediente=${id}`)).data.map(e => e.movimiento);
+      const antes = await libro();
       await editar(id,{ unidad_esperada:'pza',unidad_medida:'bandeja',cantidad_base:30,factor_unidad:1 });
       const ficha = await leer(id), esperada = { unidad_esperada:'bandeja',factor_esperado:1,base_esperada:30 };
       assert.deepEqual([ficha.unidad_base,ficha.unidad_medida,ficha.stock_actual,ficha.stock_minimo,Number(ficha.costo_unitario_ref)],['pza','bandeja',2,1,15000]);
-      assert.deepEqual(ficha.historial_movimientos,antes.historial_movimientos);
+      assert.deepEqual(await libro(),antes);
       assert.equal((await api(token,ruta)).data.find(x=>x.id_ingrediente===id).cantidad,0.066666667);
       await api(token,ruta,'PUT',{ ingredientes:[{ id_ingrediente:id,cantidad:0.1,...esperada }] });
       const receta = await db.receta.findFirstOrThrow({where:{id_producto,id_ingrediente:id}});
@@ -78,7 +79,7 @@ test('unidad base del ingrediente: catálogo, edición y cantidades históricas'
       const alerta = (await api(token,'/inventario/alertas/stock-bajo')).data.find(x=>x.id_ingrediente===id);
       assert.deepEqual([alerta.stock_actual, alerta.stock_minimo, alerta.unidad_medida],[1,1,'bandeja']);
       await editar(id,{ ...esperada, unidad_medida:'pza',cantidad_base:1,factor_unidad:1 });
-      assert.deepEqual((await leer(id)).historial_movimientos.map(m=>[m.tipo_movimiento,Number(m.cantidad)]),[['SALIDA',30],['ENTRADA',60]]);
+      assert.deepEqual((await libro()).map(m=>[m.tipo,Number(m.cantidad)]),[['SALIDA',30],['ENTRADA',60]]);
       assert.equal((await leer(id)).stock_actual,30);
     });
 

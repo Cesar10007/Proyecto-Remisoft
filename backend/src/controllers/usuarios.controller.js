@@ -569,7 +569,7 @@ export async function actualizar(req, res, next) {
         id_usuario: id,
       },
       data: updateData,
-    }));
+    }), { sedes: [usuarioObjetivo.id_restaurante, data.id_restaurante] });
 
     return res.json({
       message: 'Usuario actualizado',
@@ -646,7 +646,7 @@ export async function eliminar(req, res, next) {
     await escritura(req.user, async tx => {
       await tx.usuario.update({ where: { ...sedeDelGerente(req), id_usuario: id }, data: { activo: false, estado: ESTADOS_USUARIO.INACTIVO } });
       await tx.personal_oculto.create({ data: { id_actor: req.user.id_usuario, id_usuario: id } });
-    });
+    }, { sedes: [usuario.id_restaurante] });
     return res.json({ message: 'Usuario desactivado y retirado de tu lista. Se conserva su historial.' });
   } catch (err) {
     if (err.code === 'P2025') {
@@ -711,7 +711,7 @@ export async function cambiarEstado(req, res, next) {
           ? ESTADOS_USUARIO.ACTIVO
           : ESTADOS_USUARIO.INACTIVO,
       },
-    }));
+    }), { sedes: [usuario.id_restaurante] });
 
     return res.json({
       message: activar

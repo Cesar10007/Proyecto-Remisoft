@@ -11,6 +11,7 @@ const lecturas: Record<string, unknown> = {
   usuarios: [{ id_usuario: 8, id_rol: 2, activo: 1, nombre: 'Lina', email: 'lina@example.test' }],
   inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'KG', unidad_bloqueada: true, costo_unitario_ref: '18000.25', stock_minimo: 20, stock_actual: 19.6 }] },
   proveedores: [{ id_proveedor: 1, nombre: 'Molino', nombre_contacto: 'Ana', telefono: '', email: '', direccion: '', nit: '', tipo_proveedor: '', estado: 'ACTIVO' }],
+  sistema: { sistema_abierto: true, version_sistema: 0 },
   historial: { data: [], siguiente: null }, 'turnos/movimientos': { data: [], siguiente: null }, 'turnos/arqueos': { data: [] },
   cajas: [], 'productos/vista': [], mesas: { data: [] }, facturas: { data: [] },
   solicitudes: { data: [] }, 'inventario/alertas/stock-bajo': { data: [] },
@@ -41,7 +42,7 @@ async function abrirPanel(page: Page, rol: 'SUPERADMIN' | 'GERENTE' | 'CAJERO' |
   await expect(page).toHaveURL(new RegExp(`/${rol.toLowerCase()}$`))
 }
 async function ir(page: Page, seccion: string) {
-  if (await boton(page, 'Abrir menú').isVisible()) await boton(page, 'Abrir menú').click()
+  if (await page.evaluate(() => matchMedia('(max-width: 767px)').matches)) await boton(page, 'Abrir menú').click()
   await boton(page, seccion).click()
 }
 
@@ -118,7 +119,7 @@ for (const [tema, gris] of [['claro', 'rgba(240, 237, 237, 0.5)'], ['oscuro', 'r
     await expect(ingrediente).toHaveCSS('background-color', gris)
     expect(await contraste(editar)).toBeGreaterThanOrEqual(4.5)
     await ir(page, 'Flujo de Caja')
-    const vacia = page.getByRole('row').filter({ hasText: 'No hay cajas disponibles' })
+    const vacia = page.getByRole('row').filter({ hasText: 'No hay cajas activas.' })
     await vacia.hover()
     await expect(vacia).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
 
@@ -142,7 +143,7 @@ for (const [tema, gris] of [['claro', 'rgba(240, 237, 237, 0.5)'], ['oscuro', 'r
     if (tema === 'oscuro') await boton(page, 'Modo oscuro').click()
     const script = await page.locator('script[type="module"][src^="/assets/"]').evaluateAll(tags => tags[0]?.getAttribute('src'))
     await expect(page.getByText(`Interfaz: ${script ? script.split('/').pop() : 'Vite (desarrollo)'}`, { exact: true })).toBeVisible()
-    await comprobarAccion(boton(page, 'Cerrar Caja'))
+    await comprobarAccion(boton(page, 'Hacer cierre total'))
     await ir(page, 'Proveedores')
     for (const nombre of ['+ Nuevo Proveedor', 'Editar', 'Desactivar']) await comprobarAccion(boton(page, nombre))
     await boton(page, '+ Nuevo Proveedor').click()
@@ -505,4 +506,48 @@ test('aprobar una solicitud protege el correo sin convertir todos los conflictos
     await boton(page, 'Aprobar').click()
     await expect(page.getByRole('alert')).toHaveText(esperado)
   }
+})
+
+test('en móvil se recorren 51 registros sin desbordar la página; Atrás y Adelante recuperan el módulo', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 })
+  const filas = Array.from({ length: 51 }, (_,i) => ({ id_ingrediente: i + 1, nombre: `Insumo ${i + 1}`, unidad_medida:'kg', stock_actual: i }))
+  await page.route('**/api/inventario', r => r.fulfill({ json: { data: filas } }))
+  await abrirPanel(page, 'GERENTE'); await ir(page,'Inventario')
+  const tabla = page.getByRole('table', { name:'Gestión de Ingredientes' })
+  const recorrer = async () => {
+    await expect(tabla.locator('tbody tr')).toHaveCount(25)
+    await boton(page,'Siguiente').click(); await expect(tabla.locator('tbody tr')).toHaveCount(25)
+    await expect(tabla.locator('tbody tr').first()).toContainText('Insumo 26')
+    await boton(page,'Siguiente').click(); await expect(tabla.locator('tbody tr')).toHaveCount(1)
+    await expect(tabla.locator('tbody tr')).toContainText('Insumo 51')
+    await expect(boton(page,'Siguiente')).toBeDisabled(); await boton(page,'Anterior').click()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
+  await recorrer(); await ir(page,'Historial'); await page.goBack(); await expect(tabla).toBeVisible()
+  await page.goBack(); await expect(page.getByRole('heading',{name:'Ventas de hoy'})).toBeVisible()
+  const cifra = page.getByText('Total cobrado',{exact:true}).locator('..').locator('p').last()
+  await expect(cifra).toHaveCSS('font-family', /DM Sans Local/)
+  await page.goForward(); await page.reload(); await expect(tabla).toBeVisible()
+  await page.route('**/api/usuarios',r=>r.fulfill({json:filas.map(i=>({ id_usuario:i.id_ingrediente, id_rol:2, activo:1, nombre:i.nombre, email:`${i.id_ingrediente}@example.test` }))}))
+  await abrirPanel(page,'SUPERADMIN'); await expect(page.locator('.sa-table tbody tr')).toHaveCount(25)
+  await boton(page,'Siguiente').click(); await expect(page.locator('.sa-table tbody tr').first()).toContainText('Insumo 26')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('caja pagina la cuenta y el comprobante, pero imprime todas las líneas', async ({ page }) => {
+  const items = Array.from({ length: 26 }, (_,i)=>({ ...cuenta.items[0], id_detalle:i+1, nombre:`Línea ${i+1}` }))
+  await page.route('**/api/cobro/pendientes',r=>r.fulfill({json:[{ ...cuenta, items }] }))
+  await page.route('**/api/cobro/cerrar-cuenta',r=>r.fulfill({json:{ factura:{...cuenta,items,consecutivo:'FAC-26',metodo:'TARJETA',fecha_emision:cuenta.fecha_hora} }}))
+  await abrirPanel(page,'CAJERO'); await page.setViewportSize({ width:360,height:780 })
+  const tabla = page.getByRole('table',{name:'Detalle de productos'})
+  await expect(tabla.locator('tbody tr')).toHaveCount(25); await boton(page,'Siguiente').click()
+  await expect(tabla.locator('tbody tr')).toContainText('Línea 26')
+  await ir(page,'Menú'); await page.goBack(); await expect(tabla).toBeVisible()
+  await page.getByRole('button',{name:/Tarjeta/i}).click(); await page.getByRole('button',{name:/Cerrar cuenta y facturar/}).click()
+  await expect(page.getByRole('heading',{name:'Factura FAC-26'})).toBeVisible()
+  await expect(tabla.locator('tbody tr')).toHaveCount(25); await boton(page,'Siguiente').click()
+  await expect(tabla.locator('tbody tr')).toHaveCount(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.evaluate(() => window.dispatchEvent(new Event('beforeprint'))); await expect(tabla.locator('tbody tr')).toHaveCount(26)
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint'))); await expect(tabla.locator('tbody tr')).toHaveCount(1)
 })

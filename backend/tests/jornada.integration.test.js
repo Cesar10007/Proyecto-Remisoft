@@ -112,7 +112,8 @@ test('jornada de un negocio nuevo: gerencia → salón → cocina → caja → a
     assert.deepEqual(await api(c, '/cobro/pendientes'), []);
     const fin = await inventario();
     assert.equal(fin.stock_actual, 9.25);
-    assert.deepEqual(fin.historial_movimientos.map(h => [h.tipo_movimiento, Number(h.cantidad), h.origen_tipo, h.origen_id, h.id_usuario]), [
+    const asientos = (await api(g, `/historial?id_ingrediente=${id_ingrediente}`)).data;
+    assert.deepEqual(asientos.map(h => [h.movimiento.tipo, Number(h.movimiento.cantidad), h.movimiento.origen, h.movimiento.origen_id, h.id_actor]), [
       ['SALIDA', 0.25, 'PEDIDO', segundo, mesero.user.id_usuario],
       ['SALIDA', 0.5, 'PEDIDO', primero, mesero.user.id_usuario],
       ['ENTRADA', 10, 'AJUSTE', null, gerente.id_usuario],
@@ -141,6 +142,11 @@ test('jornada de un negocio nuevo: gerencia → salón → cocina → caja → a
     assert.deepEqual((await api(b, '/turnos/arqueos')).data, []);
 
     await t.test('libro y cierre de turno quedan en la sede correcta, con los operadores reales', async () => {
+      for (const [area, estado] of [['COCINA','PREPARANDO'], ['COCINA','LISTO'], ['MESEROS','ENTREGADO']]) {
+        const historial = (await api(g, `/historial?grupo=${area}`)).data;
+        assert.ok(historial.every(h => h.grupo === area));
+        assert.ok(historial.some(h => h.entidad === 'Detalle de pedido' && h.despues?.endsWith(estado) && h.id_actor === mesero.user.id_usuario));
+      }
       const libro = (await api(g, '/turnos/movimientos')).data;
       assert.deepEqual(libro.map(f => [f.id_turno, f.metodo, Number(f.ingresos), Number(f.saldo)]),
         [[id_turno,'TARJETA',11900,85700],[id_turno,'EFECTIVO',23800,73800]]);

@@ -162,7 +162,7 @@ export async function resetPassword(req, res, next) {
     await escritura(usuarioActualizado, async tx => {
       await tx.password_reset_tokens.delete({ where: { email: emailNormalizado, token: resetToken.token } });
       await tx.usuario.update({ where: { id_usuario: usuarioActualizado.id_usuario, email: emailNormalizado }, data: { contrasena_hash } });
-    });
+    }, { permiteSedeCerrada: true }); // Recuperar la credencial no abre ni modifica la operación.
 
     // RNF-001.8 — PASSWORD_CHANGED con id_usuario.
     registrarAuditoria({

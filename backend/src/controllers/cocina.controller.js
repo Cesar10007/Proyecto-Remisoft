@@ -119,6 +119,8 @@ export async function avanzarItem(req, res, next) {
       const siguiente = SIGUIENTE_ESTADO_ITEM[d.estado_item ?? 'PENDIENTE'];
       if (!siguiente || (req.body?.estado_item !== undefined && req.body.estado_item !== siguiente))
         throw new ErrorSalon(409, 'El plato cambió de estado. Actualiza la comanda.');
+      // El pase a mesa es una entrega del salón, aunque comparta el endpoint del tablero.
+      if (siguiente === 'ENTREGADO') await tx.$executeRaw`UPDATE contexto_actividad SET area='MESEROS' WHERE conexion=CONNECTION_ID()`;
       await tx.detalle_pedido.update({ where: { id_detalle: idDetalle }, data: { estado_item: siguiente } });
       const estados = p.Detalle_pedido.filter((i) => i.estado_item !== 'CANCELADO').map((i) =>
         i.id_detalle === idDetalle ? siguiente : i.estado_item,
@@ -128,7 +130,7 @@ export async function avanzarItem(req, res, next) {
         data: { estado: estadoSegunItems(estados) },
       });
       return { id_detalle: idDetalle, id_pedido: p.id_pedido, nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre, estado: siguiente };
-    });
+    }, 'COCINA');
     res.json(resultado);
   } catch (err) {
     next(err);

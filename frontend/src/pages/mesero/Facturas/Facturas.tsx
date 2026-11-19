@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, FilePlus2, FileText, LockKeyhole, Pencil, Printer, RefreshCw } from 'lucide-react'
 import { Buscador, Dialogo, ErrorCarga, Estado, Vacio } from '../Elementos'
 import { mesaN, normalizar, type Pedido } from '../modelo'
@@ -141,8 +141,11 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
   const [estado, setEstado] = useState('')
   const [params, cambiar] = useSearchParams()
   const id = Number(params.get('factura')) || null
-  const abrir = (otro: Record<string, string> = {}) =>
-    cambiar({ vista: 'facturas', ...otro }, { replace: true })
+  const location = useLocation(), navigate = useNavigate()
+  const abrir = (otro: Record<string, string>, replace = false) => cambiar({ vista: 'facturas', ...otro }, {
+    replace, state: { desdeListado: replace ? location.state?.desdeListado === true : true },
+  })
+  const cerrar = () => location.state?.desdeListado ? navigate(-1) : cambiar({ vista: 'facturas' }, { replace: true })
   const refrescar = async () => {
     await Promise.all([cargar(), cargarSalon()])
   }
@@ -224,7 +227,7 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
         </div>
       )}
       {id ? (
-        <Comprobante key={id} id={id} cerrar={() => abrir()} actualizar={refrescar} />
+        <Comprobante key={id} id={id} cerrar={cerrar} actualizar={refrescar} />
       ) : (
         params.has('generar') && (
           <EditorFactura
@@ -234,9 +237,9 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
             tasa={tasa}
             bloqueo={errorSalon}
             refrescar={refrescar}
-            cerrar={() => abrir()}
+            cerrar={cerrar}
             guardada={async (id) => {
-              abrir({ factura: String(id) })
+              abrir({ factura: String(id) }, true)
               await refrescar()
             }}
           />

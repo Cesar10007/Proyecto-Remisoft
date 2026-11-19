@@ -9,6 +9,7 @@ import { authRequired as authMiddleware } from './middleware/auth.js'
 import { contextoEstablecimiento } from './middleware/establecimiento.js'
 import errorHandler from './middleware/errorHandler.js'
 
+import sistemaRoutes, { bloquearSistemaCerrado } from './routes/sistema.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import passwordResetRoutes from './routes/passwordReset.routes.js'
 import cajasRoutes from './routes/cajas.routes.js'
@@ -87,6 +88,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/auth', passwordResetRoutes)
 
 app.use(authMiddleware)
+app.use('/api/sistema', contextoEstablecimiento, sistemaRoutes)
+app.use(bloquearSistemaCerrado)
 
 app.use('/api/solicitudes', solicitudRegistroRoutes)
 app.use('/api/roles', rolRoutes)
@@ -94,6 +97,8 @@ app.use('/api/usuarios', usuariosRoutes)
 app.use('/api/restaurantes', restaurantesRoutes)
 
 app.use(contextoEstablecimiento)
+// El superadmin puede seleccionar una sede operativa aunque no esté asociado a ella.
+app.use((req, res, next) => req.user.rol === 'SUPERADMIN' ? bloquearSistemaCerrado(req, res, next) : next())
 app.use('/api/historial', historialRoutes)
 app.use('/api/cajas', cajasRoutes)
 app.use('/api/cobro', cobroRoutes)

@@ -39,15 +39,15 @@ function Login({ onClose }: LoginProps) {
       onClose?.()
 
       if (rolNormalizado === 'SUPERADMIN') {
-        navigate('/superadmin')
+        navigate('/superadmin', { replace: true })
       } else if (rolNormalizado === 'GERENTE') {
-        navigate('/gerente')
+        navigate('/gerente', { replace: true })
       } else if (rolNormalizado === 'CAJERO') {
-        navigate('/cajero')
+        navigate('/cajero', { replace: true })
       } else if (rolNormalizado === 'MESERO') {
-        navigate('/mesero')
+        navigate('/mesero', { replace: true })
       } else if (rolNormalizado === 'REPARTIDOR') {
-        navigate('/repartidor')
+        navigate('/repartidor', { replace: true })
       } else {
         navigate('/')
       }

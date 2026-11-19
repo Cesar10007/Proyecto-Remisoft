@@ -23,6 +23,7 @@ export async function escenarioEstablecimiento(t) {
     await db.factura_item.deleteMany({ where: { Factura: pedido } });
     await db.factura.deleteMany({ where: pedido });
     await db.detalle_pedido.deleteMany({ where: pedido });
+    await db.domicilio.deleteMany({ where: pedido });
     await db.pedido.deleteMany({ where: sede });
     await db.detalle_orden_compra.deleteMany({ where: { orden_compra: sede } });
     await db.orden_compra.deleteMany({ where: sede });

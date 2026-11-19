@@ -1,3 +1,5 @@
+import TablaConsumo from './TablaConsumo'
+import { useVistaURL } from '../../hook/useVistaURL'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
@@ -97,7 +99,7 @@ export default function Cajero() {
   const [errorCobro, setErrorCobro] = useState<string | null>(null)
   const [factura, setFactura] = useState<FacturaEmitida | null>(null)
   // Vista del menú lateral: cobro o carta de platos (productos de la base).
-  const [vista, setVista] = useState<'cobro' | 'menu'>('cobro')
+  const [vista, setVista] = useVistaURL('vista', 'cobro', ['cobro', 'menu'])
   const [productos, setProductos] = useState<ProductoCarta[]>([])
   const [cargandoProductos, setCargandoProductos] = useState(false)
   const [errorProductos, setErrorProductos] = useState<string | null>(null)
@@ -200,7 +202,7 @@ export default function Cajero() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to="/gerente">
+            <Link className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined
@@ -271,26 +273,7 @@ export default function Cajero() {
                 {factura.mesa ? ` · Mesa ${factura.mesa}` : ''}
                 {factura.receptor && ` · ${factura.receptor}`}
               </p>
-              <table className="cajero__tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {factura.items.map((it, i) => (
-                    <tr key={i}>
-                      <td>{it.nombre}</td>
-                      <td>{it.cantidad}</td>
-                      <td>{formatoCOP(it.precio_unitario)}</td>
-                      <td>{formatoCOP(it.cantidad * it.precio_unitario)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TablaConsumo key={factura.id_factura} items={factura.items} moneda={formatoCOP} comprobante />
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(factura.subtotal)}</dd></div>
                 {factura.descuento > 0 && <div><dt>Descuento</dt><dd>− {formatoCOP(factura.descuento)}</dd></div>}
@@ -328,26 +311,7 @@ export default function Cajero() {
                 {cuenta.receptor && ` · ${cuenta.receptor}`}
               </p>
 
-              <table className="cajero__tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cuenta.items.map((it) => (
-                    <tr key={it.id_detalle}>
-                      <td>{it.nombre}</td>
-                      <td>{it.cantidad}</td>
-                      <td>{formatoCOP(it.precio_unitario)}</td>
-                      <td>{formatoCOP(it.subtotal)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TablaConsumo key={cuenta.id_pedido} items={cuenta.items} moneda={formatoCOP} />
 
               <dl className="cajero__totales">
                 <div><dt>Subtotal</dt><dd>{formatoCOP(cuenta.subtotal)}</dd></div>

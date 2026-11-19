@@ -101,8 +101,9 @@ export async function cerrarCuenta(req, res, next) {
     const idUsuario = req.user.id_usuario;
     const resultado = await transaccionSalon(req.user, async (tx) => {
       // Serializa pagos de un mismo turno para no perder saldo ni cobrar en una caja cerrada.
-      const [turno] = await tx.$queryRaw`SELECT id_turno, efectivo_inicial FROM turno_caja
-        WHERE id_usuario_cajero = ${idUsuario} AND id_restaurante = ${req.sede.id_restaurante} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
+      const [turno] = await tx.$queryRaw`SELECT t.id_turno, t.efectivo_inicial FROM turno_caja t
+        JOIN caja c ON c.id_caja=t.id_caja AND c.id_restaurante=t.id_restaurante AND c.estado='ACTIVA'
+        WHERE t.id_usuario_cajero = ${idUsuario} AND t.id_restaurante = ${req.sede.id_restaurante} AND t.estado = 'ABIERTA' ORDER BY t.id_turno DESC LIMIT 1 FOR UPDATE`;
       if (!turno) return { status: 409, message: 'Debes tener un turno de caja abierto para cobrar.' };
       await bloquearPedido(tx, idPedido, req.sede.id_restaurante);
       const pedido = await tx.pedido.findFirst({
@@ -267,7 +268,7 @@ export async function cerrarCuenta(req, res, next) {
           fecha_emision: factura.Fecha_emision,
         },
       };
-    });
+    }, 'CAJA');
 
     if (resultado.status !== 201) {
       return res.status(resultado.status).json({ message: resultado.message });

@@ -110,7 +110,7 @@ test('panel del gerente: movimientos, saldos y permisos de dos establecimientos'
       const token = `recuperacion-${tag}`;
       await db.password_reset_tokens.create({ data:{ email,token,created_at:new Date() } });
       await api(null,'/auth/reset-password','POST',{ email,token,password:`Restablecida!1${tag}` });
-      const eventos = await hist();
+      const eventos = (await api(a.token, '/historial?grupo=OTROS')).data;
       assert.ok(eventos.some(e => e.entidad === 'Solicitud' && e.id_actor === a.id_usuario && e.despues.includes('APROBADA')));
       assert.ok(eventos.some(e => e.accion === 'Cambio de contraseña' && e.id_actor === aprobada.usuario.id_usuario && e.campos === 'contraseña'));
       assert.ok(eventos.some(e => e.entidad === 'Sesión' && e.id_actor === mesero.id_usuario));
@@ -123,7 +123,7 @@ test('panel del gerente: movimientos, saldos y permisos de dos establecimientos'
       await api(adminToken, '/historial','GET',undefined,422);
       for (let i=0; i<52; i++) await post('/mesas',{numero:100+i,capacidad:1,id_restaurante:b.id_restaurante});
       const pagina = await api(a.token,`/historial?id_restaurante=${b.id_restaurante}`);
-      assert.equal(pagina.data.length,50);
+      assert.equal(pagina.data.length,25);
       const mas = (await api(a.token,`/historial?antes=${pagina.siguiente}`)).data;
       assert.ok(mas.length > 0 && mas[0].id_evento < pagina.data.at(-1).id_evento);
       assert.ok([...pagina.data,...mas].every(e => e.id_restaurante === a.id_restaurante));

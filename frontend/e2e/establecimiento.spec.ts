@@ -38,7 +38,7 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
     ['Inventario', 'No hay ingredientes disponibles'], ['Pedidos', 'No hay pedidos en curso.'],
     ['Finanzas', 'No hay transacciones recientes'], ['Mesas', 'No hay mesas registradas para este establecimiento.'],
     ['IA Insights', 'No hay análisis de IA registrados para este establecimiento.'], ['Historial', 'Historial de actividad'],
-    ['Flujo de Caja', 'No hay cajas disponibles'], ['Turnos', 'No hay turnos registrados.'],
+    ['Flujo de Caja', 'No hay cajas activas.'], ['Turnos', 'No hay turnos activos.'],
     ['Proveedores', 'No hay proveedores disponibles'], ['Personal', 'No hay personal registrado'],
   ]) {
     await boton(seccion).click()
@@ -69,7 +69,7 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await fila.getByRole('button', { name: 'Movimientos' }).click()
   const movimientos = page.getByRole('dialog', { name: `Movimientos de Ingrediente ${id}` })
   await expect(movimientos.getByLabel('Cantidad (bandejas)')).toBeEditable()
-  await expect(movimientos.getByRole('listitem')).toContainText('Entrada: 1 bandeja')
+  await expect(movimientos.getByRole('listitem')).toHaveCount(0)
   await movimientos.getByRole('button', { name: 'Cerrar ventana' }).click()
   await boton('Notificaciones').click()
   const campana = page.getByRole('dialog', { name: 'Alertas de inventario' })
@@ -84,7 +84,7 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await editor.getByRole('button', { name: 'Actualizar' }).click()
   await expect(fila.getByRole('cell', { name: '30 pza', exact: true })).toBeVisible()
   await fila.getByRole('button', { name: 'Movimientos' }).click()
-  await expect(movimientos.getByRole('listitem')).toContainText('Entrada: 1 bandeja')
+  await expect(movimientos.getByRole('listitem')).toHaveCount(0)
   const tablero = await page.context().newPage()
   await tablero.goto('/gerente')
   await tablero.getByRole('button', { name: 'Notificaciones', exact: true }).click()
@@ -98,6 +98,11 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await expect(tablero.getByText(/Sin alertas de stock/)).toBeVisible()
   await tablero.close()
   await movimientos.getByRole('button', { name: 'Cerrar ventana' }).click()
+  await boton('Historial').click()
+  await page.getByLabel('Área del movimiento').selectOption('INVENTARIO')
+  await page.getByRole('combobox', { name: 'Ingrediente', exact: true }).selectOption({ label: `Ingrediente ${id}` })
+  await expect(page.getByRole('listitem').filter({ hasText: 'Stock inicial' })).toContainText('Entrada: 1 bandeja')
+  await boton('Inventario').click()
   await boton('Notificaciones').click()
   await expect(campana).toContainText('No hay ingredientes')
   await page.keyboard.press('Escape')
@@ -130,6 +135,7 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await persona.getByRole('button', { name: /Eliminar/ }).click()
   await expect(persona).toHaveCount(0)
   await boton('Historial').click()
+  await page.getByLabel('Área del movimiento').selectOption('OTROS')
   await expect(page.getByRole('listitem').filter({ hasText: 'Retiro de mi lista' })).toContainText('Gerente de prueba')
   expect(errores).toEqual([])
 })

@@ -70,7 +70,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
   const arqueoActual = useMemo(() => arqueos.find(estaAbierto) ?? null, [arqueos])
 
-  const arqueosFiltrados = arqueos.filter((a) => (filtroEstado ? estadoDe(a) === filtroEstado : true))
+  const arqueosFiltrados = arqueos.filter(a => filtroEstado === 'En curso' ? estaAbierto(a) : a.estado === 'CERRADA' && (!filtroEstado || estadoDe(a) === filtroEstado))
 
   if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
 
@@ -154,7 +154,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
       <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">Historial de arqueos</h2>
+            <h2 className="text-[1.05rem] font-bold text-[var(--wa-text)]">{filtroEstado === 'En curso' ? 'Arqueos de turnos activos' : 'Historial de arqueos cerrados'}</h2>
             <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Un arqueo por cada turno de caja.</p>
           </div>
 
@@ -182,7 +182,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       filtroEstado === op ? 'font-bold text-[var(--wa-primary)]' : ''
                     }`}
                   >
-                    {op || 'Todos'}
+                    {op || 'Todos los cerrados'}
                   </button>
                 ))}
               </div>
@@ -190,7 +190,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
           </div>
         </div>
 
-        <DataTable
+        <DataTable key={filtroEstado}
           columns={[
             { header: 'Fecha', render: (a) => <span className="text-sm">{fecha(a.fecha_apertura)}</span> },
             { header: 'Hora', render: (a) => <span className="text-sm">{hora(a.fecha_apertura)}</span> },

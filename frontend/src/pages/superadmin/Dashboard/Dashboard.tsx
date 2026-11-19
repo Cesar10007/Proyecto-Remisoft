@@ -1,3 +1,5 @@
+import Paginacion from '../../../components/common/Paginacion'
+import { usePaginaFilas } from '../../../hook/usePaginaFilas'
 import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
 import './Dashboard.css'
@@ -49,6 +51,7 @@ const metricasBase = [
 
 function Dashboard() {
   const [gerentes, setGerentes] = useState<Usuario[]>([])
+  const pag = usePaginaFilas(gerentes)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [solicitudesPendientes, setSolicitudesPendientes] = useState<number | null>(null)
@@ -139,7 +142,7 @@ function Dashboard() {
         </p>
 
         <div className="sa-table-card">
-          <div className="sa-table-scroll">
+          <div className="sa-table-scroll tabla-scroll">
             <table className="sa-table">
               <thead>
                 <tr>
@@ -174,7 +177,7 @@ function Dashboard() {
                   </tr>
                 )}
 
-                {!cargando && !error && gerentes.map((gerente) => (
+                {!cargando && !error && pag.filas.map((gerente) => (
                   <tr key={gerente.id_usuario}>
                     <td>
                       <div className="sa-user-cell">
@@ -203,6 +206,7 @@ function Dashboard() {
               </tbody>
             </table>
           </div>
+          {!cargando && !error && <Paginacion {...pag} titulo="gerentes activos" />}
         </div>
       </section>
     </section>

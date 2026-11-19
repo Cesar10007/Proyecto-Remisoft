@@ -9,14 +9,12 @@ import { cantidadConUnidad, unidadDeCantidad } from '../../../utils/unidadesInve
 import Modal from '../../../components/common/Modal'
 import type { Ingrediente } from '../types'
 
-interface Movimiento { id_movimiento: number; fecha_hora: string | null; tipo_movimiento: string; cantidad: string; origen_tipo: string | null; observaciones: string | null }
-interface Ficha { unidad_base?: string | null; factor_unidad?: number; cantidad_base?: number; unidad_medida: string | null; stock_actual: number; historial_movimientos: Movimiento[] }
+interface Ficha { unidad_base?: string | null; factor_unidad?: number; cantidad_base?: number; unidad_medida: string | null; stock_actual: number }
 
 export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar }: { ingrediente: Ingrediente; actualizar: () => Promise<void>; cerrar: () => void }) {
   const id = ingrediente.id_ingrediente
   const ficha = useConsulta<{ data: Ficha }>(`/inventario/${id}`)
   const unidad = ficha.data?.data.unidad_medida
-  const base = ficha.data?.data.unidad_base === undefined ? unidad : ficha.data.data.unidad_base
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
@@ -43,16 +41,6 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
         {aviso && <p role="status">{aviso}</p>}
         <Button type="submit" disabled={guardando}>{guardando ? 'Registrando…' : 'Registrar movimiento'}</Button>
       </form>
-      <h3 className="mt-4 font-semibold">Historial de movimientos</h3>
-      {!ficha.data.data.historial_movimientos.length && <p className="mt-2 text-sm">Sin movimientos registrados.</p>}
-      <ul className="divide-y divide-[var(--borde)] text-sm">
-        {ficha.data.data.historial_movimientos.map(m => <li key={m.id_movimiento} className="py-2">
-          <strong>{m.tipo_movimiento === 'ENTRADA' ? 'Entrada' : m.tipo_movimiento === 'SALIDA' ? 'Salida' : m.tipo_movimiento}: {cantidadConUnidad(Number(m.cantidad), base)}</strong>
-          <span className="ml-2">{m.origen_tipo}</span>
-          {m.fecha_hora && <time dateTime={m.fecha_hora} className="ml-2 text-xs text-[var(--texto-muted)]">{new Date(m.fecha_hora).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}</time>}
-          <p className="text-[var(--texto-muted)]">{m.observaciones}</p>
-        </li>)}
-      </ul>
     </>}
   </Modal>
 }

@@ -84,7 +84,7 @@ export async function index(req, res, next) {
 
 /**
  * GET /api/inventario/:id
- * Obtiene un ingrediente con stock calculado e historial de movimientos.
+ * Obtiene la ficha y el stock. El libro se consulta en /historial.
  */
 export async function show(req, res, next) {
   try {
@@ -107,7 +107,7 @@ export async function show(req, res, next) {
         _count: referenciasDeUnidad,
         inventario_mov: {
           where: req.sede,
-          orderBy: [{ fecha_hora: 'desc' }, { id_movimiento: 'desc' }],
+          select: { tipo_movimiento: true, cantidad: true },
         },
       },
     });
@@ -122,10 +122,7 @@ export async function show(req, res, next) {
 
     return res.status(200).json({
       success: true,
-      data: {
-        ...serializarIngrediente(ingrediente),
-        historial_movimientos: ingrediente.inventario_mov,
-      },
+      data: serializarIngrediente(ingrediente),
     });
   } catch (error) {
     next(error);

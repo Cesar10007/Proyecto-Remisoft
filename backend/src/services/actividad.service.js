@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import { exigirSedeAbierta } from './sistema.service.js';
 import prisma from '../config/prisma.js';
 
 const cambios = new EventEmitter();
@@ -15,11 +16,14 @@ function notificarSede(id) {
 
 // Contexto transaccional, no variables de sesión del pool. Un rollback descarta tanto el cambio
 // como sus eventos y el contexto. Los triggers determinan la sede a partir de las filas reales.
-export async function escritura(actor, tarea, opciones) {
+export async function escritura(actor, tarea, { permiteSedeCerrada, sedes = [], area = null, ...opciones } = {}) {
   const resultado = await prisma.$transaction(async tx => {
+    if (!permiteSedeCerrada) {
+      for (const id of [...new Set([actor?.id_restaurante, ...sedes].filter(Boolean))].sort((a, b) => a - b)) await exigirSedeAbierta(tx, id);
+    }
     if (actor) {
       const nombre = [actor.nombre, actor.apellido].filter(Boolean).join(' ') || `Usuario #${actor.id_usuario}`;
-      await tx.$executeRaw`INSERT INTO contexto_actividad(conexion,id_actor,actor) VALUES(CONNECTION_ID(),${actor.id_usuario},${nombre})`;
+      await tx.$executeRaw`INSERT INTO contexto_actividad(conexion,id_actor,actor,area) VALUES(CONNECTION_ID(),${actor.id_usuario},${nombre},${area})`;
     }
     const r = await tarea(tx);
     if (actor) await tx.$executeRaw`DELETE FROM contexto_actividad WHERE conexion=CONNECTION_ID()`;

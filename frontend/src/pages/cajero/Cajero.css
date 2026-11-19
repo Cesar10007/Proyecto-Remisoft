@@ -70,6 +70,7 @@
 }
 
 .cajero__detalle {
+  min-width: 0;
   padding: 24px;
   min-height: 420px;
 }

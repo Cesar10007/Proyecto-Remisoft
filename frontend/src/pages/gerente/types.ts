@@ -30,6 +30,7 @@ export interface Proveedor {
 }
 
 export interface Caja {
+  turno_activo?: number | null
   id_caja: number
   nombre: string
   estado: string

@@ -8,6 +8,8 @@ datasource db {
 }
 
 model restaurante {
+  sistema_abierto Boolean @default(true)
+  version_sistema Int @default(0)
   id_restaurante   Int                @id @default(autoincrement())
   nombre           String             @db.VarChar(100)
   direccion        String?            @db.VarChar(200)
@@ -635,6 +637,11 @@ model solicitud_registro {
 
 // Instantáneas de auditoría: no dependen de que siga existiendo el objeto o el empleado.
 model actividad_sede {
+  grupo String @default("OTROS") @db.VarChar(20)
+  movimiento Json?
+  id_ingrediente_mov Int?
+  @@index([id_restaurante,grupo,id_evento],map:"actividad_por_grupo")
+  @@index([id_restaurante,id_ingrediente_mov,id_evento],map:"actividad_por_insumo")
   id_evento      Int      @id @default(autoincrement())
   id_restaurante Int
   fecha          DateTime @default(now()) @db.DateTime(3)
@@ -651,6 +658,7 @@ model actividad_sede {
 
 // La fila solo vive dentro de la transacción de escritura, nunca en una sesión reutilizada del pool.
 model contexto_actividad {
+  area String? @db.VarChar(20)
   conexion BigInt @id @db.UnsignedBigInt
   id_actor Int
   actor    String @db.VarChar(150)

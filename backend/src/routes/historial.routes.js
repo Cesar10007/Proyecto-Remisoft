@@ -11,10 +11,12 @@ router.get('/cambios', esperarCambio);
 router.get('/', async (req, res, next) => {
   try {
     const antes = req.query.antes === undefined ? null : entero(Number(req.query.antes), 'El cursor');
-    const filas = await prisma.actividad_sede.findMany({ where: { ...req.sede, ...(antes && { id_evento: { lt: antes } }) },
-      orderBy: { id_evento: 'desc' }, take: 51 });
-    const data = filas.slice(0, 50);
-    res.set('Cache-Control', 'no-store').json({ data, siguiente: filas.length > 50 ? data.at(-1).id_evento : null });
+    const grupo = req.query.grupo, insumo = req.query.id_ingrediente === undefined ? null : entero(Number(req.query.id_ingrediente), 'El ingrediente');
+    if (grupo !== undefined && !['CAJA','MESEROS','INVENTARIO','COCINA','SISTEMA','OTROS'].includes(grupo)) return res.status(422).json({ message: 'Área desconocida.' });
+    const filas = await prisma.actividad_sede.findMany({ where: { ...req.sede, ...(grupo && { grupo }), ...(insumo && { id_ingrediente_mov: insumo }), ...(antes && { id_evento: { lt: antes } }) },
+      orderBy: { id_evento: 'desc' }, take: 26 });
+    const data = filas.slice(0, 25);
+    res.set('Cache-Control', 'no-store').json({ data, siguiente: filas.length > 25 ? data.at(-1).id_evento : null });
   } catch (err) { next(err); }
 });
 export default router;

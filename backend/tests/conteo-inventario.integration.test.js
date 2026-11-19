@@ -14,7 +14,9 @@ test('crear y editar ingredientes concilia el stock con el historial de su sede'
     const leer = async () => (await api(g.token, `/inventario/${id_ingrediente}`)).data;
     const editar = (cambios, status = 200) => api(g.token, ruta, 'PUT', { ...ficha, ...cambios }, status);
     const motivo = 'Conteo físico de bodega';
-    const antes = await leer();
+    const libro = async () => (await api(g.token, `/historial?grupo=INVENTARIO&id_ingrediente=${id_ingrediente}`)).data;
+    const antes = await leer(), movimientosAntes = await libro();
+    assert.ok(!('historial_movimientos' in antes));
     const conteo = { stock_esperado: antes.stock_actual, stock_actual: '20', motivo };
 
     await t.test('el stock inicial crea una única entrada en la sede del gerente y no altera el mínimo', async () => {
@@ -24,8 +26,8 @@ test('crear y editar ingredientes concilia el stock con el historial de su sede'
       assert.equal(fila.stock_actual, 19.6);
       assert.equal(Number(fila.stock_minimo), 20);
       assert.equal(antes.movimientos, 1);
-      const [m] = antes.historial_movimientos;
-      assert.deepEqual([m.tipo_movimiento, Number(m.cantidad), m.origen_tipo, m.observaciones, m.id_usuario, m.id_restaurante],
+      const [m] = movimientosAntes;
+      assert.deepEqual([m.movimiento.tipo, Number(m.movimiento.cantidad), m.movimiento.origen, m.movimiento.motivo, m.id_actor, m.id_restaurante],
         ['ENTRADA', 19.6, 'AJUSTE', 'Stock inicial', g.id_usuario, g.id_restaurante]);
       assert.deepEqual((await api(otra.token, '/inventario')).data, []);
     });
@@ -65,10 +67,10 @@ test('crear y editar ingredientes concilia el stock con el historial de su sede'
       assert.equal(fila.stock_actual, 20);
       assert.equal(Number(fila.stock_minimo), 20); // El mínimo no se confundió con el saldo al abrir (19.6).
       assert.equal(fila.stock_bajo, true); // En RemiSoft se alerta también al alcanzar el mínimo.
-      const { historial_movimientos: [entrada, original] } = await leer();
-      assert.deepEqual(original, antes.historial_movimientos[0]);
-      assert.deepEqual([entrada.tipo_movimiento, Number(entrada.cantidad), entrada.origen_tipo, entrada.id_usuario,
-        entrada.id_restaurante, entrada.observaciones], ['ENTRADA', 0.4, 'AJUSTE', g.id_usuario, g.id_restaurante, motivo]);
+      const [entrada, original] = await libro();
+      assert.deepEqual(original, movimientosAntes[0]);
+      assert.deepEqual([entrada.movimiento.tipo, Number(entrada.movimiento.cantidad), entrada.movimiento.origen, entrada.id_actor,
+        entrada.id_restaurante, entrada.movimiento.motivo], ['ENTRADA', 0.4, 'AJUSTE', g.id_usuario, g.id_restaurante, motivo]);
       // El mismo valor (incluido el envío explícito), o editar solo el mínimo y el costo, no duplica movimientos.
       await editar({ stock_esperado: 20, stock_actual: 20 });
       await editar({ stock_minimo: 3.25, costo_unitario_ref: 19000.5 });
@@ -83,7 +85,7 @@ test('crear y editar ingredientes concilia el stock con el historial de su sede'
       const fin = await leer();
       assert.equal(fin.stock_actual, 0);
       assert.equal(Number(fin.stock_minimo), 20);
-      assert.deepEqual(fin.historial_movimientos.map(m => [m.tipo_movimiento, Number(m.cantidad)]), [['SALIDA', 20], ['ENTRADA', 0.4], ['ENTRADA', 19.6]]);
+      assert.deepEqual((await libro()).map(m => [m.movimiento.tipo, Number(m.movimiento.cantidad)]), [['SALIDA', 20], ['ENTRADA', 0.4], ['ENTRADA', 19.6]]);
       assert.equal((await api(g.token, '/inventario/alertas/stock-bajo')).data[0].alerta, 'SIN STOCK');
     });
 

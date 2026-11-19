@@ -110,7 +110,7 @@ export default function Cocina() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to="/gerente">
+            <Link className="cocina__btn cocina__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined

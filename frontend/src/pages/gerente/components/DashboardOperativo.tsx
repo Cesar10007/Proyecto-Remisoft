@@ -68,15 +68,15 @@ function DashboardOperativo({ reporte }: { reporte: ReturnType<typeof useConsult
             <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <p className="text-[0.75rem] text-[var(--texto-muted)]">Total cobrado</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_netos)}</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_netos)}</p>
               </div>
               <div>
                 <p className="text-[0.75rem] text-[var(--texto-muted)]">Facturas con pago</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{ventas.total.total_pedidos}</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{ventas.total.total_pedidos}</p>
               </div>
               <div>
                 <p className="text-[0.75rem] text-[var(--texto-muted)]">Propinas</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.total_propinas)}</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.total_propinas)}</p>
               </div>
             </div>
 

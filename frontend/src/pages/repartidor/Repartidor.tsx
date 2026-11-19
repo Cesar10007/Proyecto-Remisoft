@@ -1,3 +1,4 @@
+import { useVistaURL } from '../../hook/useVistaURL'
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -138,7 +139,7 @@ const formatoPesos = (valor: number) =>
 const etiquetaEstadoCola: Record<string, string> = { ASIGNADO: 'Asignado', EN_CAMINO: 'En camino' }
 
 function Repartidor() {
-  const [activeItem, setActiveItem] = useState('resumen')
+  const [activeItem, setActiveItem] = useVistaURL('vista', 'resumen', menuItems.map(i => i.label.toLowerCase()))
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const nombreUsuario = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Repartidor'

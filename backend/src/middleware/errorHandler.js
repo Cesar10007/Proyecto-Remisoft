@@ -1,3 +1,4 @@
+import { SistemaCerrado } from '../services/sistema.service.js';
 import { ErrorSalon } from '../utils/salon.js';
 import { CORREO_INVALIDO, esConflictoCorreo } from '../utils/validation.js';
 
@@ -6,6 +7,7 @@ export default function errorHandler(err, req, res, next) {
     return next(err);
   }
 
+  if (err instanceof SistemaCerrado) return res.status(423).json({ code: 'SISTEMA_CERRADO', message: err.message });
   if (err instanceof ErrorSalon) return res.status(err.status).json({ message: err.message });
   if (err.code === 'P2034') return res.status(409).json({ message: 'Otra operación cambió la cuenta. Actualiza e inténtalo de nuevo.' });
 

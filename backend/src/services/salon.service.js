@@ -18,7 +18,7 @@ import {
   estadoSegunItems,
 } from '../utils/salon.js';
 
-export const transaccionSalon = (user, fn) => escritura(user, fn, { isolationLevel: 'ReadCommitted' });
+export const transaccionSalon = (user, fn, area = 'MESEROS') => escritura(user, fn, { isolationLevel: 'ReadCommitted', area });
 export const bloquearPedido = (tx, id, idRestaurante) =>
   tx.$queryRaw`SELECT id_pedido FROM pedido WHERE id_pedido = ${id} AND id_restaurante = ${idRestaurante} FOR UPDATE`;
 

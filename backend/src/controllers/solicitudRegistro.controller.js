@@ -1,3 +1,4 @@
+import { exigirSedeAbierta } from '../services/sistema.service.js';
 import { escritura } from '../services/actividad.service.js';
 import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
@@ -156,7 +157,7 @@ export async function crearSolicitud(req, res, next) {
         estado: true,
         fecha_solicitud: true,
       },
-    }));
+    }), { sedes: [idRestaurante] });
 
     return res.status(201).json({
       success: true,
@@ -335,6 +336,7 @@ export async function aprobarSolicitud(req, res, next) {
         throw error;
       }
 
+      if (solicitud.id_restaurante !== req.user.id_restaurante) await exigirSedeAbierta(tx, solicitud.id_restaurante);
       // Tampoco una solicitud antigua puede adjudicar al gerente una sede ajena.
       const idRestaurante = solicitud.id_rol_solicitado === 2
         ? (await crearEstablecimiento(tx, solicitud.nombre_establecimiento || `Restaurante de ${solicitud.nombre}`)).id_restaurante
@@ -465,7 +467,7 @@ export async function rechazarSolicitud(req, res, next) {
         motivo_rechazo: true,
         fecha_revision: true,
       },
-    }));
+    }), { sedes: [solicitud.id_restaurante] });
 
     return res.json({
       success: true,

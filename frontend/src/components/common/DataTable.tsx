@@ -1,3 +1,5 @@
+import Paginacion from './Paginacion'
+import { usePaginaFilas } from '../../hook/usePaginaFilas'
 import type { ReactNode } from 'react'
 
 export interface Column<T> {
@@ -40,8 +42,9 @@ export function DataTable<T extends object>({
   keyExtractor,
   className = '',
 }: DataTableProps<T>) {
+  const pag = usePaginaFilas(data)
   return (
-    <section className={`rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-sm ${className}`}>
+    <section className={`min-w-0 max-w-full rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-sm ${className}`}>
       {(title || actionButton) && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           {title && <h3 className="font-['Syne'] text-lg font-bold text-[var(--texto)]">{title}</h3>}
@@ -49,8 +52,8 @@ export function DataTable<T extends object>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-sm">
+      <div className="tabla-scroll">
+        <table aria-label={title} className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--borde)]">
               {columns.map((col) => (
@@ -74,7 +77,8 @@ export function DataTable<T extends object>({
                 </td>
               </tr>
             ) : (
-              data.map((row, rowIdx) => {
+              pag.filas.map((row, i) => {
+                const rowIdx = pag.inicio + i
                 const rowKey = keyExtractor ? keyExtractor(row, rowIdx) : getDefaultRowKey(row, rowIdx)
                 return (
                   <tr key={rowKey} className="border-b border-[var(--borde)]">
@@ -90,6 +94,7 @@ export function DataTable<T extends object>({
           </tbody>
         </table>
       </div>
+      {!isLoading && <Paginacion {...pag} titulo={title} />}
     </section>
   )
 }

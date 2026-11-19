@@ -1,4 +1,6 @@
 import './Gerente.css'
+import CierreTotal from './components/CierreTotal'
+import { useVistaURL } from '../../hook/useVistaURL'
 import { useCambiosSede } from '../../hook/useCambiosSede'
 import HistorialSection from './sections/HistorialSection'
 import { mensajeError } from '../../utils/mensajeError'
@@ -72,7 +74,8 @@ const cajaVacia = { nombre: '', estado: 'ACTIVA' }
 const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as number | '' , contrasena: '' }
 function Gerente() {
   useCambiosSede()
-  const [seccionActiva, setSeccionActiva] = useState('Menú')
+  const [seccionActiva, setSeccionActiva] = useVistaURL('vista', 'Menú', menuItems.map(i => i.label))
+  const [revisionAbierta, setRevisionAbierta] = useState(false)
   const [fuenteProductos, setFuenteProductos] = useState<'vista' | 'sp'>('vista')
   const datos = useDatosGerente(seccionActiva, fuenteProductos)
   const { ingresosDelMes, pagosAprobados, mesas, movimientosRecientes, estadoInventario, tendenciaSemanal } = datos
@@ -172,7 +175,7 @@ function Gerente() {
 
   const nombreEmpleado = (t: TurnoApi) => `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—'
   const horaTurno = (fecha: string | null) =>
-    fecha ? new Date(fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '—'
+    fecha ? new Date(fecha).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Bogota' }) : '—'
   const turnoParaCerrar = turnos.find(t => t.id_turno === turnoCerrando) ?? null
 
   const cerrarTurno = async (t: TurnoApi) => {
@@ -278,7 +281,7 @@ function Gerente() {
   }
   const toggleCaja = async (id: number, estado: string) => {
     if (!confirm(`¿Deseas ${estado === 'ACTIVA' ? 'desactivar' : 'activar'} esta caja?`)) return
-    try { await api.delete(`/cajas/${id}`); datos.cajas.cargar() } catch { alert('Error') }
+    await api.patch(`/cajas/${id}/estado`, { estado: estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA' }); await datos.cajas.cargar()
   }
   return (
     <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
@@ -288,7 +291,7 @@ function Gerente() {
         vistaActual={vistaActual}
         onNavigate={setVistaActual}
         onLogout={() => { logout(); navigate('/') }}
-        footer={<Button className="mb-2" onClick={() => setVistaActual('turnos')}>Cerrar Caja</Button>}
+        footer={<Button className="mb-2" onClick={() => setRevisionAbierta(true)}>Hacer cierre total</Button>}
       />
       <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 pt-20 md:p-8">
         <Header
@@ -544,7 +547,6 @@ function Gerente() {
             ]}
             transacciones={[...pagosAprobados]
               .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
-              .slice(0, 10)
               .map(p => ({
                 fecha: p.fecha_pago
                   ? new Date(p.fecha_pago).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
@@ -667,57 +669,18 @@ function Gerente() {
               </div>
             )}
             {errorTurno && turnoCerrando === null && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
-              <DataTable
-                columns={[
-                  { header: 'Empleado', render: (t) => <strong>{nombreEmpleado(t)}</strong> },
-                  {
-                    header: 'Rol',
-                    render: (t) => <span className="text-[var(--texto-muted)]">Cajero{t.caja?.nombre ? ` · ${t.caja.nombre}` : ''}</span>,
-                  },
-                  {
-                    header: 'Turno',
-                    render: (t) => (
-                      <span className="text-[var(--texto-muted)]">
-                        {horaTurno(t.fecha_apertura)} - {t.fecha_cierre ? horaTurno(t.fecha_cierre) : 'En curso'}
-                      </span>
-                    ),
-                  },
-                  {
-                    header: 'Estado',
-                    render: (t) => (
-                      <span className={`font-semibold ${t.estado === 'ABIERTA' ? 'text-[var(--verde)]' : 'text-[var(--t-txt-854f0b,#854F0B)]'}`}>
-                        {t.estado === 'ABIERTA' ? 'Activo' : 'Cerrado'}
-                        {t.estado !== 'ABIERTA' && (
-                          <span className="block text-[0.75rem] font-normal text-[var(--texto-muted)]">
-                            Esperado {monedaTurno(t.efectivo_esperado)} · Diferencia {monedaTurno(t.diferencia)}
-                          </span>
-                        )}
-                      </span>
-                    ),
-                  },
-                  {
-                    header: 'Acciones',
-                    render: (t) =>
-                      t.estado === 'ABIERTA' ? (
-                        <Button size="small" variant="outline"
-                          onClick={() => {
-                            setTurnoCerrando(t.id_turno)
-                            setEfectivoContado('')
-                            setNotasCierre('')
-                            setErrorTurno('')
-                          }}
-                        >
-                          Cerrar turno
-                        </Button>
-                      ) : (
-                        '—'
-                      ),
-                  },
-                ]}
-                data={turnos}
-                emptyMessage="No hay turnos registrados."
-                keyExtractor={(t) => t.id_turno}
-              />
+            <DataTable title="Turnos activos" data={turnos.filter(t => t.estado === 'ABIERTA')} keyExtractor={t => t.id_turno} emptyMessage="No hay turnos activos." columns={[
+              { header: 'Cajero', render: t => nombreEmpleado(t) }, { header: 'Caja', render: t => t.caja?.nombre ?? '—' },
+              { header: 'Apertura', render: t => horaTurno(t.fecha_apertura) }, { header: 'Estado', render: () => 'Activo' },
+              { header: 'Acciones', render: t => <Button size="small" variant="outline" onClick={() => {
+                setTurnoCerrando(t.id_turno); setEfectivoContado(''); setNotasCierre(''); setErrorTurno('')
+              }}>Cerrar turno</Button> },
+            ]} />
+            <DataTable className="mt-5" title="Historial de turnos cerrados" data={turnos.filter(t => t.estado === 'CERRADA')} keyExtractor={t => t.id_turno} emptyMessage="No hay turnos cerrados." columns={[
+              { header: 'Cajero', render: t => nombreEmpleado(t) }, { header: 'Caja', render: t => t.caja?.nombre ?? '—' },
+              { header: 'Apertura', render: t => horaTurno(t.fecha_apertura) }, { header: 'Cierre', render: t => horaTurno(t.fecha_cierre) },
+              { header: 'Arqueo', render: t => `Esperado ${monedaTurno(t.efectivo_esperado)} · Diferencia ${monedaTurno(t.diferencia)}` },
+            ]} />
 
               <Modal title="Cerrar turno" isOpen={turnoParaCerrar !== null} onClose={() => setTurnoCerrando(null)}>
                 {turnoParaCerrar && (
@@ -749,6 +712,7 @@ function Gerente() {
           </section>
         )}
       </main>
+      {revisionAbierta && <CierreTotal cerrar={() => setRevisionAbierta(false)} />}
       {receta && <RecetaProducto key={receta.id_producto} producto={receta} cerrar={() => setReceta(null)} />}
       <GerenteModals
         producto={productoActual}

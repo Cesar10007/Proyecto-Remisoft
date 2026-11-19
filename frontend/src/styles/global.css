@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
 @import "tailwindcss";
 @import "../components/common/tables.css";
 
@@ -6,6 +6,30 @@
   font-family: 'DM Sans Local';
   src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
   font-weight: 100 1000;
+  font-display: swap;
+}
+
+/* Los dígitos en etiquetas mixtas (Mesa 01, FAC-12, etc.) usan los mismos glifos
+   locales incluso cuando el resto del título usa otra familia o no hay red. */
+@font-face {
+  font-family: 'Syne';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  unicode-range: U+0030-0039;
   font-display: swap;
 }
 
@@ -37,13 +61,13 @@
     --table-row-hover: rgba(240, 237, 237, 0.5);
     --borde: rgba(0,0,0,0.09);
     --sombra: 0 2px 24px rgba(216,90,48,0.08), 0 1px 4px rgba(0,0,0,0.06);
-    --font-numeros: 'Montserrat', sans-serif;
+    --font-numeros: var(--fuente-lectura);
 }
 
 .font-number,
 .font-numeric {
     font-family: var(--font-numeros);
-    font-weight: 400;
+    font-variant-numeric: tabular-nums;
 }
 
 html { scroll-behavior: smooth; }
@@ -52,6 +76,7 @@ body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--texto);
+    font-variant-numeric: tabular-nums;
     min-height: 100vh;
     overflow-x: hidden;
 }

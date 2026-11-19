@@ -5,3 +5,15 @@
     background-color: var(--table-row-hover);
   }
 }
+
+/* Solo la tabla se desplaza horizontalmente, nunca la página ni el paginador. */
+.tabla-scroll { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+@media (max-width: 640px) {
+  .tabla-scroll th, .tabla-scroll td { padding-inline: .65rem; }
+  .tabla-scroll td { overflow-wrap: anywhere; min-width: 5rem; }
+  .tabla-paginacion { justify-content: center; }
+}
+@media print {
+  .tabla-scroll { overflow: visible; }
+  .tabla-paginacion { display: none !important; }
+}
