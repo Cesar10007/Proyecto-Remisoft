@@ -1,3 +1,61 @@
+.modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+    padding: 20px;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 420px; width: 100%;
+    /* Evita que el modal se salga de la pantalla cuando el formulario
+       tiene muchos campos: en vez de cortarse, hace scroll interno. */
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    transform: scale(0.96);
+    transition: transform 0.25s;
+    border: 1px solid var(--borde);
+}
+.modal-overlay.open .modal { transform: scale(1); }
+
+.modal-header {
+    /* El botón de cerrar es el único hijo, así que va al extremo derecho.
+       Con space-between quedaba pegado a la izquierda. */
+    display: flex; align-items: center; justify-content: flex-end;
+    margin-bottom: 20px;
+}
+.modal-header h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; }
+.modal-close {
+    width: 30px; height: 30px; flex-shrink: 0;
+    border-radius: 50%; border: 1px solid var(--borde);
+    background: transparent; cursor: pointer;
+    font-size: 1rem; color: var(--texto-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.modal-close:hover { background: var(--t-bg-f0ebe5, #f0ebe5); }
+
+/* En pantallas angostas el padding de 36px deja muy poco espacio útil. */
+@media (max-width: 480px) {
+    .modal-overlay { padding: 12px; }
+    .modal {
+        padding: 24px 20px;
+        border-radius: 16px;
+        max-height: calc(100vh - 24px);
+    }
+}
+
+/* Los formularios dentro del modal NO deben tener min-width propio:
+   el ancho lo define el contenedor (.modal). Si el formulario pide más
+   ancho del disponible, se desborda a la derecha y el modal queda
+   asimétrico (mucho aire a la izquierda, nada a la derecha). */
+.modal form { width: 100%; min-width: 0; }
 .dialog-surface {
   position: fixed;
   inset: 0;

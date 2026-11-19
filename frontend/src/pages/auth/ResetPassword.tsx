@@ -112,7 +112,7 @@ function ResetPassword() {
                 aria-description={showPassword ? 'Oculta los caracteres de la nueva contraseña.' : 'Muestra la nueva contraseña para revisarla.'}
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+                className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 <span className="material-symbols-outlined block text-[20px]">
@@ -138,7 +138,7 @@ function ResetPassword() {
                 aria-description={showConfirm ? 'Oculta la contraseña de confirmación.' : 'Muestra la contraseña de confirmación.'}
                 type="button"
                 onClick={() => setShowConfirm((p) => !p)}
-                className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+                className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
                 aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 <span className="material-symbols-outlined block text-[20px]">

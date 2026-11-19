@@ -106,7 +106,7 @@ function Login({ onClose }: LoginProps) {
               aria-description={showPassword ? 'Oculta los caracteres de la contraseña.' : 'Muestra la contraseña para que puedas revisarla.'}
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
+              className="absolute bottom-0 right-3 top-5 inline-flex items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
               aria-label={
                 showPassword
                   ? 'Ocultar contraseña'

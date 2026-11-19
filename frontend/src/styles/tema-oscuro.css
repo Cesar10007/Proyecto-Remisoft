@@ -16,6 +16,7 @@ html[data-theme='dark'] {
   --texto: #f2ece7;
   --texto-muted: #b9aca3;
   --borde: rgba(255, 255, 255, 0.10);
+  --fila-hover: #2a2420;
   --sombra: 0 2px 24px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.3);
   --rojo-light: #3a1f16;
   --amarillo-light: #3a2e14;

@@ -31,6 +31,84 @@ import IASection from './sections/IASection'
 import MesasSection from './sections/MesasSection'
 import RecetaProducto from './components/RecetaProducto'
 
+// Formas de respuesta de GET /api/facturas y GET /api/inventario (solo los campos que usamos).
+interface PagoApi { id_factura?: number; id_turno?: number | null; metodo: string | null; monto: string | number | null; estado: string | null; fecha_pago: string | null }
+interface FacturaApi { pedido?: { Mesa_num: number | null } | null; pago?: PagoApi[] }
+interface TurnoApi {
+  id_turno: number
+  id_caja: number
+  id_usuario_cajero: number
+  fecha_apertura: string | null
+  fecha_cierre: string | null
+  efectivo_inicial: string | number | null
+  efectivo_esperado: string | number | null
+  efectivo_real: string | number | null
+  diferencia: string | number | null
+  estado: string | null
+  caja?: { nombre: string | null } | null
+  usuario?: { nombre: string | null; apellido: string | null } | null
+}
+interface PedidoApi {
+  id_pedido: number
+  Mesa_num: number | null
+  Tipo_pedido: string | null
+  Fecha_hora: string | null
+  nombre_mesero: string | null
+}
+interface EventoHistorial { fecha: string | null; usuario: string; accion: string }
+interface InventarioApi { nombre: string; unidad_medida: string | null; stock_minimo: string | number | null; stock_actual: number | string | null; stock_bajo: boolean }
+
+const etiquetaMetodo = (metodo: string | null) => {
+  const etiquetas: Record<string, string> = { EFECTIVO: 'Efectivo', TARJETA_CREDITO: 'Tarjeta crédito', TARJETA_DEBITO: 'Tarjeta débito', PSE: 'PSE' }
+  return metodo ? (etiquetas[metodo] ?? metodo) : 'Sin método'
+}
+
+const haceTiempo = (fecha: string | null) => {
+  if (!fecha) return '—'
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 60000))
+  if (minutos < 60) return `Hace ${minutos} min`
+  if (minutos < 1440) return `Hace ${Math.round(minutos / 60)} h`
+  return `Hace ${Math.round(minutos / 1440)} d`
+}
+
+// Fecha YYYY-MM-DD del día de Bogotá, desplazada N días.
+function fechaBogota(desplazamientoDias = 0): string {
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
+  const fecha = new Date(`${hoy}T00:00:00Z`)
+  fecha.setUTCDate(fecha.getUTCDate() + desplazamientoDias)
+  return fecha.toISOString().slice(0, 10)
+}
+
+type PeriodoTendencia = 'dia' | 'semana' | 'mes' | 'anio'
+
+interface FiltroTendencia {
+  periodo: PeriodoTendencia
+  ancla: string
+  etiqueta: string
+}
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// Etiqueta corta para una fecha exacta: "18 nov 2026".
+function etiquetaFechaCorta(fecha: string): string {
+  const dia = Number(fecha.slice(8, 10))
+  const mes = MESES_CORTOS[Number(fecha.slice(5, 7)) - 1]
+  return `${dia} ${mes} ${fecha.slice(0, 4)}`
+}
+
+interface PuntoTendencia {
+  etiqueta: string
+  secundaria: string
+  detalle: string
+  desde: string
+  hasta: string
+  ingresos: number
+  facturas: number
+}
+
+interface ResumenDashboard {
+  ingresosHoy: number
+  pedidosActivos: number
 function EstadoLectura({ consulta, vacio }: { consulta: Lectura; vacio?: string }) {
   if (consulta.error) return <p role="alert" className="text-sm text-[var(--rojo-dark)]">{consulta.error} <button aria-description="Vuelve a cargar los datos de esta sección." onClick={consulta.cargar}>Reintentar</button></p>
   const mensaje = consulta.data === null ? 'Cargando…' : vacio
@@ -126,6 +204,29 @@ function Gerente() {
   const [errorPersonal, setErrorPersonal] = useState<ErrorPersonal | null>(null)
   const [guardandoPersonal, setGuardandoPersonal] = useState(false)
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
+  const [resumenDashboard, setResumenDashboard] = useState<ResumenDashboard | null>(null)
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú') return
+    const hasta = fechaBogota(0)
+    const desde = fechaBogota(-6)
+    Promise.all([
+      api.get('/reportes/ventas-diarias', { params: { desde, hasta } }),
+      api.get('/reportes/pedidos-activos'),
+    ])
+      .then(([ventas, pedidos]) => {
+        const dias: { fecha: string; ingresos_brutos: number }[] = ventas.data.data.dias
+        const ingresosPorDia = new Map<string, number>(
+          dias.map(d => [d.fecha, Number(d.ingresos_brutos)] as [string, number]),
+        )
+        setResumenDashboard({
+          ingresosHoy: ingresosPorDia.get(hasta) ?? 0,
+          pedidosActivos: Number(pedidos.data.data.pedidos_activos),
+        })
+      })
+      .catch(console.error)
+  }, [seccionActiva])
+
   const metricasDashboard = [
     {
       icon: 'monetization_on',
@@ -149,6 +250,209 @@ function Gerente() {
       badgeColor: pedidosActivos != null && pedidosActivos > 0 ? 'rojo' : 'muted',
     },
   ]
+
+  const [filtroTendencia, setFiltroTendencia] = useState<FiltroTendencia>({
+    periodo: 'semana',
+    ancla: fechaBogota(0),
+    etiqueta: 'Esta semana',
+  })
+  const [menuTendencia, setMenuTendencia] = useState(false)
+  const [fechaExacta, setFechaExacta] = useState(fechaBogota(0))
+  const [puntosTendencia, setPuntosTendencia] = useState<PuntoTendencia[]>([])
+  const [tituloTendencia, setTituloTendencia] = useState('')
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú') return
+    let vigente = true
+    api.get('/reportes/tendencia', {
+      params: { periodo: filtroTendencia.periodo, ancla: filtroTendencia.ancla },
+    })
+      .then(({ data }) => {
+        if (!vigente) return
+        setPuntosTendencia(data.data.puntos)
+        setTituloTendencia(data.data.titulo ?? '')
+      })
+      .catch(console.error)
+    return () => { vigente = false }
+  }, [seccionActiva, filtroTendencia])
+
+  const maxTendencia = Math.max(...puntosTendencia.map(p => p.ingresos), 1)
+
+  const hoyTendencia = fechaBogota(0)
+  const anioTendencia = Number(hoyTendencia.slice(0, 4))
+
+  const opcionesTendencia: FiltroTendencia[] = [
+    { periodo: 'dia', ancla: hoyTendencia, etiqueta: 'Hoy' },
+    { periodo: 'semana', ancla: hoyTendencia, etiqueta: 'Esta semana' },
+    { periodo: 'mes', ancla: hoyTendencia, etiqueta: 'Este mes' },
+    { periodo: 'anio', ancla: hoyTendencia, etiqueta: 'Este año' },
+  ]
+
+  const aniosTendencia: FiltroTendencia[] = Array.from({ length: 4 }, (_, i) => {
+    const anio = anioTendencia + i + 1
+    return { periodo: 'anio' as const, ancla: `${anio}-01-01`, etiqueta: `Año ${anio}` }
+  })
+
+  const aplicarFechaExacta = (valor: string) => {
+    if (!valor) return
+    setFechaExacta(valor)
+    setFiltroTendencia({ periodo: 'dia', ancla: valor, etiqueta: etiquetaFechaCorta(valor) })
+  }
+
+  const itemTendencia = (opcion: FiltroTendencia) => {
+    const activo = filtroTendencia.etiqueta === opcion.etiqueta
+    return (
+      <button
+        key={opcion.etiqueta}
+        type="button"
+        onClick={() => {
+          setFiltroTendencia(opcion)
+          if (opcion.periodo === 'dia') setFechaExacta(opcion.ancla)
+          setMenuTendencia(false)
+        }}
+        className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[0.78rem] font-medium transition-colors ${
+          activo
+            ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]'
+            : 'text-[var(--texto)] hover:bg-[var(--t-bg-f9f5f0,#f9f5f0)]'
+        }`}
+      >
+        {opcion.etiqueta}
+        {activo ? <span className="material-symbols-outlined text-[16px]">check</span> : null}
+      </button>
+    )
+  }
+
+  const subtituloTendencia = tituloTendencia || 'Ingresos del periodo'
+
+  const [pedidosEnCurso, setPedidosEnCurso] = useState<PedidoEnCurso[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Pedidos') return
+    api.get('/pedidos')
+      .then(({ data }: { data: PedidoEnCurso[] }) =>
+        setPedidosEnCurso(data.filter(p => p.estado !== 'CERRADO' && p.estado !== 'CANCELADO')))
+      .catch(console.error)
+  }, [seccionActiva])
+
+  // Estado de mesas: mesas reales de la base (GET /api/mesas), actualizadas cada 15 s.
+  const [mesas, setMesas] = useState<{ id: string; ocupada: boolean }[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú' && seccionActiva !== 'Mesas') return
+    const cargarMesas = () =>
+      api.get('/mesas')
+        .then(({ data }: { data: { data: { numero: number; estado: string }[] } }) =>
+          setMesas(data.data.map(m => ({
+            id: `T-${String(m.numero).padStart(2, '0')}`,
+            ocupada: m.estado === 'occupied',
+          }))))
+        .catch(console.error)
+    cargarMesas()
+    const intervalo = setInterval(cargarMesas, 15000)
+    return () => clearInterval(intervalo)
+  }, [seccionActiva])
+
+  // Movimientos recientes (pagos aprobados) y Estado inventario (stock actual): datos de la base.
+  const [movimientosRecientes, setMovimientosRecientes] = useState<{ icon: string; titulo: string; sub: string; monto: string; positivo: boolean }[]>([])
+  const [estadoInventario, setEstadoInventario] = useState<{ nombre: string; porcentaje: number; color: string; etiqueta: string }[]>([])
+
+  useEffect(() => {
+    if (seccionActiva !== 'Menú' && seccionActiva !== 'Finanzas') return
+    api.get('/facturas')
+      .then(({ data }: { data: { data: FacturaApi[] } }) => {
+        const aprobados = data.data
+          .flatMap(f => (f.pago ?? []).map(p => ({ ...p, mesa: f.pedido?.Mesa_num ?? null })))
+          .filter(p => p.estado === 'APROBADO')
+        const ahora = new Date()
+        setIngresosDelMes(aprobados
+          .filter(p => {
+            const fecha = new Date(p.fecha_pago ?? '')
+            return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear()
+          })
+          .reduce((acc, p) => acc + Number(p.monto ?? 0), 0))
+        setPagosAprobados(aprobados)
+        const pagos = [...aprobados]
+          .sort((a, b) => new Date(b.fecha_pago ?? 0).getTime() - new Date(a.fecha_pago ?? 0).getTime())
+          .slice(0, 4)
+        setMovimientosRecientes(pagos.map(p => ({
+          icon: 'shopping_cart',
+          titulo: p.mesa ? `Mesa ${String(p.mesa).padStart(2, '0')} - Pago recibido` : 'Pago recibido (domicilio)',
+          sub: `${haceTiempo(p.fecha_pago)} • ${etiquetaMetodo(p.metodo)}`,
+          monto: `+${formatoCOP.format(Number(p.monto ?? 0))}`,
+          positivo: true,
+        })))
+      })
+      .catch(console.error)
+
+    if (seccionActiva !== 'Menú') return
+    api.get('/inventario')
+      .then(({ data }: { data: { data: InventarioApi[] } }) => setEstadoInventario(data.data.map(i => {
+        const minimo = Number(i.stock_minimo ?? 0)
+        const actual = Number(i.stock_actual ?? 0)
+        return {
+          nombre: i.nombre,
+          porcentaje: minimo > 0 ? Math.min(100, Math.round((actual / minimo) * 100)) : 100,
+          color: i.stock_bajo ? 'rojo' : 'verde',
+          etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim(),
+        }
+      })))
+      .catch(console.error)
+  }, [seccionActiva])
+
+  // Historial: pedidos, pagos y turnos registrados en la base (no hay tabla de auditoria).
+  useEffect(() => {
+    if (seccionActiva !== 'Historial') return
+    Promise.all([api.get('/pedidos'), api.get('/turnos'), api.get('/facturas')])
+      .then(([pedidosRes, turnosRes, facturasRes]) => {
+        const pedidos: PedidoApi[] = pedidosRes.data
+        const turnosLista: TurnoApi[] = turnosRes.data.data
+        const facturasLista: FacturaApi[] = facturasRes.data.data
+        const cajeroDeTurno = new Map<number, string>(turnosLista.map(t => [
+          t.id_turno,
+          `${t.usuario?.nombre ?? ''} ${t.usuario?.apellido ?? ''}`.trim() || '—',
+        ]))
+        const eventos: EventoHistorial[] = [
+          ...pedidos.map(p => ({
+            fecha: p.Fecha_hora,
+            usuario: p.nombre_mesero ?? '—',
+            accion: `Creó el pedido #${p.id_pedido} · ${p.Mesa_num ? `Mesa ${p.Mesa_num}` : (p.Tipo_pedido ?? 'Sin mesa')}`,
+          })),
+          ...turnosLista.flatMap(t => {
+            const caja = t.caja?.nombre ?? `caja ${t.id_caja}`
+            const cajero = cajeroDeTurno.get(t.id_turno) ?? '—'
+            const movimientos: EventoHistorial[] = [{ fecha: t.fecha_apertura, usuario: cajero, accion: `Abrió turno en ${caja}` }]
+            if (t.fecha_cierre) movimientos.push({ fecha: t.fecha_cierre, usuario: cajero, accion: `Cerró turno en ${caja}` })
+            return movimientos
+          }),
+          ...facturasLista.flatMap(f => (f.pago ?? []).map(p => ({
+            fecha: p.fecha_pago,
+            usuario: p.id_turno != null ? (cajeroDeTurno.get(p.id_turno) ?? '—') : '—',
+            accion: `Registró pago de ${formatoCOP.format(Number(p.monto ?? 0))} (${etiquetaMetodo(p.metodo)}) · factura #${p.id_factura ?? '—'}`,
+          }))),
+        ]
+        setHistorial(eventos
+          .sort((a, b) => new Date(b.fecha ?? 0).getTime() - new Date(a.fecha ?? 0).getTime())
+          .slice(0, 50))
+      })
+      .catch(console.error)
+  }, [seccionActiva])
+
+  const recargarTurnos = () => {
+    api.get('/turnos')
+      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
+      .catch(console.error)
+  }
+
+  useEffect(() => {
+    if (seccionActiva !== 'Turnos') return
+    api.get('/turnos')
+      .then(({ data }: { data: { data: TurnoApi[] } }) => setTurnos(data.data))
+      .catch(console.error)
+    api.get('/cajas').then(r => setCajas(r.data)).catch(console.error)
+    api.get('/usuarios')
+      .then(({ data }: { data: Personal[] }) => setCajeros(data.filter(u => u.rol === 'CAJERO' && u.activo === 1)))
+      .catch(console.error)
+  }, [seccionActiva])
 
   const abrirTurno = async () => {
     const efectivo = Number(formAbrir.efectivo_inicial)
@@ -318,26 +622,60 @@ function Gerente() {
             </section>
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
-                <div className="mb-7 flex items-end justify-between">
+                <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia semanal</h3>
-                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Ingresos de los últimos 7 días</p>
+                    <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Tendencia de ingresos</h3>
+                    <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">{subtituloTendencia}</p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setMenuTendencia(v => !v)}
+                        className="flex items-center gap-1.5 rounded-full border border-[var(--borde)] px-3 py-1.5 text-[0.74rem] font-semibold text-[var(--texto)] transition-colors hover:border-[var(--rojo)]"
+                      >
+                        <span className="material-symbols-outlined text-[17px] text-[var(--texto-muted)]">filter_list</span>
+                        {filtroTendencia.etiqueta}
+                        <span className="material-symbols-outlined text-[18px] text-[var(--texto-muted)]">expand_more</span>
+                      </button>
+                      {menuTendencia ? (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setMenuTendencia(false)}></div>
+                          <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-1.5 shadow-[var(--sombra)]">
+                            {opcionesTendencia.map(itemTendencia)}
+                            <div className="my-1 border-t border-[var(--borde)]"></div>
+                            <p className="px-3 py-1 text-[0.64rem] font-bold uppercase tracking-wider text-[var(--texto-muted)]">Por año</p>
+                            {aniosTendencia.map(itemTendencia)}
+                            <div className="my-1 border-t border-[var(--borde)]"></div>
+                            <p className="px-3 py-1 text-[0.64rem] font-bold uppercase tracking-wider text-[var(--texto-muted)]">Fecha exacta</p>
+                            <input
+                              type="date"
+                              value={fechaExacta}
+                              onChange={e => aplicarFechaExacta(e.target.value)}
+                              className="w-full rounded-xl border border-[var(--borde)] bg-transparent px-3 py-1.5 text-[0.78rem] text-[var(--texto)] outline-none focus:border-[var(--rojo)]"
+                            />
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--amarillo)]">
                       <span className="inline-block h-2.5 w-2.5 rounded-full bg-current"></span>Real
                     </span>
                   </div>
                 </div>
                 <div className="flex h-40 items-end justify-between gap-2">
+                  {puntosTendencia.map(p => (
+                    <div key={p.desde} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                   <EstadoLectura consulta={datos.semana} vacio={!tendenciaSemanal.length ? 'No hay ventas registradas en los últimos 7 días.' : undefined} />
                   {tendenciaSemanal.map(b => (
                     <div key={b.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                       <div
                         className="w-full rounded-t-[6px] bg-[var(--rojo)] opacity-85 transition-[height] duration-300 ease-in-out"
-                        style={{ height: `${b.alto}%` }}
+                        style={{ height: `${Math.max(Math.round((p.ingresos / maxTendencia) * 100), 2)}%` }}
+                        title={`${p.detalle}: ${formatoCOP.format(p.ingresos)} (${p.facturas} facturas)`}
                       ></div>
-                      <span className="text-[0.65rem] font-semibold text-[var(--texto-muted)]">{b.dia}</span>
+                      <span className="whitespace-nowrap text-[0.65rem] font-semibold text-[var(--texto-muted)]">{p.etiqueta}</span>
+                      <span className="whitespace-nowrap text-[0.6rem] leading-none text-[var(--texto-muted)] opacity-70">{p.secundaria}</span>
                     </div>
                   ))}
                 </div>
@@ -633,6 +971,11 @@ function Gerente() {
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
+              <button
+                type="button"
+                onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}
+                className="rounded-xl bg-[var(--rojo)] px-4 py-2 text-[0.85rem] font-semibold text-white"
+              >
               <Button aria-description={mostrarAbrirTurno ? 'Oculta el formulario sin abrir un turno.' : 'Elige caja, cajero y fondo inicial para un nuevo turno.'} variant="primary" aria-expanded={mostrarAbrirTurno} className="ge-abrir-turno" onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
                 {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
               </Button>

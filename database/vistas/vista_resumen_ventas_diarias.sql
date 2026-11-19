@@ -10,6 +10,18 @@ CREATE OR REPLACE VIEW vista_primer_cobro_factura AS
 SELECT id_factura,MIN(fecha) AS fecha FROM vista_cobros_factura_dia GROUP BY id_factura;
 
 CREATE OR REPLACE VIEW vista_resumen_ventas_diarias AS
+SELECT
+    DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00')) AS fecha,
+    COUNT(f.id_factura)        AS total_pedidos,
+    SUM(f.total + COALESCE(f.Descuento, 0)) AS ingresos_brutos,
+    SUM(f.IVA)                 AS total_iva,
+    SUM(f.Descuento)           AS total_descuentos,
+    SUM(f.Propina)             AS total_propinas,
+    SUM(f.total)               AS ingresos_netos
+FROM Factura f
+WHERE f.estado = 'PAGADA'
+GROUP BY DATE(CONVERT_TZ(f.Fecha_emision, '+00:00', '-05:00'))
+ORDER BY fecha DESC;
 SELECT p.id_restaurante, c.fecha, COUNT(*) AS total_pedidos,
        SUM(c.cobrado + IF(c.fecha=primero.fecha,COALESCE(f.Descuento,0),0)) AS ingresos_brutos,
        SUM(IF(c.fecha=primero.fecha,COALESCE(f.IVA,0),0)) AS total_iva,
