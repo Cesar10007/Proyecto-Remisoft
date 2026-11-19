@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import Button from '../../components/common/Button'
 import './Repartidor.css'
+import { Headset, History, LayoutDashboard, Truck } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { InputField } from '../../components/common/InputField'
@@ -12,10 +14,10 @@ import { SelectField } from '../../components/common/SelectField'
 import { TextAreaField } from '../../components/common/TextAreaField'
 
 const menuItems = [
-  { icon: 'dashboard', label: 'Resumen' },
-  { icon: 'local_shipping', label: 'Entregas' },
-  { icon: 'history', label: 'Historial' },
-  { icon: 'support_agent', label: 'Soporte' },
+  { icon: <LayoutDashboard />, label: 'Resumen' },
+  { icon: <Truck />, label: 'Entregas' },
+  { icon: <History />, label: 'Historial' },
+  { icon: <Headset />, label: 'Soporte' },
 ]
 
 interface Domicilio {
@@ -356,7 +358,7 @@ function Repartidor() {
         onNavigate={setActiveItem}
         onLogout={() => { logout(); navigate('/') }}
         footer={
-          <button type="button" onClick={() => { logout(); navigate('/') }} className="mb-2 w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3 font-bold text-white">
+          <button type="button" onClick={() => { logout(); navigate('/') }} className="mb-2 w-full rounded-xl border-none bg-[var(--accion-primaria)] px-4 py-3 font-bold text-[var(--sobre-accion)]">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
             Finalizar turno
           </button>
@@ -479,7 +481,7 @@ function Repartidor() {
                           <span className="material-symbols-outlined">qr_code_2</span>App Pay
                         </button>
                       </div>
-                      <button className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-4 text-[1rem] font-extrabold text-white">
+                      <button className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-4.5 py-4 text-[1rem] font-extrabold text-[var(--sobre-accion)]">
                         <span className="material-symbols-outlined">check_circle</span>
                         Confirmar entrega
                       </button>
@@ -569,7 +571,7 @@ function Repartidor() {
                 nombreUsuario={nombreUsuario}
                 acciones={
                   <button
-                    className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-5 py-2.5 text-[0.875rem] font-extrabold text-white"
+                    className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-5 py-2.5 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
                     onClick={abrirCrearDomicilio}
                   >
                     <span className="material-symbols-outlined text-[18px]">add</span>
@@ -639,8 +641,8 @@ function Repartidor() {
                           disabled={d.estado === 'CANCELADO'}
                           className={`flex-1 rounded-xl border-[1.5px] border-[var(--t-brd-f0ebe7,#f0ebe7)] px-3 py-2.5 text-[0.82rem] font-bold ${
                             d.estado === 'CANCELADO'
-                              ? 'cursor-not-allowed bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-text-muted)] opacity-50'
-                              : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--rd-danger)]'
+                              ? 'cursor-not-allowed bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-text-muted)] border-dashed'
+                              : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--texto-acento)]'
                           }`}
                         >
                           Cancelar
@@ -688,20 +690,10 @@ function Repartidor() {
                   </p>
                 )}
                 <div className="mt-2 flex gap-2.5">
-                  <button
-                    disabled={guardandoDomicilio}
-                    onClick={() => setModalDomicilio(false)}
-                    className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={guardarDomicilio}
-                    disabled={guardandoDomicilio}
-                    className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
-                  >
+                  <Button className="flex-1" variant="outline" disabled={guardandoDomicilio} onClick={() => setModalDomicilio(false)}>Cancelar</Button>
+                  <Button className="flex-[2]" onClick={guardarDomicilio} disabled={guardandoDomicilio}>
                     {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </Modal>
@@ -906,7 +898,7 @@ function Repartidor() {
                     {modalSuceso.caso.estado === 'Abierto' && (
                       <button
                         onClick={() => resolverCaso(modalSuceso.caso!.id)}
-                        className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-success)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+                        className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-exito)] px-4.5 py-3 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
                       >
                         Marcar como resuelto
                       </button>
@@ -951,7 +943,7 @@ function Repartidor() {
               </button>
               <button
                 onClick={guardarReporte}
-                className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+                className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-4.5 py-3 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
               >
                 Enviar reporte
               </button>

@@ -3,7 +3,7 @@ import { ChevronLeft, LogOut, Menu, X } from 'lucide-react'
 import ThemeToggle from '../common/ThemeToggle'
 
 export interface SidebarMenuItem {
-  icon: string | ReactElement
+  icon: ReactElement
   label: string
   badge?: number
 }
@@ -24,6 +24,8 @@ interface SidebarProps {
 // Escritorio: columna fija a la izquierda del contenido (puede contraerse si es colapsable).
 // Celular: barra superior con modo oscuro y menú, que abre un cajón.
 const CLAVE_PLEGADO = 'remisoft-sidebar'
+// El nombre con hash viene del JS que ejecuta esta pestaña, no del HEAD local.
+const versionInterfaz = import.meta.env.DEV ? 'Vite (desarrollo)' : new URL(import.meta.url).pathname.split('/').pop()
 
 function Sidebar({
   subtitulo,
@@ -176,17 +178,11 @@ function Sidebar({
                     : 'border-r-transparent bg-transparent text-[var(--texto-muted)]'
                 }`}
               >
-                {typeof item.icon === 'string' ? (
-                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-                    {item.icon}
-                  </span>
-                ) : (
-                  item.icon
-                )}
+                <span aria-hidden="true" className="shrink-0 [&>svg]:size-5">{item.icon}</span>
                 <span className={compacto ? 'md:hidden' : ''}>{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
                   <span
-                    className={`ml-auto rounded-full bg-[var(--rojo)] px-2 py-0.5 text-[0.7rem] font-bold text-white ${compacto ? 'md:hidden' : ''}`}
+                    className={`ml-auto rounded-full bg-[var(--accion-primaria)] px-2 py-0.5 text-[0.7rem] font-bold text-[var(--sobre-accion)] ${compacto ? 'md:hidden' : ''}`}
                   >
                     {item.badge}
                   </span>
@@ -216,6 +212,9 @@ function Sidebar({
             <LogOut size={18} aria-hidden="true" />
             <span className={compacto ? 'md:hidden' : ''}>Cerrar sesión</span>
           </button>
+          <small className={`break-all px-3 text-xs text-[var(--texto-muted)] ${compacto ? 'md:hidden' : ''}`}>
+            Interfaz: <span translate="no">{versionInterfaz}</span>
+          </small>
         </div>
       </aside>
     </>

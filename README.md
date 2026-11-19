@@ -197,6 +197,16 @@ Abrir frontend:
 - Localmente: `http://localhost`.
 - En Codespaces: abrir el puerto 80 desde la pestaña **Ports** de VS Code.
 
+### Cómo saber qué interfaz está abierta en Codespaces
+
+`git log -1` identifica el commit del directorio, no el JavaScript de la pestaña. **Después de actualizar la rama**, usa el puerto correspondiente:
+
+- **80 (Docker Compose).** Si Compose ya está en marcha, desde la raíz ejecuta `docker compose up -d --build --no-deps frontend`. Vuelve a abrir el **80** desde **Puertos**. Esto reconstruye solo la interfaz: no reinicia el backend ni borra datos.
+- **4173 (compilación independiente).** Con la API ya funcionando en el 3000, ejecuta `pnpm --dir frontend run vista:rama` desde la raíz. Si faltan dependencias, usa antes `pnpm --dir frontend install --frozen-lockfile`. Deja la terminal abierta y elige **Puertos → 4173 → Abrir en el navegador**. Si no aparece, reenvía el 4173 como puerto privado. Inicia sesión en ese origen. El comando compila los archivos del directorio actual, no reemplaza lo servido en el 80 y no toca la BD.
+- **5173 (desarrollo).** `pnpm --dir frontend dev` sirve el código del directorio donde se inició Vite, con recarga en caliente. Tanto desarrollo como la vista del 4173 fallan si su puerto está ocupado en vez de saltar silenciosamente a otro.
+
+**Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 se puede contrastar con `docker compose exec frontend ls /usr/share/nginx/html/assets`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
+
 ### Logs
 
 ```bash

@@ -5,21 +5,3 @@
     background-color: var(--table-row-hover);
   }
 }
-
-.table-action {
-  border-radius: 10px;
-  padding: .375rem .75rem;
-  background: transparent;
-  color: var(--texto-muted);
-  font-size: .8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.table-action--outlined {
-  border: 1px solid var(--borde);
-  background: var(--bg);
-}
-.table-action:hover {
-  background: var(--t-bg-ede5dc, #ede5dc);
-  color: var(--texto);
-}

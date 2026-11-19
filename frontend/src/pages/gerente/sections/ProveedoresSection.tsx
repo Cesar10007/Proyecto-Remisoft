@@ -1,3 +1,4 @@
+import Button from '../../../components/common/Button'
 import type { Proveedor } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
@@ -44,18 +45,8 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
       header: 'Acciones',
       render: (p) => (
         <div className="flex gap-2">
-          <button
-            className="table-action table-action--outlined"
-            onClick={() => onEdit(p)}
-          >
-            Editar
-          </button>
-          <button
-            className="table-action"
-            onClick={() => onToggle(p.id_proveedor, p.estado)}
-          >
-            {p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
-          </button>
+          <Button size="small" variant="outline" onClick={() => onEdit(p)}>Editar</Button>
+          <Button size="small" variant="ghost" onClick={() => onToggle(p.id_proveedor, p.estado)}>{p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</Button>
         </div>
       ),
     },
@@ -69,14 +60,7 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
         data={proveedores}
         emptyMessage="No hay proveedores disponibles"
         keyExtractor={(p) => p.id_proveedor}
-        actionButton={
-          <button
-            className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white transition-opacity hover:opacity-90"
-            onClick={onCreate}
-          >
-            + Nuevo Proveedor
-          </button>
-        }
+        actionButton={<Button onClick={onCreate}>+ Nuevo Proveedor</Button>}
       />
     </div>
   )

@@ -1,6 +1,7 @@
 import './Gerente.css'
 import { mensajeError } from '../../utils/mensajeError'
 import { useState } from 'react'
+import { Banknote, Boxes, Clock3, History, Landmark, ShoppingCart, Sparkles, Table2, Truck, Users, Utensils } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
@@ -14,11 +15,12 @@ import Sidebar from '../../components/layout/Sidebar'
 import { DataTable } from '../../components/common/DataTable'
 import { InputField } from '../../components/common/InputField'
 import Modal from '../../components/common/Modal'
+import Button from '../../components/common/Button'
 import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
 import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
-import { etiquetaMesa, menuItems } from './data'
+import { etiquetaMesa } from './data'
 import { useDatosGerente, formatoCOP, etiquetaMetodo, type TurnoApi, type Lectura } from './useDatosGerente'
 import IASection from './sections/IASection'
 import MesasSection from './sections/MesasSection'
@@ -29,6 +31,20 @@ function EstadoLectura({ consulta, vacio }: { consulta: Lectura; vacio?: string 
   const mensaje = consulta.data === null ? 'Cargando…' : vacio
   return mensaje ? <p className="col-span-full text-sm text-[var(--texto-muted)]">{mensaje}</p> : null
 }
+
+const menuItems = [
+  { icon: <Utensils />, label: 'Menú' },
+  { icon: <Boxes />, label: 'Inventario' },
+  { icon: <Banknote />, label: 'Finanzas' },
+  { icon: <ShoppingCart />, label: 'Pedidos' },
+  { icon: <Table2 />, label: 'Mesas' },
+  { icon: <Sparkles />, label: 'IA Insights' },
+  { icon: <Truck />, label: 'Proveedores' },
+  { icon: <History />, label: 'Historial' },
+  { icon: <Landmark />, label: 'Flujo de Caja' },
+  { icon: <Clock3 />, label: 'Turnos' },
+  { icon: <Users />, label: 'Personal' },
+]
 
 const etiquetaEstadoPedido: Record<string, string> = {
   ABIERTO: 'Abierto',
@@ -283,7 +299,7 @@ function Gerente() {
         vistaActual={vistaActual}
         onNavigate={setVistaActual}
         onLogout={() => { logout(); navigate('/') }}
-        footer={<button type="button" onClick={() => setVistaActual('turnos')} className="mb-2 rounded-[10px] bg-[var(--rojo)] px-2.5 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">Cerrar Caja</button>}
+        footer={<Button className="mb-2" onClick={() => setVistaActual('turnos')}>Cerrar Caja</Button>}
       />
       <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 pt-20 md:p-8">
         <Header
@@ -338,7 +354,7 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <h4 className="mb-3 font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Acciones rápidas</h4>
                   <div className="flex flex-col gap-2">
-                    <button className="flex items-center justify-between rounded-[10px] bg-[var(--rojo)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-white">
+                    <button className="flex items-center justify-between rounded-[10px] bg-[var(--accion-primaria)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--sobre-accion)]">
                       Nuevo Pedido
                       <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </button>
@@ -399,12 +415,7 @@ function Gerente() {
                   >
                     Procedimiento
                   </button>
-                  <button
-                    className="rounded-[10px] bg-[var(--rojo)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-white"
-                    onClick={abrirCrearProducto}
-                  >
-                    + Nuevo Producto
-                  </button>
+                  <Button onClick={abrirCrearProducto}>+ Nuevo Producto</Button>
                 </div>
               </div>
               {datos.catalogo.data === null || datos.catalogo.error ? (
@@ -428,15 +439,10 @@ function Gerente() {
                       render: (p) => (
                         <div className="flex gap-2">
                           <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setReceta(p)}>Receta</button>
-                          <button className="table-action table-action--outlined" onClick={() => abrirEditarProducto(p)}>Editar</button>
-                          <button
-                            className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
-                              p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
-                            }`}
-                            onClick={() => toggleProducto(p.id_producto, p.Estado)}
-                          >
+                          <Button size="small" variant="outline" onClick={() => abrirEditarProducto(p)}>Editar</Button>
+                          <Button size="small" variant={p.Estado ? 'ghost' : 'primary'} onClick={() => toggleProducto(p.id_producto, p.Estado)}>
                             {p.Estado ? 'Desactivar' : 'Activar'}
-                          </button>
+                          </Button>
                         </div>
                       ),
                     },
@@ -650,13 +656,9 @@ function Gerente() {
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
-              <button
-                type="button"
-                onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}
-                className="rounded-xl bg-[var(--texto)] px-4 py-2 text-[0.85rem] font-semibold text-white"
-              >
+              <Button variant={mostrarAbrirTurno ? 'outline' : 'primary'} onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
                 {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
-              </button>
+              </Button>
             </div>
             {mostrarAbrirTurno && (
               <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-[var(--borde)] p-4 md:grid-cols-4">
@@ -688,9 +690,7 @@ function Gerente() {
                   onChange={e => setFormAbrir({ ...formAbrir, efectivo_inicial: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
                 />
-                <button type="button" onClick={abrirTurno} className="rounded-lg bg-[var(--verde)] px-4 py-2 text-[0.85rem] font-semibold text-white">
-                  Confirmar apertura
-                </button>
+                <Button variant="success" onClick={abrirTurno}>Confirmar apertura</Button>
               </div>
             )}
             {errorTurno && turnoCerrando === null && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
@@ -726,18 +726,16 @@ function Gerente() {
                     header: 'Acciones',
                     render: (t) =>
                       t.estado === 'ABIERTA' ? (
-                        <button
-                          type="button"
+                        <Button size="small" variant="outline"
                           onClick={() => {
                             setTurnoCerrando(t.id_turno)
                             setEfectivoContado('')
                             setNotasCierre('')
                             setErrorTurno('')
                           }}
-                          className="rounded-lg border border-[var(--borde)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto)]"
                         >
                           Cerrar turno
-                        </button>
+                        </Button>
                       ) : (
                         '—'
                       ),
@@ -770,13 +768,7 @@ function Gerente() {
                         value={notasCierre}
                         onChange={e => setNotasCierre(e.target.value)}
                       />
-                      <button
-                        type="button"
-                        onClick={() => cerrarTurno(turnoParaCerrar)}
-                        className="mt-2 rounded-lg bg-[var(--rojo-dark)] px-4 py-2 text-[0.85rem] font-semibold text-white"
-                      >
-                        Confirmar cierre
-                      </button>
+                      <Button className="mt-2" onClick={() => cerrarTurno(turnoParaCerrar)}>Confirmar cierre</Button>
                     </div>
                   </>
                 )}

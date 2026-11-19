@@ -69,6 +69,15 @@ Sin Compose, ejecuta `printf '%s' "$CLAVE" | (cd backend && ADMIN_EMAIL="$ADMIN_
 
 ### Regresión visual de los paneles (sin base de datos)
 
-Con el frontend en marcha (`pnpm --dir frontend dev`) y Chromium instalado, ejecuta `pnpm --dir frontend exec playwright test e2e/consistencia-visual.spec.ts`. Usa respuestas locales para comprobar el gris de **Gerentes activos**, Inventario y Caja en ambos temas, y los formularios de catálogo en escritorio y a 360 × 640. No registra proveedores ni emite facturas en la API.
+Con Chromium instalado, ejecuta **una** de estas combinaciones desde la raíz (una terminal para el servidor y otra para las pruebas):
 
-Al añadir formularios, deja que `Modal` controle el ancho, los márgenes y el desplazamiento; no añadas un ancho mínimo o un segundo relleno exterior al formulario. Las filas de datos de `tbody` heredan el resaltado del tema sin clases de color. Reserva `table-status-row` para las filas que solo muestran carga, vacío o error.
+| Qué se está probando | Servidor | Regresión visual |
+| --- | --- | --- |
+| Archivos en desarrollo | `pnpm --dir frontend dev` | `pnpm --dir frontend exec playwright test e2e/consistencia-visual.spec.ts` |
+| Compilación de producción del checkout | `pnpm --dir frontend run vista:rama` | `SALON_BASE_URL=http://127.0.0.1:4173 pnpm --dir frontend exec playwright test e2e/consistencia-visual.spec.ts` |
+
+Las respuestas de API de esta prueba son locales: no registra proveedores ni emite facturas. Comprueba el resaltado de **Gerentes activos**, Inventario y Caja, el contraste mínimo de **4,5:1** en las acciones de Proveedores y Turnos (reposo, hover y foco), y que los controles de guardado sigan siendo legibles mientras están deshabilitados. En los formularios de catálogo mide la alineación de la cabecera y los márgenes de campos y botones a **1440 × 900** y **360 × 640**.
+
+**Comprobación manual:** abre **Gerente → Proveedores → + Nuevo Proveedor** en modo oscuro. El título y la × deben estar en la misma fila, los campos deben terminar a la altura del borde derecho de «Crear», y al bajar en móvil se deben poder pulsar «Cancelar» y «Crear» sin perder la cabecera. [Captura del compilado con la API de prueba](imagenes/nuevo-proveedor-oscuro.png). Para identificar qué interfaz sirve cada puerto, consulta la [guía de Codespaces](../README.md#cómo-saber-qué-interfaz-está-abierta-en-codespaces).
+
+Al añadir formularios, deja que `Modal` controle el ancho, los márgenes y el desplazamiento; no añadas un ancho mínimo o un segundo relleno exterior al formulario. Usa `Button` para sus acciones: las variantes emparejan fondo y texto del tema, también en hover y al guardar. Las filas de datos de `tbody` heredan el resaltado del tema sin clases de color. Reserva `table-status-row` para las filas que solo muestran carga, vacío o error.

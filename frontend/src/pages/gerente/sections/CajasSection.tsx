@@ -1,3 +1,4 @@
+import Button from '../../../components/common/Button'
 import type { Caja } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
@@ -28,18 +29,8 @@ function CajasSection({ cajas, onCreate, onEdit, onToggle }: CajasSectionProps) 
       header: 'Acciones',
       render: (c) => (
         <div className="flex gap-2">
-          <button
-            className="table-action table-action--outlined"
-            onClick={() => onEdit(c)}
-          >
-            Editar
-          </button>
-          <button
-            className="table-action"
-            onClick={() => onToggle(c.id_caja, c.estado)}
-          >
-            {c.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}
-          </button>
+          <Button size="small" variant="outline" onClick={() => onEdit(c)}>Editar</Button>
+          <Button size="small" variant="ghost" onClick={() => onToggle(c.id_caja, c.estado)}>{c.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}</Button>
         </div>
       ),
     },
@@ -53,14 +44,7 @@ function CajasSection({ cajas, onCreate, onEdit, onToggle }: CajasSectionProps) 
         data={cajas}
         emptyMessage="No hay cajas disponibles"
         keyExtractor={(c) => c.id_caja}
-        actionButton={
-          <button
-            className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white transition-opacity hover:opacity-90"
-            onClick={onCreate}
-          >
-            + Nueva Caja
-          </button>
-        }
+        actionButton={<Button onClick={onCreate}>+ Nueva Caja</Button>}
       />
     </div>
   )

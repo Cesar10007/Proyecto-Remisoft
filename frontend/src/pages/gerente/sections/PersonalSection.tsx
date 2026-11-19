@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import type { Personal } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
+import Button from '../../../components/common/Button'
 import { Badge } from '../../../components/common/Badge'
 import { InputField } from '../../../components/common/InputField'
 import { SelectField } from '../../../components/common/SelectField'
@@ -168,21 +169,11 @@ function PersonalSection({
           )}
           <div className="flex gap-2 md:col-span-2 mt-2">
             {usuarioEditando && (
-              <button
-                type="button"
-                onClick={onCancelEdit}
-                className="rounded-[10px] border border-[var(--borde)] px-4 py-2.5 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
-              >
-                Cancelar
-              </button>
+              <Button variant="outline" onClick={onCancelEdit}>Cancelar</Button>
             )}
-            <button
-              type="submit"
-              disabled={guardandoPersonal}
-              className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 text-[0.875rem] font-semibold text-white"
-            >
+            <Button type="submit" disabled={guardandoPersonal}>
               {guardandoPersonal ? 'Guardando...' : usuarioEditando ? 'Actualizar' : 'Crear Personal'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

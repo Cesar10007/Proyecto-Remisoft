@@ -33,26 +33,30 @@
   top: 0;
   z-index: 1;
   background: var(--bg-card);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 1rem var(--dialog-padding);
   border-bottom: 1px solid var(--borde);
 }
 .app-modal__header h2 { font: 700 1.2rem 'Syne', sans-serif; overflow-wrap: anywhere; }
 .app-modal__close {
-  flex-shrink: 0;
+  display: grid;
+  place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid var(--borde);
+  border: 1px solid var(--borde-accion);
   border-radius: 50%;
-  color: var(--texto-muted);
+  background: var(--bg-card);
+  color: var(--texto);
+  line-height: 1;
   font-size: 1.25rem;
   cursor: pointer;
 }
 .app-modal__close:hover:not(:disabled) { background: var(--bg); color: var(--texto); }
-.app-modal__close:disabled { opacity: .5; cursor: not-allowed; }
+.app-modal__close:focus-visible { outline: 2px solid var(--texto-acento); outline-offset: 2px; }
+.app-modal__close:disabled { border: 1px dashed var(--borde-accion); cursor: not-allowed; }
 .app-modal__body {
   padding: var(--dialog-padding);
 }

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Button from '../../../components/common/Button'
 import api from '../../../api/axios'
 import { mensajeError } from '../../../utils/mensajeError'
 import { InputField } from '../../../components/common/InputField'
@@ -24,7 +25,7 @@ export default function AltaMesa({ alCrear }: { alCrear: (numero: number) => Pro
     <form onSubmit={crear} className="mb-6 flex flex-wrap items-end gap-3">
       <InputField label="Número de mesa" name="numero" type="number" min="1" max="2147483647" step="1" required />
       <InputField label="Capacidad" name="capacidad" type="number" min="1" max="2147483647" step="1" required />
-      <button disabled={guardando} className="rounded-lg bg-[var(--rojo)] px-4 py-2 font-semibold text-white">Agregar mesa</button>
+      <Button type="submit" disabled={guardando}>Agregar mesa</Button>
       {error && <p role="alert" className="text-[var(--rojo-dark)]">{error}</p>}
     </form>
   )

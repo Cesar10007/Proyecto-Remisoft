@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Button from '../../../components/common/Button'
 import api from '../../../api/axios'
 import { DataTable } from '../../../components/common/DataTable'
 import { mensajeError } from '../../../utils/mensajeError'
@@ -36,14 +37,14 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
         { header: 'Mesa', render: m => <strong>{etiquetaMesa(m.numero)}</strong> },
         { header: 'Capacidad', render: m => m.capacidad == null ? 'Sin especificar' : `${m.capacidad} personas` },
         { header: 'Estado', render: m => m.ocupada ? 'Ocupada' : 'Disponible' },
-        { header: 'Acciones', render: m => <button type="button" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
-          className="font-semibold text-[var(--rojo-dark)] disabled:opacity-40" onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</button> },
+        { header: 'Acciones', render: m => <Button variant="ghost" size="small" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
+          onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</Button> },
       ]} />
       {seleccion && <Modal title={`¿Eliminar la mesa ${seleccion.numero}?`} onClose={() => setSeleccion(null)} busy={eliminando}>
         <p className="mb-5 text-sm">Se retirará del plano de tu establecimiento. Se conservarán sus pedidos y facturas anteriores.</p>
         <div className="flex justify-end gap-3">
-          <button disabled={eliminando} className="ge-secondary-btn" onClick={() => setSeleccion(null)}>Cancelar</button>
-          <button disabled={eliminando} className="ge-primary-btn" onClick={eliminar}>{eliminando ? 'Eliminando…' : 'Eliminar mesa'}</button>
+          <Button variant="outline" disabled={eliminando} onClick={() => setSeleccion(null)}>Cancelar</Button>
+          <Button disabled={eliminando} onClick={eliminar}>{eliminando ? 'Eliminando…' : 'Eliminar mesa'}</Button>
         </div>
       </Modal>}
     </section>

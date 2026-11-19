@@ -18,6 +18,14 @@
     --texto-muted: #5F5E5A;
     --bg: #FDFAF7;
     --bg-card: #ffffff;
+    /* El texto y el fondo de las acciones sólidas cambian como pareja. */
+    --accion-primaria: #ae4625;
+    --accion-primaria-hover: #923719;
+    --accion-exito: #146b4f;
+    --accion-exito-hover: #10553f;
+    --sobre-accion: #fff;
+    --borde-accion: #8c7b70;
+    --texto-acento: var(--rojo-dark);
     --table-row-hover: rgba(240, 237, 237, 0.5);
     --borde: rgba(0,0,0,0.09);
     --sombra: 0 2px 24px rgba(216,90,48,0.08), 0 1px 4px rgba(0,0,0,0.06);

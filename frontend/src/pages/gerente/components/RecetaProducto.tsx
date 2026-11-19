@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Button from '../../../components/common/Button'
 import api from '../../../api/axios'
 import { InputField } from '../../../components/common/InputField'
 import { useConsulta } from '../../../hook/useConsulta'
@@ -32,7 +33,7 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
           {data.data.map(i => <InputField key={i.id_ingrediente} label={`${i.nombre} (${i.unidad_medida || 'unidades'})`} name={String(i.id_ingrediente)}
             type="number" min="0" max="9999999.999" step="0.001" placeholder="0" defaultValue={i.cantidad || ''} />)}
           {fallo && <p role="alert" className="text-[var(--rojo-dark)]">{fallo}</p>}
-          <button disabled={guardando} className="ge-primary-btn">{guardando ? 'Guardando…' : 'Guardar receta'}</button>
+          <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar receta'}</Button>
         </form>}
     </Modal>
   )

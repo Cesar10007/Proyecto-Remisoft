@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Button from '../../../components/common/Button'
 import api from '../../../api/axios'
 import { InputField } from '../../../components/common/InputField'
 import { SelectField } from '../../../components/common/SelectField'
@@ -37,7 +38,7 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
         <InputField label="Motivo" name="motivo" minLength={5} maxLength={1000} placeholder="Ej.: conteo inicial" required />
         {error && <p role="alert" className="text-[var(--rojo-dark)]">{error}</p>}
         {aviso && <p role="status">{aviso}</p>}
-        <button disabled={guardando} className="ge-primary-btn">{guardando ? 'Registrando…' : 'Registrar movimiento'}</button>
+        <Button type="submit" disabled={guardando}>{guardando ? 'Registrando…' : 'Registrar movimiento'}</Button>
       </form>
       <h3 className="mt-4 font-semibold">Historial de movimientos</h3>
       {!ficha.data.data.historial_movimientos.length && <p className="mt-2 text-sm">Sin movimientos registrados.</p>}

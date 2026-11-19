@@ -16,6 +16,10 @@ const lecturas: Record<string, unknown> = {
   'reportes/ventas-diarias': { data: { dias: [], productos_top: [], total: { ingresos_brutos: 0, total_pedidos: 0, total_propinas: 0 } } },
   'reportes/pedidos-activos': { data: { pedidos_activos: 0 } },
   'cobro/pendientes': [cuenta],
+  turnos: { data: [{ id_turno: 1, id_caja: 1, estado: 'ABIERTA', fecha_apertura: cuenta.fecha_hora, caja: { nombre: 'Central' } }] },
+  'cocina/comandas': [{ ...cuenta, items: [{ ...cuenta.items[0], estado: 'PENDIENTE' }] }],
+  domicilios: [{ id_domicilio: 1, id_pedido: 12, id_repartidor: 8, direccion: 'Calle 1', estado: 'ASIGNADO' }],
+  'domicilios/resumen': { data: { cola: [], top: [], actual: null, entregas_hoy: 0 } },
 }
 
 test.beforeEach(async ({ page }) => {
@@ -30,8 +34,8 @@ test.beforeEach(async ({ page }) => {
 })
 
 const boton = (page: Page, name: string) => page.getByRole('button', { name, exact: true })
-async function abrirPanel(page: Page, rol: 'SUPERADMIN' | 'GERENTE' | 'CAJERO') {
-  await page.route('**/api/auth/login', route => route.fulfill({ json: { rol, token: 'fixture-visual', user: { nombre: 'Prueba' } } }), { times: 1 })
+async function abrirPanel(page: Page, rol: 'SUPERADMIN' | 'GERENTE' | 'CAJERO' | 'REPARTIDOR') {
+  await page.route('**/api/auth/login', route => route.fulfill({ json: { rol, token: 'fixture-visual', user: { id_usuario: 8, nombre: 'Prueba' } } }), { times: 1 })
   await entrar(page, 'visual@example.test', 'solo-prueba')
   await expect(page).toHaveURL(new RegExp(`/${rol.toLowerCase()}$`))
 }
@@ -40,20 +44,50 @@ async function ir(page: Page, seccion: string) {
   await boton(page, seccion).click()
 }
 
-// Contraste del texto sobre el fondo realmente pintado (el gris de hover es translúcido).
+// Dos píxeles en sRGB: fondo (0) y texto (1). El navegador compone las capas,
+// incluidas la transparencia del hover de fila y la opacidad de un control.
 function contraste(elemento: Locator) {
   return elemento.evaluate(el => {
-    const rgba = (css: string) => css.match(/[\d.]+/g)!.map(Number)
-    const fondos: number[][] = []
-    for (let nodo: Element | null = el; nodo; nodo = nodo.parentElement) fondos.unshift(rgba(getComputedStyle(nodo).backgroundColor))
-    const fondo = fondos.reduce((base, [r, g, b, a = 1]) => [r, g, b].map((c, i) => c * a + base[i] * (1 - a)), [255, 255, 255])
-    const luminancia = ([r, g, b]: number[]) => [r, g, b].reduce((s, c, i) => {
-      const v = c / 255
-      return s + [0.2126, 0.7152, 0.0722][i] * (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+    const canvas = document.createElement('canvas')
+    canvas.width = 2; canvas.height = 1
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = getComputedStyle(el).color
+    ctx.fillRect(1, 0, 1, 1)
+    for (let nodo: Element | null = el; nodo; nodo = nodo.parentElement) {
+      const estilo = getComputedStyle(nodo)
+      ctx.globalCompositeOperation = 'destination-over'
+      ctx.fillStyle = estilo.backgroundColor
+      ctx.fillRect(0, 0, 2, 1)
+      ctx.globalCompositeOperation = 'destination-in'
+      ctx.fillStyle = `rgb(0 0 0 / ${estilo.opacity})`
+      ctx.fillRect(0, 0, 2, 1)
+    }
+    ctx.globalCompositeOperation = 'destination-over'
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, 2, 1)
+    const rgb = ctx.getImageData(0, 0, 2, 1).data
+    const luminancia = (offset: number) => [0.2126, 0.7152, 0.0722].reduce((suma, peso, i) => {
+      const v = rgb[offset + i] / 255
+      return suma + peso * (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
     }, 0)
-    const a = luminancia(fondo), b = luminancia(rgba(getComputedStyle(el).color))
+    const a = luminancia(0), b = luminancia(4)
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
   })
+}
+
+async function comprobarAccion(control: Locator) {
+  const page = control.page()
+  await expect(control).toBeVisible()
+  const nombre = (await control.getAttribute('aria-label') ?? await control.innerText()).trim()
+  await page.mouse.move(0, 0)
+  expect(await contraste(control), `${nombre}: reposo`).toBeGreaterThanOrEqual(4.5)
+  await control.hover()
+  expect(await contraste(control), `${nombre}: hover`).toBeGreaterThanOrEqual(4.5)
+  await page.mouse.move(0, 0)
+  await page.keyboard.press('Tab')
+  await control.focus()
+  expect(await control.evaluate(el => el.matches(':focus-visible')), `${nombre}: foco de teclado`).toBe(true)
+  expect(await contraste(control), `${nombre}: foco`).toBeGreaterThanOrEqual(4.5)
 }
 
 for (const [tema, gris] of [['claro', 'rgba(240, 237, 237, 0.5)'], ['oscuro', 'rgba(36, 32, 30, 0.5)']]) {
@@ -89,27 +123,78 @@ for (const [tema, gris] of [['claro', 'rgba(240, 237, 237, 0.5)'], ['oscuro', 'r
 
     await abrirPanel(page, 'CAJERO')
     await comprobarFila('Arepa')
+    const cobrar = page.getByRole('button', { name: /Cerrar cuenta y facturar/ })
+    await expect(cobrar).toBeDisabled()
+    expect(await contraste(cobrar)).toBeGreaterThanOrEqual(4.5)
     await page.getByRole('button', { name: /Tarjeta/i }).click()
-    await page.getByRole('button', { name: /Cerrar cuenta y facturar/ }).click()
+    await comprobarAccion(cobrar)
+    await cobrar.click()
     await expect(page.getByRole('heading', { name: 'Factura FAC-12' })).toBeVisible()
     const comprobante = await comprobarFila('Arepa')
     await page.emulateMedia({ media: 'print' })
     await expect(comprobante).toBeVisible()
     await expect(comprobante).not.toHaveCSS('background-color', gris)
   })
+
+  test(`las acciones de proveedores y de turnos son legibles en modo ${tema}`, async ({ page }) => {
+    await abrirPanel(page, 'GERENTE')
+    if (tema === 'oscuro') await boton(page, 'Modo oscuro').click()
+    const script = await page.locator('script[type="module"][src^="/assets/"]').evaluateAll(tags => tags[0]?.getAttribute('src'))
+    await expect(page.getByText(`Interfaz: ${script ? script.split('/').pop() : 'Vite (desarrollo)'}`, { exact: true })).toBeVisible()
+    await comprobarAccion(boton(page, 'Cerrar Caja'))
+    await ir(page, 'Proveedores')
+    for (const nombre of ['+ Nuevo Proveedor', 'Editar', 'Desactivar']) await comprobarAccion(boton(page, nombre))
+    await boton(page, '+ Nuevo Proveedor').click()
+    for (const nombre of ['Cerrar ventana', 'Cancelar', 'Crear']) await comprobarAccion(boton(page, nombre))
+    await boton(page, 'Cancelar').click()
+    await ir(page, 'Turnos')
+    await comprobarAccion(boton(page, 'Abrir turno'))
+    await boton(page, 'Abrir turno').click()
+    await comprobarAccion(boton(page, 'Cancelar'))
+    await comprobarAccion(boton(page, 'Confirmar apertura'))
+    await boton(page, 'Cancelar').click()
+    await boton(page, 'Cerrar turno').click()
+    await comprobarAccion(boton(page, 'Confirmar cierre'))
+  })
+
+  test(`se conserva el contraste en cocina y al editar un domicilio en modo ${tema}`, async ({ page }) => {
+    await abrirPanel(page, 'GERENTE')
+    if (tema === 'oscuro') await boton(page, 'Modo oscuro').click()
+    await page.goto('/cocina')
+    await comprobarAccion(boton(page, 'Empezar'))
+    await abrirPanel(page, 'REPARTIDOR')
+    await ir(page, 'Entregas')
+    await comprobarAccion(page.getByRole('button', { name: /Nuevo Domicilio/ }))
+    const editar = page.getByRole('button', { name: /Editar/ })
+    await comprobarAccion(editar)
+    await comprobarAccion(boton(page, 'Cancelar')) // Acción de la tarjeta, antes de abrir el diálogo.
+    await editar.click()
+    const dialogo = page.getByRole('dialog', { name: 'Editar Domicilio' })
+    await comprobarAccion(dialogo.getByRole('button', { name: 'Cancelar' }))
+    await comprobarAccion(dialogo.getByRole('button', { name: 'Actualizar' }))
+  })
 }
 
 async function comprobarFormulario(dialogo: Locator) {
   await expect(dialogo).toBeVisible()
+  const cabecera = dialogo.locator('header')
+  await expect(cabecera.getByRole('heading')).toBeVisible()
+  await expect(cabecera.getByRole('button', { name: 'Cerrar ventana' })).toBeVisible()
   const medidas = await dialogo.evaluate(el => {
     const panel = el.getBoundingClientRect()
     const campos = Array.from(el.querySelectorAll('input, select, textarea'), campo => campo.getBoundingClientRect())
+    const titulo = el.querySelector('header h2')!.getBoundingClientRect()
+    const cerrar = el.querySelector('header button')!.getBoundingClientRect()
+    const acciones = Array.from(el.querySelectorAll('form button'), b => b.getBoundingClientRect())
     const accion = el.querySelector('button[type="submit"]')!.getBoundingClientRect()
     return {
       x: panel.left, y: panel.top, derecha: innerWidth - panel.right, abajo: innerHeight - panel.bottom,
       desborda: el.scrollWidth > el.clientWidth,
       campos: campos.map(c => [c.left - panel.left, panel.right - c.right]),
+      accionesDentro: acciones.every(b => b.left >= campos[0].left - 1 && b.right <= campos[0].right + 1),
       botonesAlineados: Math.abs(accion.right - campos[0].right) <= 1,
+      tituloYCierreEnLinea: titulo.right <= cerrar.left && Math.abs((titulo.top + titulo.bottom - cerrar.top - cerrar.bottom) / 2) <= 1,
+      cabeceraAlineada: Math.abs(titulo.left - campos[0].left) <= 1 && Math.abs(cerrar.right - campos[0].right) <= 1,
     }
   })
   expect(Math.min(medidas.x, medidas.y)).toBeGreaterThan(0)
@@ -120,6 +205,9 @@ async function comprobarFormulario(dialogo: Locator) {
     expect(izquierda).toBeGreaterThan(0)
     expect(Math.abs(izquierda - derecha)).toBeLessThanOrEqual(1)
   }
+  expect(medidas.tituloYCierreEnLinea).toBe(true)
+  expect(medidas.cabeceraAlineada).toBe(true)
+  expect(medidas.accionesDentro).toBe(true)
   expect(medidas.botonesAlineados).toBe(true)
 }
 
@@ -137,7 +225,9 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
       const cancelar = dialogo.getByRole('button', { name: 'Cancelar' })
       await cancelar.scrollIntoViewIfNeeded()
       await expect(cancelar).toBeInViewport({ ratio: 1 })
-      await expect(dialogo.getByRole('heading', { name: titulo })).toBeInViewport()
+      await expect(dialogo.getByRole('button', { name: 'Crear' })).toBeInViewport({ ratio: 1 })
+      await expect(dialogo.getByRole('button', { name: 'Cerrar ventana' })).toBeInViewport({ ratio: 1 })
+      await expect(dialogo.getByRole('heading', { name: titulo })).toBeInViewport({ ratio: 1 })
       expect(await contraste(cancelar)).toBeGreaterThanOrEqual(4.5)
       if (titulo === 'Nuevo Proveedor' && viewport.width === 360) expect(await dialogo.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
       await cancelar.click()
@@ -153,32 +243,37 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
   })
 }
 
-test('al guardar un proveedor, ni Escape ni el fondo descartan el formulario', async ({ page }) => {
-  await abrirPanel(page, 'GERENTE')
-  await ir(page, 'Proveedores')
-  const abrir = boton(page, '+ Nuevo Proveedor')
-  await abrir.click()
-  const dialogo = page.getByRole('dialog', { name: 'Nuevo Proveedor' })
-  await dialogo.getByLabel('Nombre', { exact: true }).fill('Molino')
-  const peticion = page.waitForRequest(req => req.method() === 'POST' && req.url().endsWith('/api/proveedores'))
-  let responder!: () => void
-  const espera = new Promise<void>(resolve => { responder = resolve })
-  await page.route('**/api/proveedores', async route => {
-    await espera
-    await route.fulfill({ status: 409, json: { message: 'El proveedor ya existe' } })
-  }, { times: 1 })
-  try {
-    await boton(page, 'Crear').click()
-    await peticion
-    await expect(dialogo.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
-    await expect(boton(page, 'Cerrar ventana')).toBeDisabled()
-    await expect(boton(page, 'Cancelar')).toBeDisabled()
-    await page.keyboard.press('Escape')
+for (const tema of ['claro', 'oscuro']) {
+  test(`el proveedor conserva sus datos y las acciones siguen siendo legibles mientras se guarda (${tema})`, async ({ page }) => {
+    await abrirPanel(page, 'GERENTE')
+    if (tema === 'oscuro') await boton(page, 'Modo oscuro').click()
+    await ir(page, 'Proveedores')
+    const abrir = boton(page, '+ Nuevo Proveedor')
+    await abrir.click()
+    const dialogo = page.getByRole('dialog', { name: 'Nuevo Proveedor' })
+    await dialogo.getByLabel('Nombre', { exact: true }).fill('Molino')
+    const peticion = page.waitForRequest(req => req.method() === 'POST' && req.url().endsWith('/api/proveedores'))
+    let responder!: () => void
+    const espera = new Promise<void>(resolve => { responder = resolve })
+    await page.route('**/api/proveedores', async route => {
+      await espera
+      await route.fulfill({ status: 409, json: { message: 'El proveedor ya existe' } })
+    }, { times: 1 })
+    try {
+      await boton(page, 'Crear').click()
+      await peticion
+      for (const nombre of ['Guardando...', 'Cerrar ventana', 'Cancelar']) {
+        const deshabilitado = dialogo.getByRole('button', { name: nombre, exact: true })
+        await expect(deshabilitado).toBeDisabled()
+        expect(await contraste(deshabilitado), nombre).toBeGreaterThanOrEqual(4.5)
+      }
+      await page.keyboard.press('Escape')
+      await page.mouse.click(2, 2)
+      await expect(dialogo).toBeVisible()
+    } finally { responder() }
+    await expect(dialogo.getByRole('alert')).toContainText('El proveedor ya existe')
+    await expect(dialogo.getByLabel('Nombre', { exact: true })).toHaveValue('Molino')
     await page.mouse.click(2, 2)
-    await expect(dialogo).toBeVisible()
-  } finally { responder() }
-  await expect(dialogo.getByRole('alert')).toContainText('El proveedor ya existe')
-  await expect(dialogo.getByLabel('Nombre', { exact: true })).toHaveValue('Molino')
-  await page.mouse.click(2, 2)
-  await expect(abrir).toBeFocused()
-})
+    await expect(abrir).toBeFocused()
+  })
+}

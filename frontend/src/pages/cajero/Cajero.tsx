@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import Button from '../../components/common/Button'
 import type { RootState } from '../../store/store'
 import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cajero.css'
+import { Calculator, Utensils } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { DataTable } from '../../components/common/DataTable'
@@ -187,8 +189,8 @@ export default function Cajero() {
       <Sidebar
         subtitulo="Cajero"
         menuItems={[
-          { icon: 'point_of_sale', label: 'Cobro' },
-          { icon: 'restaurant_menu', label: 'Menú' },
+          { icon: <Calculator />, label: 'Cobro' },
+          { icon: <Utensils />, label: 'Menú' },
         ]}
         vistaActual={vista === 'menu' ? 'menú' : 'cobro'}
         onNavigate={(v) => setVista(v === 'menú' ? 'menu' : 'cobro')}
@@ -307,9 +309,7 @@ export default function Cajero() {
                 <button type="button" className="cajero__btn cajero__btn--ghost" onClick={() => window.print()}>
                   <span className="material-symbols-outlined">print</span> Imprimir
                 </button>
-                <button type="button" className="cajero__btn cajero__btn--primario" onClick={nuevaCuenta}>
-                  Siguiente cuenta
-                </button>
+                <Button onClick={nuevaCuenta}>Siguiente cuenta</Button>
               </div>
             </div>
           ) : !cuenta ? (
@@ -407,14 +407,13 @@ export default function Cajero() {
 
               {errorCobro && <div className="cajero__alerta cajero__alerta--error">{errorCobro}</div>}
 
-              <button
-                type="button"
-                className="cajero__btn cajero__btn--primario cajero__btn--grande"
+              <Button
+                className="cajero__btn--grande"
                 disabled={!puedeCobrar}
                 onClick={cerrarCuenta}
               >
                 {enviando ? 'Procesando…' : `Cerrar cuenta y facturar ${formatoCOP(cuenta.total)}`}
-              </button>
+              </Button>
               {!metodo && <p className="cajero__muted">Selecciona un método de pago para continuar.</p>}
             </>
           )}

@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import Button from '../../components/common/Button'
 import type { RootState } from '../../store/store'
 import { useAuth } from '../../store/hooks'
 import { tiempoTranscurrido } from '../../utils/tiempo'
 import './Cocina.css'
+import { Soup } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 
@@ -99,7 +101,7 @@ export default function Cocina() {
     <div className="cocina">
       <Sidebar
         subtitulo="Cocina"
-        menuItems={[{ icon: 'soup_kitchen', label: 'Comandas' }]}
+        menuItems={[{ icon: <Soup />, label: 'Comandas' }]}
         vistaActual="comandas"
         onNavigate={() => {}}
         onLogout={() => {
@@ -174,14 +176,12 @@ export default function Cocina() {
                     {item.nota && <div className="cocina__notas">Plato: {item.nota}</div>}
                     {comanda.notas && <div className="cocina__notas">Nota: {comanda.notas}</div>}
                     {col.siguiente && col.accion && (
-                      <button
-                        type="button"
-                        className="cocina__btn cocina__btn--primario"
+                      <Button fullWidth
                         disabled={ocupado === item.id_detalle}
                         onClick={() => avanzar(item, col.siguiente as EstadoItem)}
                       >
                         {col.accion}
-                      </button>
+                      </Button>
                     )}
                   </article>
                 ))}

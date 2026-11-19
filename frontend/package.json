@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "vista:rama": "vite build && vite preview",
     "test:e2e:salon": "playwright test salon.spec.ts"
   },
   "dependencies": {

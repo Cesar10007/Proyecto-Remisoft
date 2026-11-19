@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Button from '../../../components/common/Button'
 import MovimientosIngrediente from '../components/MovimientosIngrediente'
 import type { Ingrediente, IngredienteConStock } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
@@ -40,12 +41,7 @@ function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDel
       render: (i) => (
         <div className="flex gap-2">
           <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
-          <button
-            className="table-action table-action--outlined"
-            onClick={() => onEdit(i)}
-          >
-            Editar
-          </button>
+          <Button size="small" variant="outline" onClick={() => onEdit(i)}>Editar</Button>
           <button
             className="rounded-[10px] bg-transparent px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo-dark)] hover:bg-[var(--rojo-light)]"
             onClick={() => onDelete(i.id_ingrediente)}
@@ -65,14 +61,7 @@ function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDel
         data={ingredientes}
         emptyMessage="No hay ingredientes disponibles"
         keyExtractor={(i) => i.id_ingrediente}
-        actionButton={
-          <button
-            className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 font-['DM_Sans'] text-[0.875rem] font-semibold text-white transition-opacity hover:opacity-90"
-            onClick={onCreate}
-          >
-            + Nuevo Ingrediente
-          </button>
-        }
+        actionButton={<Button onClick={onCreate}>+ Nuevo Ingrediente</Button>}
       />
       {seleccion && <MovimientosIngrediente ingrediente={seleccion} actualizar={actualizar} cerrar={() => setSeleccion(null)} />}
     </div>
