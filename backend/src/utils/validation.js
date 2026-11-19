@@ -45,6 +45,6 @@ export function validateEmail(
 }
 
 // Receta.Cantidad_necesaria e inventario_mov.cantidad son DECIMAL(10,3).
-export function cantidadInventarioValida(valor) {
-  return ['number', 'string'].includes(typeof valor) && /^\d{1,7}(?:\.\d{1,3})?$/.test(String(valor)) && Number(valor) > 0;
+export function cantidadInventarioValida(valor, { permitirCero = false } = {}) {
+  return ['number', 'string'].includes(typeof valor) && /^\d{1,7}(?:\.\d{1,3})?$/.test(String(valor)) && (permitirCero || Number(valor) > 0);
 }

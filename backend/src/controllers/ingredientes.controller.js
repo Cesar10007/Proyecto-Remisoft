@@ -1,4 +1,8 @@
 import prisma from '../config/prisma.js';
+import { conciliarConteo } from '../services/inventario.service.js';
+import { cantidadInventarioValida } from '../utils/validation.js';
+import { auditarAjusteInventario } from '../utils/auditoria.js';
+import { entero } from '../utils/salon.js';
 
 export async function index(req, res, next) {
   try {
@@ -48,7 +52,7 @@ export async function crear(req, res, next) {
 
 export async function actualizar(req, res, next) {
   try {
-    const { id } = req.params;
+    const id_ingrediente = entero(Number(req.params.id), 'El ingrediente');
     const { nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo } = req.body;
 
     if (!nombre || typeof nombre !== 'string' || nombre.length > 50) {
@@ -67,18 +71,32 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: 'El campo stock_minimo debe ser numérico' });
     }
 
-    await prisma.ingrediente.update({
-      where: { id_ingrediente: Number(id), ...req.sede },
-      data: {
-        nombre,
-        descripcion: descripcion ?? null,
-        unidad_medida: unidad_medida ?? null,
-        costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
-        stock_minimo: Number(stock_minimo ?? 0),
-      },
-    });
+    const { stock_actual, stock_esperado, motivo } = req.body;
+    const hayConteo = stock_actual !== undefined;
+    if (hayConteo && (!cantidadInventarioValida(stock_actual, { permitirCero: true }) || !Number.isFinite(stock_esperado))) {
+      return res.status(422).json({ message: 'Indica el stock actual entre 0 y 9999999.999 (hasta tres decimales) y el saldo que viste al abrir la ficha.' });
+    }
+    const razon = typeof motivo === 'string' ? motivo.trim() : '';
+    if (hayConteo && Number(stock_actual) !== stock_esperado && (razon.length < 5 || razon.length > 1000)) {
+      return res.status(422).json({ message: 'El motivo del ajuste debe tener entre 5 y 1000 caracteres.' });
+    }
 
-    res.json({ message: 'Ingrediente actualizado' });
+    const movimiento = await prisma.$transaction(async tx => {
+      // Este UPDATE toma el mismo bloqueo de fila que pedidos y ajustes manuales.
+      // Ante un conteo obsoleto también se revierte la edición de los demás campos.
+      await tx.ingrediente.update({
+        where: { id_ingrediente, ...req.sede },
+        data: {
+          nombre, descripcion: descripcion ?? null, unidad_medida: unidad_medida ?? null,
+          costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
+          stock_minimo: Number(stock_minimo ?? 0),
+        },
+      });
+      if (!hayConteo) return null;
+      return conciliarConteo(tx, { ...req.sede, id_ingrediente, id_usuario: req.user.id_usuario }, stock_esperado, Number(stock_actual), razon);
+    }, { isolationLevel: 'ReadCommitted' });
+    if (movimiento) auditarAjusteInventario(req, movimiento, nombre);
+    res.json({ message: 'Ingrediente actualizado', ...(hayConteo && { stock_actual: Number(stock_actual) }) });
   } catch (err) {
     if (err.code === 'P2025') {
       return res.status(404).json({ message: 'Ingrediente no encontrado' });

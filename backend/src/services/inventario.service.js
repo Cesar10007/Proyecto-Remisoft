@@ -1,4 +1,5 @@
 import { ErrorSalon } from '../utils/salon.js';
+import { cantidadInventarioValida } from '../utils/validation.js';
 import { Prisma } from '../generated/prisma/client.js';
 
 // Réplica en la API de la validación de sp_registrar_movimiento_inventario:
@@ -6,8 +7,6 @@ import { Prisma } from '../generated/prisma/client.js';
 // El stock se calcula con los movimientos (ENTRADA - SALIDA), igual que
 // inventario.controller.js.
 
-const TIPOS_SUMA = new Set(['ENTRADA']);
-const TIPOS_RESTA = new Set(['SALIDA']);
 const DECIMALES = 1000; // 3 decimales, como Decimal(10,3)
 
 function numero(valor) {
@@ -42,41 +41,61 @@ export async function bloquearIngredientes(tx, ids, idRestaurante) {
   }
 }
 
-/**
- * Verifica stock contra una lista ya calculada de requerimientos
- * [{ id_ingrediente, requerido }].
- * Lanza StockInsuficienteError si falta algo.
- */
-export async function verificarStockIngredientes(tx, requerimientos, idRestaurante) {
-  if (!Array.isArray(requerimientos) || requerimientos.length === 0) {
-    return [];
-  }
+// El listado, el conteo y la validación de las comandas usan el mismo saldo.
+// Sumar en milésimas evita movimientos residuales al corregir, p. ej., 19.6 a 20.
+function variacionMilesimas(tipo, cantidad) {
+  const n = Math.round(Number(cantidad ?? 0) * DECIMALES);
+  return tipo === 'ENTRADA' ? n : tipo === 'SALIDA' ? -n : 0;
+}
 
-  const ids = [...new Set(requerimientos.map((r) => r.id_ingrediente))];
+export function calcularStockActual(movimientos) {
+  return movimientos.reduce((saldo, m) => saldo + variacionMilesimas(m.tipo_movimiento, m.cantidad), 0) / DECIMALES;
+}
 
+async function saldosEnMilesimas(tx, ids, idRestaurante) {
   const movimientos = await tx.inventario_mov.groupBy({
     by: ['id_ingrediente', 'tipo_movimiento'],
     where: { id_restaurante: idRestaurante, id_ingrediente: { in: ids } },
     _sum: { cantidad: true },
   });
-
-  const stock = new Map(ids.map((id) => [id, 0]));
-
-  for (const mov of movimientos) {
-    const actual = stock.get(mov.id_ingrediente) ?? 0;
-
-    if (TIPOS_SUMA.has(mov.tipo_movimiento)) {
-      stock.set(mov.id_ingrediente, actual + numero(mov._sum.cantidad));
-    } else if (TIPOS_RESTA.has(mov.tipo_movimiento)) {
-      stock.set(mov.id_ingrediente, actual - numero(mov._sum.cantidad));
-    }
+  const saldos = new Map(ids.map(id => [id, 0]));
+  for (const m of movimientos) {
+    saldos.set(m.id_ingrediente, saldos.get(m.id_ingrediente) + variacionMilesimas(m.tipo_movimiento, m._sum.cantidad));
   }
+  return saldos;
+}
 
+export function crearAjusteManual(tx, { id_restaurante, id_ingrediente, id_usuario }, tipo, cantidad, motivo) {
+  return tx.inventario_mov.create({ data: {
+    id_restaurante, id_ingrediente, id_usuario, fecha_hora: new Date(),
+    tipo_movimiento: tipo, cantidad, origen_tipo: 'AJUSTE', observaciones: motivo,
+  } });
+}
+
+// La transacción ya tiene bloqueada la fila de Ingrediente (UPDATE de la ficha).
+export async function conciliarConteo(tx, origen, esperado, contado, motivo) {
+  const { id_restaurante, id_ingrediente } = origen;
+  const saldo = (await saldosEnMilesimas(tx, [id_ingrediente], id_restaurante)).get(id_ingrediente);
+  if (saldo / DECIMALES !== esperado) {
+    throw new ErrorSalon(409, `El stock cambió de ${esperado} a ${saldo / DECIMALES}. No se guardó el cambio. Cierra y vuelve a abrir el ingrediente para revisar el conteo.`);
+  }
+  const diferencia = Math.round(contado * DECIMALES) - saldo;
+  if (!diferencia) return null;
+  const cantidad = Math.abs(diferencia) / DECIMALES;
+  if (!cantidadInventarioValida(cantidad)) throw new ErrorSalon(422, 'La diferencia supera la cantidad máxima de un movimiento (9999999.999).');
+  return crearAjusteManual(tx, origen, diferencia > 0 ? 'ENTRADA' : 'SALIDA', cantidad, motivo);
+}
+
+/** Verifica los requerimientos de una comanda contra su inventario, ya bloqueado. */
+export async function verificarStockIngredientes(tx, requerimientos, idRestaurante) {
+  if (!Array.isArray(requerimientos) || requerimientos.length === 0) return [];
+  const ids = [...new Set(requerimientos.map(r => r.id_ingrediente))];
+  const saldos = await saldosEnMilesimas(tx, ids, idRestaurante);
   const faltantes = requerimientos
     .map((r) => ({
       id_ingrediente: r.id_ingrediente,
       requerido: redondear(r.requerido),
-      disponible: redondear(stock.get(r.id_ingrediente) ?? 0),
+      disponible: saldos.get(r.id_ingrediente) / DECIMALES,
     }))
     .filter((r) => r.disponible < r.requerido);
 

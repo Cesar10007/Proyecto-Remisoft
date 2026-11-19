@@ -25,3 +25,9 @@ test('receta y ajustes aceptan únicamente cantidades positivas representables e
   for (const n of [0.001, '0.001', 1.001, '9999999.999']) assert.equal(cantidadInventarioValida(n), true)
   for (const n of [0, -1, 0.0001, 10000000, '', null, NaN, true, [1]]) assert.equal(cantidadInventarioValida(n), false)
 })
+
+test('el conteo absoluto acepta cero sin permitir movimientos nulos ni redondear cantidades inválidas', () => {
+  for (const valor of [0, '0', '0.000', '19.6', '19.625']) assert.equal(cantidadInventarioValida(valor, { permitirCero: true }), true)
+  for (const valor of ['', ' ', null, false, -1, '0.0001', '10000000']) assert.equal(cantidadInventarioValida(valor, { permitirCero: true }), false)
+  assert.equal(cantidadInventarioValida('0.000'), false)
+})

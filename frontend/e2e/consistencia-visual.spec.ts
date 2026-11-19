@@ -9,7 +9,7 @@ const cuenta = {
 }
 const lecturas: Record<string, unknown> = {
   usuarios: [{ id_usuario: 8, id_rol: 2, activo: 1, nombre: 'Lina', email: 'lina@example.test' }],
-  inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'kg', stock_minimo: 1, stock_actual: 5 }] },
+  inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'kg', costo_unitario_ref: '18000.25', stock_minimo: 20, stock_actual: 19.6 }] },
   proveedores: [{ id_proveedor: 1, nombre: 'Molino', nombre_contacto: 'Ana', telefono: '', email: '', direccion: '', nit: '', tipo_proveedor: '', estado: 'ACTIVO' }],
   cajas: [], 'productos/vista': [], mesas: { data: [] }, facturas: { data: [] },
   solicitudes: { data: [] }, 'inventario/alertas/stock-bajo': { data: [] },
@@ -222,6 +222,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
       await abrir.click()
       const dialogo = page.getByRole('dialog', { name: titulo })
       await comprobarFormulario(dialogo)
+      if (titulo === 'Nuevo Ingrediente') await expect(dialogo.getByLabel('Stock actual')).toHaveCount(0)
       const cancelar = dialogo.getByRole('button', { name: 'Cancelar' })
       await cancelar.scrollIntoViewIfNeeded()
       await expect(cancelar).toBeInViewport({ ratio: 1 })
@@ -229,7 +230,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
       await expect(dialogo.getByRole('button', { name: 'Cerrar ventana' })).toBeInViewport({ ratio: 1 })
       await expect(dialogo.getByRole('heading', { name: titulo })).toBeInViewport({ ratio: 1 })
       expect(await contraste(cancelar)).toBeGreaterThanOrEqual(4.5)
-      if (titulo === 'Nuevo Proveedor' && viewport.width === 360) expect(await dialogo.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+      if (titulo === 'Nuevo Proveedor' && viewport.width === 360) expect(await dialogo.locator('.app-modal__body').evaluate(el => el.scrollTop)).toBeGreaterThan(0)
       await cancelar.click()
       await expect(abrir).toBeFocused()
     }
@@ -242,6 +243,69 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
     await expect(editar).toBeFocused()
   })
 }
+
+test('editar un ingrediente en móvil con letra grande no recorta la cabecera y conserva el conteo en conflicto', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await abrirPanel(page, 'GERENTE')
+  await expect(page).toHaveTitle('RemiSoft')
+  await boton(page, 'Modo oscuro').click()
+  await ir(page, 'Inventario')
+  const editar = page.getByRole('row').filter({ hasText: 'Maíz' }).getByRole('button', { name: 'Editar' })
+  await editar.click()
+  await page.addStyleTag({ content: 'html { font-size: 125%; }' })
+  const d = page.getByRole('dialog', { name: 'Editar Ingrediente' })
+  const stock = d.getByLabel('Stock actual', { exact: true })
+  await expect(stock).toHaveValue('19.6')
+  await expect(d.getByLabel('Stock mínimo')).toHaveValue('20')
+  await expect(d.getByLabel('Motivo del ajuste')).toHaveCount(0)
+  await stock.fill('0')
+  await d.getByLabel('Motivo del ajuste').fill('Recuento físico')
+  await comprobarFormulario(d)
+  const encabezado = d.locator('header')
+  const antes = await encabezado.boundingBox()
+  const guardar = d.getByRole('button', { name: 'Actualizar' })
+  await guardar.scrollIntoViewIfNeeded()
+  await expect(guardar).toBeInViewport({ ratio: 1 })
+  await expect(encabezado).toBeInViewport({ ratio: 1 })
+  expect(await encabezado.boundingBox()).toEqual(antes)
+  // Comprobar las líneas del texto, no solo que exista el h2 en el DOM.
+  expect(await encabezado.evaluate(el => {
+    const r = document.createRange()
+    r.selectNodeContents(el.querySelector('h2')!)
+    const cabecera = el.getBoundingClientRect(), x = el.querySelector('button')!.getBoundingClientRect()
+    const lineas = Array.from(r.getClientRects())
+    return lineas.length <= 2 && lineas.every(linea => linea.top > cabecera.top && linea.bottom < cabecera.bottom && linea.left >= cabecera.left && linea.right < x.left)
+  })).toBe(true)
+  await page.route('**/api/ingredientes/1', route => route.fulfill({ status: 409, json: { message: 'El stock cambió. Revisa el conteo.' } }))
+  const enviado = page.waitForRequest(req => req.method() === 'PUT' && req.url().endsWith('/api/ingredientes/1'))
+  await guardar.click()
+  expect((await enviado).postDataJSON()).toMatchObject({ stock_actual: 0, stock_esperado: 19.6, motivo: 'Recuento físico', stock_minimo: '20' })
+  await expect(d.getByRole('alert')).toContainText('El stock cambió')
+  await expect(stock).toHaveValue('0')
+  await expect(d.getByLabel('Motivo del ajuste')).toHaveValue('Recuento físico')
+  await d.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(editar).toBeFocused()
+})
+
+test('editar solo la ficha no envía un conteo y una API antigua no se confunde con un stock guardado', async ({ page }) => {
+  await abrirPanel(page, 'GERENTE')
+  await ir(page, 'Inventario')
+  const editar = page.getByRole('row').filter({ hasText: 'Maíz' }).getByRole('button', { name: 'Editar' })
+  await page.route('**/api/ingredientes/1', route => route.fulfill({ json: { message: 'Ingrediente actualizado' } }))
+  await editar.click()
+  const d = page.getByRole('dialog', { name: 'Editar Ingrediente' })
+  await d.getByLabel('Descripción').fill('De la finca')
+  const peticion = page.waitForRequest(req => req.method() === 'PUT' && req.url().endsWith('/api/ingredientes/1'))
+  await d.getByRole('button', { name: 'Actualizar' }).click()
+  expect((await peticion).postDataJSON()).not.toHaveProperty('stock_actual')
+  await expect(d).toHaveCount(0)
+  await editar.click()
+  await d.getByLabel('Stock actual').fill('22.125')
+  await d.getByLabel('Motivo del ajuste').fill('Recuento físico')
+  await d.getByRole('button', { name: 'Actualizar' }).click()
+  await expect(d.getByRole('alert')).toContainText('La API no confirmó el stock')
+  await expect(d.getByLabel('Stock actual')).toHaveValue('22.125')
+})
 
 for (const tema of ['claro', 'oscuro']) {
   test(`el proveedor conserva sus datos y las acciones siguen siendo legibles mientras se guarda (${tema})`, async ({ page }) => {

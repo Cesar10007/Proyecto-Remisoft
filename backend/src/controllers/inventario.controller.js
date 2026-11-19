@@ -1,32 +1,12 @@
 import { cantidadInventarioValida } from '../utils/validation.js';
 import prisma from '../config/prisma.js';
-import { bloquearIngredientes, verificarStockIngredientes } from '../services/inventario.service.js';
-import { registrarAuditoria } from '../utils/auditoria.js';
-
-const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
-const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
+import { bloquearIngredientes, calcularStockActual, crearAjusteManual, verificarStockIngredientes } from '../services/inventario.service.js';
+import { auditarAjusteInventario } from '../utils/auditoria.js';
 
 function parseIngredientId(value) {
   if (typeof value !== 'number' && typeof value !== 'string') return null;
   const id = Number(value);
   return Number.isInteger(id) && id > 0 && id <= 2147483647 ? id : null;
-}
-
-function calcularStockActual(movimientos) {
-  // Acumular milésimas enteras (DECIMAL(10,3)), no fracciones binarias.
-  return movimientos.reduce((total, movimiento) => {
-    const cantidad = Math.round(Number(movimiento.cantidad ?? 0) * 1000);
-
-    if (TIPOS_MOVIMIENTO_SUMA.has(movimiento.tipo_movimiento)) {
-      return total + cantidad;
-    }
-
-    if (TIPOS_MOVIMIENTO_RESTA.has(movimiento.tipo_movimiento)) {
-      return total - cantidad;
-    }
-
-    return total;
-  }, 0) / 1000;
 }
 
 function serializarIngrediente(ingrediente) {
@@ -252,33 +232,9 @@ export async function ajuste(req, res, next) {
         ], req.sede.id_restaurante);
       }
 
-      return tx.inventario_mov.create({
-        data: {
-          ...req.sede,
-          id_ingrediente: idIngrediente,
-          id_usuario: idUsuario,
-          fecha_hora: new Date(),
-          tipo_movimiento: tipo,
-          cantidad,
-          origen_tipo: 'AJUSTE',
-          observaciones: motivo,
-        },
-      });
+      return crearAjusteManual(tx, { ...req.sede, id_ingrediente: idIngrediente, id_usuario: idUsuario }, tipo, cantidad, motivo);
     });
-
-    // RNF-001.8 — ajuste manual fuera del flujo automático,
-    // con id_usuario (tomado del JWT) y motivo.
-    registrarAuditoria({
-      evento: 'INVENTARIO_AJUSTE_MANUAL',
-      id_usuario: idUsuario,
-      ip: req.ip,
-      endpoint: req.originalUrl,
-      motivo: `${tipo} ${cantidad} de ${ingrediente.nombre ?? idIngrediente}: ${motivo}`,
-      extra: {
-        id_movimiento: movimiento.id_movimiento,
-        id_ingrediente: idIngrediente,
-      },
-    });
+    auditarAjusteInventario(req, movimiento, ingrediente.nombre);
 
     return res.status(201).json({
       success: true,

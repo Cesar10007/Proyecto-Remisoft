@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Button from '../../../components/common/Button'
+import EditorIngrediente from '../components/EditorIngrediente'
 import MovimientosIngrediente from '../components/MovimientosIngrediente'
 import type { Ingrediente, IngredienteConStock } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
@@ -7,12 +8,11 @@ import { DataTable, Column } from '../../../components/common/DataTable'
 interface IngredientesSectionProps {
   ingredientes: IngredienteConStock[]
   actualizar: () => Promise<void>
-  onCreate: () => void
-  onEdit: (ingrediente: Ingrediente) => void
   onDelete: (id: number) => void
 }
 
-function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDelete }: IngredientesSectionProps) {
+function IngredientesSection({ ingredientes, actualizar, onDelete }: IngredientesSectionProps) {
+  const [editor, setEditor] = useState<IngredienteConStock | 'nuevo' | null>(null)
   const [seleccion, setSeleccion] = useState<Ingrediente | null>(null)
   const columns: Column<IngredienteConStock>[] = [
     {
@@ -41,7 +41,7 @@ function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDel
       render: (i) => (
         <div className="flex gap-2">
           <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
-          <Button size="small" variant="outline" onClick={() => onEdit(i)}>Editar</Button>
+          <Button size="small" variant="outline" onClick={() => setEditor(i)}>Editar</Button>
           <button
             className="rounded-[10px] bg-transparent px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo-dark)] hover:bg-[var(--rojo-light)]"
             onClick={() => onDelete(i.id_ingrediente)}
@@ -61,8 +61,9 @@ function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDel
         data={ingredientes}
         emptyMessage="No hay ingredientes disponibles"
         keyExtractor={(i) => i.id_ingrediente}
-        actionButton={<Button onClick={onCreate}>+ Nuevo Ingrediente</Button>}
+        actionButton={<Button onClick={() => setEditor('nuevo')}>+ Nuevo Ingrediente</Button>}
       />
+      {editor && <EditorIngrediente ingrediente={editor === 'nuevo' ? null : editor} actualizar={actualizar} cerrar={() => setEditor(null)} />}
       {seleccion && <MovimientosIngrediente ingrediente={seleccion} actualizar={actualizar} cerrar={() => setSeleccion(null)} />}
     </div>
   )

@@ -19,7 +19,7 @@ import Button from '../../components/common/Button'
 import { MetricCard } from '../../components/common/MetricCard'
 import GerenteModals from './components/GerenteModals'
 import DashboardOperativo from './components/DashboardOperativo'
-import type { Caja, Ingrediente, Personal, Producto, Proveedor } from './types'
+import type { Caja, Personal, Producto, Proveedor } from './types'
 import { etiquetaMesa } from './data'
 import { useDatosGerente, formatoCOP, etiquetaMetodo, type TurnoApi, type Lectura } from './useDatosGerente'
 import IASection from './sections/IASection'
@@ -60,9 +60,6 @@ function tiempoDesde(fecha: string): string {
 
 const productoVacio: Omit<Producto, 'id_producto'> = {
   Nombre: '', Descripcion: '', precio_venta: '', Categoria: '', Tiempo_preparacion: '00:00:00', Estado: 1,
-}
-const ingredienteVacio = {
-  nombre: '', descripcion: '', unidad_medida: '', costo_unitario_ref: '', stock_minimo: '0',
 }
 const proveedorVacio = {
   nombre: '', nombre_contacto: '', telefono: '', email: '',
@@ -105,12 +102,6 @@ function Gerente() {
   const [idEditandoProducto, setIdEditandoProducto] = useState<number | null>(null)
   const [guardandoProducto, setGuardandoProducto] = useState(false)
   const [errorProducto, setErrorProducto] = useState<string | null>(null)
-  const [modalIngrediente, setModalIngrediente] = useState(false)
-  const [modoEdicionIngrediente, setModoEdicionIngrediente] = useState(false)
-  const [ingredienteActual, setIngredienteActual] = useState(ingredienteVacio)
-  const [idEditandoIngrediente, setIdEditandoIngrediente] = useState<number | null>(null)
-  const [guardandoIngrediente, setGuardandoIngrediente] = useState(false)
-  const [errorIngrediente, setErrorIngrediente] = useState<string | null>(null)
   const [modalProveedor, setModalProveedor] = useState(false)
   const [modoEdicionProveedor, setModoEdicionProveedor] = useState(false)
   const [proveedorActual, setProveedorActual] = useState(proveedorVacio)
@@ -244,17 +235,6 @@ function Gerente() {
   const toggleProducto = async (id: number, estado: number) => {
     if (!confirm(`¿Deseas ${estado ? 'desactivar' : 'activar'} este producto?`)) return
     try { await api.delete(`/productos/${id}`); datos.catalogo.cargar() } catch { alert('Error') }
-  }
-  const abrirCrearIngrediente = () => { setModoEdicionIngrediente(false); setIngredienteActual(ingredienteVacio); setIdEditandoIngrediente(null); setErrorIngrediente(null); setModalIngrediente(true) }
-  const abrirEditarIngrediente = (i: Ingrediente) => { setModoEdicionIngrediente(true); setIngredienteActual({ nombre: i.nombre, descripcion: i.descripcion, unidad_medida: i.unidad_medida, costo_unitario_ref: i.costo_unitario_ref, stock_minimo: i.stock_minimo }); setIdEditandoIngrediente(i.id_ingrediente); setErrorIngrediente(null); setModalIngrediente(true) }
-  const guardarIngrediente = async () => {
-    if (!ingredienteActual.nombre.trim()) { setErrorIngrediente('El nombre es obligatorio'); return }
-    setGuardandoIngrediente(true); setErrorIngrediente(null)
-    try {
-      modoEdicionIngrediente && idEditandoIngrediente ? await api.put(`/ingredientes/${idEditandoIngrediente}`, ingredienteActual) : await api.post('/ingredientes', ingredienteActual)
-      setModalIngrediente(false); datos.inventario.cargar()
-    } catch (err) { setErrorIngrediente(mensajeError(err)) }
-    finally { setGuardandoIngrediente(false) }
   }
   const eliminarIngrediente = async (id: number) => {
     if (!confirm('¿Eliminar este ingrediente?')) return
@@ -516,12 +496,10 @@ function Gerente() {
           </>
         )}
         {/* INVENTARIO — CRUD Ingredientes */}
-        {seccionActiva === 'Inventario' && !datos.aviso && (
+        {seccionActiva === 'Inventario' && datos.inventario.data !== null && (
           <IngredientesSection
             ingredientes={ingredientes}
             actualizar={datos.inventario.cargar}
-            onCreate={abrirCrearIngrediente}
-            onEdit={abrirEditarIngrediente}
             onDelete={eliminarIngrediente}
           />
         )}
@@ -779,35 +757,27 @@ function Gerente() {
       {receta && <RecetaProducto key={receta.id_producto} producto={receta} cerrar={() => setReceta(null)} />}
       <GerenteModals
         producto={productoActual}
-        ingrediente={ingredienteActual}
         proveedor={proveedorActual}
         caja={cajaActual}
         productoOpen={modalProducto}
-        ingredienteOpen={modalIngrediente}
         proveedorOpen={modalProveedor}
         cajaOpen={modalCaja}
         editProducto={modoEdicionProducto}
-        editIngrediente={modoEdicionIngrediente}
         editProveedor={modoEdicionProveedor}
         editCaja={modoEdicionCaja}
         savingProducto={guardandoProducto}
-        savingIngrediente={guardandoIngrediente}
         savingProveedor={guardandoProveedor}
         savingCaja={guardandoCaja}
         errorProducto={errorProducto}
-        errorIngrediente={errorIngrediente}
         errorProveedor={errorProveedor}
         errorCaja={errorCaja}
         setProducto={setProductoActual}
-        setIngrediente={setIngredienteActual}
         setProveedor={setProveedorActual}
         setCaja={setCajaActual}
         closeProducto={() => setModalProducto(false)}
-        closeIngrediente={() => setModalIngrediente(false)}
         closeProveedor={() => setModalProveedor(false)}
         closeCaja={() => setModalCaja(false)}
         submitProducto={guardarProducto}
-        submitIngrediente={guardarIngrediente}
         submitProveedor={guardarProveedor}
         submitCaja={guardarCaja}
       />
