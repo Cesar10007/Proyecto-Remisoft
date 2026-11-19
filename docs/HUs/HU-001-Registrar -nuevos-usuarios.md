@@ -34,7 +34,7 @@ Sistema Web Inteligente para Restaurante Familia Remi.
 ## Criterio de aceptación 003
   - **Dado que** el administrador registra un email ya existente,
   - **cuando** el sistema valida los datos,
-  - **entonces** rechaza el registro e indica que el correo ya está en uso.
+  - **entonces** rechaza el registro y muestra únicamente «Correo inválido, verifique que esté bien escrito o ingrese otro.», sin indicar si existe una cuenta.
 ## Criterio de aceptación 004
   - **Dado que** el registro es exitoso,
   - **cuando** se guarda el usuario,

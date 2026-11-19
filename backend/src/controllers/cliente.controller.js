@@ -125,12 +125,6 @@ export async function crear(req, res, next) {
       message: 'Cliente creado',
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del cliente ya está registrado',
-      });
-    }
-
     next(err);
   }
 }
@@ -166,12 +160,6 @@ export async function actualizar(req, res, next) {
       message: 'Cliente actualizado',
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del cliente ya está registrado',
-      });
-    }
-
     if (err.code === 'P2025') {
       return res.status(404).json({
         message: 'Cliente no encontrado',

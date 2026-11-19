@@ -15,11 +15,13 @@ interface FormData {
   contrasena: string
 }
 
+export type ErrorPersonal = { origen: 'formulario' | 'lista'; mensaje: string }
+
 interface PersonalSectionProps {
   personal: Personal[]
   formData: FormData
   usuarioEditando: Personal | null
-  errorPersonal: string | null
+  errorPersonal: ErrorPersonal | null
   guardandoPersonal: boolean
   cargandoPersonal: boolean
   mostrarContrasena: boolean
@@ -87,9 +89,9 @@ function PersonalSection({
 
   return (
     <section className="mt-6 flex flex-col gap-6">
-      {errorPersonal && (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-[0.85rem] text-[var(--rojo)]">
-          {errorPersonal}
+      {errorPersonal?.origen === 'lista' && (
+        <p role="alert" className="text-sm text-[var(--rojo-dark)]">
+          {errorPersonal.mensaje}
         </p>
       )}
 
@@ -166,6 +168,9 @@ function PersonalSection({
                 </span>
               </button>
             </div>
+          )}
+          {errorPersonal?.origen === 'formulario' && (
+            <p role="alert" className="md:col-span-2 text-sm text-[var(--rojo-dark)]">{errorPersonal.mensaje}</p>
           )}
           <div className="flex gap-2 md:col-span-2 mt-2">
             {usuarioEditando && (

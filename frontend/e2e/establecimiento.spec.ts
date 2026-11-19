@@ -1,13 +1,26 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import { iniciarSedeNueva } from './helpers/sede'
 
 test.skip(process.env.ESTABLECIMIENTO_E2E !== '1', 'Solo para una base desechable con el superadmin de demostración.')
 
-test('un gerente nuevo ve su sede vacía, incluso si Principal ya tiene ventas y alertas', async ({ page }) => {
+// Ambas altas hacen POST a la API real. Para reintentar solo se modifica el correo.
+async function comprobarYCorregirCorreo(form: Locator) {
+  const correo = form.locator('input[type=email]')
+  const nuevo = await correo.inputValue()
+  await correo.fill('CARLOS.RAMIREZ@RESTO.COM')
+  await form.locator('button[type=submit]').click()
+  const aviso = form.getByRole('alert')
+  await expect(aviso).toHaveText('Correo inválido, verifique que esté bien escrito o ingrese otro.')
+  await expect(aviso).toBeInViewport({ ratio: 1 })
+  await correo.fill(nuevo)
+  await expect(aviso).toHaveCount(0)
+}
+
+test('altas de gerente y personal: se puede corregir el correo y la sede empieza sin datos ajenos', async ({ page }) => {
   const boton = (name: string) => page.getByRole('button', { name, exact: true })
   const errores: string[] = []
   page.on('pageerror', e => errores.push(e.message))
-  const { id } = await iniciarSedeNueva(page)
+  const { id, clave } = await iniciarSedeNueva(page, comprobarYCorregirCorreo)
   await expect(page.getByText(/Sin ventas registradas hoy/)).toBeVisible()
   await expect(page.getByText(/Sin alertas de stock/)).toBeVisible()
   await expect(page.getByText('Sin productos', { exact: true })).toBeVisible()
@@ -56,5 +69,16 @@ test('un gerente nuevo ve su sede vacía, incluso si Principal ya tiene ventas y
   await page.unroute('**/api/ia')
   await boton('Reintentar').click()
   await expect(page.getByText(/No hay análisis de IA/)).toBeVisible()
+  await boton('Personal').click()
+  const form = page.locator('form').filter({ has: boton('Crear Personal') })
+  const email = `mesero-${id}@example.test`
+  await form.getByLabel('Nombre', { exact: true }).fill('Juan')
+  await form.getByLabel('Apellido').fill('Rojas')
+  await form.getByLabel('Email').fill(email)
+  await form.getByLabel('Rol').selectOption({ label: 'MESERO' })
+  await form.getByLabel('Contraseña', { exact: true }).fill(clave)
+  await comprobarYCorregirCorreo(form)
+  await boton('Crear Personal').click()
+  await expect(page.getByRole('row').filter({ hasText: email })).toContainText('Juan Rojas')
   expect(errores).toEqual([])
 })

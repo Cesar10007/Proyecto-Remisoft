@@ -1,4 +1,5 @@
 import { ErrorSalon } from '../utils/salon.js';
+import { CORREO_INVALIDO, esConflictoCorreo } from '../utils/validation.js';
 
 export default function errorHandler(err, req, res, next) {
   if (res.headersSent) {
@@ -17,9 +18,11 @@ export default function errorHandler(err, req, res, next) {
     });
   }
 
+  if (esConflictoCorreo(err)) return res.status(422).json({ message: CORREO_INVALIDO });
+
   console.error('[ErrorHandler]', err);
   if (err.code === 'P2002') {
-    const field = err.meta?.target
+    const field = Array.isArray(err.meta?.target)
       ? err.meta.target.join(', ')
       : 'campo';
 

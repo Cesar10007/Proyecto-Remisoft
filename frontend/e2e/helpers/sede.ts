@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 export async function entrar(page: Page, email: string, clave: string) {
   await page.goto('/')
@@ -10,7 +10,7 @@ export async function entrar(page: Page, email: string, clave: string) {
 }
 
 // Arranca con el superadmin de la BD de prueba; el resto se da de alta desde la interfaz.
-export async function iniciarSedeNueva(page: Page) {
+export async function iniciarSedeNueva(page: Page, antesDeGuardar?: (form: Locator) => Promise<void>) {
   const id = randomUUID().slice(0, 8)
   const email = `gerente-${id}@example.test`
   const clave = `Nueva!9${id}`
@@ -23,6 +23,7 @@ export async function iniciarSedeNueva(page: Page) {
   await alta.getByLabel('Correo electrónico *').fill(email)
   await alta.getByLabel('Nombre Establecimiento *').fill(`Sede ${id}`)
   await alta.getByLabel('Contraseña *', { exact: true }).fill(clave)
+  await antesDeGuardar?.(alta.locator('form'))
   await alta.getByRole('button', { name: 'Crear gerente' }).click()
   await expect(page.getByText(email, { exact: true })).toBeVisible()
   await boton('Cerrar sesión').click()

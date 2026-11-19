@@ -455,12 +455,6 @@ export async function crear(req, res, next) {
       data: resultado,
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del usuario ya está registrado.',
-      });
-    }
-
     if (err.code === 'P2003') {
       return res.status(422).json({
         message: 'No fue posible asociar el gerente al establecimiento.',
@@ -578,12 +572,6 @@ export async function actualizar(req, res, next) {
       message: 'Usuario actualizado',
     });
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        message: 'El email del usuario ya está registrado',
-      });
-    }
-
     if (err.code === 'P2003') {
       return res.status(422).json({
         message: 'El rol o restaurante indicado no existe',

@@ -99,6 +99,7 @@ function GestionGerentes() {
     campo: keyof FormularioGerente,
     valor: string,
   ) => {
+    setError(null)
     setFormulario((actual) => ({
       ...actual,
       [campo]: valor,
@@ -120,6 +121,7 @@ function GestionGerentes() {
 
   const cerrarFormulario = () => {
     if (guardando) return
+    setError(null)
     limpiarFormulario()
     setMostrarFormulario(false)
   }
@@ -334,7 +336,6 @@ function GestionGerentes() {
 
       <Modal title="Agregar gerente" size="wide" isOpen={mostrarFormulario} onClose={cerrarFormulario} busy={guardando}>
         <p className="mb-4 text-sm text-[var(--texto-muted)]">Completa la información del nuevo gerente.</p>
-        {error && <p role="alert" className="mb-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
         <form className="sa-manager-form" onSubmit={crearGerente}>
           <div className="sa-manager-form__grid">
             <InputField
@@ -440,6 +441,7 @@ function GestionGerentes() {
             establecimiento se genera automáticamente.
           </p>
 
+          {error && <p role="alert" className="mt-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
           <div className="sa-manager-form__actions">
             <button
               type="button"

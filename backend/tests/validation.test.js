@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { cantidadInventarioValida, validateEmail } from '../src/utils/validation.js'
+import { cantidadInventarioValida, esConflictoCorreo, validateEmail } from '../src/utils/validation.js'
 
 test('validateEmail exige un valor cuando el campo es obligatorio', () => {
   assert.equal(validateEmail(undefined, { required: true }), 'El campo email es requerido')
@@ -20,6 +20,18 @@ test('validateEmail normaliza espacios externos al validar', () => {
   assert.equal(validateEmail('  usuario@ejemplo.com  ', { required: true }), null)
 })
 
+test('solo una clave única de correo se trata como correo inválido', () => {
+  const prisma = target => ({ code: 'P2002', meta: { target } })
+  const mariadb = index => ({ code: 'P2002', meta: { driverAdapterError: { cause: { constraint: { index } } } } })
+  assert.equal(esConflictoCorreo(prisma(['id_restaurante', 'Email'])), true)
+  assert.equal(esConflictoCorreo(prisma('usuario.email')), true)
+  assert.equal(esConflictoCorreo(mariadb('solicitud_registro_email_unique')), true)
+  assert.equal(esConflictoCorreo({ code: 'P2002', meta: { modelName: 'Cliente' } }), true)
+  assert.equal(esConflictoCorreo({ code: 'P2002', meta: { modelName: 'mesa' } }), false)
+  assert.equal(esConflictoCorreo(prisma(['id_restaurante', 'numero'])), false)
+  assert.equal(esConflictoCorreo(mariadb('PRIMARY')), false)
+  assert.equal(esConflictoCorreo({ code: 'P2003', meta: { target: ['email'] } }), false)
+})
 
 test('receta y ajustes aceptan únicamente cantidades positivas representables en DECIMAL(10,3)', () => {
   for (const n of [0.001, '0.001', 1.001, '9999999.999']) assert.equal(cantidadInventarioValida(n), true)

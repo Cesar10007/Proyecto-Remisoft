@@ -5,7 +5,7 @@ import { Banknote, Boxes, Clock3, History, Landmark, ShoppingCart, Sparkles, Tab
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
-import PersonalSection from './sections/PersonalSection'
+import PersonalSection, { type ErrorPersonal } from './sections/PersonalSection'
 import IngredientesSection from './sections/IngredientesSection'
 import FinanzasSection from './sections/FinanzasSection'
 import ProveedoresSection from './sections/ProveedoresSection'
@@ -116,7 +116,7 @@ function Gerente() {
   const [errorCaja, setErrorCaja] = useState<string | null>(null)
   const [formData, setFormData] = useState(personalVacio)
   const [usuarioEditando, setUsuarioEditando] = useState<Personal | null>(null)
-  const [errorPersonal, setErrorPersonal] = useState<string | null>(null)
+  const [errorPersonal, setErrorPersonal] = useState<ErrorPersonal | null>(null)
   const [guardandoPersonal, setGuardandoPersonal] = useState(false)
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
   const metricasDashboard = [
@@ -201,11 +201,12 @@ function Gerente() {
   }
   const eliminarUsuario = async (id: number) => {
     if (!confirm('¿Eliminar este usuario?')) return
-    try { await api.delete(`/usuarios/${id}`); await datos.usuarios.cargar() } catch { setErrorPersonal('No se pudo eliminar el usuario') }
+    setErrorPersonal(null)
+    try { await api.delete(`/usuarios/${id}`); await datos.usuarios.cargar() } catch { setErrorPersonal({ origen: 'lista', mensaje: 'No se pudo eliminar el usuario' }) }
   }
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!formData.id_rol) { setErrorPersonal('Selecciona un rol'); return }
+    if (!formData.id_rol) { setErrorPersonal({ origen: 'formulario', mensaje: 'Selecciona un rol' }); return }
     setGuardandoPersonal(true)
     setErrorPersonal(null)
     try {
@@ -217,7 +218,7 @@ function Gerente() {
       setMostrarContrasena(false)
       await datos.usuarios.cargar()
     } catch (err) {
-      setErrorPersonal(mensajeError(err))
+      setErrorPersonal({ origen: 'formulario', mensaje: mensajeError(err) })
     } finally { setGuardandoPersonal(false) }
   }
   const abrirCrearProducto = () => { setModoEdicionProducto(false); setProductoActual(productoVacio); setIdEditandoProducto(null); setErrorProducto(null); setModalProducto(true) }
@@ -622,7 +623,10 @@ function Gerente() {
             cargandoPersonal={datos.usuarios.cargando}
             mostrarContrasena={mostrarContrasena}
             onFormSubmit={handleSubmit}
-            onFormChange={(field, value) => setFormData(current => ({ ...current, [field]: value }))}
+            onFormChange={(field, value) => {
+              setErrorPersonal(null)
+              setFormData(current => ({ ...current, [field]: value }))
+            }}
             onEdit={editarUsuario}
             onDelete={eliminarUsuario}
             onCancelEdit={() => { setUsuarioEditando(null); setFormData(personalVacio); setErrorPersonal(null) }}

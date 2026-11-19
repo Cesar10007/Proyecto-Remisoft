@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import bcrypt from 'bcryptjs';
 import prisma from '../src/config/prisma.js';
-import { validateEmail } from '../src/utils/validation.js';
+import { CORREO_INVALIDO, esConflictoCorreo, validateEmail } from '../src/utils/validation.js';
 
 async function crearPrimero() {
   const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
@@ -24,6 +24,6 @@ async function crearPrimero() {
 try { await crearPrimero(); }
 catch (e) {
   // Los errores del ORM pueden incluir argumentos de la operación; no registrar credenciales ni hashes.
-  console.error(e.code === 'P2002' ? 'El correo ya está en uso.' : e.constructor === Error ? e.message : 'No se pudo completar el alta. Revisa la conexión y las migraciones.');
+  console.error(esConflictoCorreo(e) ? CORREO_INVALIDO : e.constructor === Error ? e.message : 'No se pudo completar el alta. Revisa la conexión y las migraciones.');
   process.exitCode = 1;
 } finally { await prisma.$disconnect(); }
