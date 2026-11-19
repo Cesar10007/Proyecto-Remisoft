@@ -29,13 +29,13 @@ function CajasSection({ cajas, onCreate, onEdit, onToggle }: CajasSectionProps) 
       render: (c) => (
         <div className="flex gap-2">
           <button
-            className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#ede5dc]"
+            className="table-action table-action--outlined"
             onClick={() => onEdit(c)}
           >
             Editar
           </button>
           <button
-            className="rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#f2ece6]"
+            className="table-action"
             onClick={() => onToggle(c.id_caja, c.estado)}
           >
             {c.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}

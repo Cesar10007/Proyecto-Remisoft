@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
 import { DataTable, Column } from '../../../components/common/DataTable'
 import { Badge } from '../../../components/common/Badge'
+import Modal from '../../../components/common/Modal'
 import { InputField } from '../../../components/common/InputField'
 import './GestionGerentes.css'
 
@@ -325,164 +326,140 @@ function GestionGerentes() {
         </button>
       </div>
 
-      {error && (
+      {error && !mostrarFormulario && (
         <p className="sa-table-message sa-table-message--error">
           {error}
         </p>
       )}
 
-      {mostrarFormulario && (
-        <div className="sa-manager-modal-backdrop">
-          <div
-            className="sa-manager-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-formulario-gerente"
-          >
-            <div className="sa-manager-modal__header">
-              <div>
-                <h3 id="titulo-formulario-gerente">Agregar gerente</h3>
-                <p>Completa la información del nuevo gerente.</p>
-              </div>
+      <Modal title="Agregar gerente" size="wide" isOpen={mostrarFormulario} onClose={cerrarFormulario} busy={guardando}>
+        <p className="mb-4 text-sm text-[var(--texto-muted)]">Completa la información del nuevo gerente.</p>
+        {error && <p role="alert" className="mb-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
+        <form className="sa-manager-form" onSubmit={crearGerente}>
+          <div className="sa-manager-form__grid">
+            <InputField
+              label="Identificación"
+              type="text"
+              value={formulario.identificacion}
+              onChange={(event) =>
+                cambiarCampo('identificacion', event.target.value)
+              }
+            />
+
+            <InputField
+              label="Nombre *"
+              type="text"
+              value={formulario.nombre}
+              onChange={(event) =>
+                cambiarCampo('nombre', event.target.value)
+              }
+              required
+            />
+
+            <InputField
+              label="Apellido"
+              type="text"
+              value={formulario.apellido}
+              onChange={(event) =>
+                cambiarCampo('apellido', event.target.value)
+              }
+            />
+
+            <InputField
+              label="Teléfono"
+              type="tel"
+              value={formulario.telefono}
+              onChange={(event) =>
+                cambiarCampo('telefono', event.target.value)
+              }
+            />
+
+            <div className="sa-manager-form__field--full">
+              <InputField
+                label="Correo electrónico *"
+                type="email"
+                value={formulario.email}
+                onChange={(event) =>
+                  cambiarCampo('email', event.target.value)
+                }
+                required
+              />
+            </div>
+
+            <InputField
+              label="Nombre Establecimiento *"
+              type="text"
+              placeholder="Ej. Restaurante Central"
+              value={formulario.nombre_establecimiento}
+              onChange={(event) =>
+                cambiarCampo(
+                  'nombre_establecimiento',
+                  event.target.value,
+                )
+              }
+              required
+            />
+
+            <div className="sa-password-field">
+              <InputField
+                label="Contraseña *"
+                type={mostrarContrasena ? 'text' : 'password'}
+                value={formulario.contrasena}
+                onChange={(event) =>
+                  cambiarCampo('contrasena', event.target.value)
+                }
+                minLength={8}
+                required
+                className="pr-12"
+              />
 
               <button
                 type="button"
-                className="sa-manager-modal__close"
-                onClick={cerrarFormulario}
-                disabled={guardando}
-                aria-label="Cerrar formulario"
+                className="sa-password-toggle !top-8 !h-10"
+                onClick={() =>
+                  setMostrarContrasena((actual) => !actual)
+                }
+                aria-label={
+                  mostrarContrasena
+                    ? 'Ocultar contraseña'
+                    : 'Mostrar contraseña'
+                }
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined">
+                  {mostrarContrasena
+                    ? 'visibility_off'
+                    : 'visibility'}
+                </span>
               </button>
             </div>
-
-            <form className="sa-manager-form" onSubmit={crearGerente}>
-              <div className="sa-manager-form__grid">
-                <InputField
-                  label="Identificación"
-                  type="text"
-                  value={formulario.identificacion}
-                  onChange={(event) =>
-                    cambiarCampo('identificacion', event.target.value)
-                  }
-                />
-
-                <InputField
-                  label="Nombre *"
-                  type="text"
-                  value={formulario.nombre}
-                  onChange={(event) =>
-                    cambiarCampo('nombre', event.target.value)
-                  }
-                  required
-                />
-
-                <InputField
-                  label="Apellido"
-                  type="text"
-                  value={formulario.apellido}
-                  onChange={(event) =>
-                    cambiarCampo('apellido', event.target.value)
-                  }
-                />
-
-                <InputField
-                  label="Teléfono"
-                  type="tel"
-                  value={formulario.telefono}
-                  onChange={(event) =>
-                    cambiarCampo('telefono', event.target.value)
-                  }
-                />
-
-                <div className="sa-manager-form__field--full">
-                  <InputField
-                    label="Correo electrónico *"
-                    type="email"
-                    value={formulario.email}
-                    onChange={(event) =>
-                      cambiarCampo('email', event.target.value)
-                    }
-                    required
-                  />
-                </div>
-
-                <InputField
-                  label="Nombre Establecimiento *"
-                  type="text"
-                  placeholder="Ej. Restaurante Central"
-                  value={formulario.nombre_establecimiento}
-                  onChange={(event) =>
-                    cambiarCampo(
-                      'nombre_establecimiento',
-                      event.target.value,
-                    )
-                  }
-                  required
-                />
-
-                <div className="sa-password-field">
-                  <InputField
-                    label="Contraseña *"
-                    type={mostrarContrasena ? 'text' : 'password'}
-                    value={formulario.contrasena}
-                    onChange={(event) =>
-                      cambiarCampo('contrasena', event.target.value)
-                    }
-                    minLength={8}
-                    required
-                    className="pr-12"
-                  />
-
-                  <button
-                    type="button"
-                    className="sa-password-toggle !top-8 !h-10"
-                    onClick={() =>
-                      setMostrarContrasena((actual) => !actual)
-                    }
-                    aria-label={
-                      mostrarContrasena
-                        ? 'Ocultar contraseña'
-                        : 'Mostrar contraseña'
-                    }
-                  >
-                    <span className="material-symbols-outlined">
-                      {mostrarContrasena
-                        ? 'visibility_off'
-                        : 'visibility'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <p className="sa-manager-form__hint">
-                La contraseña debe tener mínimo 8 caracteres e incluir
-                mayúscula, minúscula, número y carácter especial. El ID del
-                establecimiento se genera automáticamente.
-              </p>
-
-              <div className="sa-manager-form__actions">
-                <button
-                  type="button"
-                  className="sa-manager-btn sa-manager-btn--secondary"
-                  onClick={cerrarFormulario}
-                  disabled={guardando}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="sa-manager-btn sa-manager-btn--primary"
-                  disabled={guardando}
-                >
-                  {guardando ? 'Guardando...' : 'Crear gerente'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+
+          <p className="sa-manager-form__hint">
+            La contraseña debe tener mínimo 8 caracteres e incluir
+            mayúscula, minúscula, número y carácter especial. El ID del
+            establecimiento se genera automáticamente.
+          </p>
+
+          <div className="sa-manager-form__actions">
+            <button
+              type="button"
+              className="sa-manager-btn sa-manager-btn--secondary"
+              onClick={cerrarFormulario}
+              disabled={guardando}
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="sa-manager-btn sa-manager-btn--primary"
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : 'Crear gerente'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <DataTable
         title="Gerentes registrados"

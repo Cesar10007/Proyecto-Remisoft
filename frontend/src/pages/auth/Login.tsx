@@ -68,15 +68,10 @@ function Login({ onClose }: LoginProps) {
   }
 
   return (
-    <div className="flex min-w-[300px] flex-col gap-2 px-1 py-2">
-      <div className="mb-2">
-        <h2 className="mb-1 font-['Syne'] text-[1.4rem] font-bold tracking-[-0.4px] text-[var(--texto)]">
-          Bienvenido
-        </h2>
-        <p className="text-[0.85rem] text-[var(--texto-muted)]">
-          Ingresa tus credenciales para continuar
-        </p>
-      </div>
+    <div className="flex min-w-0 flex-col gap-2">
+      <p className="mb-2 text-[0.85rem] text-[var(--texto-muted)]">
+        Ingresa tus credenciales para continuar
+      </p>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3.5">

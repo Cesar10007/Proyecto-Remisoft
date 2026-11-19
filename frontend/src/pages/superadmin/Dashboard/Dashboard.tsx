@@ -151,7 +151,7 @@ function Dashboard() {
               </thead>
               <tbody>
                 {cargando && (
-                  <tr>
+                  <tr className="table-status-row">
                     <td colSpan={4} className="sa-table-message">
                       Cargando gerentes...
                     </td>
@@ -159,7 +159,7 @@ function Dashboard() {
                 )}
 
                 {!cargando && error && (
-                  <tr>
+                  <tr className="table-status-row">
                     <td colSpan={4} className="sa-table-message sa-table-message--error">
                       {error}
                     </td>
@@ -167,7 +167,7 @@ function Dashboard() {
                 )}
 
                 {!cargando && !error && gerentes.length === 0 && (
-                  <tr>
+                  <tr className="table-status-row">
                     <td colSpan={4} className="sa-table-message">
                       No hay gerentes activos registrados.
                     </td>

@@ -4,7 +4,7 @@ import { InputField } from '../../../components/common/InputField'
 import { useConsulta } from '../../../hook/useConsulta'
 import { mensajeError } from '../../../utils/mensajeError'
 import type { Producto } from '../types'
-import DialogoGestion from './DialogoGestion'
+import Modal from '../../../components/common/Modal'
 
 interface Renglon { id_ingrediente: number; nombre: string; unidad_medida: string | null; cantidad: number }
 
@@ -24,7 +24,7 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
     finally { setGuardando(false) }
   }
   return (
-    <DialogoGestion titulo={`Receta de ${producto.Nombre}`} cerrar={cerrar} ocupado={guardando}>
+    <Modal title={`Receta de ${producto.Nombre}`} onClose={cerrar} busy={guardando}>
       {error ? <p role="alert">{error} <button onClick={cargar}>Reintentar</button></p> : !data ? <p role="status">Cargando receta…</p> : !data.data.length ?
         <p>Primero crea un ingrediente en Inventario.</p> :
         <form onSubmit={guardar} className="grid gap-4">
@@ -34,6 +34,6 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
           {fallo && <p role="alert" className="text-[var(--rojo-dark)]">{fallo}</p>}
           <button disabled={guardando} className="ge-primary-btn">{guardando ? 'Guardando…' : 'Guardar receta'}</button>
         </form>}
-    </DialogoGestion>
+    </Modal>
   )
 }

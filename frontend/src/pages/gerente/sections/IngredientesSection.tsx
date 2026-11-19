@@ -41,13 +41,13 @@ function IngredientesSection({ ingredientes, actualizar, onCreate, onEdit, onDel
         <div className="flex gap-2">
           <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
           <button
-            className="rounded-[10px] border border-[var(--borde)] bg-[#f9f5f0] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)] hover:bg-[#ede5dc]"
+            className="table-action table-action--outlined"
             onClick={() => onEdit(i)}
           >
             Editar
           </button>
           <button
-            className="rounded-[10px] bg-transparent px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo)] hover:bg-[var(--rojo-light)]"
+            className="rounded-[10px] bg-transparent px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo-dark)] hover:bg-[var(--rojo-light)]"
             onClick={() => onDelete(i.id_ingrediente)}
           >
             Eliminar

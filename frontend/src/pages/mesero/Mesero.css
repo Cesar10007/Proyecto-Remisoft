@@ -383,13 +383,8 @@ html[data-theme='dark'] .sl-app {
   display: block;
 }
 .sl-dialog {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  width: min(545px, calc(100% - 24px));
-  max-height: calc(100dvh - 40px);
+  --dialog-width: 545px;
   padding: 0;
-  overflow: auto;
   border: 1px solid var(--sl-line);
   border-radius: 15px;
   color: var(--sl-ink);
@@ -397,7 +392,7 @@ html[data-theme='dark'] .sl-app {
   box-shadow: 0 24px 85px #1326173b;
 }
 .sl-dialog-wide {
-  width: min(900px, calc(100% - 24px));
+  --dialog-width: 900px;
 }
 .sl-dialog::backdrop {
   background: #17201cc4;
@@ -678,9 +673,6 @@ html[data-theme='dark'] .sl-app {
   }
   .sl-basket-lines {
     max-height: none;
-  }
-  .sl-dialog {
-    max-height: 94dvh;
   }
   .sl-dialog-head,
   .sl-order-form fieldset,

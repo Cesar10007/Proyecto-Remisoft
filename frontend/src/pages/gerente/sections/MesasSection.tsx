@@ -3,7 +3,7 @@ import api from '../../../api/axios'
 import { DataTable } from '../../../components/common/DataTable'
 import { mensajeError } from '../../../utils/mensajeError'
 import AltaMesa from '../components/AltaMesa'
-import DialogoGestion from '../components/DialogoGestion'
+import Modal from '../../../components/common/Modal'
 import { etiquetaMesa } from '../data'
 import type { MesaGerente } from '../types'
 
@@ -39,13 +39,13 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
         { header: 'Acciones', render: m => <button type="button" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
           className="font-semibold text-[var(--rojo-dark)] disabled:opacity-40" onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</button> },
       ]} />
-      {seleccion && <DialogoGestion titulo={`¿Eliminar la mesa ${seleccion.numero}?`} cerrar={() => setSeleccion(null)} ocupado={eliminando}>
+      {seleccion && <Modal title={`¿Eliminar la mesa ${seleccion.numero}?`} onClose={() => setSeleccion(null)} busy={eliminando}>
         <p className="mb-5 text-sm">Se retirará del plano de tu establecimiento. Se conservarán sus pedidos y facturas anteriores.</p>
         <div className="flex justify-end gap-3">
           <button disabled={eliminando} className="ge-secondary-btn" onClick={() => setSeleccion(null)}>Cancelar</button>
           <button disabled={eliminando} className="ge-primary-btn" onClick={eliminar}>{eliminando ? 'Eliminando…' : 'Eliminar mesa'}</button>
         </div>
-      </DialogoGestion>}
+      </Modal>}
     </section>
   )
 }

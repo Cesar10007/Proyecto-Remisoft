@@ -105,7 +105,6 @@
 .sa-table { width: 100%; min-width: 680px; border-collapse: collapse; }
 .sa-table thead th { padding: 20px 24px; border-bottom: 1px solid var(--sa-surface-low); color: var(--t-txt-rgba_88_66_59_0_5, rgba(88, 66, 59, 0.5)); font-size: 0.72rem; font-weight: 900; text-align: left; text-transform: uppercase; }
 .sa-table tbody td { padding: 20px 24px; border-bottom: 1px solid var(--sa-surface-low); vertical-align: middle; }
-.sa-table tbody tr:hover { background: var(--t-bg-rgba_240_237_237_0_5, rgba(240, 237, 237, 0.5)); }
 .sa-table-message { padding: 32px !important; text-align: center; }
 .sa-table-message--error { color: var(--sa-error); }
 .sa-user-cell { display: flex; align-items: center; gap: 16px; }

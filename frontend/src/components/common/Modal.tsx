@@ -1,24 +1,29 @@
-import './Modal.css'
+import { useId, type ReactNode } from 'react'
+import { DialogSurface } from './DialogSurface'
 
 interface ModalProps {
-  isOpen: boolean
+  isOpen?: boolean
+  title: string
+  size?: 'compact' | 'normal' | 'wide'
+  busy?: boolean
   onClose: () => void
-  children: React.ReactNode
+  children: ReactNode
 }
 
-function Modal({ isOpen, onClose, children }: ModalProps){
+export default function Modal({ isOpen = true, title, size = 'normal', busy = false, onClose, children }: ModalProps) {
+  const titleId = useId()
   if (!isOpen) return null
-
   return (
-    <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal">
-        <div className="modal-header">
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <DialogSurface
+      labelledBy={titleId}
+      className={`app-modal app-modal--${size}`}
+      onClose={() => { if (!busy) onClose() }}
+    >
+      <header className="app-modal__header">
+        <h2 id={titleId}>{title}</h2>
+        <button type="button" className="app-modal__close" aria-label="Cerrar ventana" disabled={busy} onClick={onClose}>×</button>
+      </header>
+      <div className="app-modal__body">{children}</div>
+    </DialogSurface>
   )
 }
-
-export default Modal

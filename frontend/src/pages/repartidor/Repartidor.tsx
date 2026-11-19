@@ -666,41 +666,42 @@ function Repartidor() {
               )}
             </div>
 
-            <Modal isOpen={modalDomicilio} onClose={() => setModalDomicilio(false)}>
-              <div className="px-6 pb-6">
-                <h3 className="mb-6 font-['Syne'] text-[1.2rem] font-extrabold">
-                  {modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <InputField label="ID Pedido *" type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido} onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))} disabled={modoEdicionDomicilio} />
-                  <InputField label="Dirección *" type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion} onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
-                  <SelectField label="Estado" value={domicilioActual.estado} onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
-                      <option value="ASIGNADO">ASIGNADO</option>
-                      <option value="EN_CAMINO">EN_CAMINO</option>
-                      <option value="ENTREGADO">ENTREGADO</option>
-                      <option value="CANCELADO">CANCELADO</option>
-                    </SelectField>
-                  <InputField label="ID Repartidor" type="number" placeholder="Opcional" value={domicilioActual.id_repartidor} onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
-                  {errorDomicilio && (
-                    <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
-                      {errorDomicilio}
-                    </p>
-                  )}
-                  <div className="mt-2 flex gap-2.5">
-                    <button
-                      onClick={() => setModalDomicilio(false)}
-                      className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={guardarDomicilio}
-                      disabled={guardandoDomicilio}
-                      className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
-                    >
-                      {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
-                    </button>
-                  </div>
+            <Modal
+              title={modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
+              busy={guardandoDomicilio}
+              isOpen={modalDomicilio}
+              onClose={() => setModalDomicilio(false)}
+            >
+              <div className="flex flex-col gap-4">
+                <InputField label="ID Pedido *" type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido} onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))} disabled={modoEdicionDomicilio} />
+                <InputField label="Dirección *" type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion} onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
+                <SelectField label="Estado" value={domicilioActual.estado} onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
+                    <option value="ASIGNADO">ASIGNADO</option>
+                    <option value="EN_CAMINO">EN_CAMINO</option>
+                    <option value="ENTREGADO">ENTREGADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </SelectField>
+                <InputField label="ID Repartidor" type="number" placeholder="Opcional" value={domicilioActual.id_repartidor} onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
+                {errorDomicilio && (
+                  <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                    {errorDomicilio}
+                  </p>
+                )}
+                <div className="mt-2 flex gap-2.5">
+                  <button
+                    disabled={guardandoDomicilio}
+                    onClick={() => setModalDomicilio(false)}
+                    className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={guardarDomicilio}
+                    disabled={guardandoDomicilio}
+                    className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+                  >
+                    {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
+                  </button>
                 </div>
               </div>
             </Modal>
@@ -875,10 +876,9 @@ function Repartidor() {
             </div>
 
             {/* MODAL: VER SUCESO */}
-            <Modal isOpen={modalSuceso.open} onClose={() => setModalSuceso({ open: false, caso: null })}>
+            <Modal title={modalSuceso.caso?.tipo ?? 'Detalle del suceso'} isOpen={modalSuceso.open} onClose={() => setModalSuceso({ open: false, caso: null })}>
               {modalSuceso.caso && (
-                <div className="px-6 pb-6">
-                  <h3 className="mb-1 font-['Syne'] text-[1.2rem] font-extrabold">{modalSuceso.caso.tipo}</h3>
+                <>
                   <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">
                     Pedido {modalSuceso.caso.pedido}
                     {modalSuceso.caso.cliente ? ` · ${modalSuceso.caso.cliente}` : ''} · {modalSuceso.caso.fecha} {modalSuceso.caso.hora}
@@ -912,52 +912,49 @@ function Repartidor() {
                       </button>
                     )}
                   </div>
-                </div>
+                </>
               )}
             </Modal>
           </>
         )}
 
         {/* MODAL: REPORTAR PROBLEMA (activado con mantener presionado) */}
-        <Modal isOpen={modalReporte.open} onClose={() => setModalReporte({ open: false, pedido: '' })}>
-          <div className="px-6 pb-6">
-            <h3 className="mb-1 font-['Syne'] text-[1.2rem] font-extrabold">Reportar problema</h3>
-            <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">Pedido {modalReporte.pedido}</p>
+        <Modal title="Reportar problema" isOpen={modalReporte.open} onClose={() => setModalReporte({ open: false, pedido: '' })}>
+          <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">Pedido {modalReporte.pedido}</p>
 
-            <div className="flex flex-col gap-4">
-              <SelectField
-                label="Categoría *"
-                value={nuevoReporte.categoria}
-                onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
+          <div className="flex flex-col gap-4">
+            <SelectField
+              label="Categoría *"
+              value={nuevoReporte.categoria}
+              onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
+            >
+              <option value="">Selecciona una opción</option>
+              {categoriasReporte.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </SelectField>
+
+            <TextAreaField label="Describe lo ocurrido *" className="min-h-[100px]" placeholder="Ej: El cliente no contesta el teléfono ni la puerta." value={nuevoReporte.descripcion} onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))} />
+
+            {errorReporte && (
+              <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                {errorReporte}
+              </p>
+            )}
+
+            <div className="mt-2 flex gap-2.5">
+              <button
+                onClick={() => setModalReporte({ open: false, pedido: '' })}
+                className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
               >
-                <option value="">Selecciona una opción</option>
-                {categoriasReporte.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </SelectField>
-
-              <TextAreaField label="Describe lo ocurrido *" className="min-h-[100px]" placeholder="Ej: El cliente no contesta el teléfono ni la puerta." value={nuevoReporte.descripcion} onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))} />
-
-              {errorReporte && (
-                <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
-                  {errorReporte}
-                </p>
-              )}
-
-              <div className="mt-2 flex gap-2.5">
-                <button
-                  onClick={() => setModalReporte({ open: false, pedido: '' })}
-                  className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={guardarReporte}
-                  className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
-                >
-                  Enviar reporte
-                </button>
-              </div>
+                Cancelar
+              </button>
+              <button
+                onClick={guardarReporte}
+                className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+              >
+                Enviar reporte
+              </button>
             </div>
           </div>
         </Modal>

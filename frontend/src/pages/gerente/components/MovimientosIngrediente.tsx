@@ -4,7 +4,7 @@ import { InputField } from '../../../components/common/InputField'
 import { SelectField } from '../../../components/common/SelectField'
 import { useConsulta } from '../../../hook/useConsulta'
 import { mensajeError } from '../../../utils/mensajeError'
-import DialogoGestion from './DialogoGestion'
+import Modal from '../../../components/common/Modal'
 import type { Ingrediente } from '../types'
 
 interface Movimiento { id_movimiento: number; fecha_hora: string | null; tipo_movimiento: string; cantidad: string; origen_tipo: string | null; observaciones: string | null }
@@ -28,7 +28,7 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
     } catch (e) { setError(mensajeError(e)) }
     finally { setGuardando(false) }
   }
-  return <DialogoGestion titulo={`Movimientos de ${ingrediente.nombre}`} cerrar={cerrar} ocupado={guardando}>
+  return <Modal title={`Movimientos de ${ingrediente.nombre}`} onClose={cerrar} busy={guardando}>
     {ficha.error ? <p role="alert">{ficha.error} <button onClick={ficha.cargar}>Reintentar</button></p> : !ficha.data ? <p role="status">Cargando movimientos…</p> : <>
       <p className="mb-4 font-semibold">Stock actual: {ficha.data.data.stock_actual} {ingrediente.unidad_medida}</p>
       <form onSubmit={ajustar} className="grid gap-3">
@@ -50,5 +50,5 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
         </li>)}
       </ul>
     </>}
-  </DialogoGestion>
+  </Modal>
 }

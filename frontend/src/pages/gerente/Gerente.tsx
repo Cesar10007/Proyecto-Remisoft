@@ -428,7 +428,7 @@ function Gerente() {
                       render: (p) => (
                         <div className="flex gap-2">
                           <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setReceta(p)}>Receta</button>
-                          <button className="rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--texto-muted)]" onClick={() => abrirEditarProducto(p)}>Editar</button>
+                          <button className="table-action table-action--outlined" onClick={() => abrirEditarProducto(p)}>Editar</button>
                           <button
                             className={`rounded-[10px] px-3 py-1.5 text-[0.8rem] font-semibold ${
                               p.Estado ? 'bg-transparent text-[var(--texto-muted)]' : 'bg-[var(--rojo)] text-white'
@@ -748,10 +748,9 @@ function Gerente() {
                 keyExtractor={(t) => t.id_turno}
               />
 
-              <Modal isOpen={turnoParaCerrar !== null} onClose={() => setTurnoCerrando(null)}>
+              <Modal title="Cerrar turno" isOpen={turnoParaCerrar !== null} onClose={() => setTurnoCerrando(null)}>
                 {turnoParaCerrar && (
-                  <div className="px-6 pb-6">
-                    <h3 className="mb-1 font-bold">Cerrar turno</h3>
+                  <>
                     <p className="mb-5 text-[0.85rem] text-[var(--texto-muted)]">
                       {nombreEmpleado(turnoParaCerrar)}
                       {turnoParaCerrar.caja?.nombre ? ` · ${turnoParaCerrar.caja.nombre}` : ''}
@@ -779,7 +778,7 @@ function Gerente() {
                         Confirmar cierre
                       </button>
                     </div>
-                  </div>
+                  </>
                 )}
               </Modal>
           </section>

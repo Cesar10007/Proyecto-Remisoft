@@ -5,6 +5,7 @@ html[data-theme='dark'] {
   color-scheme: dark;
   --bg: #151210;
   --bg-card: #201b18;
+  --table-row-hover: rgba(36, 32, 30, 0.5);
   --texto: #f2ece7;
   --texto-muted: #b9aca3;
   --borde: rgba(255, 255, 255, 0.10);
@@ -38,7 +39,6 @@ html[data-theme='dark'] {
   --t-bg-fff0e8: #3f2518;
   --t-bg-fff8f7: #3f1d18;
   --t-bg-ffffff: #24201e;
-  --t-bg-rgba_240_237_237_0_5: rgba(36, 32, 30, 0.50);
   --t-bg-rgba_252_249_248_0_8: rgba(52, 39, 35, 0.80);
   --t-bg-rgba_252_249_248_0_9: rgba(52, 39, 35, 0.90);
   --t-bg-rgba_253_250_247_0_88: rgba(56, 43, 30, 0.88);

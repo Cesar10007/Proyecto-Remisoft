@@ -35,6 +35,8 @@ function App() {
               </main>
               <Footer />
               <Modal
+                title="Bienvenido"
+                size="compact"
                 isOpen={modal === 'login'}
                 onClose={() => setModal(null)}
               >
