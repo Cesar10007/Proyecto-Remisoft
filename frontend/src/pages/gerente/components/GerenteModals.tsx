@@ -41,97 +41,7 @@ function GerenteModals({
   closeProducto, closeProveedor, closeCaja,
   submitProducto, submitProveedor, submitCaja,
 }: Props) {
-  const actions = (close: () => void, saving: boolean, edit: boolean) => (
-    <div className="mt-5 flex justify-end gap-3">
-      <button
-        type="button"
-        className="rounded-[10px] border border-[var(--borde)] bg-[var(--bg)] px-4 py-2.5 text-[0.875rem] font-semibold text-[var(--texto-muted)]"
-        onClick={close}
-        disabled={saving}
-      >
-        Cancelar
-      </button>
-      <button
-        type="submit"
-        className="rounded-[10px] bg-[var(--rojo)] px-4 py-2.5 text-[0.875rem] font-semibold text-white"
-        disabled={saving}
-      >
-        {saving ? 'Guardando...' : edit ? 'Actualizar' : 'Crear'}
-      </button>
-    </div>
-  )
 
-  return (
-    <>
-      {/* Modal Producto */}
-      <Modal isOpen={productoOpen} onClose={closeProducto}>
-        <form
-          className="w-full"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submitProducto()
-          }}
-        >
-          <h3 className="mb-4 font-['Syne'] text-[1.2rem] font-bold text-[var(--texto)]">
-            {editProducto ? 'Editar Producto' : 'Nuevo Producto'}
-          </h3>
-          {errorProducto && <p className="mb-3 text-[0.85rem] text-[var(--rojo)]">{errorProducto}</p>}
-          <div className="flex flex-col gap-3">
-            <InputField
-              label="Nombre"
-              placeholder="Nombre *"
-              value={producto.Nombre}
-              onChange={(e) => setProducto({ ...producto, Nombre: e.target.value })}
-              required
-            />
-            <TextAreaField
-              label="Descripción"
-              placeholder="Descripción del producto"
-              value={producto.Descripcion}
-              onChange={(e) => setProducto({ ...producto, Descripcion: e.target.value })}
-              rows={3}
-            />
-            <InputField
-              label="Precio"
-              type="number"
-              placeholder="Precio *"
-              value={producto.precio_venta}
-              onChange={(e) => setProducto({ ...producto, precio_venta: e.target.value })}
-              required
-            />
-            <InputField
-              label="Categoría"
-              placeholder="Categoría"
-              value={producto.Categoria}
-              onChange={(e) => setProducto({ ...producto, Categoria: e.target.value })}
-            />
-            <InputField
-              label="Tiempo de preparación"
-              placeholder="HH:MM:SS"
-              value={producto.Tiempo_preparacion}
-              onChange={(e) => setProducto({ ...producto, Tiempo_preparacion: e.target.value })}
-            />
-            <SelectField
-              label="Estado"
-              value={producto.Estado}
-              onChange={(e) => setProducto({ ...producto, Estado: Number(e.target.value) })}
-            >
-              <option value={1}>Activo</option>
-              <option value={0}>Inactivo</option>
-            </SelectField>
-          </div>
-          {actions(closeProducto, savingProducto, editProducto)}
-        </form>
-      </Modal>
-
-      {/* Modal Ingrediente */}
-      <Modal isOpen={ingredienteOpen} onClose={closeIngrediente}>
-        <form
-          className="w-full"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submitIngrediente()
-          }}
   return (
     <>
       {/* Modal Producto */}
@@ -189,14 +99,6 @@ function GerenteModals({
         </SelectField>
       </FormularioCatalogo>
 
-      {/* Modal Proveedor */}
-      <Modal isOpen={proveedorOpen} onClose={closeProveedor}>
-        <form
-          className="w-full"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submitProveedor()
-          }}
       <FormularioCatalogo
         entidad="Proveedor" open={proveedorOpen}
         saving={savingProveedor} edit={editProveedor} error={errorProveedor}
@@ -263,14 +165,6 @@ function GerenteModals({
         </SelectField>
       </FormularioCatalogo>
 
-      {/* Modal Caja */}
-      <Modal isOpen={cajaOpen} onClose={closeCaja}>
-        <form
-          className="w-full"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submitCaja()
-          }}
       <FormularioCatalogo
         entidad="Caja" open={cajaOpen}
         saving={savingCaja} edit={editCaja} error={errorCaja}
