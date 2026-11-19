@@ -222,7 +222,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 360, height: 640 
       await abrir.click()
       const dialogo = page.getByRole('dialog', { name: titulo })
       await comprobarFormulario(dialogo)
-      if (titulo === 'Nuevo Ingrediente') await expect(dialogo.getByLabel('Stock actual')).toHaveCount(0)
+      if (titulo === 'Nuevo Ingrediente') await expect(dialogo.getByLabel('Stock actual')).toHaveValue('0')
       const cancelar = dialogo.getByRole('button', { name: 'Cancelar' })
       await cancelar.scrollIntoViewIfNeeded()
       await expect(cancelar).toBeInViewport({ ratio: 1 })
@@ -285,6 +285,37 @@ test('editar un ingrediente en móvil con letra grande no recorta la cabecera y 
   await expect(d.getByLabel('Motivo del ajuste')).toHaveValue('Recuento físico')
   await d.getByRole('button', { name: 'Cancelar' }).click()
   await expect(editar).toBeFocused()
+})
+
+test('la g de Nuevo Ingrediente y Editar Ingrediente conserva el trazo inferior', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await abrirPanel(page, 'GERENTE')
+  await boton(page, 'Modo oscuro').click()
+  await ir(page, 'Inventario')
+  await expect(page.getByRole('heading', { name: 'Gestión de Ingredientes' })).toHaveCSS('font-family', /DM Sans Local/)
+  for (const [accion, titulo] of [['+ Nuevo Ingrediente', 'Nuevo Ingrediente'], ['Editar', 'Editar Ingrediente']]) {
+    await boton(page, accion).click()
+    const d = page.getByRole('dialog', { name: titulo })
+    // Comparar la tinta real: la caja del h2 también cabía con la g de cola plana.
+    await expect(d.getByRole('heading')).toHaveScreenshot(`titulo-${titulo.split(' ')[0].toLowerCase()}-ingrediente.png`, { scale: 'css' })
+    await d.getByRole('button', { name: 'Cancelar' }).click()
+  }
+})
+
+test('un alta con stock en una API anterior avisa sin invitar a crear la ficha otra vez', async ({ page }) => {
+  await abrirPanel(page, 'GERENTE')
+  await ir(page, 'Inventario')
+  await boton(page, '+ Nuevo Ingrediente').click()
+  const nuevo = page.getByRole('dialog', { name: 'Nuevo Ingrediente' })
+  await nuevo.getByLabel('Nombre', { exact: true }).fill('Fríjol')
+  await nuevo.getByLabel('Stock mínimo').fill('3')
+  await nuevo.getByLabel('Stock actual').fill('5.125')
+  await page.route('**/api/ingredientes', route => route.fulfill({ status: 201, json: { message: 'Ingrediente creado' } }))
+  const peticion = page.waitForRequest(req => req.method() === 'POST' && req.url().endsWith('/api/ingredientes'))
+  await nuevo.getByRole('button', { name: 'Crear' }).click()
+  expect((await peticion).postDataJSON()).toMatchObject({ nombre: 'Fríjol', stock_actual: 5.125, stock_minimo: '3' })
+  await expect(nuevo).toHaveCount(0)
+  await expect(page.getByRole('alert')).toContainText('no confirmó el stock inicial')
 })
 
 test('editar solo la ficha no envía un conteo y una API antigua no se confunde con un stock guardado', async ({ page }) => {

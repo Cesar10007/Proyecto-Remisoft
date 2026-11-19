@@ -2,25 +2,53 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { escenarioEstablecimiento } from './fixtures/establecimiento.js';
 
-test('editar stock actual concilia un total con el historial de su sede',
+test('crear y editar ingredientes concilia el stock con el historial de su sede',
   { skip: process.env.ESTABLECIMIENTO_DB_TEST !== '1' }, async t => {
     const { altaGerente, api, llamar, tag, contrasena } = await escenarioEstablecimiento(t);
     const g = await altaGerente('Conteo'), otra = await altaGerente('Otra');
     const ficha = { nombre: 'Carne', unidad_medida: 'KG', stock_minimo: 20, costo_unitario_ref: 18000.25 };
-    await api(g.token, '/ingredientes', 'POST', ficha, 201);
-    const [{ id_ingrediente }] = await api(g.token, '/ingredientes');
+    const { id_ingrediente, stock_actual } = await api(g.token, '/ingredientes', 'POST', {
+      ...ficha, stock_actual: '19.600', id_restaurante: otra.id_restaurante, id_usuario: otra.id_usuario,
+    }, 201);
     const ruta = `/ingredientes/${id_ingrediente}`;
     const leer = async () => (await api(g.token, `/inventario/${id_ingrediente}`)).data;
     const editar = (cambios, status = 200) => api(g.token, ruta, 'PUT', { ...ficha, ...cambios }, status);
     const motivo = 'Conteo físico de bodega';
-    await api(g.token, '/inventario/ajuste', 'POST', { id_ingrediente, tipo: 'ENTRADA', cantidad: 19.6, motivo: 'Existencias al abrir' }, 201);
     const antes = await leer();
     const conteo = { stock_esperado: antes.stock_actual, stock_actual: '20', motivo };
+
+    await t.test('el stock inicial crea una única entrada en la sede del gerente y no altera el mínimo', async () => {
+      assert.equal(stock_actual, 19.6);
+      const [fila] = (await api(g.token, '/inventario')).data;
+      assert.equal(fila.id_ingrediente, id_ingrediente);
+      assert.equal(fila.stock_actual, 19.6);
+      assert.equal(Number(fila.stock_minimo), 20);
+      assert.equal(antes.movimientos, 1);
+      const [m] = antes.historial_movimientos;
+      assert.deepEqual([m.tipo_movimiento, Number(m.cantidad), m.origen_tipo, m.observaciones, m.id_usuario, m.id_restaurante],
+        ['ENTRADA', 19.6, 'AJUSTE', 'Stock inicial', g.id_usuario, g.id_restaurante]);
+      assert.deepEqual((await api(otra.token, '/inventario')).data, []);
+    });
+
+    await t.test('crear sin existencias o en cero no inventa movimientos; un conteo inválido no crea la ficha', async () => {
+      for (const stock_actual of [-1, 0.0001, '10000000', 'nada', '', null, false]) {
+        await api(otra.token, '/ingredientes', 'POST', { ...ficha, stock_actual }, 422);
+      }
+      assert.deepEqual((await api(otra.token, '/inventario')).data, []);
+      for (const stock of [{}, { stock_actual: '0.000' }, { stock_actual: 0.001 }]) {
+        const alta = await api(otra.token, '/ingredientes', 'POST', { ...ficha, ...stock }, 201);
+        const item = (await api(otra.token, `/inventario/${alta.id_ingrediente}`)).data;
+        assert.equal(item.stock_actual, Number(stock.stock_actual ?? 0));
+        assert.equal(item.stock_actual, alta.stock_actual);
+        assert.equal(item.movimientos, item.stock_actual === 0 ? 0 : 1);
+      }
+    });
 
     await t.test('rechaza fichas ajenas, roles de lectura y cantidades o motivos inválidos sin escrituras', async () => {
       const email = `caja-conteo-${tag}@example.test`;
       await api(g.token, '/usuarios', 'POST', { nombre: 'Cajera', email, contrasena, id_rol: 3 }, 201);
       const cajera = await api(null, '/auth/login', 'POST', { email, contrasena });
+      await api(cajera.token, '/ingredientes', 'POST', { ...ficha, stock_actual: 5 }, 403);
       await api(cajera.token, ruta, 'PUT', { ...ficha, ...conteo }, 403);
       await api(otra.token, ruta, 'PUT', { ...ficha, ...conteo }, 404);
       for (const stock_actual of [-1, 1.0001, '10000000', null, '', false]) {

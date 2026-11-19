@@ -9,7 +9,7 @@ import FormularioCatalogo from './FormularioCatalogo'
 interface Props {
   ingrediente: IngredienteConStock | null
   actualizar: () => Promise<void>
-  cerrar: () => void
+  cerrar: (aviso?: string) => void
 }
 
 export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: Props) {
@@ -20,12 +20,13 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
     unidad_medida: ingrediente?.unidad_medida ?? '', costo_unitario_ref: String(ingrediente?.costo_unitario_ref ?? ''),
     stock_minimo: String(ingrediente?.stock_minimo ?? 0),
   }))
-  const [stock, setStock] = useState(String(ingrediente?.stock_actual ?? ''))
+  const [stock, setStock] = useState(String(ingrediente?.stock_actual ?? 0))
   const [motivo, setMotivo] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const ayudaStock = useId()
-  const cambiaStock = ingrediente !== null && stock !== '' && Number(stock) !== ingrediente.stock_actual
+  const total = Number(stock)
+  const cambiaStock = ingrediente !== null && stock !== '' && total !== ingrediente.stock_actual
   function campo(clave: keyof CrearIngrediente, valor: string) {
     setFicha(previa => ({ ...previa, [clave]: valor }))
   }
@@ -36,21 +37,26 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
     if (cambiaStock && motivo.trim().length < 5) { setError('Indica el motivo del ajuste (mínimo 5 caracteres).'); return }
     setGuardando(true); setError(null)
     try {
+      let aviso: string | undefined
       if (ingrediente) {
         const { data } = await api.put<{ stock_actual?: number }>(`/ingredientes/${ingrediente.id_ingrediente}`, {
           ...ficha,
-          ...(cambiaStock && { stock_actual: Number(stock), stock_esperado: ingrediente.stock_actual, motivo: motivo.trim() }),
+          ...(cambiaStock && { stock_actual: total, stock_esperado: ingrediente.stock_actual, motivo: motivo.trim() }),
         })
         // Un backend anterior ignoraba stock_actual y devolvía 200 solo por la ficha.
-        if (cambiaStock && data?.stock_actual !== Number(stock)) {
+        if (cambiaStock && data?.stock_actual !== total) {
           setError('La API no confirmó el stock. Actualiza también el backend y revisa la ficha antes de reintentar.')
           void actualizar()
           return
         }
       } else {
-        await api.post('/ingredientes', ficha)
+        const { data } = await api.post<{ stock_actual?: number }>('/ingredientes', { ...ficha, stock_actual: total })
+        if (total > 0 && data?.stock_actual !== total) {
+          // Una API anterior pudo crear la ficha sin el saldo. No ofrecer otro POST.
+          aviso = `Se creó «${ficha.nombre}», pero la API no confirmó el stock inicial. Actualiza el backend y revisa el saldo en Editar; no vuelvas a crear el ingrediente.`
+        }
       }
-      cerrar()
+      cerrar(aviso)
       void actualizar()
     } catch (e) {
       setError(mensajeError(e))
@@ -61,7 +67,7 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
 
   return (
     <FormularioCatalogo title={ingrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'} edit={ingrediente !== null}
-      saving={guardando} error={error} submit={guardar} close={cerrar}>
+      saving={guardando} error={error} submit={guardar} close={() => cerrar()}>
       <InputField label="Nombre" placeholder="Nombre *" required maxLength={50}
         value={ficha.nombre} onChange={e => campo('nombre', e.target.value)} />
       <TextAreaField label="Descripción" placeholder="Descripción" rows={2} maxLength={500}
@@ -72,14 +78,15 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
         value={ficha.costo_unitario_ref} onChange={e => campo('costo_unitario_ref', e.target.value)} />
       <InputField label="Stock mínimo" type="number" min="0" step="0.01" placeholder="0"
         value={ficha.stock_minimo} onChange={e => campo('stock_minimo', e.target.value)} />
-      {ingrediente && <div>
+      <div>
         <InputField label="Stock actual" type="number" inputMode="decimal" min="0" max="9999999.999" step="0.001" required
           aria-describedby={ayudaStock} value={stock} onChange={e => setStock(e.target.value)} />
         <p id={ayudaStock} className="mt-1 text-xs leading-relaxed text-[var(--texto-muted)]">
-          Saldo al abrir: {ingrediente.stock_actual.toLocaleString('es-CO', { maximumFractionDigits: 3 })} {ingrediente.unidad_medida}.
-          Escribe el total contado; solo la diferencia quedará en Movimientos.
+          {ingrediente ? <>Saldo al abrir: {ingrediente.stock_actual.toLocaleString('es-CO', { maximumFractionDigits: 3 })} {ingrediente.unidad_medida}.
+            Escribe el total contado; solo la diferencia quedará en Movimientos.</> :
+            'Si ya tienes existencias, indica la cantidad. Quedará una entrada «Stock inicial» en Movimientos. Si no tienes, deja 0.'}
         </p>
-      </div>}
+      </div>
       {cambiaStock && <InputField label="Motivo del ajuste" required minLength={5} maxLength={1000} placeholder="Ej.: conteo físico de bodega"
         value={motivo} onChange={e => setMotivo(e.target.value)} />}
     </FormularioCatalogo>

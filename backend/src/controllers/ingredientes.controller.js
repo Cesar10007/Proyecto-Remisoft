@@ -1,5 +1,5 @@
 import prisma from '../config/prisma.js';
-import { conciliarConteo } from '../services/inventario.service.js';
+import { conciliarConteo, crearAjusteManual } from '../services/inventario.service.js';
 import { cantidadInventarioValida } from '../utils/validation.js';
 import { auditarAjusteInventario } from '../utils/auditoria.js';
 import { entero } from '../utils/salon.js';
@@ -15,7 +15,7 @@ export async function index(req, res, next) {
 
 export async function crear(req, res, next) {
   try {
-    const { nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo } = req.body;
+    const { nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo, stock_actual = 0 } = req.body;
 
     if (!nombre || typeof nombre !== 'string' || nombre.length > 50) {
       return res.status(422).json({ message: 'El campo nombre es requerido (máx. 50 caracteres)' });
@@ -33,18 +33,28 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: 'El campo stock_minimo debe ser numérico' });
     }
 
-    await prisma.ingrediente.create({
-      data: {
-        ...req.sede,
-        nombre,
-        descripcion: descripcion ?? null,
-        unidad_medida: unidad_medida ?? null,
-        costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
-        stock_minimo: Number(stock_minimo ?? 0),
-      },
-    });
+    if (!cantidadInventarioValida(stock_actual, { permitirCero: true })) {
+      return res.status(422).json({ message: 'El stock actual debe estar entre 0 y 9999999.999, con hasta tres decimales.' });
+    }
 
-    res.status(201).json({ message: 'Ingrediente creado' });
+    // El saldo nace del primer movimiento, no de una segunda columna ni de otra petición.
+    const inicial = Number(stock_actual);
+    const { id_ingrediente, movimiento } = await prisma.$transaction(async tx => {
+      const { id_ingrediente } = await tx.ingrediente.create({
+        data: {
+          ...req.sede, nombre, descripcion: descripcion ?? null, unidad_medida: unidad_medida ?? null,
+          costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
+          stock_minimo: Number(stock_minimo ?? 0),
+        },
+        select: { id_ingrediente: true },
+      });
+      const movimiento = inicial > 0 ? await crearAjusteManual(tx, {
+        ...req.sede, id_ingrediente, id_usuario: req.user.id_usuario,
+      }, 'ENTRADA', inicial, 'Stock inicial') : null;
+      return { id_ingrediente, movimiento };
+    });
+    if (movimiento) auditarAjusteInventario(req, movimiento, nombre);
+    res.status(201).json({ message: 'Ingrediente creado', id_ingrediente, stock_actual: inicial });
   } catch (err) {
     next(err);
   }

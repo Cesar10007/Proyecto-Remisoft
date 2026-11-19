@@ -45,7 +45,9 @@
 .app-modal__header h2 {
   min-width: 0;
   margin: 0;
-  font: 700 1.2rem/1.4 'Syne', sans-serif;
+  /* La g de Syne termina en un trazo plano. Usar un descendente completo
+     también cuando las fuentes externas no carguen. */
+  font: 700 1.2rem/1.5 var(--fuente-lectura);
   overflow-wrap: anywhere;
 }
 .app-modal__close {

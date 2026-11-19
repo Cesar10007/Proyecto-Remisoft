@@ -5,6 +5,8 @@
   font-family: 'DM Sans', sans-serif;
 }
 
+.ge-catalogo-ingredientes h3 { font-family: var(--fuente-lectura); }
+
 .ge-sidebar {
   width: 240px;
   min-height: 100vh;

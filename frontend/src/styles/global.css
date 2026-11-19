@@ -2,10 +2,18 @@
 @import "tailwindcss";
 @import "../components/common/tables.css";
 
+@font-face {
+  font-family: 'DM Sans Local';
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-display: swap;
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 }
 :root {
+    --fuente-lectura: 'DM Sans Local', system-ui, sans-serif;
     --rojo: #D85A30;
     --rojo-dark: #993C1D;
     --rojo-light: #FAECE7;

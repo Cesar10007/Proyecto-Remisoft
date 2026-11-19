@@ -13,6 +13,7 @@ interface IngredientesSectionProps {
 
 function IngredientesSection({ ingredientes, actualizar, onDelete }: IngredientesSectionProps) {
   const [editor, setEditor] = useState<IngredienteConStock | 'nuevo' | null>(null)
+  const [aviso, setAviso] = useState('')
   const [seleccion, setSeleccion] = useState<Ingrediente | null>(null)
   const columns: Column<IngredienteConStock>[] = [
     {
@@ -55,7 +56,9 @@ function IngredientesSection({ ingredientes, actualizar, onDelete }: Ingrediente
 
   return (
     <div className="mt-6">
+      {aviso && <p role="alert" className="mb-3 text-sm text-[var(--rojo-dark)]">{aviso}</p>}
       <DataTable
+        className="ge-catalogo-ingredientes"
         title="Gestión de Ingredientes"
         columns={columns}
         data={ingredientes}
@@ -63,7 +66,8 @@ function IngredientesSection({ ingredientes, actualizar, onDelete }: Ingrediente
         keyExtractor={(i) => i.id_ingrediente}
         actionButton={<Button onClick={() => setEditor('nuevo')}>+ Nuevo Ingrediente</Button>}
       />
-      {editor && <EditorIngrediente ingrediente={editor === 'nuevo' ? null : editor} actualizar={actualizar} cerrar={() => setEditor(null)} />}
+      {editor && <EditorIngrediente ingrediente={editor === 'nuevo' ? null : editor} actualizar={actualizar}
+        cerrar={mensaje => { setEditor(null); setAviso(mensaje ?? '') }} />}
       {seleccion && <MovimientosIngrediente ingrediente={seleccion} actualizar={actualizar} cerrar={() => setSeleccion(null)} />}
     </div>
   )

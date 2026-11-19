@@ -31,15 +31,21 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
   await page.getByLabel('Nombre', { exact: true }).fill('Masa')
   await page.getByLabel('Unidad de medida').fill('kg')
   await page.getByLabel('Stock mínimo').fill('9.5')
+  await page.getByLabel('Stock actual').fill('9.125')
   await ir('Crear')
+  const filaMasa = page.getByRole('row').filter({ hasText: 'Masa' })
+  await expect(filaMasa.getByRole('cell', { name: '9.125', exact: true })).toBeVisible()
+  await page.reload(); await ir('Inventario')
   const inv = page.getByRole('dialog', { name: 'Movimientos de Masa' })
   await ir('Movimientos')
-  await inv.getByLabel('Cantidad (kg)').fill('9.6')
-  await inv.getByLabel('Motivo').fill('Conteo inicial')
+  await expect(inv).toContainText('Stock actual: 9.125 kg')
+  await expect(inv.getByRole('listitem')).toHaveCount(1)
+  await expect(inv.getByRole('listitem')).toContainText('Stock inicial')
+  await inv.getByLabel('Cantidad (kg)').fill('0.475')
+  await inv.getByLabel('Motivo').fill('Entrada posterior al alta')
   await ir('Registrar movimiento')
   await expect(inv).toContainText('Stock actual: 9.6 kg')
   await ir('Cerrar ventana')
-  const filaMasa = page.getByRole('row').filter({ hasText: 'Masa' })
   await filaMasa.getByRole('button', { name: 'Editar' }).click()
   const editor = page.getByRole('dialog', { name: 'Editar Ingrediente' })
   await expect(editor.getByLabel('Stock mínimo')).toHaveValue('9.5')
@@ -88,7 +94,7 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
     await expect(retirar).toBeDisabled()
     await ir('Inventario'); await ir('Movimientos')
     await expect(inv).toContainText('Stock actual: 9.5 kg')
-    await expect(inv.getByRole('listitem')).toHaveCount(3) // Entrada inicial, diferencia del conteo y consumo.
+    await expect(inv.getByRole('listitem')).toHaveCount(4) // Stock inicial, entrada posterior, diferencia del conteo y consumo.
     await expect(inv.getByRole('listitem').filter({ hasText: 'Salida: 0.5 kg' })).toHaveCount(1)
     await ir('Cerrar ventana')
 
@@ -120,7 +126,7 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
     await expect(page.getByRole('row').filter({ hasText: 'Eva Rojas' })).toContainText(/Esperado\s*\$\s*50\.000\s*·\s*Diferencia\s*\$\s*0/)
     await ir('Inventario'); await ir('Movimientos')
     await expect(inv).toContainText('Stock actual: 9.5 kg')
-    await expect(inv.getByRole('listitem')).toHaveCount(3) // Cobrar no crea otra salida.
+    await expect(inv.getByRole('listitem')).toHaveCount(4) // Cobrar no crea otra salida.
     await ir('Cerrar ventana'); await ir('Mesas')
     await retirar.click(); await confirmar.getByRole('button', { name: 'Eliminar mesa' }).click()
     await expect(page.getByText('No hay mesas registradas para este establecimiento.')).toBeVisible()
