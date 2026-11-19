@@ -82,7 +82,6 @@ export function DataTable<T extends object>({
                 const rowKey = keyExtractor ? keyExtractor(row, rowIdx) : getDefaultRowKey(row, rowIdx)
                 return (
                   <tr key={rowKey} className="border-b border-[var(--borde)] hover:bg-[var(--fila-hover)]">
-                  <tr key={rowKey} className="border-b border-[var(--borde)]">
                     {columns.map((col) => (
                       <td key={String(col.accessor ?? col.header)} className="px-4 py-3.5 text-sm text-[var(--texto)]">
                         {col.render ? col.render(row) : col.accessor ? String(row[col.accessor] ?? '—') : '—'}
