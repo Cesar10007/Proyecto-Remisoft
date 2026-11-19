@@ -67,6 +67,7 @@ export default function CuentaMesa({
           !enCaja &&
           !p.pago_registrado && (
             <button
+              aria-description="Registra que el plato ya se sirvió en la mesa."
               className="sl-btn tiny green no-print"
               disabled={ocupado}
               onClick={() => operar('servir', i.id_detalle)}
@@ -104,10 +105,11 @@ export default function CuentaMesa({
           {cambioDuranteConfirmacion && (
             <ErrorCarga texto="La comanda cambió. Vuelve a revisar la precuenta antes de confirmar." />
           )}
-          <button className="sl-btn" disabled={ocupado} onClick={() => setConfirmar(null)}>
+          <button aria-description="Vuelve al pedido sin confirmar la operación." className="sl-btn" disabled={ocupado} onClick={() => setConfirmar(null)}>
             Volver
           </button>
           <button
+            aria-description={confirmar.accion === 'cuenta' ? 'Envía la cuenta a caja para su cobro.' : 'Cancela el pedido y devuelve los ingredientes al inventario.'}
             className={`sl-btn ${confirmar.accion === 'cuenta' ? 'primary' : 'danger'}`}
             disabled={ocupado || !!cambioDuranteConfirmacion}
             onClick={() => operar(confirmar.accion)}
@@ -117,16 +119,17 @@ export default function CuentaMesa({
         </div>
       ) : (
         <div className="sl-dialog-actions no-print">
-          <button className="sl-btn" disabled={ocupado} onClick={() => window.print()}>
+          <button aria-description="Abre la vista de impresión de la precuenta." className="sl-btn" disabled={ocupado} onClick={() => window.print()}>
             <Printer size={15} /> Precuenta
           </button>
           {enCaja && !p.pago_registrado && (
-            <button className="sl-btn primary" disabled={ocupado} onClick={() => facturar(p)}>
+            <button aria-description={p.id_factura == null ? 'Abre el formulario para facturar este pedido.' : 'Consulta la factura de este pedido.'} className="sl-btn primary" disabled={ocupado} onClick={() => facturar(p)}>
               <ReceiptText size={16} /> {p.id_factura == null ? 'Generar factura' : 'Ver factura'}
             </button>
           )}
           {editable(p) && (
             <button
+              aria-description="Revisa la cancelación antes de anular el pedido."
               className="sl-btn danger"
               disabled={ocupado}
               onClick={() => setConfirmar({ accion: 'cancelar', version: p.version })}
@@ -136,6 +139,7 @@ export default function CuentaMesa({
           )}
           {!enCaja && !p.pago_registrado && (
             <button
+              aria-description={editable(p) ? 'Abre la comanda para cambiar sus platos.' : 'Agrega una ronda de platos a esta cuenta.'}
               className="sl-btn"
               disabled={ocupado}
               onClick={() => editar({ modo: editable(p) ? 'editar' : 'ronda', mesa: p.mesa, pedido: p })}
@@ -146,6 +150,7 @@ export default function CuentaMesa({
           )}
           {!enCaja && !p.pago_registrado && entregado(p) && (
             <button
+              aria-description="Revisa la cuenta antes de enviarla a cobrar."
               className="sl-btn primary"
               disabled={ocupado}
               onClick={() => setConfirmar({ accion: 'cuenta', version: p.version })}

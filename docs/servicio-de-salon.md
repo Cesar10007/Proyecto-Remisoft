@@ -20,18 +20,18 @@ En una **base de demostración** con `database/datos.sql`, inicia sesión como `
 
 ## Instalación sobre una base existente
 
-Con las variables del backend configuradas, aplica las migraciones aditivas y regenera el cliente antes de iniciar la nueva versión. Haz primero una copia de seguridad. No borres la base ni vuelvas a importar `datos.sql` en una instalación con consumos reales.
+Con las variables del backend configuradas, aplica las migraciones pendientes y regenera el cliente antes de iniciar la nueva versión. Haz primero una copia de seguridad. No borres la base ni vuelvas a importar `datos.sql` en una instalación con consumos reales.
 
 ```sh
 pnpm --dir backend exec prisma migrate deploy
 pnpm --dir backend exec prisma generate
 ```
 
-**Sin Docker:** con el cliente MariaDB, ejecuta `database/vistas/vista_resumen_ventas_diarias.sql` sobre esa misma base para actualizar el reporte (el descuento ya está incluido en el total cobrado). Reinicia el backend y sirve también el frontend actualizado. Verifica que `DATABASE_URL` (migraciones) y `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (aplicación) apuntan a la misma base. No compartas estas credenciales.
+**Sin Docker:** reinstala **todas** las vistas y procedimientos de `database/` sobre esa misma base, según la [guía de establecimientos](establecimientos.md#actualizar-una-instalación-existente). Reinicia el backend y sirve también el frontend actualizado. Verifica que `DATABASE_URL` (migraciones) y `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (aplicación) apuntan a la misma base. No compartas estas credenciales.
 
 **Con Docker Compose:** `docker compose up -d --build` conserva el volumen y ejecuta `database/init.sh`: aplica migraciones, genera el cliente y carga las vistas. No uses `down -v` para actualizar.
 
-`version_salon = NULL` conserva el flujo de cobro anterior para pedidos históricos. Una comanda nueva descuenta ingredientes al confirmarse; las ediciones compensan el consumo con movimientos `PEDIDO` en el kardex de ingredientes compartido del sistema, y caja **no vuelve a descontarlo**. Si una cuenta histórica figura abierta pero ya registra un pago aprobado, no se puede cobrar dos veces: se indica al mesero que consulte el cierre con caja. El catálogo de números de mesa se comparte; la ocupación se calcula por sede a partir de una atención sin pedido (`mesa_atencion`) o de al menos una cuenta abierta. La primera comanda sustituye la atención en la misma transacción, sin modificar las mesas ni los pedidos históricos. Para pedidos antiguos sin `id_restaurante` se usa la sede del mesero asociado.
+`version_salon = NULL` conserva el flujo de cobro anterior para pedidos históricos. Una comanda nueva descuenta ingredientes al confirmarse; las ediciones compensan el consumo con movimientos `PEDIDO` en el kardex de ingredientes de la sede, y caja **no vuelve a descontarlo**. Si una cuenta histórica figura abierta pero ya registra un pago aprobado, no se puede cobrar dos veces: se indica al mesero que consulte el cierre con caja. El gerente configura las mesas de su propia sede; la ocupación se calcula por sede a partir de una atención sin pedido (`mesa_atencion`) o de al menos una cuenta abierta. La primera comanda sustituye la atención en la misma transacción, sin modificar las mesas ni los pedidos históricos. La migración materializa la sede de los pedidos antiguos que tenían mesero con establecimiento conocido.
 
 ## Contrato de salón (sesión MESERO)
 
@@ -73,7 +73,7 @@ pnpm --dir frontend exec tsc --noEmit
 pnpm --dir frontend build
 ```
 
-La integración cubre ocupación/liberación sin pedido, concurrencia y fichas obsoletas, aislamiento entre sedes/meseros, mesas históricas con varios pedidos, apertura simultánea, última unidad de inventario, rollback por falta de stock, edición obsoleta, permisos, cancelación, ronda adicional, entrega, cobro con turno, factura consultable y liberación de la mesa. Esta prueba con MariaDB es optativa (`SALON_DB_TEST=1`); el workflow predeterminado no levanta una base de pruebas.
+La integración cubre ocupación/liberación sin pedido, concurrencia y fichas obsoletas, aislamiento entre sedes/meseros, mesas históricas con varios pedidos, apertura simultánea, última unidad de inventario, rollback por falta de stock, edición obsoleta, permisos, cancelación, ronda adicional, entrega, cobro con turno, factura consultable y liberación de la mesa. Se habilita con `SALON_DB_TEST=1`. Para verificar además el alta de gerentes y la operación entre sedes, instala las vistas y los procedimientos y activa también `ESTABLECIMIENTO_DB_TEST=1`.
 
 **Regresión de la interfaz:** con frontend y API ya levantados contra una base **desechable con los usuarios y productos de demostración**, ejecuta:
 

@@ -26,6 +26,7 @@ export function Buscador({
     <label className="sl-search">
       <Search size={16} aria-hidden="true" />
       <input
+        aria-description="Escribe para filtrar los resultados de esta lista."
         type="search"
         aria-label={titulo}
         placeholder={titulo}
@@ -41,7 +42,7 @@ export function ErrorCarga({ texto, reintentar }: { texto: string; reintentar?: 
       <AlertCircle size={18} />
       <span>{texto}</span>
       {reintentar && (
-        <button type="button" onClick={reintentar}>
+        <button aria-description="Vuelve a intentar la consulta que falló." type="button" onClick={reintentar}>
           <RefreshCw size={14} /> Reintentar
         </button>
       )}
@@ -88,7 +89,7 @@ export function CargaCaja({
   return (
     <section className="sl-panel sl-detail">
       <div>
-        <button className="sl-btn" onClick={volver}>
+        <button aria-description="Regresa al resumen de caja." className="sl-btn" onClick={volver}>
           <ArrowLeft size={15} /> Volver
         </button>
       </div>

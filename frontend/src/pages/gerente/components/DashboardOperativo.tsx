@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import api from '../../../api/axios'
+import { cantidadConUnidad } from '../../../utils/unidadesInventario'
+import { useConsulta } from '../../../hook/useConsulta'
+import { formatoCOP, type VentasDia } from '../useDatosGerente'
 
 interface AlertaStock {
   id_ingrediente: number
@@ -10,52 +11,10 @@ interface AlertaStock {
   alerta: 'SIN STOCK' | 'BAJO MÍNIMO'
 }
 
-interface ResumenDia {
-  fecha: string
-  total_pedidos: number
-  ingresos_brutos: number
-  total_iva: number
-  total_descuentos: number
-  total_propinas: number
-  ingresos_netos: number
-}
-
-interface ProductoTop {
-  id_producto: number
-  producto: string
-  unidades: number
-  ingresos: number
-}
-
-interface VentasDiarias {
-  desde: string
-  hasta: string
-  dias: ResumenDia[]
-  total: Omit<ResumenDia, 'fecha'>
-  productos_top: ProductoTop[]
-}
-
-const formatoCOP = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-})
-
-function DashboardOperativo() {
-  const [alertas, setAlertas] = useState<AlertaStock[] | null>(null)
-  const [ventas, setVentas] = useState<VentasDiarias | null>(null)
-  const [errorAlertas, setErrorAlertas] = useState(false)
-  const [errorVentas, setErrorVentas] = useState(false)
-
-  useEffect(() => {
-    api.get('/inventario/alertas/stock-bajo')
-      .then(({ data }) => setAlertas(data.data))
-      .catch(() => setErrorAlertas(true))
-
-    api.get('/reportes/ventas-diarias')
-      .then(({ data }) => setVentas(data.data))
-      .catch(() => setErrorVentas(true))
-  }, [])
+function DashboardOperativo({ reporte }: { reporte: ReturnType<typeof useConsulta<{ data: VentasDia }>> }) {
+  const stock = useConsulta<{ data: AlertaStock[] }>('/inventario/alertas/stock-bajo', 15000)
+  const alertas = stock.error ? null : stock.data?.data ?? null
+  const ventas = reporte.error ? null : reporte.data?.data ?? null
 
   return (
     <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -72,10 +31,10 @@ function DashboardOperativo() {
           )}
         </div>
 
-        {errorAlertas && <p className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas.</p>}
-        {!errorAlertas && alertas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
+        {stock.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas. <button aria-description="Vuelve a consultar los ingredientes con poco stock." onClick={stock.cargar}>Reintentar</button></p>}
+        {!stock.error && alertas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {alertas && alertas.length === 0 && (
-          <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin alertas de stock.</p>
+          <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin alertas de stock para este establecimiento.</p>
         )}
         {alertas && alertas.length > 0 && (
           <ul className="flex flex-col gap-2">
@@ -84,7 +43,7 @@ function DashboardOperativo() {
                 <div>
                   <p className="text-[0.88rem] font-semibold text-[var(--texto)]">{a.nombre}</p>
                   <p className="text-[0.75rem] text-[var(--texto-muted)]">
-                    Stock {a.stock_actual} {a.unidad_medida ?? ''} · mínimo {a.stock_minimo} {a.unidad_medida ?? ''}
+                    Stock {cantidadConUnidad(a.stock_actual, a.unidad_medida)} · mínimo {cantidadConUnidad(a.stock_minimo, a.unidad_medida)}
                   </p>
                 </div>
                 <span className={`rounded-full px-2.5 py-0.5 text-[0.7rem] font-semibold ${
@@ -99,31 +58,31 @@ function DashboardOperativo() {
       <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
         <div className="mb-4">
           <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Ventas de hoy</h3>
-          <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Facturas pagadas del día</p>
+          <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Pagos aprobados de esta sede · {ventas?.desde} · Bogotá</p>
         </div>
 
-        {errorVentas && <p className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas.</p>}
-        {!errorVentas && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
+        {reporte.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas. <button aria-description="Vuelve a consultar las ventas de hoy." onClick={reporte.cargar}>Reintentar</button></p>}
+        {!reporte.error && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {ventas && (
           <>
             <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
-                <p className="text-[0.75rem] text-[var(--texto-muted)]">Ingresos brutos</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_brutos)}</p>
+                <p className="text-[0.75rem] text-[var(--texto-muted)]">Total cobrado</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_netos)}</p>
               </div>
               <div>
-                <p className="text-[0.75rem] text-[var(--texto-muted)]">Pedidos pagados</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{ventas.total.total_pedidos}</p>
+                <p className="text-[0.75rem] text-[var(--texto-muted)]">Facturas con pago</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{ventas.total.total_pedidos}</p>
               </div>
               <div>
                 <p className="text-[0.75rem] text-[var(--texto-muted)]">Propinas</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.total_propinas)}</p>
+                <p className="font-number text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.total_propinas)}</p>
               </div>
             </div>
 
             <p className="mb-2 text-[0.78rem] font-semibold text-[var(--texto-muted)]">Productos más vendidos</p>
             {ventas.productos_top.length === 0 ? (
-              <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin ventas registradas hoy.</p>
+              <p className="text-[0.85rem] text-[var(--texto-muted)]">{ventas.total.total_pedidos === 0 ? 'Sin ventas registradas hoy en este establecimiento.' : 'Sin productos desglosados con primer cobro hoy.'}</p>
             ) : (
               <ol className="flex flex-col gap-1.5">
                 {ventas.productos_top.map((p, i) => (

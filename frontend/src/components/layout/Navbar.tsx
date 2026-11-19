@@ -12,6 +12,7 @@ function Navbar({ onLogin }: NavbarProps) {
       <div className="flex items-center gap-4">
       <ThemeToggle />
       <a
+        aria-description="Vuelve al principio de la página."
         href="#"
         className="font-['Syne'] text-[1.4rem] font-extrabold tracking-[-0.5px] text-[var(--rojo-dark)] no-underline"
       >
@@ -20,7 +21,7 @@ function Navbar({ onLogin }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-2.5">
-        <Button onClick={onLogin}>Iniciar sesión</Button>
+        <Button aria-description="Abre el formulario de acceso a RemiSoft." onClick={onLogin}>Iniciar sesión</Button>
       </div>
     </nav>
   )

@@ -1,14 +1,15 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import Footer from '../../components/layout/Footer'
+import { LayoutDashboard, MailOpen, Users } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import './SuperAdmin.css'
 
 const menuItems = [
-  { icon: 'dashboard', label: 'Resumen', path: '/superadmin' },
-  { icon: 'group', label: 'Gestión de Gerentes', path: '/superadmin/gerentes' },
-  { icon: 'mark_email_unread', label: 'Solicitudes', path: '/superadmin/solicitudes' },
+  { icon: <LayoutDashboard />, label: 'Resumen', path: '/superadmin' },
+  { icon: <Users />, label: 'Gestión de Gerentes', path: '/superadmin/gerentes' },
+  { icon: <MailOpen />, label: 'Solicitudes', path: '/superadmin/solicitudes' },
 ]
 
 function SuperAdmin() {

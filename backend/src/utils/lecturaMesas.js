@@ -1,45 +1,51 @@
-import { CUENTA_ABIERTA, formatCuenta, mesasDeSede, round2 } from './salon.js';
+import { relacionDeSede } from './restaurante.js';
+import { CUENTA_ABIERTA, formatCuenta, deSede, round2 } from './salon.js';
 
 // Tanto el tablero como la ficha leen el mismo servicio actual, nunca el historial
 // del número de mesa ni los pedidos de otra sede. Leer un plato no autoriza editarlo.
 export const pedidosDelComedor = (user) => ({
   Mesa_num: { not: null },
-  AND: [user.rol === 'SUPERADMIN' ? {} : mesasDeSede(user.id_restaurante), CUENTA_ABIERTA],
+  ...deSede(user),
+  ...CUENTA_ABIERTA,
 });
 export const datosDelConsumo = {
-  usuario: { select: { nombre: true, apellido: true } },
-  Detalle_pedido: { include: { Producto: { select: { Nombre: true } } }, orderBy: { id_detalle: 'asc' } },
+  usuario: { select: { nombre: true, apellido: true, id_restaurante: true } },
+  Detalle_pedido: { include: { Producto: { select: { Nombre: true, id_restaurante: true } } }, orderBy: { id_detalle: 'asc' } },
 };
 export const atencionesDelComedor = (user) => ({
   atenciones: {
-    where: user.rol === 'SUPERADMIN' ? undefined : { id_restaurante: user.id_restaurante ?? null },
+    where: deSede(user),
     select: {
       id_atencion: true,
       id_mesero: true,
       desde: true,
       comensales: true,
-      mesero: { select: { nombre: true, apellido: true } },
+      mesero: { select: { nombre: true, apellido: true, id_restaurante: true } },
     },
   },
 });
 
 export function consumoPublico(pedido) {
-  return { ...formatCuenta(pedido), comensales: pedido.comensales ?? null, notas: pedido.notas ?? '' };
+  return { ...formatCuenta(pedido), id_restaurante: pedido.id_restaurante, comensales: pedido.comensales ?? null, notas: pedido.notas ?? '' };
 }
 
 export function presentarMesas(catalogo, consumos, user) {
   const porNumero = new Map();
   for (const p of consumos) {
-    if (!porNumero.has(p.mesa)) porNumero.set(p.mesa, []);
-    porNumero.get(p.mesa).push(p);
+    const clave = `${p.id_restaurante}:${p.mesa}`;
+    if (!porNumero.has(clave)) porNumero.set(clave, []);
+    porNumero.get(clave).push(p);
   }
-  return catalogo.map(({ numero, capacidad, atenciones }) => {
-    const cuentas = porNumero.get(numero) ?? [];
+  return catalogo.map(({ id_mesa, numero, id_restaurante, capacidad, atenciones }) => {
+    const cuentas = porNumero.get(`${id_restaurante}:${numero}`) ?? [];
     const p = cuentas[0];
     const a = p ? null : atenciones?.[0];
     const ocupada = Boolean(p || a);
+    const mesero = relacionDeSede(a?.mesero, id_restaurante);
     return {
       numero,
+      id_mesa,
+      id_restaurante,
       capacidad,
       ocupada,
       estado: ocupada ? 'occupied' : 'available',
@@ -48,7 +54,7 @@ export function presentarMesas(catalogo, consumos, user) {
       id_pedido: p?.id_pedido ?? null,
       articulos: cuentas.reduce((n, c) => n + c.items.reduce((s, i) => s + i.cantidad, 0), 0),
       total: round2(cuentas.reduce((n, c) => n + c.subtotal, 0)),
-      mesero: p?.nombre_mesero || (a ? [a.mesero.nombre, a.mesero.apellido].filter(Boolean).join(' ') : null),
+      mesero: p?.nombre_mesero || (mesero ? [mesero.nombre, mesero.apellido].filter(Boolean).join(' ') : null),
       fecha_hora: p?.fecha_hora ?? a?.desde ?? null,
       comensales: cuentas.length > 1 ? null : (p?.comensales ?? a?.comensales ?? null),
       atencion:

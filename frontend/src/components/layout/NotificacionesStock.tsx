@@ -1,6 +1,7 @@
+import { unidadDeCantidad } from '../../utils/unidadesInventario'
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
-import api from '../../api/axios'
+import { useConsulta } from '../../hook/useConsulta'
 
 interface AlertaStock {
   id_ingrediente: number
@@ -13,31 +14,9 @@ interface AlertaStock {
 
 export default function NotificacionesStock() {
   const [abierta, setAbierta] = useState(false)
-  const [alertas, setAlertas] = useState<AlertaStock[] | null>(null)
-  const [errorAlertas, setErrorAlertas] = useState<string | null>(null)
+  const consulta = useConsulta<{ data: AlertaStock[] }>(abierta ? '/inventario/alertas/stock-bajo' : null, 10000)
+  const alertas = consulta.data?.data ?? null, errorAlertas = consulta.error
   const contenedorRef = useRef<HTMLDivElement>(null)
-
-  // Carga las alertas cada vez que se abre la campana.
-  useEffect(() => {
-    if (!abierta) return
-    setErrorAlertas(null)
-    setAlertas(null)
-    const ctl = new AbortController()
-    api
-      .get('/inventario/alertas/stock-bajo', { signal: ctl.signal, timeout: 20000 })
-      .then(({ data }) => {
-        if (!ctl.signal.aborted) setAlertas(data.data)
-      })
-      .catch((error: { response?: { status?: number } }) => {
-        if (ctl.signal.aborted) return
-        setErrorAlertas(
-          error?.response?.status === 403
-            ? 'Las alertas de inventario no están disponibles para tu rol.'
-            : 'No se pudieron cargar las alertas. Cierra y vuelve a abrir para reintentar.',
-        )
-      })
-    return () => ctl.abort()
-  }, [abierta])
 
   // Cierra el panel al hacer clic fuera o con Escape.
   useEffect(() => {
@@ -59,6 +38,7 @@ export default function NotificacionesStock() {
   return (
     <div ref={contenedorRef} className="relative">
       <button
+        aria-description={abierta ? 'Oculta las alertas de inventario.' : 'Consulta los ingredientes agotados o bajo el mínimo.'}
         type="button"
         aria-label="Notificaciones"
         aria-expanded={abierta}
@@ -82,7 +62,7 @@ export default function NotificacionesStock() {
             <p className="text-[0.8rem] text-[var(--texto-muted)]">Cargando...</p>
           ) : alertas.length === 0 ? (
             <p className="text-[0.8rem] text-[var(--texto-muted)]">
-              No hay ingredientes con lotes bajo el mínimo.
+              No hay ingredientes en alerta para este establecimiento.
             </p>
           ) : (
             <ul className="max-h-72 space-y-2.5 overflow-y-auto">
@@ -96,7 +76,7 @@ export default function NotificacionesStock() {
                         : 'whitespace-nowrap text-[var(--texto-muted)]'
                     }
                   >
-                    {a.stock_actual} / {a.stock_minimo} {a.unidad_medida ?? ''} · {a.alerta}
+                    {a.stock_actual} / {a.stock_minimo} {unidadDeCantidad(a.unidad_medida, a.stock_minimo)} · {a.alerta}
                   </span>
                 </li>
               ))}

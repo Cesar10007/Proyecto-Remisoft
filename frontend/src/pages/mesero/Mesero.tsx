@@ -98,7 +98,7 @@ export default function Mesero() {
           navigate('/', { replace: true })
         }}
         footer={
-          <button className="wa-accion-rapida" onClick={() => cambiar('pedidos')}>
+          <button aria-description="Abre la lista de pedidos del salón." className="wa-accion-rapida" onClick={() => cambiar('pedidos')}>
             <Plus size={17} /> Acción Rápida
           </button>
         }
@@ -110,17 +110,17 @@ export default function Mesero() {
             nombreUsuario={nombre}
             acciones={
               <>
-                <button className="wa-enlace-cabecera" onClick={() => cambiar('mesas')}>
+                <button aria-description="Muestra el plano y la disponibilidad de las mesas." className="wa-enlace-cabecera" onClick={() => cambiar('mesas')}>
                   Plano del Piso
                 </button>
-                <button className="wa-enlace-cabecera" onClick={() => cambiar('caja')}>
+                <button aria-description="Abre el resumen y las consultas de caja." className="wa-enlace-cabecera" onClick={() => cambiar('caja')}>
                   Pago Rápido
                 </button>
                 {vista === 'mesas' && (
                   <Buscador valor={buscar} cambiar={setBuscar} titulo="Buscar mesas o artículos..." />
                 )}
                 {vista === 'pedidos' && (
-                  <button className="sl-btn primary" onClick={venta} disabled={!permiteVenta}>
+                  <button aria-description="Abre el formulario de una nueva comanda." className="sl-btn primary" onClick={venta} disabled={!permiteVenta}>
                     <Plus size={16} />
                     Nuevo pedido
                   </button>
@@ -172,7 +172,7 @@ export default function Mesero() {
                 {hora &&
                   `Última lectura ${hora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })}`}
               </span>
-              <button onClick={cargar} disabled={cargando}>
+              <button aria-description="Vuelve a consultar las mesas y los pedidos." onClick={cargar} disabled={cargando}>
                 <RefreshCw size={13} /> Actualizar salón
               </button>
             </div>
@@ -227,7 +227,7 @@ export default function Mesero() {
       {aviso && !seleccion && !editor && (
         <div className="sl-toast" role="status">
           <CheckCircle2 size={18} /> {aviso}
-          <button aria-label="Ocultar aviso" onClick={() => setAviso('')}>
+          <button aria-description="Retira este aviso de la pantalla." aria-label="Ocultar aviso" onClick={() => setAviso('')}>
             <X size={15} />
           </button>
         </div>

@@ -39,7 +39,7 @@ export async function show(req, res, next) {
       },
     });
     if (!f) throw new ErrorSalon(404, 'Factura no encontrada.');
-    const items = consumoFacturado(f);
+    const items = consumoFacturado(f, f.pedido.id_restaurante);
     // Los consumidores antiguos del detalle también ven el precio y nombre históricos.
     const Factura_item = items.map((i) => ({
       id_factura: f.id_factura,

@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import { escritura } from './actividad.service.js';
 import {
   bloquearIngredientes,
   calcularRequerimientos,
@@ -8,7 +8,6 @@ import {
   ErrorSalon,
   CUENTA_ABIERTA,
   ESTADOS_EN_MESA,
-  mesasDeSede,
   misPedidos,
   entero,
   texto,
@@ -19,17 +18,17 @@ import {
   estadoSegunItems,
 } from '../utils/salon.js';
 
-export const transaccionSalon = (fn) => prisma.$transaction(fn, { isolationLevel: 'ReadCommitted' });
-export const bloquearPedido = (tx, id) =>
-  tx.$queryRaw`SELECT id_pedido FROM pedido WHERE id_pedido = ${id} FOR UPDATE`;
+export const transaccionSalon = (user, fn, area = 'MESEROS') => escritura(user, fn, { isolationLevel: 'ReadCommitted', area });
+export const bloquearPedido = (tx, id, idRestaurante) =>
+  tx.$queryRaw`SELECT id_pedido FROM pedido WHERE id_pedido = ${id} AND id_restaurante = ${idRestaurante} FOR UPDATE`;
 
 // Compara con los movimientos reales, no con una receta histórica reconstruida. Al anular,
 // se devuelve exactamente lo descontado, incluso si administración cambió la receta.
 async function ajustarConsumo(tx, id, items, user, soloAdicion = false) {
-  const requeridos = await calcularRequerimientos(tx, items);
+  const requeridos = await calcularRequerimientos(tx, items, user.id_restaurante);
   const delta = new Map(requeridos.map((r) => [r.id_ingrediente, r.requerido]));
   if (!soloAdicion) {
-    const previos = await tx.inventario_mov.findMany({ where: { origen_tipo: 'PEDIDO', origen_id: id } });
+    const previos = await tx.inventario_mov.findMany({ where: { id_restaurante: user.id_restaurante, origen_tipo: 'PEDIDO', origen_id: id } });
     for (const m of previos) {
       const signo = m.tipo_movimiento === 'SALIDA' ? -1 : m.tipo_movimiento === 'ENTRADA' ? 1 : 0;
       delta.set(m.id_ingrediente, (delta.get(m.id_ingrediente) ?? 0) + signo * Number(m.cantidad));
@@ -45,10 +44,12 @@ async function ajustarConsumo(tx, id, items, user, soloAdicion = false) {
   await bloquearIngredientes(
     tx,
     ajustes.map((r) => r.id_ingrediente),
+    user.id_restaurante,
   );
   await verificarStockIngredientes(
     tx,
     ajustes.filter((r) => r.requerido > 0),
+    user.id_restaurante,
   );
   await tx.inventario_mov.createMany({
     data: ajustes.map((r) => ({
@@ -66,9 +67,9 @@ async function ajustarConsumo(tx, id, items, user, soloAdicion = false) {
 
 // Actualiza los detalles sin romper las referencias históricas de Factura_item. Precios
 // de líneas existentes congelados; los nuevos siempre salen del catálogo del servidor.
-async function escribirLineas(tx, id, lineas, anteriores) {
+async function escribirLineas(tx, id, lineas, anteriores, idRestaurante) {
   const catalogo = await tx.producto.findMany({
-    where: { id_producto: { in: lineas.map((l) => l.id_producto) } },
+    where: { id_restaurante: idRestaurante, id_producto: { in: lineas.map((l) => l.id_producto) } },
   });
   const conservar = new Set();
   const nuevas = [];
@@ -112,9 +113,9 @@ async function escribirLineas(tx, id, lineas, anteriores) {
   if (nuevas.length) await tx.detalle_pedido.createMany({ data: nuevas });
 }
 
-async function cabecera(tx, body, capacidad) {
+async function cabecera(tx, body, capacidad, idRestaurante) {
   const id_cliente = body.id_cliente == null ? null : entero(body.id_cliente, 'El cliente');
-  if (id_cliente && !(await tx.cliente.findUnique({ where: { id_cliente }, select: { id_cliente: true } })))
+  if (id_cliente && !(await tx.cliente.findUnique({ where: { id_cliente, id_restaurante: idRestaurante }, select: { id_cliente: true } })))
     throw new ErrorSalon(422, 'El cliente seleccionado ya no existe.');
   return {
     comensales: entero(body.comensales, 'El número de comensales', capacidad ?? 99),
@@ -123,25 +124,16 @@ async function cabecera(tx, body, capacidad) {
   };
 }
 
-// Abrir un pedido y cambiar la ocupación usan el mismo bloqueo, incluso en la sede
-// histórica NULL. Nunca se cambia solo una bandera que pudiera ocultar una cuenta.
+// Abrir una cuenta y cambiar la ocupación bloquean la misma mesa de la sede.
 export async function mesaDisponible(tx, numero, pedido, { excepto, idAtencion = null } = {}) {
-  const [mesa] = await tx.$queryRaw`SELECT capacidad FROM mesa WHERE numero = ${numero} FOR UPDATE`;
-  if (!mesa) throw new ErrorSalon(404, 'La mesa no existe.');
-  const sede =
-    pedido.id_restaurante ??
-    (pedido.id_mesero == null
-      ? null
-      : (
-          await tx.usuario.findUnique({
-            where: { id_usuario: pedido.id_mesero },
-            select: { id_restaurante: true },
-          })
-        )?.id_restaurante);
+  const sede = pedido.id_restaurante;
+  const [mesa] = await tx.$queryRaw`SELECT id_mesa, capacidad FROM mesa WHERE numero = ${numero} AND id_restaurante = ${sede} FOR UPDATE`;
+  if (!mesa) throw new ErrorSalon(404, 'La mesa no existe en este establecimiento.');
   if (
     await tx.pedido.findFirst({
       where: {
-        AND: [mesasDeSede(sede), CUENTA_ABIERTA],
+        id_restaurante: sede,
+        ...CUENTA_ABIERTA,
         Mesa_num: numero,
         ...(excepto == null ? {} : { id_pedido: { not: excepto } }),
       },
@@ -150,7 +142,7 @@ export async function mesaDisponible(tx, numero, pedido, { excepto, idAtencion =
   ) {
     throw new ErrorSalon(409, 'La mesa tiene una cuenta abierta. No se puede cambiar su ocupación.');
   }
-  const atencion = await tx.mesa_atencion.findFirst({ where: { numero, id_restaurante: sede ?? null } });
+  const atencion = await tx.mesa_atencion.findFirst({ where: { numero, id_restaurante: sede } });
   if (
     (atencion?.id_atencion ?? null) !== idAtencion ||
     (atencion && atencion.id_mesero !== pedido.id_mesero)
@@ -160,7 +152,7 @@ export async function mesaDisponible(tx, numero, pedido, { excepto, idAtencion =
       'La ocupación de la mesa cambió o la atiende otro mesero. Revisa la ficha de la mesa.',
     );
   }
-  return { ...mesa, id_restaurante: sede ?? null, atencion };
+  return { ...mesa, id_restaurante: sede, atencion };
 }
 
 export function cambiarEstadoMesa(user, numero, body) {
@@ -168,7 +160,7 @@ export function cambiarEstadoMesa(user, numero, body) {
   if (!ocupar && body?.estado !== 'DISPONIBLE') throw new ErrorSalon(422, 'Selecciona Disponible u Ocupada.');
   const idAtencion = ocupar ? null : entero(body.id_atencion, 'La atención de la mesa');
   const responsable = { id_restaurante: user.id_restaurante, id_mesero: user.id_usuario };
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     const mesa = await mesaDisponible(tx, numero, responsable, { idAtencion });
     if (ocupar) {
       const comensales = entero(body.comensales, 'El número de comensales', mesa.capacidad ?? 99);
@@ -186,7 +178,7 @@ export function abrirMesa(user, body) {
   const numero = entero(body?.mesa, 'La mesa');
   const lineas = leerLineas(body.items);
   const idAtencion = body.id_atencion == null ? null : entero(body.id_atencion, 'La atención de la mesa');
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     const mesa = await mesaDisponible(
       tx,
       numero,
@@ -196,7 +188,7 @@ export function abrirMesa(user, body) {
       },
       { idAtencion },
     );
-    const datos = await cabecera(tx, body, mesa.capacidad);
+    const datos = await cabecera(tx, body, mesa.capacidad, user.id_restaurante);
     const p = await tx.pedido.create({
       data: {
         ...datos,
@@ -208,7 +200,7 @@ export function abrirMesa(user, body) {
         version_salon: 1,
       },
     });
-    await escribirLineas(tx, p.id_pedido, lineas, []);
+    await escribirLineas(tx, p.id_pedido, lineas, [], user.id_restaurante);
     await ajustarConsumo(tx, p.id_pedido, lineas, user);
     // Ahora el pedido mantiene la mesa ocupada hasta cancelar/cobrar. Un rollback
     // por falta de stock conserva también la atención previa, sin crear una cuenta vacía.
@@ -218,8 +210,8 @@ export function abrirMesa(user, body) {
 }
 
 export function cambiarComanda(user, id, body, accion) {
-  return transaccionSalon(async (tx) => {
-    await bloquearPedido(tx, id);
+  return transaccionSalon(user, async (tx) => {
+    await bloquearPedido(tx, id, user.id_restaurante);
     const p = await tx.pedido.findFirst({
       where: { id_pedido: id, ...misPedidos(user) },
       include: { Detalle_pedido: true, Factura: indicadorPago },
@@ -262,13 +254,13 @@ export function cambiarComanda(user, id, body, accion) {
     } else {
       const lineas = leerLineas(body.items);
       if (accion === 'editar') {
-        const mesa = await tx.mesa.findUnique({ where: { numero: p.Mesa_num } });
-        Object.assign(data, await cabecera(tx, body, mesa?.capacidad));
-        await escribirLineas(tx, id, lineas, items);
+        const mesa = await tx.mesa.findFirst({ where: { numero: p.Mesa_num, id_restaurante: user.id_restaurante } });
+        Object.assign(data, await cabecera(tx, body, mesa?.capacidad, user.id_restaurante));
+        await escribirLineas(tx, id, lineas, items, user.id_restaurante);
         await ajustarConsumo(tx, id, lineas, user);
       } else {
         // Una ronda agrega renglones pendientes; jamás reabre los ya preparados.
-        await escribirLineas(tx, id, lineas, []);
+        await escribirLineas(tx, id, lineas, [], user.id_restaurante);
         const gestionado = p.version_salon !== null;
         const consumo = gestionado
           ? lineas

@@ -49,6 +49,7 @@ export function DashboardSidebar({
   return (
     <>
       <button
+        aria-description={mobileOpen ? 'Oculta el menú de navegación.' : 'Muestra el menú de navegación.'}
         type="button"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
@@ -62,6 +63,7 @@ export function DashboardSidebar({
 
       {mobileOpen && (
         <button
+          aria-description="Cierra el menú y vuelve al panel."
           type="button"
           aria-label="Cerrar menú"
           onClick={closeMobileMenu}
@@ -78,10 +80,10 @@ export function DashboardSidebar({
       >
         <div className={`mb-5 flex items-center gap-2 ${collapsed ? 'justify-center' : 'px-2'}`}>
           <button
+            aria-description={collapsed ? 'Muestra los nombres de las secciones.' : 'Deja solo los iconos de las secciones.'}
             type="button"
             aria-label={collapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
             aria-pressed={collapsed}
-            title={collapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
             onClick={() => setDashboardSidebarCollapsed(!collapsed)}
             className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--texto-muted)] hover:bg-[#f5ede7] lg:flex"
           >
@@ -121,11 +123,12 @@ export function DashboardSidebar({
             if (item.path) {
               return (
                 <NavLink
+                  aria-description={`Abre la sección «${item.label}».`}
                   key={item.id}
                   to={item.path}
                   end={item.end}
                   onClick={closeMobileMenu}
-                  title={collapsed ? item.label : undefined}
+                  aria-label={item.label}
                   className={({ isActive }) =>
                     `${linkClasses(isActive)} ${collapsed ? 'lg:justify-center' : ''}`
                   }
@@ -139,10 +142,11 @@ export function DashboardSidebar({
 
             return (
               <button
+                aria-description={`Abre la sección «${item.label}».`}
                 key={item.id}
                 type="button"
                 aria-current={isActive ? 'page' : undefined}
-                title={collapsed ? item.label : undefined}
+                aria-label={item.label}
                 onClick={() => {
                   onNavigate?.(item.id)
                   closeMobileMenu()
@@ -158,9 +162,10 @@ export function DashboardSidebar({
         <div className="mt-auto flex flex-col gap-2 border-t border-[var(--borde)] pt-4">
           <div className={collapsed ? 'lg:hidden' : ''}>{footerActions}</div>
           <button
+            aria-description="Sal de tu cuenta y vuelve al inicio."
             type="button"
             onClick={handleLogout}
-            title={collapsed ? 'Cerrar sesión' : undefined}
+            aria-label="Cerrar sesión"
             className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[var(--texto-muted)] hover:bg-[#f5ede7] ${
               collapsed ? 'lg:justify-center' : ''
             }`}

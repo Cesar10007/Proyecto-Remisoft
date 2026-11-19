@@ -1,3 +1,4 @@
+import EstadoSistema from './EstadoSistema'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 /**
@@ -13,7 +14,7 @@ interface PrivateRouteProps {
 }
 
 function PrivateRoute({ children, rolRequerido, rolesPermitidos }: PrivateRouteProps) {
-  const { token, rol } = useAuth()
+  const { token, rol, user } = useAuth()
 
   if (!token) return <Navigate to="/" replace />
   if (rolRequerido && rol !== rolRequerido) return <Navigate to="/" replace />
@@ -21,7 +22,7 @@ function PrivateRoute({ children, rolRequerido, rolesPermitidos }: PrivateRouteP
     return <Navigate to="/" replace />
   }
 
-  return children
+  return rol === 'SUPERADMIN' && !user?.id_restaurante ? children : <EstadoSistema key={token}>{children}</EstadoSistema>
 }
 
 export default PrivateRoute

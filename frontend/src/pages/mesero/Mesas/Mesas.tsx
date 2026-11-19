@@ -28,6 +28,7 @@ function Cocina({ pedidos, abrir }: { pedidos: Consumo[]; abrir: AbrirMesa }) {
         <div className="wa-comedor-feed">
           {platos.map(({ p, i }) => (
             <button
+              aria-description="Consulta el pedido al que pertenece este aviso."
               key={i.id_detalle}
               className={i.estado === 'LISTO' ? 'listo' : ''}
               onClick={() => abrir(p.mesa, p.id_pedido)}
@@ -47,7 +48,7 @@ function Cocina({ pedidos, abrir }: { pedidos: Consumo[]; abrir: AbrirMesa }) {
           ))}
         </div>
       )}
-      <Link className="sl-btn" to="/cocina" aria-label="Cocina">
+      <Link aria-description="Abre el tablero de comandas de cocina." className="sl-btn" to="/cocina" aria-label="Cocina">
         <ChefHat size={16} /> Tablero de cocina <ArrowRight size={14} />
       </Link>
     </aside>
@@ -96,7 +97,7 @@ export default function Mesas({
           <h2>En mesas</h2>
           <strong>{formatCOP(cuentas.reduce((n, p) => n + p.subtotal, 0))}</strong>
         </article>
-        <button className="wa-registrar" disabled={!permiteVenta} onClick={venta}>
+        <button aria-description="Abre una comanda para registrar un pedido." className="wa-registrar" disabled={!permiteVenta} onClick={venta}>
           <ShoppingCart size={26} />
           Registrar Venta
         </button>
@@ -111,6 +112,7 @@ export default function Mesas({
             <div className="wa-leyenda" role="group" aria-label="Filtrar mesas">
               {['Disponibles', 'Ocupadas'].map((f) => (
                 <button
+                  aria-description={filtro === f ? 'Quita el filtro y muestra todas las mesas.' : `Muestra solo las mesas ${f.toLowerCase()}.`}
                   key={f}
                   aria-pressed={filtro === f}
                   onClick={() => setFiltro(filtro === f ? 'Todas' : f)}

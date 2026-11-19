@@ -1,9 +1,16 @@
+import { escritura } from '../services/actividad.service.js';
+import { relacionDeSede } from '../utils/restaurante.js';
 import prisma from '../config/prisma.js';
+
+async function repartidorValido(id, sede) {
+  return id == null || Boolean(await prisma.usuario.count({ where: { ...sede, id_usuario: Number(id), rol: { nombre: 'REPARTIDOR' } } }));
+}
 
 export async function index(req, res, next) {
   try {
     const domicilios = await prisma.domicilio.findMany({
-      include: { pedido: { include: { Cliente: true } } },
+      where: { pedido: req.sede },
+      include: { pedido: { include: { Cliente: { where: req.sede } } } },
     });
 
     const aplanado = domicilios.map((d) => ({
@@ -42,14 +49,17 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: 'El campo id_repartidor debe ser un número entero' });
     }
 
-    await prisma.domicilio.create({
+    if (!await prisma.pedido.count({ where: { ...req.sede, id_pedido: Number(id_pedido) } }) || !await repartidorValido(id_repartidor, req.sede)) {
+      return res.status(422).json({ message: 'El pedido o el repartidor no pertenece al establecimiento.' });
+    }
+    await escritura(req.user, tx => tx.domicilio.create({
       data: {
         id_pedido: Number(id_pedido),
         direccion,
         estado: estado || 'ASIGNADO',
         id_repartidor: id_repartidor ? Number(id_repartidor) : null,
       },
-    });
+    }));
 
     res.status(201).json({ message: 'Domicilio creado' });
   } catch (err) {
@@ -78,14 +88,17 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: 'El campo id_repartidor debe ser un número entero' });
     }
 
-    await prisma.domicilio.update({
-      where: { id_domicilio: Number(id) },
+    if (!await repartidorValido(id_repartidor, req.sede)) {
+      return res.status(422).json({ message: 'El repartidor no pertenece al establecimiento.' });
+    }
+    await escritura(req.user, tx => tx.domicilio.update({
+      where: { id_domicilio: Number(id), pedido: req.sede },
       data: {
         direccion,
         estado: estado ?? null,
         id_repartidor: id_repartidor ? Number(id_repartidor) : null,
       },
-    });
+    }));
 
     res.json({ message: 'Domicilio actualizado' });
   } catch (err) {
@@ -102,10 +115,10 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-    await prisma.domicilio.update({
-      where: { id_domicilio: Number(id) },
+    await escritura(req.user, tx => tx.domicilio.update({
+      where: { id_domicilio: Number(id), pedido: req.sede },
       data: { estado: 'CANCELADO' },
-    });
+    }));
     res.json({ message: 'Domicilio cancelado' });
   } catch (err) {
     if (err.code === 'P2025') {
@@ -135,15 +148,14 @@ const ESTADOS_COLA = ['ASIGNADO', 'EN_CAMINO'];
 export async function resumenRepartidor(req, res, next) {
   try {
     const idUsuario = req.user.id_usuario;
-    const idRestaurante = req.user.id_restaurante ?? null;
     const inicioHoy = inicioDeHoyBogota();
 
     const misDomicilios = await prisma.domicilio.findMany({
-      where: { id_repartidor: idUsuario },
+      where: { id_repartidor: idUsuario, pedido: req.sede },
       include: {
         pedido: {
           include: {
-            Cliente: true,
+            Cliente: { where: req.sede },
             Factura: true,
             Detalle_pedido: { include: { Producto: true } },
           },
@@ -174,7 +186,7 @@ export async function resumenRepartidor(req, res, next) {
         const precio = Number(it.Precio_unitario ?? 0);
         const cantidad = it.Cantidad ?? 0;
         return {
-          nombre: it.Producto?.Nombre ?? 'Producto',
+          nombre: relacionDeSede(it.Producto, d.pedido.id_restaurante)?.Nombre ?? 'Producto',
           cantidad,
           subtotal: precio * cantidad,
         };
@@ -196,7 +208,8 @@ export async function resumenRepartidor(req, res, next) {
         estado: 'ENTREGADO',
         fecha_entrega: { gte: inicioHoy },
         id_repartidor: { not: null },
-        ...(idRestaurante ? { pedido: { id_restaurante: idRestaurante } } : {}),
+        usuario: req.sede,
+        pedido: req.sede,
       },
       select: { id_repartidor: true, usuario: { select: { nombre: true, apellido: true } } },
     });

@@ -16,15 +16,15 @@ if (!DB_USERNAME || !DB_PASSWORD || !DB_DATABASE) {
   );
 }
 
-const adapter = new PrismaMariaDb({
+export const dbConfig = {
   host: DB_HOST,
   port: Number(DB_PORT),
   user: DB_USERNAME,
   password: DB_PASSWORD,
   database: DB_DATABASE,
   charset: 'utf8mb4',
-});
+};
 
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter: new PrismaMariaDb(dbConfig) });
 
 export default prisma;

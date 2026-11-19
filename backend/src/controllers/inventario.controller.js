@@ -1,45 +1,33 @@
+import { escritura } from '../services/actividad.service.js';
+import { referenciasDeUnidad, unidadEnUso, verificarPresentacion, medidaTrabajo, cantidadVisible, cantidadBase, costoVisible } from '../utils/unidadesInventario.js';
 import prisma from '../config/prisma.js';
-import { bloquearIngredientes, verificarStockIngredientes } from '../services/inventario.service.js';
-import { registrarAuditoria } from '../utils/auditoria.js';
-
-const TIPOS_MOVIMIENTO_SUMA = new Set(['ENTRADA']);
-const TIPOS_MOVIMIENTO_RESTA = new Set(['SALIDA']);
+import { bloquearIngredientes, calcularStockActual, crearAjusteManual, verificarStockIngredientes } from '../services/inventario.service.js';
+import { auditarAjusteInventario } from '../utils/auditoria.js';
 
 function parseIngredientId(value) {
-  const id = Number.parseInt(value, 10);
-
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
-
-function calcularStockActual(movimientos) {
-  return movimientos.reduce((total, movimiento) => {
-    const cantidad = Number(movimiento.cantidad ?? 0);
-
-    if (TIPOS_MOVIMIENTO_SUMA.has(movimiento.tipo_movimiento)) {
-      return total + cantidad;
-    }
-
-    if (TIPOS_MOVIMIENTO_RESTA.has(movimiento.tipo_movimiento)) {
-      return total - cantidad;
-    }
-
-    return total;
-  }, 0);
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 && id <= 2147483647 ? id : null;
 }
 
 function serializarIngrediente(ingrediente) {
   const stockActual = calcularStockActual(ingrediente.inventario_mov);
 
+  const enUso = ingrediente.unidad_presentacion != null || unidadEnUso(ingrediente._count);
   return {
     id_ingrediente: ingrediente.id_ingrediente,
     nombre: ingrediente.nombre,
     descripcion: ingrediente.descripcion,
-    unidad_medida: ingrediente.unidad_medida,
-    costo_unitario_ref: ingrediente.costo_unitario_ref,
-    stock_minimo: ingrediente.stock_minimo,
-    stock_actual: stockActual,
+    unidad_medida: medidaTrabajo(ingrediente),
+    unidad_base: ingrediente.unidad_medida,
+    factor_unidad: Number(ingrediente.factor_unidad), cantidad_base: Number(ingrediente.cantidad_base),
+    costo_unitario_ref: costoVisible(ingrediente),
+    stock_minimo: cantidadVisible(ingrediente.stock_minimo, ingrediente),
+    stock_actual: cantidadVisible(stockActual, ingrediente),
     stock_bajo: stockActual <= Number(ingrediente.stock_minimo ?? 0),
     movimientos: ingrediente.inventario_mov.length,
+    requiere_equivalencia: enUso,
+    unidad_bloqueada: enUso, // compatibilidad: un cliente antiguo no sabe convertir la base histórica
   };
 }
 
@@ -62,9 +50,11 @@ export async function index(req, res, next) {
     }
 
     const ingredientes = await prisma.ingrediente.findMany({
-      where: idIngrediente ? { id_ingrediente: idIngrediente } : undefined,
+      where: { ...req.sede, ...(idIngrediente ? { id_ingrediente: idIngrediente } : {}) },
       include: {
+        _count: referenciasDeUnidad,
         inventario_mov: {
+          where: req.sede,
           select: {
             tipo_movimiento: true,
             cantidad: true,
@@ -94,7 +84,7 @@ export async function index(req, res, next) {
 
 /**
  * GET /api/inventario/:id
- * Obtiene un ingrediente con stock calculado e historial de movimientos.
+ * Obtiene la ficha y el stock. El libro se consulta en /historial.
  */
 export async function show(req, res, next) {
   try {
@@ -110,13 +100,14 @@ export async function show(req, res, next) {
 
     const ingrediente = await prisma.ingrediente.findUnique({
       where: {
+        ...req.sede,
         id_ingrediente: idIngrediente,
       },
       include: {
+        _count: referenciasDeUnidad,
         inventario_mov: {
-          orderBy: {
-            fecha_hora: 'desc',
-          },
+          where: req.sede,
+          select: { tipo_movimiento: true, cantidad: true },
         },
       },
     });
@@ -131,10 +122,7 @@ export async function show(req, res, next) {
 
     return res.status(200).json({
       success: true,
-      data: {
-        ...serializarIngrediente(ingrediente),
-        historial_movimientos: ingrediente.inventario_mov,
-      },
+      data: serializarIngrediente(ingrediente),
     });
   } catch (error) {
     next(error);
@@ -143,15 +131,16 @@ export async function show(req, res, next) {
 
 /**
  * GET /api/inventario/alertas/stock-bajo
- * Lista ingredientes con stock en lotes activos menor o igual a su mínimo.
- * Lee de vista_inventario_bajo_minimo (fuente: lote_ingrediente).
+ * El mismo libro de movimientos del editor, con y sin lote.
  */
 export async function stockBajo(req, res, next) {
   try {
+    const idSede = req.sede.id_restaurante ?? null;
     const filas = await prisma.$queryRaw`
       SELECT id_ingrediente, ingrediente, unidad_medida, stock_minimo,
              stock_total_actual, alerta
       FROM vista_inventario_bajo_minimo
+      WHERE (${idSede} IS NULL OR id_restaurante = ${idSede}) ORDER BY stock_total_actual, id_ingrediente
     `;
 
     const data = filas.map((fila) => ({
@@ -192,7 +181,6 @@ export async function ajuste(req, res, next) {
         : '';
     const motivo =
       typeof req.body?.motivo === 'string' ? req.body.motivo.trim() : '';
-    const cantidad = Number(req.body?.cantidad);
     const idUsuario = req.user?.id_usuario ?? null;
 
     if (!idIngrediente) {
@@ -211,14 +199,6 @@ export async function ajuste(req, res, next) {
       });
     }
 
-    if (!Number.isFinite(cantidad) || cantidad <= 0) {
-      return res.status(422).json({
-        success: false,
-        message: 'La cantidad debe ser un número mayor a 0.',
-        code: 'INVALID_CANTIDAD',
-      });
-    }
-
     if (motivo.length < 5 || motivo.length > 1000) {
       return res.status(422).json({
         success: false,
@@ -228,7 +208,7 @@ export async function ajuste(req, res, next) {
     }
 
     const ingrediente = await prisma.ingrediente.findUnique({
-      where: { id_ingrediente: idIngrediente },
+      where: { id_ingrediente: idIngrediente, ...req.sede },
       select: { id_ingrediente: true, nombre: true },
     });
 
@@ -240,40 +220,19 @@ export async function ajuste(req, res, next) {
       });
     }
 
-    const movimiento = await prisma.$transaction(async (tx) => {
-      await bloquearIngredientes(tx, [idIngrediente]);
+    const movimiento = await escritura(req.user, async (tx) => {
+      const [actual] = await bloquearIngredientes(tx, [idIngrediente], req.sede.id_restaurante);
+      verificarPresentacion(actual, req.body);
+      const cantidad = cantidadBase(req.body.cantidad, actual);
       if (tipo === 'SALIDA') {
         await verificarStockIngredientes(tx, [
           { id_ingrediente: idIngrediente, requerido: cantidad },
-        ]);
+        ], req.sede.id_restaurante);
       }
 
-      return tx.inventario_mov.create({
-        data: {
-          id_ingrediente: idIngrediente,
-          id_usuario: idUsuario,
-          fecha_hora: new Date(),
-          tipo_movimiento: tipo,
-          cantidad,
-          origen_tipo: 'AJUSTE',
-          observaciones: motivo,
-        },
-      });
+      return crearAjusteManual(tx, { ...req.sede, id_ingrediente: idIngrediente, id_usuario: idUsuario }, tipo, cantidad, motivo);
     });
-
-    // RNF-001.8 — ajuste manual fuera del flujo automático,
-    // con id_usuario (tomado del JWT) y motivo.
-    registrarAuditoria({
-      evento: 'INVENTARIO_AJUSTE_MANUAL',
-      id_usuario: idUsuario,
-      ip: req.ip,
-      endpoint: req.originalUrl,
-      motivo: `${tipo} ${cantidad} de ${ingrediente.nombre ?? idIngrediente}: ${motivo}`,
-      extra: {
-        id_movimiento: movimiento.id_movimiento,
-        id_ingrediente: idIngrediente,
-      },
-    });
+    auditarAjusteInventario(req, movimiento, ingrediente.nombre);
 
     return res.status(201).json({
       success: true,

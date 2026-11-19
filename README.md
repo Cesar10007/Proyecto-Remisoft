@@ -197,6 +197,34 @@ Abrir frontend:
 - Localmente: `http://localhost`.
 - En Codespaces: abrir el puerto 80 desde la pestaña **Ports** de VS Code.
 
+### Cómo saber qué interfaz está abierta en Codespaces
+
+`git log -1` identifica el commit del directorio, no el JavaScript de la pestaña. **Después de actualizar la rama**, usa el puerto correspondiente:
+
+- **80 (Docker Compose).** Si Compose ya está en marcha, desde la raíz ejecuta `docker compose up -d --build --no-deps frontend`. Vuelve a abrir el **80** desde **Puertos**. Esto reconstruye solo la interfaz: no reinicia el backend ni borra datos.
+- **4173 (compilación independiente).** Con la API ya funcionando en el 3000, ejecuta `pnpm --dir frontend run vista:rama` desde la raíz. Si faltan dependencias, usa antes `pnpm --dir frontend install --frozen-lockfile`. Deja la terminal abierta y elige **Puertos → 4173 → Abrir en el navegador**. Si no aparece, reenvía el 4173 como puerto privado. Inicia sesión en ese origen. El comando compila los archivos del directorio actual, no reemplaza lo servido en el 80 y no toca la BD.
+- **5173 (desarrollo).** `pnpm --dir frontend dev` sirve el código del directorio donde se inició Vite, con recarga en caliente. Tanto desarrollo como la vista del 4173 fallan si su puerto está ocupado en vez de saltar silenciosamente a otro.
+
+Para usar el **desplegable de unidades** y **Stock actual** en **Inventario → Nuevo Ingrediente** o **Editar**, actualiza **también la API**: con Compose ejecuta `docker compose up -d --build backend frontend` desde la raíz; si usas Vite, reinicia el backend con el código actualizado. Esta versión añade la equivalencia por ingrediente, el historial por sede y la ocultación individual. El arranque del backend aplica las migraciones y reinstala las vistas sin borrar el volumen. [Cómo elegir entre peso, volumen, piezas y empaques](docs/establecimientos.md#unidad-de-medida-del-ingrediente).
+
+**Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 compáralo con el `src` del `<script type="module">` de `docker compose exec -T frontend cat /usr/share/nginx/html/index.html`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
+
+**Si «Nuevo Ingrediente» termina en «Stock mínimo»:** [así se ve el formulario vacío con «Stock actual»](docs/imagenes/nuevo-ingrediente-vacio.png). No hace falta escribir el nombre ni entrar en Editar. El alta con stock se incorporó en `d627665` del [PR #270](https://github.com/Cesar10007/Proyecto-Remisoft/pull/270).
+
+**Correo en Personal y Agregar gerente:** [así se ve el aviso bajo el campo en modo oscuro](docs/imagenes/personal-correo-invalido.png). Debe decir solo «Correo inválido, ingrese otro.» Si el aviso de correo aparece por encima de la tabla de personal, la pestaña está ejecutando una interfaz anterior. Actualiza tanto el frontend como el backend para que también la respuesta HTTP use el mensaje breve.
+
+**Actualizar la instalación Compose:** reconstruir contenedores no descarga la rama del PR. Para probarla en una instalación Compose ya en marcha, ejecuta estos pasos en la **misma carpeta** con la que la iniciaste. Si Git informa cambios locales incompatibles, detente; no los descartes.
+
+```bash
+git fetch origin
+git switch arena/8509438c-proyecto-remisoft
+git pull --ff-only origin arena/8509438c-proyecto-remisoft
+docker compose up -d --build --no-deps --force-recreate backend frontend
+docker compose port frontend 80
+```
+
+Abre de nuevo el puerto publicado (en Codespaces, desde **Puertos**). Esto recrea la API y la interfaz, no la base ni sus volúmenes. Si **Interfaz** no coincide con el script del contenedor, comprueba el puerto y recarga la pestaña con **Ctrl + Shift + R**; no uses `docker compose down -v`.
+
 ### Logs
 
 ```bash
@@ -222,7 +250,7 @@ docker compose up --build
 
 > `-v` elimina el volumen `db_data` y borra los datos persistentes de MariaDB. Úsalo solo cuando quieras probar una instalación limpia.
 
-Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, carga datos iniciales si la base está vacía y luego carga vistas y procedimientos.
+Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, solo importa la demo si la base no tenía tablas antes de migrar y `CARGAR_DEMO=1`, y reinstala vistas y procedimientos. En una instalación real usa `CARGAR_DEMO=0` y [crea el primer superadmin sin ejemplos](docs/establecimientos.md#primera-instalación-sin-ejemplos).
 
 ### Validaciones rápidas
 
@@ -405,12 +433,13 @@ En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y su
 
 ## Modelo multi-restaurante
 
-El sistema soporta múltiples sedes mediante `restaurante`. Cada usuario puede tener un `id_restaurante` opcional.
+La clave existente es **`id_restaurante`**. Crear un gerente desde Superadmin (o aprobar su solicitud) crea un establecimiento propio y vacío. El personal opera en la sede que la API obtiene del usuario en la BD. Productos, existencias, mesas, IA, ventas y demás actividad del panel no se comparten entre negocios. Un gerente sin ventas o sin análisis ve ese estado, no datos de ejemplo.
 
-- `SUPERADMIN`: puede operar globalmente.
-- Roles operativos: deberían limitarse a su sede asignada.
+[Cierre total, revisión de pendientes y reapertura por sede](docs/establecimientos.md#cierre-total-y-reapertura-de-una-sede).
 
-> **Estado pendiente:** que `id_restaurante` exista en el JWT no garantiza aislamiento de datos. El filtrado debe verificarse en cada controlador y endpoint antes de considerarlo completo.
+[Historial del gerente, baja de personal, ventas por fecha de pago y libro de caja](docs/establecimientos.md#historial-personal-y-caja).
+
+[Guía de establecimientos: actualizar sin borrar datos, tratar históricos sin sede y probar el aislamiento](docs/establecimientos.md).
 
 El middleware de autenticación soporta JWT estándar y tokens estilo Sanctum heredados, cuando corresponda.
 

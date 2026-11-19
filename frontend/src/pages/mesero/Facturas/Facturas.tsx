@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, FilePlus2, FileText, LockKeyhole, Pencil, Printer, RefreshCw } from 'lucide-react'
 import { Buscador, Dialogo, ErrorCarga, Estado, Vacio } from '../Elementos'
 import { mesaN, normalizar, type Pedido } from '../modelo'
@@ -108,16 +108,17 @@ function Comprobante({
         )}
       </div>
       <div className="sl-dialog-actions no-print">
-        <button className="sl-btn" onClick={cerrar}>
+        <button aria-description="Cierra el comprobante y vuelve al listado." className="sl-btn" onClick={cerrar}>
           Cerrar
         </button>
         {f && !error && (
           <>
-            <button className="sl-btn" onClick={() => window.print()}>
+            <button aria-description="Abre la vista de impresión de esta factura." className="sl-btn" onClick={() => window.print()}>
               <Printer size={15} /> Imprimir factura
             </button>
             {f.editable && (
               <button
+                aria-description="Abre la factura pendiente para modificar sus datos."
                 className="sl-btn primary"
                 onClick={() => {
                   setAviso('')
@@ -141,8 +142,11 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
   const [estado, setEstado] = useState('')
   const [params, cambiar] = useSearchParams()
   const id = Number(params.get('factura')) || null
-  const abrir = (otro: Record<string, string> = {}) =>
-    cambiar({ vista: 'facturas', ...otro }, { replace: true })
+  const location = useLocation(), navigate = useNavigate()
+  const abrir = (otro: Record<string, string>, replace = false) => cambiar({ vista: 'facturas', ...otro }, {
+    replace, state: { desdeListado: replace ? location.state?.desdeListado === true : true },
+  })
+  const cerrar = () => location.state?.desdeListado ? navigate(-1) : cambiar({ vista: 'facturas' }, { replace: true })
   const refrescar = async () => {
     await Promise.all([cargar(), cargarSalon()])
   }
@@ -166,6 +170,7 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
         </div>
         <div className="fc-acciones">
           <button
+            aria-description="Vuelve a consultar las facturas de la sede."
             className="sl-iconbtn"
             aria-label="Actualizar facturas"
             disabled={cargando}
@@ -173,14 +178,14 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
           >
             <RefreshCw size={16} />
           </button>
-          <button className="sl-btn primary" onClick={() => abrir({ generar: '1' })}>
+          <button aria-description="Abre el formulario para facturar una cuenta pendiente." className="sl-btn primary" onClick={() => abrir({ generar: '1' })}>
             <FilePlus2 size={16} /> Generar factura
           </button>
         </div>
       </div>
       <div className="sl-tools">
         <Buscador valor={buscar} cambiar={setBuscar} titulo="Buscar factura, pedido o mesa" />
-        <select aria-label="Estado de factura" value={estado} onChange={(e) => setEstado(e.target.value)}>
+        <select aria-description="Filtra las facturas por su estado de pago o emisión." aria-label="Estado de factura" value={estado} onChange={(e) => setEstado(e.target.value)}>
           <option value="">Todos los estados</option>
           <option value="PENDIENTE">Pendiente de pago</option>
           <option value="PAGADA">Pagada</option>
@@ -203,6 +208,7 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
         <div className="sl-list">
           {visibles.map((f) => (
             <button
+              aria-description="Abre el detalle y los importes de esta factura."
               key={f.id_factura}
               className="sl-order-row"
               onClick={() => abrir({ factura: String(f.id_factura) })}
@@ -224,7 +230,7 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
         </div>
       )}
       {id ? (
-        <Comprobante key={id} id={id} cerrar={() => abrir()} actualizar={refrescar} />
+        <Comprobante key={id} id={id} cerrar={cerrar} actualizar={refrescar} />
       ) : (
         params.has('generar') && (
           <EditorFactura
@@ -234,9 +240,9 @@ export default function Facturas({ pedidos, tasa, errorSalon, cargarSalon }: Pro
             tasa={tasa}
             bloqueo={errorSalon}
             refrescar={refrescar}
-            cerrar={() => abrir()}
+            cerrar={cerrar}
             guardada={async (id) => {
-              abrir({ factura: String(id) })
+              abrir({ factura: String(id) }, true)
               await refrescar()
             }}
           />

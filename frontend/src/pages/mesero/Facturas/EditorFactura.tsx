@@ -48,6 +48,7 @@ export default function EditorFactura(props: Props) {
               <label className="sl-field">
                 Pedido a facturar
                 <select
+                  aria-description="Elige una cuenta enviada a caja que aún no tenga factura."
                   value={id ?? ''}
                   onChange={(e) => setId(Number(e.target.value) || null)}
                   disabled={enviando}
@@ -109,7 +110,7 @@ export default function EditorFactura(props: Props) {
       </div>
       {!items && (
         <div className="sl-dialog-actions">
-          <button className="sl-btn" onClick={props.cerrar}>
+          <button aria-description="Regresa al historial de facturas." className="sl-btn" onClick={props.cerrar}>
             Volver al historial
           </button>
         </div>
@@ -149,11 +150,12 @@ function Formulario(
     }
   }
   return (
-    <form className="fc-form" onSubmit={enviar}>
+    <form aria-description="Revisa a nombre de quién se factura y los importes finales." className="fc-form" onSubmit={enviar}>
       <fieldset disabled={props.enviando || !!props.bloqueo}>
         <label className="sl-field">
           A nombre de
           <input
+            aria-description="Indica el nombre que debe aparecer en la factura."
             maxLength={120}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
@@ -164,6 +166,7 @@ function Formulario(
           <label className="sl-field">
             Descuento antes de IVA (COP)
             <input
+              aria-description="Indica en pesos el descuento que se aplica antes del impuesto."
               type="number"
               required
               min="0"
@@ -176,6 +179,7 @@ function Formulario(
           <label className="sl-field">
             Propina voluntaria (COP)
             <input
+              aria-description="Indica en pesos la propina que desea dejar el cliente."
               type="number"
               required
               min="0"
@@ -199,10 +203,11 @@ function Formulario(
       {props.bloqueo && <ErrorCarga texto={props.bloqueo} />}
       {error && <ErrorCarga texto={error} />}
       <div className="fc-acciones">
-        <button className="sl-btn" type="button" disabled={props.enviando} onClick={props.cancelar}>
+        <button aria-description="Cierra el formulario sin guardar la factura." className="sl-btn" type="button" disabled={props.enviando} onClick={props.cancelar}>
           Cancelar
         </button>
         <button
+          aria-description={props.edicion ? 'Guarda los cambios de la factura pendiente.' : 'Genera la factura sin registrar un pago.'}
           className="sl-btn primary"
           type="submit"
           disabled={!valido || props.enviando || !!props.bloqueo}

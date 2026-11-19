@@ -1,6 +1,6 @@
 .rd-wrapper {
   --rd-primary: #d85a30;
-  --rd-primary-dark: #993c1d;
+  --rd-primary-dark: var(--texto-acento);
   --rd-primary-soft: #faece7;
   --rd-secondary: #ef9f27;
   --rd-secondary-soft: #faeeda;

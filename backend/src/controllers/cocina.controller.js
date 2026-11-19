@@ -1,3 +1,4 @@
+import { relacionDeSede } from '../utils/restaurante.js';
 import {
   ESTADOS_EN_COCINA,
   estadoSegunItems,
@@ -59,7 +60,7 @@ export async function comandas(req, res, next) {
           include: { Producto: true },
           orderBy: { id_detalle: 'asc' },
         },
-        usuario: { select: { nombre: true, apellido: true } },
+        usuario: { where: req.sede, select: { nombre: true, apellido: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
@@ -74,7 +75,7 @@ export async function comandas(req, res, next) {
         nombre_mesero: p.usuario ? `${p.usuario.nombre ?? ''} ${p.usuario.apellido ?? ''}`.trim() : null,
         items: p.Detalle_pedido.map((d) => ({
           id_detalle: d.id_detalle,
-          nombre: d.Producto?.Nombre ?? `Producto ${d.id_producto}`,
+          nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre ?? `Producto ${d.id_producto}`,
           cantidad: Number(d.Cantidad ?? 0),
           estado: d.estado_item ?? 'PENDIENTE',
           nota: d.nota ?? '',
@@ -97,17 +98,17 @@ export async function avanzarItem(req, res, next) {
     }
 
     const item = await prisma.detalle_pedido.findUnique({
-      where: { id_detalle: idDetalle },
+      where: { id_detalle: idDetalle, pedido: alcance(req.user) },
       select: { id_pedido: true },
     });
     if (!item) throw new ErrorSalon(404, 'Ítem no encontrado.');
-    const resultado = await transaccionSalon(async (tx) => {
-      await bloquearPedido(tx, item.id_pedido);
+    const resultado = await transaccionSalon(req.user, async (tx) => {
+      await bloquearPedido(tx, item.id_pedido, req.sede.id_restaurante);
       const p = await tx.pedido.findFirst({
         where: { id_pedido: item.id_pedido, ...alcance(req.user) },
         include: {
           Factura: indicadorPago,
-          Detalle_pedido: { include: { Producto: { select: { Nombre: true } } } },
+          Detalle_pedido: { include: { Producto: { select: { Nombre: true, id_restaurante: true } } } },
         },
       });
       if (!p) throw new ErrorSalon(404, 'Comanda no encontrada.');
@@ -118,6 +119,8 @@ export async function avanzarItem(req, res, next) {
       const siguiente = SIGUIENTE_ESTADO_ITEM[d.estado_item ?? 'PENDIENTE'];
       if (!siguiente || (req.body?.estado_item !== undefined && req.body.estado_item !== siguiente))
         throw new ErrorSalon(409, 'El plato cambió de estado. Actualiza la comanda.');
+      // El pase a mesa es una entrega del salón, aunque comparta el endpoint del tablero.
+      if (siguiente === 'ENTREGADO') await tx.$executeRaw`UPDATE contexto_actividad SET area='MESEROS' WHERE conexion=CONNECTION_ID()`;
       await tx.detalle_pedido.update({ where: { id_detalle: idDetalle }, data: { estado_item: siguiente } });
       const estados = p.Detalle_pedido.filter((i) => i.estado_item !== 'CANCELADO').map((i) =>
         i.id_detalle === idDetalle ? siguiente : i.estado_item,
@@ -126,8 +129,8 @@ export async function avanzarItem(req, res, next) {
         where: { id_pedido: p.id_pedido },
         data: { estado: estadoSegunItems(estados) },
       });
-      return { id_detalle: idDetalle, id_pedido: p.id_pedido, nombre: d.Producto?.Nombre, estado: siguiente };
-    });
+      return { id_detalle: idDetalle, id_pedido: p.id_pedido, nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre, estado: siguiente };
+    }, 'COCINA');
     res.json(resultado);
   } catch (err) {
     next(err);

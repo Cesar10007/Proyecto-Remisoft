@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
@@ -128,6 +129,7 @@ export async function resetPassword(req, res, next) {
     if (
       !resetToken ||
       !resetToken.created_at ||
+      Buffer.byteLength(resetToken.token) !== Buffer.byteLength(token) ||
       !crypto.timingSafeEqual(
         Buffer.from(resetToken.token),
         Buffer.from(token),
@@ -155,16 +157,12 @@ export async function resetPassword(req, res, next) {
     const contrasena_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     // El select evita devolver el hash y nos da el id para la auditoría.
-    const [usuarioActualizado] = await prisma.$transaction([
-      prisma.usuario.update({
-        where: { email: emailNormalizado },
-        data: { contrasena_hash },
-        select: { id_usuario: true },
-      }),
-      prisma.password_reset_tokens.delete({
-        where: { email: emailNormalizado },
-      }),
-    ]);
+    const usuarioActualizado = await prisma.usuario.findUniqueOrThrow({ where: { email: emailNormalizado },
+      select: { id_usuario: true, nombre: true, apellido: true, id_restaurante: true } });
+    await escritura(usuarioActualizado, async tx => {
+      await tx.password_reset_tokens.delete({ where: { email: emailNormalizado, token: resetToken.token } });
+      await tx.usuario.update({ where: { id_usuario: usuarioActualizado.id_usuario, email: emailNormalizado }, data: { contrasena_hash } });
+    }, { permiteSedeCerrada: true }); // Recuperar la credencial no abre ni modifica la operación.
 
     // RNF-001.8 — PASSWORD_CHANGED con id_usuario.
     registrarAuditoria({

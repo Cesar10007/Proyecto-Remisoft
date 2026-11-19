@@ -70,6 +70,7 @@
 }
 
 .cajero__detalle {
+  min-width: 0;
   padding: 24px;
   min-height: 420px;
 }
@@ -116,7 +117,7 @@
 .cajero__cuenta-total {
   margin-top: 6px;
   font-weight: 700;
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
 }
 
 .cajero__tiempo {
@@ -186,7 +187,7 @@
 .cajero__total-final dd {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
 }
 
 .cajero__pago {
@@ -225,7 +226,7 @@
 
 .cajero__metodo--activo {
   border-color: var(--rojo);
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
   background: var(--rojo-light);
 }
 
@@ -257,7 +258,7 @@
 
 .cajero__error-campo {
   font-weight: 600;
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
   margin: 0;
 }
 
@@ -270,7 +271,7 @@
 
 .cajero__alerta--error {
   background: var(--rojo-light);
-  color: var(--rojo-dark);
+  color: var(--texto-acento);
 }
 
 .cajero__alerta--ok {
@@ -292,17 +293,6 @@
   border: 1px solid var(--borde);
   background: var(--t-bg-ffffff, #fff);
   color: var(--texto);
-}
-
-.cajero__btn--primario {
-  background: var(--rojo);
-  border-color: var(--rojo);
-  color: #fff;
-}
-
-.cajero__btn--primario:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .cajero__btn--grande {

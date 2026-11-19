@@ -1,3 +1,4 @@
+import { relacionDeSede } from '../utils/restaurante.js';
 import { alcanceMesero, ErrorSalon, indicadorPago, consumoSellado } from '../utils/salon.js';
 import { bloquearPedido, transaccionSalon } from '../services/salon.service.js';
 import prisma from '../config/prisma.js';
@@ -12,6 +13,8 @@ const PEDIDO_EDITABLE = 'ABIERTO';
 //   Detalle_pedido.Producto (con P mayúscula)
 const RELACIONES = { pedido: true, Producto: true };
 
+const presentarDetalle = item => ({ ...item, Producto: relacionDeSede(item.Producto, item.pedido.id_restaurante) });
+
 function parseCantidad(value) {
   const cantidad = Number(value);
 
@@ -21,7 +24,7 @@ function parseCantidad(value) {
 // Estos endpoints siguen sirviendo a pedidos no gestionados por salón. Tomar el mismo
 // bloqueo del pedido evita añadir renglones mientras cocina lo empieza o caja lo cobra.
 async function permitirDetalle(tx, id, user) {
-  await bloquearPedido(tx, id);
+  await bloquearPedido(tx, id, user.id_restaurante);
   const p = await tx.pedido.findFirst({
     where: { id_pedido: id, ...alcanceMesero(user) },
     select: { estado: true, version_salon: true, Mesa_num: true, Factura: indicadorPago },
@@ -52,14 +55,14 @@ export async function index(req, res, next) {
       where = { id_pedido: idPedido };
     }
 
-    if (req.user.rol === 'MESERO') where.pedido = alcanceMesero(req.user);
+    where.pedido = alcanceMesero(req.user);
     const items = await prisma.detalle_pedido.findMany({
       where,
       include: RELACIONES,
       orderBy: { id_detalle: 'asc' },
     });
 
-    res.status(200).json({ success: true, data: items, count: items.length });
+    res.status(200).json({ success: true, data: items.map(presentarDetalle), count: items.length });
   } catch (error) {
     next(error);
   }
@@ -91,7 +94,7 @@ export async function show(req, res, next) {
       });
     }
 
-    res.status(200).json({ success: true, data: item });
+    res.status(200).json({ success: true, data: presentarDetalle(item) });
   } catch (error) {
     next(error);
   }
@@ -127,7 +130,7 @@ export async function store(req, res, next) {
     }
 
     const producto = await prisma.producto.findUnique({
-      where: { id_producto: idProducto },
+      where: { id_producto: idProducto, ...req.sede },
       select: { id_producto: true, precio_venta: true, Estado: true },
     });
 
@@ -147,7 +150,7 @@ export async function store(req, res, next) {
       });
     }
 
-    const item = await transaccionSalon(async (tx) => {
+    const item = await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, idPedido, req.user);
       return tx.detalle_pedido.create({
         data: {
@@ -160,7 +163,7 @@ export async function store(req, res, next) {
         include: RELACIONES,
       });
     });
-    res.status(201).json({ success: true, message: 'Creado', data: item });
+    res.status(201).json({ success: true, message: 'Creado', data: presentarDetalle(item) });
   } catch (error) {
     if (error.code === 'P2003') {
       return res.status(422).json({
@@ -192,7 +195,7 @@ export async function update(req, res, next) {
     }
 
     const actual = await prisma.detalle_pedido.findUnique({
-      where: { id_detalle: id },
+      where: { id_detalle: id, pedido: alcanceMesero(req.user) },
       select: { id_pedido: true },
     });
 
@@ -220,7 +223,7 @@ export async function update(req, res, next) {
       data.Cantidad = cantidad;
     }
 
-    const item = await transaccionSalon(async (tx) => {
+    const item = await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, actual.id_pedido, req.user);
       return tx.detalle_pedido.update({
         where: { id_detalle: id },
@@ -228,7 +231,7 @@ export async function update(req, res, next) {
         include: RELACIONES,
       });
     });
-    res.status(200).json({ success: true, message: 'Actualizado', data: item });
+    res.status(200).json({ success: true, message: 'Actualizado', data: presentarDetalle(item) });
   } catch (error) {
     next(error);
   }
@@ -251,7 +254,7 @@ export async function destroy(req, res, next) {
     }
 
     const actual = await prisma.detalle_pedido.findUnique({
-      where: { id_detalle: id },
+      where: { id_detalle: id, pedido: alcanceMesero(req.user) },
       select: { id_pedido: true },
     });
 
@@ -263,7 +266,7 @@ export async function destroy(req, res, next) {
       });
     }
 
-    await transaccionSalon(async (tx) => {
+    await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, actual.id_pedido, req.user);
       await tx.detalle_pedido.delete({ where: { id_detalle: id } });
     });

@@ -7,6 +7,7 @@ import Login from './pages/auth/Login'
 import ResetPassword from './pages/auth/ResetPassword'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import Modal from './components/common/Modal'
+import AyudasContextuales from './components/common/AyudasContextuales'
 import PrivateRoute from './components/common/PrivateRoute'
 import SuperAdmin from './pages/superadmin/SuperAdmin'
 import Dashboard from './pages/superadmin/Dashboard/Dashboard'
@@ -24,6 +25,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <AyudasContextuales />
       <Routes>
         <Route
           path="/"
@@ -35,6 +37,8 @@ function App() {
               </main>
               <Footer />
               <Modal
+                title="Bienvenido"
+                size="compact"
                 isOpen={modal === 'login'}
                 onClose={() => setModal(null)}
               >

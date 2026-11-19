@@ -86,45 +86,6 @@
   gap: 4px;
 }
 
-.ge-primary-btn {
-  background: var(--rojo);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 10px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  margin-bottom: 8px;
-}
-
-.ge-primary-btn--split {
-  margin-bottom: 0;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ge-secondary-btn {
-  background: var(--t-bg-f9f5f0, #f9f5f0);
-  color: var(--texto-muted);
-  border: 1px solid var(--borde);
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.ge-secondary-btn--split {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .ge-logout-btn {
   display: flex;
   align-items: center;
@@ -676,4 +637,9 @@
   font-size: 0.85rem;
   color: var(--texto);
   border-bottom: 1px solid var(--borde);
+}
+/* Mantener tinta y fondo como pareja también al pulsar, no invertir el botón al abrir el formulario. */
+.ge-abrir-turno:is(:hover, :focus-visible, :active):not(:disabled) {
+  background-color: var(--accion-primaria-hover);
+  color: var(--sobre-accion);
 }

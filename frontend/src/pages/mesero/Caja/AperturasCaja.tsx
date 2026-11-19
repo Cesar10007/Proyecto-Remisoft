@@ -39,7 +39,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
   const aperturas = useMemo(() => data?.data ?? [], [data])
 
   const [openFiltro, setOpenFiltro] = useState(false)
-  const [filtroEstado, setFiltroEstado] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('CERRADA')
 
   const [detalle, setDetalle] = useState<{ open: boolean; title: string; rows: { label: string; value: string }[] }>({
     open: false,
@@ -51,8 +51,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
   const aperturaActiva = useMemo(() => aperturas.find(esActiva) ?? null, [aperturas])
 
   const aperturasFiltradas = aperturas.filter((a) => {
-    if (!filtroEstado) return true
-    return filtroEstado === 'ABIERTA' ? esActiva(a) : !esActiva(a)
+    return a.estado === filtroEstado
   })
 
   if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
@@ -63,10 +62,11 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -140,12 +140,13 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
       <div className="rounded-[14px] border border-[var(--wa-border)] bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-[var(--wa-border)] p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-[1.05rem] font-bold">Historial de aperturas</h2>
-            <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Consulta las aperturas realizadas anteriormente.</p>
+            <h2 className="text-[1.05rem] font-bold">{filtroEstado === 'ABIERTA' ? 'Aperturas activas' : 'Historial de aperturas cerradas'}</h2>
+            <p className="mt-1 text-sm text-[var(--wa-text-muted)]">Consulta por separado las aperturas activas y los turnos cerrados.</p>
           </div>
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta las opciones de estado del turno.' : 'Elige entre aperturas de turnos activos o cerrados.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -157,11 +158,11 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
             {openFiltro && (
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {[
-                  { valor: '', texto: 'Todos' },
-                  { valor: 'ABIERTA', texto: 'Abierta' },
-                  { valor: 'CERRADA', texto: 'Cerrada' },
+                  { valor: 'ABIERTA', texto: 'Turnos activos' },
+                  { valor: 'CERRADA', texto: 'Turnos cerrados' },
                 ].map((op) => (
                   <button
+                    aria-description={op.valor === 'ABIERTA' ? 'Muestra las aperturas con turno activo.' : 'Muestra las aperturas de turnos ya cerrados.'}
                     key={op.texto}
                     type="button"
                     onClick={() => {
@@ -180,7 +181,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
           </div>
         </div>
 
-        <DataTable
+        <DataTable key={filtroEstado}
           columns={[
             { header: 'Fecha', render: (a) => fecha(a.fecha_apertura) },
             { header: 'Hora', render: (a) => hora(a.fecha_apertura) },
@@ -197,6 +198,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
               header: 'Acción',
               render: (a) => (
                 <button
+                  aria-description="Consulta el fondo inicial y el responsable de esta apertura."
                   type="button"
                   onClick={() =>
                     setDetalle({
@@ -214,7 +216,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  aria-label="Ver apertura" title="Ver apertura"
+                  aria-label="Ver apertura"
                 >
                   <Eye size={18} aria-hidden="true" />
                 </button>

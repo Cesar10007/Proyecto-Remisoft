@@ -28,7 +28,7 @@ function cuentaParaCobro(pedido) {
   const cuenta = formatCuenta(pedido);
   const f = pedido.Factura;
   if (!esBorrador(f)) return { ...cuenta, descuento: 0, propina: 0, version_factura: null };
-  const items = consumoFacturado(f).map((i) => ({ ...i, subtotal: round2(i.cantidad * i.precio_unitario) }));
+  const items = consumoFacturado(f, pedido.id_restaurante).map((i) => ({ ...i, subtotal: round2(i.cantidad * i.precio_unitario) }));
   return {
     ...cuenta,
     items,
@@ -67,7 +67,7 @@ export async function pendientes(req, res, next) {
       include: {
         Detalle_pedido: { include: { Producto: true } },
         Factura: { include: { Factura_item: lineasDeFactura } },
-        usuario: { select: { nombre: true, apellido: true } },
+        usuario: { where: req.sede, select: { nombre: true, apellido: true, id_restaurante: true } },
       },
       orderBy: { Fecha_hora: 'asc' },
     });
@@ -99,12 +99,13 @@ export async function cerrarCuenta(req, res, next) {
     const referencia = req.body?.referencia ? String(req.body.referencia).trim().slice(0, 80) || null : null;
 
     const idUsuario = req.user.id_usuario;
-    const resultado = await transaccionSalon(async (tx) => {
+    const resultado = await transaccionSalon(req.user, async (tx) => {
       // Serializa pagos de un mismo turno para no perder saldo ni cobrar en una caja cerrada.
-      const [turno] = await tx.$queryRaw`SELECT id_turno, efectivo_inicial FROM turno_caja
-        WHERE id_usuario_cajero = ${idUsuario} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
+      const [turno] = await tx.$queryRaw`SELECT t.id_turno, t.efectivo_inicial FROM turno_caja t
+        JOIN caja c ON c.id_caja=t.id_caja AND c.id_restaurante=t.id_restaurante AND c.estado='ACTIVA'
+        WHERE t.id_usuario_cajero = ${idUsuario} AND t.id_restaurante = ${req.sede.id_restaurante} AND t.estado = 'ABIERTA' ORDER BY t.id_turno DESC LIMIT 1 FOR UPDATE`;
       if (!turno) return { status: 409, message: 'Debes tener un turno de caja abierto para cobrar.' };
-      await bloquearPedido(tx, idPedido);
+      await bloquearPedido(tx, idPedido, req.sede.id_restaurante);
       const pedido = await tx.pedido.findFirst({
         where: { id_pedido: idPedido, ...deSede(req.user) },
         include: {
@@ -171,6 +172,7 @@ export async function cerrarCuenta(req, res, next) {
                 id_producto: d.id_producto,
                 cantidad: Number(d.Cantidad ?? 0),
               })),
+              req.sede.id_restaurante,
             );
 
       const { subtotal, iva, total, descuento, propina } = cuenta;
@@ -215,11 +217,10 @@ export async function cerrarCuenta(req, res, next) {
         },
       });
 
-      const ultimoMovimiento = await tx.flujo_caja.findFirst({
-        where: { id_turno: turno.id_turno },
-        orderBy: { id_flujo: 'desc' },
-      });
-      const saldoAnterior = Number(ultimoMovimiento?.saldo ?? turno.efectivo_inicial ?? 0);
+      // El turno está bloqueado. Un movimiento histórico puede no haber guardado saldo;
+      // no perder su ingreso/egreso ni sumar dos veces una apertura antigua.
+      const [libro] = await tx.$queryRaw`SELECT ingresos, egresos FROM vista_arqueo_turno WHERE id_turno=${turno.id_turno} AND id_restaurante=${req.sede.id_restaurante}`;
+      const saldoAnterior = Number(turno.efectivo_inicial ?? 0) + Number(libro.ingresos) - Number(libro.egresos);
 
       await tx.flujo_caja.create({
         data: {
@@ -242,6 +243,7 @@ export async function cerrarCuenta(req, res, next) {
       // Descuento de inventario por consumo (una sola vez por cobro).
       await registrarSalidasPorConsumo(tx, requerimientos, {
         id_usuario: idUsuario,
+        ...req.sede,
         origen_tipo: 'VENTA',
         origen_id: factura.id_factura,
       });
@@ -266,7 +268,7 @@ export async function cerrarCuenta(req, res, next) {
           fecha_emision: factura.Fecha_emision,
         },
       };
-    });
+    }, 'CAJA');
 
     if (resultado.status !== 201) {
       return res.status(resultado.status).json({ message: resultado.message });

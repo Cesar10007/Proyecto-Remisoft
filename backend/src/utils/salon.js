@@ -1,3 +1,4 @@
+import { filtroRestaurante, relacionDeSede } from './restaurante.js';
 // Reglas compartidas por el salón, el pase de cocina y caja.
 export const ESTADOS_EN_COCINA = ['ABIERTO', 'EN_PROCESO', 'EN_PREPARACION', 'LISTO'];
 export const ESTADOS_EN_MESA = [...ESTADOS_EN_COCINA, 'ENTREGADO', 'POR_COBRAR'];
@@ -16,22 +17,9 @@ export class ErrorSalon extends Error {
   }
 }
 
-// Las cuentas antiguas no siempre tenían restaurante. En ese caso manda la sede del mesero.
-function filtroSede(sede) {
-  const heredado = { id_restaurante: null, usuario: { is: { id_restaurante: sede } } };
-  return sede === null ? heredado : { OR: [{ id_restaurante: sede }, heredado] };
-}
-export function deSede(user) {
-  return user.rol === 'SUPERADMIN' ? {} : filtroSede(user.id_restaurante ?? null);
-}
-// Para comprobar ocupación importa la sede del pedido, no la del administrador que lo edita.
-export function mesasDeSede(sede) {
-  return sede != null
-    ? filtroSede(sede)
-    : { id_restaurante: null, OR: [{ id_mesero: null }, { usuario: { is: { id_restaurante: null } } }] };
-}
+export const deSede = filtroRestaurante;
 export function alcanceMesero(user) {
-  return user.rol === 'MESERO' ? { ...deSede(user), id_mesero: user.id_usuario } : {};
+  return { ...deSede(user), ...(user.rol === 'MESERO' ? { id_mesero: user.id_usuario } : {}) };
 }
 export function misPedidos(user) {
   return { ...deSede(user), id_mesero: user.id_usuario, Mesa_num: { not: null } };
@@ -95,6 +83,7 @@ export function leerLineas(items) {
 }
 
 export function formatCuenta(pedido) {
+  const mesero = relacionDeSede(pedido.usuario, pedido.id_restaurante);
   const detalles = itemsFacturables(pedido.Detalle_pedido);
   const totales = calcularTotales(detalles);
 
@@ -104,15 +93,15 @@ export function formatCuenta(pedido) {
     mesa: pedido.Mesa_num,
     tipo_pedido: pedido.Tipo_pedido ?? '',
     fecha_hora: pedido.Fecha_hora,
-    nombre_mesero: pedido.usuario
-      ? `${pedido.usuario.nombre ?? ''} ${pedido.usuario.apellido ?? ''}`.trim()
+    nombre_mesero: mesero
+      ? `${mesero.nombre ?? ''} ${mesero.apellido ?? ''}`.trim()
       : null,
     items: detalles.map((d) => ({
       id_detalle: d.id_detalle,
       estado: d.estado_item ?? 'PENDIENTE',
       nota: d.nota ?? '',
       id_producto: d.id_producto,
-      nombre: d.Producto?.Nombre ?? `Producto ${d.id_producto}`,
+      nombre: relacionDeSede(d.Producto, pedido.id_restaurante)?.Nombre ?? `Producto ${d.id_producto}`,
       cantidad: Number(d.Cantidad),
       precio_unitario: Number(d.Precio_unitario ?? 0),
       subtotal: round2(Number(d.Cantidad) * Number(d.Precio_unitario ?? 0)),

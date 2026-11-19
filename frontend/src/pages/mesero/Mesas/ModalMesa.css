@@ -1,12 +1,6 @@
 /* Funciona también en el dashboard Mesas original, sin contenedor de modales especial. */
 dialog.mesa-modal {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  box-sizing: border-box;
-  width: min(560px, calc(100% - 24px));
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
+  --dialog-width: 560px;
   padding: 0;
   border: 1px solid var(--borde);
   border-radius: 18px;

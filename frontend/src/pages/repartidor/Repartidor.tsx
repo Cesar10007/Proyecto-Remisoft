@@ -1,10 +1,13 @@
+import { useVistaURL } from '../../hook/useVistaURL'
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import Button from '../../components/common/Button'
 import './Repartidor.css'
+import { Headset, History, LayoutDashboard, Truck } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
 import { InputField } from '../../components/common/InputField'
@@ -12,10 +15,10 @@ import { SelectField } from '../../components/common/SelectField'
 import { TextAreaField } from '../../components/common/TextAreaField'
 
 const menuItems = [
-  { icon: 'dashboard', label: 'Resumen' },
-  { icon: 'local_shipping', label: 'Entregas' },
-  { icon: 'history', label: 'Historial' },
-  { icon: 'support_agent', label: 'Soporte' },
+  { icon: <LayoutDashboard />, label: 'Resumen' },
+  { icon: <Truck />, label: 'Entregas' },
+  { icon: <History />, label: 'Historial' },
+  { icon: <Headset />, label: 'Soporte' },
 ]
 
 interface Domicilio {
@@ -136,7 +139,7 @@ const formatoPesos = (valor: number) =>
 const etiquetaEstadoCola: Record<string, string> = { ASIGNADO: 'Asignado', EN_CAMINO: 'En camino' }
 
 function Repartidor() {
-  const [activeItem, setActiveItem] = useState('resumen')
+  const [activeItem, setActiveItem] = useVistaURL('vista', 'resumen', menuItems.map(i => i.label.toLowerCase()))
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const nombreUsuario = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Repartidor'
@@ -356,7 +359,7 @@ function Repartidor() {
         onNavigate={setActiveItem}
         onLogout={() => { logout(); navigate('/') }}
         footer={
-          <button type="button" onClick={() => { logout(); navigate('/') }} className="mb-2 w-full rounded-xl border-none bg-[var(--rd-primary)] px-4 py-3 font-bold text-white">
+          <button aria-description="Cierra tu sesión de repartidor y vuelve al inicio." type="button" onClick={() => { logout(); navigate('/') }} className="mb-2 w-full rounded-xl border-none bg-[var(--accion-primaria)] px-4 py-3 font-bold text-[var(--sobre-accion)]">
             <span className="material-symbols-outlined mr-2 align-middle text-[18px]">schedule</span>
             Finalizar turno
           </button>
@@ -376,6 +379,7 @@ function Repartidor() {
                     <div className="relative w-full md:w-80">
                       <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--rd-text-muted)]">search</span>
                       <input
+                        aria-label="Buscar una orden" aria-description="Este campo todavía no filtra las órdenes."
                         type="text"
                         placeholder="Buscar una orden específica..."
                         className="w-full rounded-full border border-[var(--rd-border)] bg-white py-2.5 pl-10 pr-4 outline-none"
@@ -440,19 +444,20 @@ function Repartidor() {
                       <div className="flex items-center gap-2.5">
                         {/* BOTÓN DE SOPORTE: mantener presionado para reportar problema */}
                         <button
+                          aria-description="Mantén presionado para reportar un problema con este domicilio."
                           onMouseDown={() => iniciarPresion('resumen-actual', `#${resumen?.actual?.id_pedido ?? ''}`)}
                           onMouseUp={cancelarPresion}
                           onMouseLeave={cancelarPresion}
                           onTouchStart={() => iniciarPresion('resumen-actual', `#${resumen?.actual?.id_pedido ?? ''}`)}
                           onTouchEnd={cancelarPresion}
-                          title="Mantén presionado para reportar un problema con este domicilio"
+                          aria-label="Reportar problema con el domicilio"
                           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-none text-[var(--rd-danger)] transition-transform ${
                             pressingKey === 'resumen-actual' ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/60'
                           }`}
                         >
                           <span className="material-symbols-outlined">report</span>
                         </button>
-                        <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-none bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-primary-dark)]">
+                        <button aria-label="Llamar al cliente" aria-description="Las llamadas no están disponibles en este panel." className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-none bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-primary-dark)]">
                           <span className="material-symbols-outlined">call</span>
                         </button>
                       </div>
@@ -469,17 +474,17 @@ function Repartidor() {
                     </div>
                     <div className="flex flex-col gap-3.5">
                       <div className="grid grid-cols-3 gap-3">
-                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
+                        <button aria-description="Este panel no registra cobros en efectivo." className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">payments</span>Efectivo
                         </button>
-                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--rd-primary)] bg-[var(--rd-primary-soft)] px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-primary-dark)]">
+                        <button aria-description="Este panel no registra cobros con tarjeta." className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--rd-primary)] bg-[var(--rd-primary-soft)] px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-primary-dark)]">
                           <span className="material-symbols-outlined">credit_card</span>Tarjeta
                         </button>
-                        <button className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
+                        <button aria-description="Este panel no registra pagos por aplicación." className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--t-brd-eee5df,#eee5df)] bg-white px-3 py-4 text-[0.78rem] font-bold text-[var(--rd-text)]">
                           <span className="material-symbols-outlined">qr_code_2</span>App Pay
                         </button>
                       </div>
-                      <button className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-4 text-[1rem] font-extrabold text-white">
+                      <button aria-description="Para marcar la entrega, edita el domicilio en Entregas." className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-4.5 py-4 text-[1rem] font-extrabold text-[var(--sobre-accion)]">
                         <span className="material-symbols-outlined">check_circle</span>
                         Confirmar entrega
                       </button>
@@ -518,12 +523,13 @@ function Repartidor() {
                             </div>
                             {/* BOTÓN DE SOPORTE en cada pedido de la cola */}
                             <button
+                              aria-description="Mantén presionado para reportar un problema con este pedido."
                               onMouseDown={() => iniciarPresion(`cola-${q.id}`, q.id)}
                               onMouseUp={cancelarPresion}
                               onMouseLeave={cancelarPresion}
                               onTouchStart={() => iniciarPresion(`cola-${q.id}`, q.id)}
                               onTouchEnd={cancelarPresion}
-                              title="Mantén presionado para reportar un problema"
+                              aria-label="Reportar problema con el pedido"
                               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-none text-[var(--rd-danger)] transition-transform ${
                                 pressingKey === `cola-${q.id}` ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-[var(--t-bg-fdecea,#fdecea)]/50'
                               }`}
@@ -569,7 +575,8 @@ function Repartidor() {
                 nombreUsuario={nombreUsuario}
                 acciones={
                   <button
-                    className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-5 py-2.5 text-[0.875rem] font-extrabold text-white"
+                    aria-description="Abre el formulario para registrar un domicilio."
+                    className="flex w-auto items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-5 py-2.5 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
                     onClick={abrirCrearDomicilio}
                   >
                     <span className="material-symbols-outlined text-[18px]">add</span>
@@ -629,30 +636,33 @@ function Repartidor() {
                       )}
                       <div className="mt-1 flex gap-2.5">
                         <button
+                          aria-description="Abre el domicilio para cambiar sus datos o su estado."
                           onClick={() => abrirEditarDomicilio(d)}
                           className="flex-1 rounded-xl border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-2.5 text-[0.82rem] font-bold text-[var(--rd-primary-dark)]"
                         >
                           Editar
                         </button>
                         <button
+                          aria-description="Solicita cancelar este domicilio."
                           onClick={() => cancelarDomicilio(d.id_domicilio)}
                           disabled={d.estado === 'CANCELADO'}
                           className={`flex-1 rounded-xl border-[1.5px] border-[var(--t-brd-f0ebe7,#f0ebe7)] px-3 py-2.5 text-[0.82rem] font-bold ${
                             d.estado === 'CANCELADO'
-                              ? 'cursor-not-allowed bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-text-muted)] opacity-50'
-                              : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--rd-danger)]'
+                              ? 'cursor-not-allowed bg-[var(--t-bg-f8f4f1,#f8f4f1)] text-[var(--rd-text-muted)] border-dashed'
+                              : 'cursor-pointer bg-[var(--rd-primary-soft)] text-[var(--texto-acento)]'
                           }`}
                         >
                           Cancelar
                         </button>
                         {/* BOTÓN DE SOPORTE: mantener presionado para reportar problema */}
                         <button
+                          aria-description="Mantén presionado para reportar un problema con este domicilio."
                           onMouseDown={() => iniciarPresion(`entrega-${d.id_domicilio}`, `#${d.id_pedido}`)}
                           onMouseUp={cancelarPresion}
                           onMouseLeave={cancelarPresion}
                           onTouchStart={() => iniciarPresion(`entrega-${d.id_domicilio}`, `#${d.id_pedido}`)}
                           onTouchEnd={cancelarPresion}
-                          title="Mantén presionado para reportar un problema con este domicilio"
+                          aria-label="Reportar problema con el domicilio"
                           className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[var(--t-brd-f0ebe7,#f0ebe7)] text-[var(--rd-danger)] transition-transform ${
                             pressingKey === `entrega-${d.id_domicilio}` ? 'scale-90 bg-[var(--t-bg-fdecea,#fdecea)]' : 'bg-white'
                           }`}
@@ -666,41 +676,32 @@ function Repartidor() {
               )}
             </div>
 
-            <Modal isOpen={modalDomicilio} onClose={() => setModalDomicilio(false)}>
-              <div className="px-6 pb-6">
-                <h3 className="mb-6 font-['Syne'] text-[1.2rem] font-extrabold">
-                  {modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <InputField label="ID Pedido *" type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido} onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))} disabled={modoEdicionDomicilio} />
-                  <InputField label="Dirección *" type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion} onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
-                  <SelectField label="Estado" value={domicilioActual.estado} onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
-                      <option value="ASIGNADO">ASIGNADO</option>
-                      <option value="EN_CAMINO">EN_CAMINO</option>
-                      <option value="ENTREGADO">ENTREGADO</option>
-                      <option value="CANCELADO">CANCELADO</option>
-                    </SelectField>
-                  <InputField label="ID Repartidor" type="number" placeholder="Opcional" value={domicilioActual.id_repartidor} onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
-                  {errorDomicilio && (
-                    <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
-                      {errorDomicilio}
-                    </p>
-                  )}
-                  <div className="mt-2 flex gap-2.5">
-                    <button
-                      onClick={() => setModalDomicilio(false)}
-                      className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={guardarDomicilio}
-                      disabled={guardandoDomicilio}
-                      className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
-                    >
-                      {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
-                    </button>
-                  </div>
+            <Modal
+              title={modoEdicionDomicilio ? 'Editar Domicilio' : 'Nuevo Domicilio'}
+              busy={guardandoDomicilio}
+              isOpen={modalDomicilio}
+              onClose={() => setModalDomicilio(false)}
+            >
+              <div className="flex flex-col gap-4">
+                <InputField aria-description="Indica el número del pedido que se va a entregar." label="ID Pedido *" type="number" placeholder="Ej: 12" value={domicilioActual.id_pedido} onChange={e => setDomicilioActual(prev => ({ ...prev, id_pedido: e.target.value }))} disabled={modoEdicionDomicilio} />
+                <InputField aria-description="Escribe la dirección donde se entregará el pedido." label="Dirección *" type="text" placeholder="Ej: Calle 45 # 12-34, Bogotá" value={domicilioActual.direccion} onChange={e => setDomicilioActual(prev => ({ ...prev, direccion: e.target.value }))} />
+                <SelectField aria-description="Selecciona la etapa en que se encuentra el domicilio." label="Estado" value={domicilioActual.estado} onChange={e => setDomicilioActual(prev => ({ ...prev, estado: e.target.value }))}>
+                    <option value="ASIGNADO">ASIGNADO</option>
+                    <option value="EN_CAMINO">EN_CAMINO</option>
+                    <option value="ENTREGADO">ENTREGADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </SelectField>
+                <InputField aria-description="Indica el número del repartidor asignado a la entrega." label="ID Repartidor" type="number" placeholder="Opcional" value={domicilioActual.id_repartidor} onChange={e => setDomicilioActual(prev => ({ ...prev, id_repartidor: e.target.value }))} />
+                {errorDomicilio && (
+                  <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                    {errorDomicilio}
+                  </p>
+                )}
+                <div className="mt-2 flex gap-2.5">
+                  <Button aria-description="Cierra el formulario sin guardar el domicilio." className="flex-1" variant="outline" disabled={guardandoDomicilio} onClick={() => setModalDomicilio(false)}>Cancelar</Button>
+                  <Button aria-description={modoEdicionDomicilio ? 'Guarda los cambios de este domicilio.' : 'Registra el domicilio con los datos indicados.'} className="flex-[2]" onClick={guardarDomicilio} disabled={guardandoDomicilio}>
+                    {guardandoDomicilio ? 'Guardando...' : modoEdicionDomicilio ? 'Actualizar' : 'Crear Domicilio'}
+                  </Button>
                 </div>
               </div>
             </Modal>
@@ -862,6 +863,7 @@ function Repartidor() {
                         </div>
 
                         <button
+                          aria-description="Consulta lo ocurrido y el estado del caso."
                           onClick={() => setModalSuceso({ open: true, caso: c })}
                           className="rounded-xl border-[1.5px] border-[var(--rd-border)] bg-white px-3.5 py-2 text-[0.8rem] font-bold text-[var(--rd-primary-dark)]"
                         >
@@ -875,10 +877,9 @@ function Repartidor() {
             </div>
 
             {/* MODAL: VER SUCESO */}
-            <Modal isOpen={modalSuceso.open} onClose={() => setModalSuceso({ open: false, caso: null })}>
+            <Modal title={modalSuceso.caso?.tipo ?? 'Detalle del suceso'} isOpen={modalSuceso.open} onClose={() => setModalSuceso({ open: false, caso: null })}>
               {modalSuceso.caso && (
-                <div className="px-6 pb-6">
-                  <h3 className="mb-1 font-['Syne'] text-[1.2rem] font-extrabold">{modalSuceso.caso.tipo}</h3>
+                <>
                   <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">
                     Pedido {modalSuceso.caso.pedido}
                     {modalSuceso.caso.cliente ? ` · ${modalSuceso.caso.cliente}` : ''} · {modalSuceso.caso.fecha} {modalSuceso.caso.hora}
@@ -898,6 +899,7 @@ function Repartidor() {
 
                   <div className="mt-5 flex gap-2.5">
                     <button
+                      aria-description="Cierra el detalle sin modificar el caso."
                       onClick={() => setModalSuceso({ open: false, caso: null })}
                       className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
                     >
@@ -905,59 +907,60 @@ function Repartidor() {
                     </button>
                     {modalSuceso.caso.estado === 'Abierto' && (
                       <button
+                        aria-description="Cambia el estado del caso a resuelto."
                         onClick={() => resolverCaso(modalSuceso.caso!.id)}
-                        className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-success)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
+                        className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-exito)] px-4.5 py-3 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
                       >
                         Marcar como resuelto
                       </button>
                     )}
                   </div>
-                </div>
+                </>
               )}
             </Modal>
           </>
         )}
 
         {/* MODAL: REPORTAR PROBLEMA (activado con mantener presionado) */}
-        <Modal isOpen={modalReporte.open} onClose={() => setModalReporte({ open: false, pedido: '' })}>
-          <div className="px-6 pb-6">
-            <h3 className="mb-1 font-['Syne'] text-[1.2rem] font-extrabold">Reportar problema</h3>
-            <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">Pedido {modalReporte.pedido}</p>
+        <Modal title="Reportar problema" isOpen={modalReporte.open} onClose={() => setModalReporte({ open: false, pedido: '' })}>
+          <p className="mb-5 text-[0.82rem] text-[var(--rd-text-muted)]">Pedido {modalReporte.pedido}</p>
 
-            <div className="flex flex-col gap-4">
-              <SelectField
-                label="Categoría *"
-                value={nuevoReporte.categoria}
-                onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
+          <div className="flex flex-col gap-4">
+            <SelectField
+              aria-description="Elige el tipo de problema que ocurrió en la entrega."
+              label="Categoría *"
+              value={nuevoReporte.categoria}
+              onChange={e => setNuevoReporte(prev => ({ ...prev, categoria: e.target.value }))}
+            >
+              <option value="">Selecciona una opción</option>
+              {categoriasReporte.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </SelectField>
+
+            <TextAreaField aria-description="Explica brevemente lo ocurrido durante la entrega." label="Describe lo ocurrido *" className="min-h-[100px]" placeholder="Ej: El cliente no contesta el teléfono ni la puerta." value={nuevoReporte.descripcion} onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))} />
+
+            {errorReporte && (
+              <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
+                {errorReporte}
+              </p>
+            )}
+
+            <div className="mt-2 flex gap-2.5">
+              <button
+                aria-description="Cierra el reporte sin registrar el problema."
+                onClick={() => setModalReporte({ open: false, pedido: '' })}
+                className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
               >
-                <option value="">Selecciona una opción</option>
-                {categoriasReporte.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </SelectField>
-
-              <TextAreaField label="Describe lo ocurrido *" className="min-h-[100px]" placeholder="Ej: El cliente no contesta el teléfono ni la puerta." value={nuevoReporte.descripcion} onChange={e => setNuevoReporte(prev => ({ ...prev, descripcion: e.target.value }))} />
-
-              {errorReporte && (
-                <p className="rounded-[10px] bg-[var(--t-bg-fdecea,#fdecea)] px-3.5 py-2.5 text-[0.82rem] text-[var(--rd-danger)]">
-                  {errorReporte}
-                </p>
-              )}
-
-              <div className="mt-2 flex gap-2.5">
-                <button
-                  onClick={() => setModalReporte({ open: false, pedido: '' })}
-                  className="flex-1 rounded-[14px] border-[1.5px] border-[var(--rd-border)] bg-white px-3 py-3 text-[0.875rem] font-bold text-[var(--rd-text-muted)]"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={guardarReporte}
-                  className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--rd-primary)] px-4.5 py-3 text-[0.875rem] font-extrabold text-white"
-                >
-                  Enviar reporte
-                </button>
-              </div>
+                Cancelar
+              </button>
+              <button
+                aria-description="Agrega el problema a la lista de casos de soporte."
+                onClick={guardarReporte}
+                className="flex flex-[2] items-center justify-center gap-2.5 rounded-2xl border-none bg-[var(--accion-primaria)] px-4.5 py-3 text-[0.875rem] font-extrabold text-[var(--sobre-accion)]"
+              >
+                Enviar reporte
+              </button>
             </div>
           </div>
         </Modal>
