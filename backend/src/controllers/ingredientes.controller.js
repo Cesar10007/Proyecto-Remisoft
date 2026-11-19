@@ -1,8 +1,9 @@
 import prisma from '../config/prisma.js';
-import { conciliarConteo, crearAjusteManual } from '../services/inventario.service.js';
+import { conciliarConteo, crearAjusteManual, leerIngredientesConBloqueo } from '../services/inventario.service.js';
 import { cantidadInventarioValida } from '../utils/validation.js';
 import { auditarAjusteInventario } from '../utils/auditoria.js';
-import { entero } from '../utils/salon.js';
+import { referenciasDeUnidad, unidadEnUso, unidadParaAlta, unidadParaEdicion, verificarUnidadEsperada } from '../utils/unidadesInventario.js';
+import { entero, ErrorSalon } from '../utils/salon.js';
 
 export async function index(req, res, next) {
   try {
@@ -23,9 +24,7 @@ export async function crear(req, res, next) {
     if (descripcion && (typeof descripcion !== 'string' || descripcion.length > 500)) {
       return res.status(422).json({ message: 'El campo descripcion no puede superar 500 caracteres' });
     }
-    if (unidad_medida && (typeof unidad_medida !== 'string' || unidad_medida.length > 20)) {
-      return res.status(422).json({ message: 'El campo unidad_medida no puede superar 20 caracteres' });
-    }
+    const unidad = unidadParaAlta(unidad_medida);
     if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && !Number.isFinite(Number(costo_unitario_ref))) {
       return res.status(422).json({ message: 'El campo costo_unitario_ref debe ser numérico' });
     }
@@ -42,7 +41,7 @@ export async function crear(req, res, next) {
     const { id_ingrediente, movimiento } = await prisma.$transaction(async tx => {
       const { id_ingrediente } = await tx.ingrediente.create({
         data: {
-          ...req.sede, nombre, descripcion: descripcion ?? null, unidad_medida: unidad_medida ?? null,
+          ...req.sede, nombre, descripcion: descripcion ?? null, unidad_medida: unidad,
           costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
           stock_minimo: Number(stock_minimo ?? 0),
         },
@@ -71,9 +70,6 @@ export async function actualizar(req, res, next) {
     if (descripcion && (typeof descripcion !== 'string' || descripcion.length > 500)) {
       return res.status(422).json({ message: 'El campo descripcion no puede superar 500 caracteres' });
     }
-    if (unidad_medida && (typeof unidad_medida !== 'string' || unidad_medida.length > 20)) {
-      return res.status(422).json({ message: 'El campo unidad_medida no puede superar 20 caracteres' });
-    }
     if (costo_unitario_ref !== undefined && costo_unitario_ref !== null && !Number.isFinite(Number(costo_unitario_ref))) {
       return res.status(422).json({ message: 'El campo costo_unitario_ref debe ser numérico' });
     }
@@ -92,12 +88,20 @@ export async function actualizar(req, res, next) {
     }
 
     const movimiento = await prisma.$transaction(async tx => {
-      // Este UPDATE toma el mismo bloqueo de fila que pedidos y ajustes manuales.
-      // Ante un conteo obsoleto también se revierte la edición de los demás campos.
+      // Serializar la elección de unidad con la primera receta, movimiento o conteo.
+      const where = { id_ingrediente, ...req.sede };
+      const [previo] = await leerIngredientesConBloqueo(tx, [id_ingrediente], req.sede.id_restaurante);
+      if (!previo) throw new ErrorSalon(404, 'Ingrediente no encontrado');
+      verificarUnidadEsperada(previo.unidad_medida, req.body.unidad_esperada);
+      const unidad = unidadParaEdicion(previo.unidad_medida, unidad_medida);
+      if (unidad !== previo.unidad_medida) {
+        const { _count } = await tx.ingrediente.findUniqueOrThrow({ where, select: { _count: referenciasDeUnidad } });
+        if (unidadEnUso(_count)) throw new ErrorSalon(409, 'La unidad ya está en uso. Para trabajar con otra medida, crea un ingrediente nuevo.');
+      }
       await tx.ingrediente.update({
-        where: { id_ingrediente, ...req.sede },
+        where,
         data: {
-          nombre, descripcion: descripcion ?? null, unidad_medida: unidad_medida ?? null,
+          nombre, descripcion: descripcion ?? null, unidad_medida: unidad,
           costo_unitario_ref: costo_unitario_ref == null || costo_unitario_ref === '' ? null : Number(costo_unitario_ref),
           stock_minimo: Number(stock_minimo ?? 0),
         },

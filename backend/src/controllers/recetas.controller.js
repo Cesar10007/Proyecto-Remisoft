@@ -1,5 +1,7 @@
 import prisma from '../config/prisma.js';
 import { cantidadInventarioValida } from '../utils/validation.js';
+import { leerIngredientesConBloqueo } from '../services/inventario.service.js';
+import { verificarUnidadEsperada } from '../utils/unidadesInventario.js';
 import { entero, ErrorSalon } from '../utils/salon.js';
 
 // El editor trabaja sobre la misma Receta que usa salón para descontar ingredientes.
@@ -55,11 +57,10 @@ export async function guardarReceta(req, res, next) {
       const [producto] = await tx.$queryRaw`SELECT id_producto FROM Producto WHERE id_producto = ${id_producto} AND id_restaurante = ${id_restaurante} FOR UPDATE`;
       if (!producto) throw new ErrorSalon(404, 'Producto no encontrado.');
       await verificarEnlaces(tx, id_producto, id_restaurante);
-      const propios = await tx.ingrediente.findMany({
-        where: { id_restaurante, id_ingrediente: { in: ids } }, select: { id_ingrediente: true, unidad_medida: true },
-      });
+      const propios = await leerIngredientesConBloqueo(tx, ids, id_restaurante);
       if (propios.length !== ids.length) throw new ErrorSalon(422, 'Selecciona solo ingredientes de este establecimiento.');
       const unidades = new Map(propios.map(i => [i.id_ingrediente, i.unidad_medida]));
+      for (const linea of lineas) verificarUnidadEsperada(unidades.get(linea.id_ingrediente), linea.unidad_esperada);
       await tx.receta.deleteMany({ where: { id_producto } });
       if (lineas.length) await tx.receta.createMany({ data: lineas.map(l => ({
         id_producto, id_ingrediente: l.id_ingrediente, Cantidad_necesaria: Number(l.cantidad), Unidad: unidades.get(l.id_ingrediente),

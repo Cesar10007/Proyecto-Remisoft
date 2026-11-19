@@ -1,3 +1,4 @@
+import { unidadDeCantidad } from '../../utils/unidadesInventario'
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import api from '../../api/axios'
@@ -96,7 +97,7 @@ export default function NotificacionesStock() {
                         : 'whitespace-nowrap text-[var(--texto-muted)]'
                     }
                   >
-                    {a.stock_actual} / {a.stock_minimo} {a.unidad_medida ?? ''} · {a.alerta}
+                    {a.stock_actual} / {a.stock_minimo} {unidadDeCantidad(a.unidad_medida, a.stock_minimo)} · {a.alerta}
                   </span>
                 </li>
               ))}

@@ -1,4 +1,5 @@
 import { cantidadInventarioValida } from '../utils/validation.js';
+import { referenciasDeUnidad, unidadEnUso, verificarUnidadEsperada } from '../utils/unidadesInventario.js';
 import prisma from '../config/prisma.js';
 import { bloquearIngredientes, calcularStockActual, crearAjusteManual, verificarStockIngredientes } from '../services/inventario.service.js';
 import { auditarAjusteInventario } from '../utils/auditoria.js';
@@ -22,6 +23,7 @@ function serializarIngrediente(ingrediente) {
     stock_actual: stockActual,
     stock_bajo: stockActual <= Number(ingrediente.stock_minimo ?? 0),
     movimientos: ingrediente.inventario_mov.length,
+    unidad_bloqueada: unidadEnUso(ingrediente._count),
   };
 }
 
@@ -46,6 +48,7 @@ export async function index(req, res, next) {
     const ingredientes = await prisma.ingrediente.findMany({
       where: { ...req.sede, ...(idIngrediente ? { id_ingrediente: idIngrediente } : {}) },
       include: {
+        _count: referenciasDeUnidad,
         inventario_mov: {
           where: req.sede,
           select: {
@@ -97,6 +100,7 @@ export async function show(req, res, next) {
         id_ingrediente: idIngrediente,
       },
       include: {
+        _count: referenciasDeUnidad,
         inventario_mov: {
           where: req.sede,
           orderBy: [{ fecha_hora: 'desc' }, { id_movimiento: 'desc' }],
@@ -225,7 +229,8 @@ export async function ajuste(req, res, next) {
     }
 
     const movimiento = await prisma.$transaction(async (tx) => {
-      await bloquearIngredientes(tx, [idIngrediente], req.sede.id_restaurante);
+      const [actual] = await bloquearIngredientes(tx, [idIngrediente], req.sede.id_restaurante);
+      verificarUnidadEsperada(actual.unidad_medida, req.body.unidad_esperada);
       if (tipo === 'SALIDA') {
         await verificarStockIngredientes(tx, [
           { id_ingrediente: idIngrediente, requerido: cantidad },

@@ -1,3 +1,4 @@
+import { cantidadConUnidad } from '../../../utils/unidadesInventario'
 import { useConsulta } from '../../../hook/useConsulta'
 import { formatoCOP } from '../useDatosGerente'
 
@@ -68,7 +69,7 @@ function DashboardOperativo() {
                 <div>
                   <p className="text-[0.88rem] font-semibold text-[var(--texto)]">{a.nombre}</p>
                   <p className="text-[0.75rem] text-[var(--texto-muted)]">
-                    Stock {a.stock_actual} {a.unidad_medida ?? ''} · mínimo {a.stock_minimo} {a.unidad_medida ?? ''}
+                    Stock {cantidadConUnidad(a.stock_actual, a.unidad_medida)} · mínimo {cantidadConUnidad(a.stock_minimo, a.unidad_medida)}
                   </p>
                 </div>
                 <span className={`rounded-full px-2.5 py-0.5 text-[0.7rem] font-semibold ${

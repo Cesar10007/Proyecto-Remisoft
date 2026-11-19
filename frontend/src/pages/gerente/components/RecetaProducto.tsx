@@ -5,6 +5,7 @@ import { InputField } from '../../../components/common/InputField'
 import { useConsulta } from '../../../hook/useConsulta'
 import { mensajeError } from '../../../utils/mensajeError'
 import type { Producto } from '../types'
+import { unidadDeCantidad } from '../../../utils/unidadesInventario'
 import Modal from '../../../components/common/Modal'
 
 interface Renglon { id_ingrediente: number; nombre: string; unidad_medida: string | null; cantidad: number }
@@ -18,7 +19,7 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
     e.preventDefault()
     if (!data || guardando) return
     const form = new FormData(e.currentTarget)
-    const ingredientes = data.data.map(({ id_ingrediente }) => ({ id_ingrediente, cantidad: Number(form.get(String(id_ingrediente))) })).filter(l => l.cantidad > 0)
+    const ingredientes = data.data.map(({ id_ingrediente, unidad_medida }) => ({ id_ingrediente, unidad_esperada: unidad_medida, cantidad: Number(form.get(String(id_ingrediente))) })).filter(l => l.cantidad > 0)
     setGuardando(true); setFallo('')
     try { await api.put(ruta, { ingredientes }); cerrar() }
     catch (e) { setFallo(mensajeError(e)) }
@@ -30,7 +31,7 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
         <p>Primero crea un ingrediente en Inventario.</p> :
         <form onSubmit={guardar} className="grid gap-4">
           <p className="text-sm text-[var(--texto-muted)]">Cantidad que se descuenta al pedir una unidad del producto. Deja en blanco los ingredientes que no se usan.</p>
-          {data.data.map(i => <InputField key={i.id_ingrediente} label={`${i.nombre} (${i.unidad_medida || 'unidades'})`} name={String(i.id_ingrediente)}
+          {data.data.map(i => <InputField key={i.id_ingrediente} label={`${i.nombre} (${unidadDeCantidad(i.unidad_medida) || 'sin unidad'})`} name={String(i.id_ingrediente)}
             type="number" min="0" max="9999999.999" step="0.001" placeholder="0" defaultValue={i.cantidad || ''} />)}
           {fallo && <p role="alert" className="text-[var(--rojo-dark)]">{fallo}</p>}
           <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar receta'}</Button>

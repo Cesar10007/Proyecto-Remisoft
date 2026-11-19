@@ -18,7 +18,7 @@ test('alta por superadmin: cada establecimiento nace vacío y conserva su propia
     for (const url of ['/productos/vista', '/productos/sp']) {
       assert.deepEqual((await api(a.token, url)).map(p => [p.Nombre, p.Tiempo_preparacion]), [['Arepa', '00:10:00'], ['Café', '00:10:00']]);
     }
-    await postA('/ingredientes', { nombre: 'Maíz', stock_minimo: 3 });
+    await postA('/ingredientes', { nombre: 'Maíz', unidad_medida: 'kg', stock_minimo: 3 });
     const [ing] = await api(a.token, '/ingredientes');
     const ajuste = { id_ingrediente: ing.id_ingrediente, tipo: 'ENTRADA', cantidad: 2, motivo: 'Conteo inicial' };
     assert.equal((await postA('/inventario/ajuste', ajuste)).data.id_restaurante, a.id_restaurante);

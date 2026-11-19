@@ -1,3 +1,4 @@
+import { cantidadConUnidad } from '../../utils/unidadesInventario'
 import { useConsulta } from '../../hook/useConsulta'
 import type { Caja, IngredienteConStock, MesaGerente, Personal, Producto, Proveedor } from './types'
 
@@ -144,7 +145,7 @@ export function useDatosGerente(seccion: string, fuente: 'sp' | 'vista') {
     estadoInventario: (inventario.data?.data ?? []).map(i => {
       const minimo = Number(i.stock_minimo), actual = Number(i.stock_actual)
       return { id: i.id_ingrediente, nombre: i.nombre, porcentaje: minimo > 0 ? Math.min(100, Math.max(0, Math.round(actual / minimo * 100))) : 0,
-        color: i.stock_bajo ? 'rojo' : 'verde', etiqueta: `${actual} ${i.unidad_medida ?? ''}`.trim() }
+        color: i.stock_bajo ? 'rojo' : 'verde', etiqueta: cantidadConUnidad(actual, i.unidad_medida) }
     }),
   }
 }

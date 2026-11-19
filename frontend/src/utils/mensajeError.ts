@@ -1,3 +1,5 @@
+import { cantidadConUnidad } from './unidadesInventario'
+
 export function mensajeError(err: unknown) {
   const data = (
     err as {
@@ -21,7 +23,7 @@ export function mensajeError(err: unknown) {
       data.detalles
         .map(
           (d) =>
-            `${d.nombre || `Ingrediente ${d.id_ingrediente}`}: se necesitan ${d.requerido} ${d.unidad_medida ?? ''} y hay ${d.disponible}.`,
+            `${d.nombre || `Ingrediente ${d.id_ingrediente}`}: se necesitan ${cantidadConUnidad(d.requerido, d.unidad_medida)} y hay ${cantidadConUnidad(d.disponible, d.unidad_medida)}.`,
         )
         .join(' ')
     )

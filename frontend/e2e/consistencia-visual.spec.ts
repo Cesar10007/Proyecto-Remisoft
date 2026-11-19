@@ -9,7 +9,7 @@ const cuenta = {
 }
 const lecturas: Record<string, unknown> = {
   usuarios: [{ id_usuario: 8, id_rol: 2, activo: 1, nombre: 'Lina', email: 'lina@example.test' }],
-  inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'kg', costo_unitario_ref: '18000.25', stock_minimo: 20, stock_actual: 19.6 }] },
+  inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'KG', unidad_bloqueada: true, costo_unitario_ref: '18000.25', stock_minimo: 20, stock_actual: 19.6 }] },
   proveedores: [{ id_proveedor: 1, nombre: 'Molino', nombre_contacto: 'Ana', telefono: '', email: '', direccion: '', nit: '', tipo_proveedor: '', estado: 'ACTIVO' }],
   cajas: [], 'productos/vista': [], mesas: { data: [] }, facturas: { data: [] },
   solicitudes: { data: [] }, 'inventario/alertas/stock-bajo': { data: [] },
@@ -264,7 +264,7 @@ test('editar un ingrediente en móvil con letra grande no recorta la cabecera y 
   await editar.click()
   await page.addStyleTag({ content: 'html { font-size: 125%; }' })
   const d = page.getByRole('dialog', { name: 'Editar Ingrediente' })
-  const stock = d.getByLabel('Stock actual', { exact: true })
+  const stock = d.getByLabel('Stock actual (kg)', { exact: true })
   await expect(stock).toHaveValue('19.6')
   await expect(d.getByLabel('Stock mínimo')).toHaveValue('20')
   await expect(d.getByLabel('Motivo del ajuste')).toHaveCount(0)
@@ -312,18 +312,67 @@ test('la g de Nuevo Ingrediente y Editar Ingrediente conserva el trazo inferior'
   }
 })
 
+test('el alta requiere elegir una unidad y muestra en qué se costea y cuenta el ingrediente', async ({ page }) => {
+  await abrirPanel(page, 'GERENTE'); await ir(page, 'Inventario'); await boton(page, '+ Nuevo Ingrediente').click()
+  const d = page.getByRole('dialog', { name: 'Nuevo Ingrediente' })
+  const selector = d.getByRole('combobox', { name: 'Unidad de medida' })
+  await expect(selector).toHaveValue('')
+  await d.getByLabel('Nombre', { exact: true }).fill('Huevos')
+  await d.getByLabel('Stock actual', { exact: true }).fill('30')
+  await d.getByRole('button', { name: 'Crear' }).click()
+  await expect(selector).toBeFocused()
+  expect(await selector.evaluate((el: HTMLSelectElement) => el.validity.valueMissing)).toBe(true)
+  const opciones = {
+    Peso: ['Kilogramo (kg)', 'Gramo (g)', 'Libra (lb)', 'Onza (oz)'], Volumen: ['Litro (L)', 'Mililitro (ml)'],
+    Conteo: ['Unidad (ud)', 'Pieza (pza)'], Empaques: ['Caja', 'Bulto', 'Atado', 'Manojo', 'Bandeja'],
+  }
+  for (const [grupo, nombres] of Object.entries(opciones)) {
+    await expect(selector.locator(`optgroup[label="${grupo}"] option`)).toHaveText(nombres)
+  }
+  for (const [codigo, plural] of [['L', 'L'], ['manojo', 'manojos'], ['pza', 'pza']]) {
+    await selector.selectOption(codigo)
+    await expect(d.getByLabel(`Stock actual (${plural})`)).toHaveValue('30')
+    await expect(d.getByLabel(`Stock mínimo (${plural})`)).toBeEditable()
+    await expect(d.getByLabel(`Costo de referencia (COP por ${codigo})`)).toBeEditable()
+  }
+})
+
+test('editar conserva el texto anterior y una unidad no definida sin sustituirlos por piezas', async ({ page }) => {
+  await page.route('**/api/inventario', route => route.fulfill({ json: { data: [
+    { id_ingrediente: 2, nombre: 'Salsa', unidad_medida: 'Botella', unidad_bloqueada: true, stock_actual: 2 },
+    { id_ingrediente: 3, nombre: 'Hierbas', unidad_medida: null, unidad_bloqueada: false, stock_actual: 0 },
+  ] } }))
+  await abrirPanel(page, 'GERENTE'); await ir(page, 'Inventario')
+  for (const [id, nombre, original] of [[2, 'Salsa', 'Botella'], [3, 'Hierbas', null]] as const) {
+    await page.getByRole('row').filter({ hasText: nombre }).getByRole('button', { name: 'Editar' }).click()
+    const d = page.getByRole('dialog', { name: 'Editar Ingrediente' })
+    const selector = d.getByLabel('Unidad de medida')
+    await expect(selector).toHaveValue(original ?? '')
+    await expect(selector.locator('option:checked')).toHaveText(original ? 'Botella (unidad anterior)' : 'Sin unidad (registro anterior)')
+    if (original) await expect(selector).toBeDisabled()
+    else await expect(selector).toBeEnabled()
+    await d.getByLabel('Descripción').fill('Otra descripción')
+    await page.route(`**/api/ingredientes/${id}`, route => route.fulfill({ json: { message: 'Actualizado' } }))
+    const peticion = page.waitForRequest(req => req.method() === 'PUT' && req.url().endsWith(`/api/ingredientes/${id}`))
+    await d.getByRole('button', { name: 'Actualizar' }).click()
+    expect((await peticion).postDataJSON()).toMatchObject({ unidad_medida: original, unidad_esperada: original })
+    await expect(d).toHaveCount(0)
+  }
+})
+
 test('un alta con stock en una API anterior avisa sin invitar a crear la ficha otra vez', async ({ page }) => {
   await abrirPanel(page, 'GERENTE')
   await ir(page, 'Inventario')
   await boton(page, '+ Nuevo Ingrediente').click()
   const nuevo = page.getByRole('dialog', { name: 'Nuevo Ingrediente' })
   await nuevo.getByLabel('Nombre', { exact: true }).fill('Fríjol')
+  await nuevo.getByLabel('Unidad de medida').selectOption('kg')
   await nuevo.getByLabel('Stock mínimo').fill('3')
   await nuevo.getByLabel('Stock actual').fill('5.125')
   await page.route('**/api/ingredientes', route => route.fulfill({ status: 201, json: { message: 'Ingrediente creado' } }))
   const peticion = page.waitForRequest(req => req.method() === 'POST' && req.url().endsWith('/api/ingredientes'))
   await nuevo.getByRole('button', { name: 'Crear' }).click()
-  expect((await peticion).postDataJSON()).toMatchObject({ nombre: 'Fríjol', stock_actual: 5.125, stock_minimo: '3' })
+  expect((await peticion).postDataJSON()).toMatchObject({ nombre: 'Fríjol', unidad_medida: 'kg', stock_actual: 5.125, stock_minimo: '3' })
   await expect(nuevo).toHaveCount(0)
   await expect(page.getByRole('alert')).toContainText('no confirmó el stock inicial')
 })
@@ -338,7 +387,9 @@ test('editar solo la ficha no envía un conteo y una API antigua no se confunde 
   await d.getByLabel('Descripción').fill('De la finca')
   const peticion = page.waitForRequest(req => req.method() === 'PUT' && req.url().endsWith('/api/ingredientes/1'))
   await d.getByRole('button', { name: 'Actualizar' }).click()
-  expect((await peticion).postDataJSON()).not.toHaveProperty('stock_actual')
+  const enviado = (await peticion).postDataJSON()
+  expect(enviado).toMatchObject({ unidad_medida: 'KG', unidad_esperada: 'KG' })
+  expect(enviado).not.toHaveProperty('stock_actual')
   await expect(d).toHaveCount(0)
   await editar.click()
   await d.getByLabel('Stock actual').fill('22.125')

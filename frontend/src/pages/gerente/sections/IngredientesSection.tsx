@@ -3,6 +3,7 @@ import Button from '../../../components/common/Button'
 import EditorIngrediente from '../components/EditorIngrediente'
 import MovimientosIngrediente from '../components/MovimientosIngrediente'
 import type { Ingrediente, IngredienteConStock } from '../types'
+import { cantidadConUnidad, codigoUnidad, unidadConocida } from '../../../utils/unidadesInventario'
 import { DataTable, Column } from '../../../components/common/DataTable'
 
 interface IngredientesSectionProps {
@@ -26,17 +27,17 @@ function IngredientesSection({ ingredientes, actualizar, onDelete }: Ingrediente
     },
     {
       header: 'Unidad',
-      accessor: 'unidad_medida',
+      render: (i) => unidadConocida(i.unidad_medida)?.nombre || codigoUnidad(i.unidad_medida) || 'Sin unidad',
     },
     {
-      header: 'Costo ref.',
+      header: 'Costo por unidad',
       render: (i) => i.costo_unitario_ref == null ? '—' : `$${Number(i.costo_unitario_ref).toLocaleString('es-CO')}`,
     },
     {
       header: 'Stock mínimo',
-      accessor: 'stock_minimo',
+      render: (i) => i.stock_minimo == null ? '—' : cantidadConUnidad(i.stock_minimo, i.unidad_medida),
     },
-    { header: 'Stock actual', accessor: 'stock_actual' },
+    { header: 'Stock actual', render: (i) => cantidadConUnidad(i.stock_actual, i.unidad_medida) },
     {
       header: 'Acciones',
       render: (i) => (

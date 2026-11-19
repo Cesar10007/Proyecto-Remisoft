@@ -14,7 +14,7 @@ La clave del negocio es **`restaurante.id_restaurante`**. En **Superadmin → Ge
 | --- | --- | --- |
 | Gerente | **Menú → Administrar mesas** (o **Mesas**) | Crea una mesa con número y capacidad. Para retirarla, pulsa **Eliminar** y confirma. Una mesa con personas sentadas, comanda abierta o cuenta en caja no se puede eliminar. Al retirar una mesa libre se conservan los pedidos y las facturas anteriores. |
 | Gerente | **Personal** | Crea un usuario **MESERO** y otro **CAJERO**, cada uno con sus credenciales. Ambos quedan en este negocio; no hace falta elegir sede ni crear nuevos tipos de rol. |
-| Gerente | **Inventario → Nuevo Ingrediente → Stock actual** | Escribe las existencias iniciales o deja **0**. Al crear la ficha, un valor positivo queda como una sola entrada **Stock inicial** en **Movimientos**. Allí puedes registrar entradas y salidas posteriores con su motivo. Un ajuste de existencias no registra por sí solo una compra ni un pago. |
+| Gerente | **Inventario → Nuevo Ingrediente → Stock actual** | Selecciona la **unidad de medida** y escribe las existencias iniciales en esa unidad, o deja **0**. Al crear la ficha, un valor positivo queda como una sola entrada **Stock inicial** en **Movimientos**. Allí puedes registrar entradas y salidas posteriores con su motivo. Un ajuste de existencias no registra por sí solo una compra ni un pago. |
 | Gerente | **Inventario → Editar → Stock actual** | Introduce el **total contado**, no la cantidad a sumar o restar. Admite cero y hasta tres decimales. Si cambias el saldo, indica el **Motivo del ajuste** y pulsa **Actualizar**. Por ejemplo, pasar de 19,6 a 20 kg deja una entrada de 0,4 kg en **Movimientos**. **Stock mínimo** sigue siendo el umbral de alerta. |
 | Gerente | **Menú → Nuevo Producto** y luego **Receta** en su fila | Indica cuánto se usa de cada ingrediente **por unidad** de producto, en la unidad del inventario. Ejemplo: 0,25 kg de masa por arepa. Un producto sin receta no genera consumo de ingredientes. |
 | Gerente | **Flujo de Caja → Nueva Caja**, luego **Turnos → Abrir turno** | Selecciona la caja activa y el cajero de la sede. Registra el efectivo inicial; no es una venta. |
@@ -23,6 +23,23 @@ La clave del negocio es **`restaurante.id_restaurante`**. En **Superadmin → Ge
 | Gerente | **Finanzas**, **Inventario → Movimientos** y **Turnos → Cerrar turno** | Revisa el ingreso, las salidas por comanda y la diferencia contra el efectivo contado. Tarjeta y transferencia son ingresos, pero **no se suman al efectivo esperado**. El cierre no recalcula turnos históricos ya cerrados. |
 
 Para integraciones: `POST /api/mesas` recibe `{ "numero": 1, "capacidad": 4 }`; `DELETE /api/mesas/1` opera por número **dentro de la sede de la sesión** (409 si está ocupada, 404 si no existe). `GET /api/productos/:id/receta` lista los ingredientes elegibles de la sede con su cantidad actual. `PUT` sobre esa misma ruta reemplaza la receta completa con `{ "ingredientes": [{ "id_ingrediente": 7, "cantidad": 0.25 }] }`; una lista vacía la quita. La API no permite asociar ingredientes de otra sede.
+
+### Unidad de medida del ingrediente
+
+En **Inventario → Nuevo Ingrediente**, elige la unidad en la que contarás las existencias y medirás el consumo en las recetas. El costo de referencia es en **COP por una de esas unidades**; el mínimo, el stock actual y las entradas y salidas usan esa misma medida.
+
+| Grupo | Opciones del desplegable |
+| --- | --- |
+| Peso | Kilogramo (kg), gramo (g), libra (lb), onza (oz) |
+| Volumen | Litro (L), mililitro (ml) |
+| Conteo | Unidad (ud), pieza (pza) |
+| Empaques | Caja, bulto, atado, manojo, bandeja |
+
+**Ejemplo:** si compras dos bandejas de 30 huevos y la cocina usa huevos sueltos, elige **Pieza (pza)** y registra una entrada de **60 pza**. Una tortilla de dos huevos consume **2 pza**. Si controlas bandejas completas del mismo tamaño, elige **Bandeja** y registra **2 bandejas**, con el costo de **una bandeja**. RemiSoft no supone cuánto pesa un bulto ni cuántas piezas hay en una caja. [Ver el formulario con Bandeja seleccionada](imagenes/unidad-de-inventario.png).
+
+Puedes corregir la unidad en **Editar** mientras la ficha no tenga movimientos, recetas, lotes, compras ni vínculos con proveedores. Revisa el costo y el mínimo al cambiarla: sus valores no se convierten. Después se bloquea solo la medida, aunque el saldo vuelva a cero. Editar otros datos conserva la unidad histórica, incluso si fue texto libre o quedó sin definir.
+
+`POST /api/ingredientes` exige una `unidad_medida` del catálogo (códigos de los símbolos anteriores o el nombre singular en minúscula de un empaque). En `PUT /api/ingredientes/:id`, omitir la unidad conserva la existente. El inventario devuelve `unidad_bloqueada`. El editor, los movimientos y las líneas de receta envían además `unidad_esperada` con el valor leído: si otra sesión cambió la medida, se rechaza la operación con **409**, sin aplicar la cantidad en otra unidad. No hay migración de unidades ni recálculo del historial.
 
 **Existencias al crear:** `POST /api/ingredientes` acepta `stock_actual` de 0 a 9999999.999, con hasta tres decimales. Si se omite o vale cero, se crea el ingrediente sin movimientos. Si es positivo, la ficha y su primera entrada se guardan en una sola transacción. El 201 devuelve `id_ingrediente` y `stock_actual`. [Ver Nuevo Ingrediente con 19,6 kg iniciales](imagenes/nuevo-ingrediente-stock-inicial.png).
 

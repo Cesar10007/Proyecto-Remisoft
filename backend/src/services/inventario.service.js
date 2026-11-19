@@ -32,13 +32,17 @@ export class StockInsuficienteError extends Error {
 
 // Mismo orden de bloqueo para cada operación que consume/devuelve ingredientes:
 // entre una lectura de stock y su movimiento no puede intercalarse otra salida.
+export async function leerIngredientesConBloqueo(tx, ids, idRestaurante) {
+  if (!ids.length) return [];
+  return tx.$queryRaw`SELECT id_ingrediente, unidad_medida FROM Ingrediente WHERE id_restaurante = ${idRestaurante}
+    AND id_ingrediente IN (${Prisma.join(ids)}) ORDER BY id_ingrediente FOR UPDATE`;
+}
+
 export async function bloquearIngredientes(tx, ids, idRestaurante) {
-  if (ids.length) {
-    const unicos = [...new Set(ids)];
-    const filas = await tx.$queryRaw`SELECT id_ingrediente FROM Ingrediente WHERE id_restaurante = ${idRestaurante}
-      AND id_ingrediente IN (${Prisma.join(unicos)}) ORDER BY id_ingrediente FOR UPDATE`;
-    if (filas.length !== unicos.length) throw new ErrorSalon(409, 'Hay un ingrediente sin asignar a este establecimiento.');
-  }
+  const unicos = [...new Set(ids)];
+  const filas = await leerIngredientesConBloqueo(tx, unicos, idRestaurante);
+  if (filas.length !== unicos.length) throw new ErrorSalon(409, 'Hay un ingrediente sin asignar a este establecimiento.');
+  return filas;
 }
 
 // El listado, el conteo y la validación de las comandas usan el mismo saldo.
@@ -72,7 +76,7 @@ export function crearAjusteManual(tx, { id_restaurante, id_ingrediente, id_usuar
   } });
 }
 
-// La transacción ya tiene bloqueada la fila de Ingrediente (UPDATE de la ficha).
+// La transacción ya tiene bloqueada la fila de Ingrediente.
 export async function conciliarConteo(tx, origen, esperado, contado, motivo) {
   const { id_restaurante, id_ingrediente } = origen;
   const saldo = (await saldosEnMilesimas(tx, [id_ingrediente], id_restaurante)).get(id_ingrediente);

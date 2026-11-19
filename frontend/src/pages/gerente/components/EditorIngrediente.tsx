@@ -4,6 +4,8 @@ import { InputField } from '../../../components/common/InputField'
 import { TextAreaField } from '../../../components/common/TextAreaField'
 import { mensajeError } from '../../../utils/mensajeError'
 import type { CrearIngrediente, IngredienteConStock } from '../types'
+import { codigoUnidad, unidadDeCantidad } from '../../../utils/unidadesInventario'
+import SelectorUnidadIngrediente from './SelectorUnidadIngrediente'
 import FormularioCatalogo from './FormularioCatalogo'
 
 interface Props {
@@ -17,7 +19,7 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
   // ni reemplazarlo si se refresca la tabla mientras el gerente está contando.
   const [ficha, setFicha] = useState<CrearIngrediente>(() => ({
     nombre: ingrediente?.nombre ?? '', descripcion: ingrediente?.descripcion ?? '',
-    unidad_medida: ingrediente?.unidad_medida ?? '', costo_unitario_ref: String(ingrediente?.costo_unitario_ref ?? ''),
+    unidad_medida: codigoUnidad(ingrediente?.unidad_medida), costo_unitario_ref: String(ingrediente?.costo_unitario_ref ?? ''),
     stock_minimo: String(ingrediente?.stock_minimo ?? 0),
   }))
   const [stock, setStock] = useState(String(ingrediente?.stock_actual ?? 0))
@@ -25,6 +27,7 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const ayudaStock = useId()
+  const sufijoStock = ficha.unidad_medida ? ` (${unidadDeCantidad(ficha.unidad_medida)})` : ''
   const total = Number(stock)
   const cambiaStock = ingrediente !== null && stock !== '' && total !== ingrediente.stock_actual
   function campo(clave: keyof CrearIngrediente, valor: string) {
@@ -41,6 +44,9 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
       if (ingrediente) {
         const { data } = await api.put<{ stock_actual?: number }>(`/ingredientes/${ingrediente.id_ingrediente}`, {
           ...ficha,
+          // Enviar el valor original cuando solo se editan otros campos, incluso con una API anterior.
+          unidad_medida: ficha.unidad_medida === codigoUnidad(ingrediente.unidad_medida) ? ingrediente.unidad_medida : ficha.unidad_medida,
+          unidad_esperada: ingrediente.unidad_medida,
           ...(cambiaStock && { stock_actual: total, stock_esperado: ingrediente.stock_actual, motivo: motivo.trim() }),
         })
         // Un backend anterior ignoraba stock_actual y devolvía 200 solo por la ficha.
@@ -72,17 +78,16 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
         value={ficha.nombre} onChange={e => campo('nombre', e.target.value)} />
       <TextAreaField label="Descripción" placeholder="Descripción" rows={2} maxLength={500}
         value={ficha.descripcion} onChange={e => campo('descripcion', e.target.value)} />
-      <InputField label="Unidad de medida" placeholder="Ej: Kg, Litro, Unidad" maxLength={20}
-        value={ficha.unidad_medida} onChange={e => campo('unidad_medida', e.target.value)} />
-      <InputField label="Costo unitario de referencia" type="number" step="0.01" placeholder="0"
+      <SelectorUnidadIngrediente ingrediente={ingrediente} valor={ficha.unidad_medida} cambiar={v => campo('unidad_medida', v)} />
+      <InputField label={`Costo de referencia (COP${ficha.unidad_medida ? ` por ${ficha.unidad_medida}` : ''})`} type="number" step="0.01" placeholder="0"
         value={ficha.costo_unitario_ref} onChange={e => campo('costo_unitario_ref', e.target.value)} />
-      <InputField label="Stock mínimo" type="number" min="0" step="0.01" placeholder="0"
+      <InputField label={`Stock mínimo${sufijoStock}`} type="number" min="0" step="0.01" placeholder="0"
         value={ficha.stock_minimo} onChange={e => campo('stock_minimo', e.target.value)} />
       <div>
-        <InputField label="Stock actual" type="number" inputMode="decimal" min="0" max="9999999.999" step="0.001" required
+        <InputField label={`Stock actual${sufijoStock}`} type="number" inputMode="decimal" min="0" max="9999999.999" step="0.001" required
           aria-describedby={ayudaStock} value={stock} onChange={e => setStock(e.target.value)} />
         <p id={ayudaStock} className="mt-1 text-xs leading-relaxed text-[var(--texto-muted)]">
-          {ingrediente ? <>Saldo al abrir: {ingrediente.stock_actual.toLocaleString('es-CO', { maximumFractionDigits: 3 })} {ingrediente.unidad_medida}.
+          {ingrediente ? <>Saldo al abrir: {ingrediente.stock_actual.toLocaleString('es-CO', { maximumFractionDigits: 3 })} {unidadDeCantidad(ingrediente.unidad_medida, ingrediente.stock_actual)}.
             Escribe el total contado; solo la diferencia quedará en Movimientos.</> :
             'Si ya tienes existencias, indica la cantidad. Quedará una entrada «Stock inicial» en Movimientos. Si no tienes, deja 0.'}
         </p>
