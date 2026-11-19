@@ -205,7 +205,7 @@ Abrir frontend:
 - **4173 (compilación independiente).** Con la API ya funcionando en el 3000, ejecuta `pnpm --dir frontend run vista:rama` desde la raíz. Si faltan dependencias, usa antes `pnpm --dir frontend install --frozen-lockfile`. Deja la terminal abierta y elige **Puertos → 4173 → Abrir en el navegador**. Si no aparece, reenvía el 4173 como puerto privado. Inicia sesión en ese origen. El comando compila los archivos del directorio actual, no reemplaza lo servido en el 80 y no toca la BD.
 - **5173 (desarrollo).** `pnpm --dir frontend dev` sirve el código del directorio donde se inició Vite, con recarga en caliente. Tanto desarrollo como la vista del 4173 fallan si su puerto está ocupado en vez de saltar silenciosamente a otro.
 
-Para usar el **desplegable de unidades** y **Stock actual** en **Inventario → Nuevo Ingrediente** o **Editar**, actualiza **también la API**: con Compose ejecuta `docker compose up -d --build backend frontend` desde la raíz; si usas Vite, reinicia el backend con el código actualizado. Ni las unidades ni el conteo requieren una nueva columna o reiniciar la base de datos. [Cómo elegir entre peso, volumen, piezas y empaques](docs/establecimientos.md#unidad-de-medida-del-ingrediente).
+Para usar el **desplegable de unidades** y **Stock actual** en **Inventario → Nuevo Ingrediente** o **Editar**, actualiza **también la API**: con Compose ejecuta `docker compose up -d --build backend frontend` desde la raíz; si usas Vite, reinicia el backend con el código actualizado. Esta versión añade la equivalencia por ingrediente, el historial por sede y la ocultación individual. El arranque del backend aplica las migraciones y reinstala las vistas sin borrar el volumen. [Cómo elegir entre peso, volumen, piezas y empaques](docs/establecimientos.md#unidad-de-medida-del-ingrediente).
 
 **Comprueba la pestaña:** despliega el menú lateral del gerente y mira **Interfaz:** debajo de **Cerrar sesión**. En 5173 dirá `Vite (desarrollo)`. En 4173 debe decir el mismo `index-….js` que acaba de imprimir la terminal en `dist/assets/`; en el 80 compáralo con el `src` del `<script type="module">` de `docker compose exec -T frontend cat /usr/share/nginx/html/index.html`. [Aspecto esperado de Nuevo Proveedor en modo oscuro](docs/imagenes/nuevo-proveedor-oscuro.png).
 
@@ -434,6 +434,8 @@ En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y su
 ## Modelo multi-restaurante
 
 La clave existente es **`id_restaurante`**. Crear un gerente desde Superadmin (o aprobar su solicitud) crea un establecimiento propio y vacío. El personal opera en la sede que la API obtiene del usuario en la BD. Productos, existencias, mesas, IA, ventas y demás actividad del panel no se comparten entre negocios. Un gerente sin ventas o sin análisis ve ese estado, no datos de ejemplo.
+
+[Historial del gerente, baja de personal, ventas por fecha de pago y libro de caja](docs/establecimientos.md#historial-personal-y-caja).
 
 [Guía de establecimientos: actualizar sin borrar datos, tratar históricos sin sede y probar el aislamiento](docs/establecimientos.md).
 

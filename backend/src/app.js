@@ -32,6 +32,7 @@ import cocinaRoutes from './routes/cocina.routes.js'
 import reportesRoutes from './routes/reportes.routes.js'
 import salonRoutes from './routes/salon.routes.js'
 import iaRoutes from './routes/ia.routes.js'
+import historialRoutes from './routes/historial.routes.js'
 import mesasRoutes from './routes/mesas.routes.js'
 
 const app = express()
@@ -93,6 +94,7 @@ app.use('/api/usuarios', usuariosRoutes)
 app.use('/api/restaurantes', restaurantesRoutes)
 
 app.use(contextoEstablecimiento)
+app.use('/api/historial', historialRoutes)
 app.use('/api/cajas', cajasRoutes)
 app.use('/api/cobro', cobroRoutes)
 app.use('/api/cocina', cocinaRoutes)

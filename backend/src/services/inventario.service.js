@@ -34,7 +34,7 @@ export class StockInsuficienteError extends Error {
 // entre una lectura de stock y su movimiento no puede intercalarse otra salida.
 export async function leerIngredientesConBloqueo(tx, ids, idRestaurante) {
   if (!ids.length) return [];
-  return tx.$queryRaw`SELECT id_ingrediente, unidad_medida FROM Ingrediente WHERE id_restaurante = ${idRestaurante}
+  return tx.$queryRaw`SELECT id_ingrediente, unidad_medida, unidad_presentacion, factor_unidad, cantidad_base FROM Ingrediente WHERE id_restaurante = ${idRestaurante}
     AND id_ingrediente IN (${Prisma.join(ids)}) ORDER BY id_ingrediente FOR UPDATE`;
 }
 

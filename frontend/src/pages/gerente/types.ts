@@ -50,5 +50,5 @@ export type CrearIngrediente = Omit<Ingrediente, 'id_ingrediente' | 'unidad_medi
 export type CrearProveedor = Omit<Proveedor, 'id_proveedor'>
 export type CrearCaja = Omit<Caja, 'id_caja'>
 
-export interface MesaGerente { numero: number; capacidad: number | null; ocupada: boolean }
-export interface IngredienteConStock extends Ingrediente { stock_actual: number; stock_bajo: boolean; unidad_bloqueada?: boolean }
+export interface MesaGerente { id_mesa?: number; numero: number; capacidad: number | null; ocupada: boolean }
+export interface IngredienteConStock extends Ingrediente { stock_actual: number; stock_bajo: boolean; requiere_equivalencia?: boolean; unidad_bloqueada?: boolean; unidad_base?: string | null; factor_unidad?: number; cantidad_base?: number }

@@ -1,3 +1,4 @@
+import LibroCaja from '../components/LibroCaja'
 import Button from '../../../components/common/Button'
 import type { Caja } from '../types'
 import { DataTable, Column } from '../../../components/common/DataTable'
@@ -38,6 +39,7 @@ function CajasSection({ cajas, onCreate, onEdit, onToggle }: CajasSectionProps) 
 
   return (
     <div className="mt-6">
+      <LibroCaja />
       <DataTable
         title="Gestión de Cajas"
         columns={columns}

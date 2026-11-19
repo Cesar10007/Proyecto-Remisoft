@@ -36,7 +36,7 @@ export function presentarMesas(catalogo, consumos, user) {
     if (!porNumero.has(clave)) porNumero.set(clave, []);
     porNumero.get(clave).push(p);
   }
-  return catalogo.map(({ numero, id_restaurante, capacidad, atenciones }) => {
+  return catalogo.map(({ id_mesa, numero, id_restaurante, capacidad, atenciones }) => {
     const cuentas = porNumero.get(`${id_restaurante}:${numero}`) ?? [];
     const p = cuentas[0];
     const a = p ? null : atenciones?.[0];
@@ -44,6 +44,7 @@ export function presentarMesas(catalogo, consumos, user) {
     const mesero = relacionDeSede(a?.mesero, id_restaurante);
     return {
       numero,
+      id_mesa,
       id_restaurante,
       capacidad,
       ocupada,

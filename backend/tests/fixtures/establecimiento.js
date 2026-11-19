@@ -27,12 +27,13 @@ export async function escenarioEstablecimiento(t) {
     await db.detalle_orden_compra.deleteMany({ where: { orden_compra: sede } });
     await db.orden_compra.deleteMany({ where: sede });
     await db.receta.deleteMany({ where: { Producto: sede } });
-    for (const modelo of ['mesa_atencion', 'inventario_mov', 'turno_caja', 'mesa', 'caja', 'cliente', 'proveedor', 'iA', 'ingrediente', 'producto', 'categoria_productos']) {
+    for (const modelo of ['mesa_atencion', 'inventario_mov', 'lote_ingrediente', 'turno_caja', 'mesa', 'caja', 'cliente', 'proveedor', 'iA', 'ingrediente', 'producto', 'categoria_productos']) {
       await db[modelo].deleteMany({ where: sede });
     }
     await db.solicitud_registro.deleteMany({ where: { email: `sol-${tag}@example.test` } });
     await db.usuario.deleteMany({ where: { OR: [sede, { id_usuario: admin.id_usuario }, { email: `sin-${tag}@example.test` }] } });
     await db.restaurante.deleteMany({ where: sede });
+    await db.actividad_sede.deleteMany({ where: sede }); // incluye retiros de limpieza de este fixture
     await db.$disconnect();
   });
   async function llamar(token, path, method = 'GET', body) {

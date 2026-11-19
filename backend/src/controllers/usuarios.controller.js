@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
@@ -229,7 +230,8 @@ function puedeVerUsuario(actor, usuario) {
 }
 
 function sedeDelGerente(req) {
-  return req.user.rol === 'GERENTE' ? { id_restaurante: req.user.id_restaurante } : {};
+  return { oculto_para: { none: { id_actor: req.user.id_usuario } },
+    ...(req.user.rol === 'GERENTE' && { id_restaurante: req.user.id_restaurante }) };
 }
 
 function puedeGestionarUsuario(actor, usuario) {
@@ -260,6 +262,7 @@ export async function index(req, res, next) {
     const idUsuario = req.user?.id_usuario;
 
     let where = {
+      ...sedeDelGerente(req),
       estado: {
         not: ESTADOS_USUARIO.ELIMINADO,
       },
@@ -361,15 +364,15 @@ export async function crear(req, res, next) {
       });
 
       if (error) return res.status(422).json({ message: error });
-      if (!ROLES_OPERATIVOS.includes(data.id_rol)) {
+      if (!esRolGestionablePorGerente(data.id_rol)) {
         return res.status(403).json({ message: 'Solo puedes crear personal operativo.' });
       }
 
       const contrasena_hash = await bcrypt.hash(contrasena, 12);
-      const usuario = await prisma.usuario.create({
+      const usuario = await escritura(req.user, tx => tx.usuario.create({
         data: { ...data, contrasena_hash },
         include: { rol: true, restaurante: true },
-      });
+      }));
 
       return res.status(201).json({
         message: 'Personal creado correctamente.',
@@ -423,7 +426,7 @@ export async function crear(req, res, next) {
 
     const contrasena_hash = await bcrypt.hash(contrasena, 12);
 
-    const resultado = await prisma.$transaction(async (tx) => {
+    const resultado = await escritura(req.user, async (tx) => {
       const restaurante = await crearEstablecimiento(tx, nombreEstablecimiento);
 
       const usuario = await tx.usuario.create({
@@ -552,21 +555,21 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    const updateData = {
-      ...data,
-    };
+    const updateData = { ...data };
+    // Editar el nombre/rol nunca reactiva una cuenta inactiva de forma implícita.
+    if (req.body.activo === undefined) { delete updateData.activo; delete updateData.estado; }
 
     if (!isEmpty(contrasena)) {
       updateData.contrasena_hash = await bcrypt.hash(contrasena, 12);
     }
 
-    await prisma.usuario.update({
+    await escritura(req.user, tx => tx.usuario.update({
       where: {
         ...sedeDelGerente(req),
         id_usuario: id,
       },
       data: updateData,
-    });
+    }));
 
     return res.json({
       message: 'Usuario actualizado',
@@ -640,20 +643,11 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await prisma.usuario.update({
-      where: {
-        ...sedeDelGerente(req),
-        id_usuario: id,
-      },
-      data: {
-        activo: false,
-        estado: ESTADOS_USUARIO.ELIMINADO,
-      },
+    await escritura(req.user, async tx => {
+      await tx.usuario.update({ where: { ...sedeDelGerente(req), id_usuario: id }, data: { activo: false, estado: ESTADOS_USUARIO.INACTIVO } });
+      await tx.personal_oculto.create({ data: { id_actor: req.user.id_usuario, id_usuario: id } });
     });
-
-    return res.json({
-      message: 'Usuario eliminado correctamente',
-    });
+    return res.json({ message: 'Usuario desactivado y retirado de tu lista. Se conserva su historial.' });
   } catch (err) {
     if (err.code === 'P2025') {
       return res.status(404).json({
@@ -703,9 +697,10 @@ export async function cambiarEstado(req, res, next) {
       });
     }
 
-    const activar = !usuario.activo;
+    if (req.body?.activo !== undefined && typeof req.body.activo !== 'boolean') return res.status(422).json({ message: 'El estado activo debe ser booleano.' });
+    const activar = req.body?.activo ?? !usuario.activo;
 
-    await prisma.usuario.update({
+    await escritura(req.user, tx => tx.usuario.update({
       where: {
         ...sedeDelGerente(req),
         id_usuario: id,
@@ -716,7 +711,7 @@ export async function cambiarEstado(req, res, next) {
           ? ESTADOS_USUARIO.ACTIVO
           : ESTADOS_USUARIO.INACTIVO,
       },
-    });
+    }));
 
     return res.json({
       message: activar

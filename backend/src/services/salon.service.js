@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import { escritura } from './actividad.service.js';
 import {
   bloquearIngredientes,
   calcularRequerimientos,
@@ -18,7 +18,7 @@ import {
   estadoSegunItems,
 } from '../utils/salon.js';
 
-export const transaccionSalon = (fn) => prisma.$transaction(fn, { isolationLevel: 'ReadCommitted' });
+export const transaccionSalon = (user, fn) => escritura(user, fn, { isolationLevel: 'ReadCommitted' });
 export const bloquearPedido = (tx, id, idRestaurante) =>
   tx.$queryRaw`SELECT id_pedido FROM pedido WHERE id_pedido = ${id} AND id_restaurante = ${idRestaurante} FOR UPDATE`;
 
@@ -127,7 +127,7 @@ async function cabecera(tx, body, capacidad, idRestaurante) {
 // Abrir una cuenta y cambiar la ocupación bloquean la misma mesa de la sede.
 export async function mesaDisponible(tx, numero, pedido, { excepto, idAtencion = null } = {}) {
   const sede = pedido.id_restaurante;
-  const [mesa] = await tx.$queryRaw`SELECT capacidad FROM mesa WHERE numero = ${numero} AND id_restaurante = ${sede} FOR UPDATE`;
+  const [mesa] = await tx.$queryRaw`SELECT id_mesa, capacidad FROM mesa WHERE numero = ${numero} AND id_restaurante = ${sede} FOR UPDATE`;
   if (!mesa) throw new ErrorSalon(404, 'La mesa no existe en este establecimiento.');
   if (
     await tx.pedido.findFirst({
@@ -160,7 +160,7 @@ export function cambiarEstadoMesa(user, numero, body) {
   if (!ocupar && body?.estado !== 'DISPONIBLE') throw new ErrorSalon(422, 'Selecciona Disponible u Ocupada.');
   const idAtencion = ocupar ? null : entero(body.id_atencion, 'La atención de la mesa');
   const responsable = { id_restaurante: user.id_restaurante, id_mesero: user.id_usuario };
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     const mesa = await mesaDisponible(tx, numero, responsable, { idAtencion });
     if (ocupar) {
       const comensales = entero(body.comensales, 'El número de comensales', mesa.capacidad ?? 99);
@@ -178,7 +178,7 @@ export function abrirMesa(user, body) {
   const numero = entero(body?.mesa, 'La mesa');
   const lineas = leerLineas(body.items);
   const idAtencion = body.id_atencion == null ? null : entero(body.id_atencion, 'La atención de la mesa');
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     const mesa = await mesaDisponible(
       tx,
       numero,
@@ -210,7 +210,7 @@ export function abrirMesa(user, body) {
 }
 
 export function cambiarComanda(user, id, body, accion) {
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     await bloquearPedido(tx, id, user.id_restaurante);
     const p = await tx.pedido.findFirst({
       where: { id_pedido: id, ...misPedidos(user) },

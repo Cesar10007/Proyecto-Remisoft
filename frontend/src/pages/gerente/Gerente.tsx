@@ -1,4 +1,6 @@
 import './Gerente.css'
+import { useCambiosSede } from '../../hook/useCambiosSede'
+import HistorialSection from './sections/HistorialSection'
 import { mensajeError } from '../../utils/mensajeError'
 import { CORREO_INVALIDO, mensajeErrorAlta } from '../../utils/correoAlta'
 import { useState } from 'react'
@@ -69,10 +71,11 @@ const proveedorVacio = {
 const cajaVacia = { nombre: '', estado: 'ACTIVA' }
 const personalVacio = { nombre: '', apellido: '', email: '', id_rol: '' as number | '' , contrasena: '' }
 function Gerente() {
+  useCambiosSede()
   const [seccionActiva, setSeccionActiva] = useState('Menú')
   const [fuenteProductos, setFuenteProductos] = useState<'vista' | 'sp'>('vista')
   const datos = useDatosGerente(seccionActiva, fuenteProductos)
-  const { ingresosDelMes, pagosAprobados, historial, mesas, movimientosRecientes, estadoInventario, tendenciaSemanal } = datos
+  const { ingresosDelMes, pagosAprobados, mesas, movimientosRecientes, estadoInventario, tendenciaSemanal } = datos
   const gastosMes = datos.compras.data?.data.gastos_mes ?? null
   const productos = datos.catalogo.data ?? []
   const ingredientes = datos.inventario.data?.data ?? []
@@ -125,7 +128,7 @@ function Gerente() {
       icon: 'monetization_on',
       label: 'Ingresos del día',
       valor: datos.ingresosHoy === null ? '—' : formatoCOP.format(datos.ingresosHoy),
-      badge: datos.semana.error ? 'Error al consultar' : 'Hoy',
+      badge: datos.hoy.error ? 'Error al consultar' : 'Hoy',
       badgeColor: 'muted',
     },
     {
@@ -162,8 +165,8 @@ function Gerente() {
       setFormAbrir({ id_caja: '', id_usuario_cajero: '', efectivo_inicial: '' })
       setErrorTurno('')
       datos.jornadas.cargar()
-    } catch {
-      setErrorTurno('No se pudo abrir el turno')
+    } catch (e) {
+      setErrorTurno(mensajeError(e))
     }
   }
 
@@ -201,9 +204,13 @@ function Gerente() {
     setErrorPersonal(null)
   }
   const eliminarUsuario = async (id: number) => {
-    if (!confirm('¿Eliminar este usuario?')) return
+    if (!confirm('¿Desactivar el acceso y retirar a esta persona de tu lista? Los demás gestores seguirán viendo su ficha inactiva. Su historial se conserva.')) return
     setErrorPersonal(null)
-    try { await api.delete(`/usuarios/${id}`); await datos.usuarios.cargar() } catch { setErrorPersonal({ origen: 'lista', mensaje: 'No se pudo eliminar el usuario' }) }
+    try {
+      await api.delete(`/usuarios/${id}`)
+      if (usuarioEditando?.id_usuario === id) { setUsuarioEditando(null); setFormData(personalVacio) }
+      await datos.usuarios.cargar()
+    } catch (e) { setErrorPersonal({ origen: 'lista', mensaje: mensajeError(e) }) }
   }
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -293,7 +300,7 @@ function Gerente() {
         {/* MENÚ — Dashboard principal */}
         {seccionActiva === 'Menú' && (
           <>
-            <DashboardOperativo />
+            <DashboardOperativo reporte={datos.hoy} />
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {metricasDashboard.map(m => (
                 <MetricCard
@@ -591,29 +598,7 @@ function Gerente() {
           <MesasSection mesas={mesas} actualizar={datos.plano.cargar} />
         )}
         {seccionActiva === 'IA Insights' && <IASection />}
-        {/* HISTORIAL — pedidos, pagos y turnos de la base */}
-        {seccionActiva === 'Historial' && !datos.aviso && (
-          <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
-            <h3 className="mb-2 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Historial de actividad</h3>
-            <p className="mb-5 text-[0.78rem] text-[var(--texto-muted)]">Pedidos, pagos y turnos registrados en la base. No incluye ediciones ni borrados.</p>
-            <div className="flex flex-col gap-4">
-              {historial.length === 0 && (
-                <p className="text-[0.85rem] text-[var(--texto-muted)]">No hay actividad registrada.</p>
-              )}
-              {historial.map((h, i) => (
-                <div key={i} className="flex items-start gap-3 border-b border-[var(--borde)] pb-4 last:border-b-0 last:pb-0">
-                  <span className="material-symbols-outlined mt-0.5 text-[18px] text-[var(--texto-muted)]">history</span>
-                  <div>
-                    <p className="text-[0.85rem] text-[var(--texto)]">{h.accion}</p>
-                    <p className="mt-0.5 text-[0.75rem] text-[var(--texto-muted)]">
-                      {h.usuario} · {h.fecha ? new Date(h.fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {seccionActiva === 'Historial' && <HistorialSection />}
         {seccionActiva === 'Personal' && !datos.aviso && (
           <PersonalSection
             personal={personal}
@@ -629,6 +614,11 @@ function Gerente() {
               setFormData(current => ({ ...current, [field]: value }))
             }}
             onEdit={editarUsuario}
+            onEstado={async persona => {
+              if (!confirm(`¿${persona.activo ? 'Desactivar' : 'Reactivar'} el acceso de ${persona.nombre}? Su ficha seguirá en la lista.`)) return
+              try { setErrorPersonal(null); await api.patch(`/usuarios/${persona.id_usuario}/estado`, { activo: !persona.activo }); await datos.usuarios.cargar() }
+              catch (e) { setErrorPersonal({ origen: 'lista', mensaje: mensajeError(e) }) }
+            }}
             onDelete={eliminarUsuario}
             onCancelEdit={() => { setUsuarioEditando(null); setFormData(personalVacio); setErrorPersonal(null) }}
             onTogglePassword={() => setMostrarContrasena(current => !current)}
@@ -639,7 +629,7 @@ function Gerente() {
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
-              <Button variant={mostrarAbrirTurno ? 'outline' : 'primary'} onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
+              <Button variant="primary" aria-expanded={mostrarAbrirTurno} className="ge-abrir-turno" onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
                 {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
               </Button>
             </div>
@@ -648,7 +638,7 @@ function Gerente() {
                 <select aria-label="Caja"
                   value={formAbrir.id_caja}
                   onChange={e => setFormAbrir({ ...formAbrir, id_caja: e.target.value })}
-                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                  className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
                 >
                   <option value="">Caja</option>
                   {cajas.filter(c => c.estado === 'ACTIVA').map(c => (
@@ -658,7 +648,7 @@ function Gerente() {
                 <select aria-label="Cajero"
                   value={formAbrir.id_usuario_cajero}
                   onChange={e => setFormAbrir({ ...formAbrir, id_usuario_cajero: e.target.value })}
-                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                  className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
                 >
                   <option value="">Cajero</option>
                   {cajeros.map(u => (
@@ -671,7 +661,7 @@ function Gerente() {
                   placeholder="Efectivo inicial"
                   value={formAbrir.efectivo_inicial}
                   onChange={e => setFormAbrir({ ...formAbrir, efectivo_inicial: e.target.value })}
-                  className="rounded-lg border border-[var(--borde)] bg-white px-3 py-2 text-[0.85rem] text-[var(--texto)]"
+                  className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
                 />
                 <Button variant="success" onClick={abrirTurno}>Confirmar apertura</Button>
               </div>

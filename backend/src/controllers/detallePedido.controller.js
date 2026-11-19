@@ -150,7 +150,7 @@ export async function store(req, res, next) {
       });
     }
 
-    const item = await transaccionSalon(async (tx) => {
+    const item = await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, idPedido, req.user);
       return tx.detalle_pedido.create({
         data: {
@@ -223,7 +223,7 @@ export async function update(req, res, next) {
       data.Cantidad = cantidad;
     }
 
-    const item = await transaccionSalon(async (tx) => {
+    const item = await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, actual.id_pedido, req.user);
       return tx.detalle_pedido.update({
         where: { id_detalle: id },
@@ -266,7 +266,7 @@ export async function destroy(req, res, next) {
       });
     }
 
-    await transaccionSalon(async (tx) => {
+    await transaccionSalon(req.user, async (tx) => {
       await permitirDetalle(tx, actual.id_pedido, req.user);
       await tx.detalle_pedido.delete({ where: { id_detalle: id } });
     });

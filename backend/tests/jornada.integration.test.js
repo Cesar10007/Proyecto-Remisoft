@@ -75,6 +75,7 @@ test('jornada de un negocio nuevo: gerencia → salón → cocina → caja → a
 
     async function servir(cantidad, atencion) {
       const { id_pedido } = await post(m, '/salon/pedidos', { ...comanda(cantidad), id_atencion: atencion });
+      await api(g, '/mesas/1', 'PUT', { capacidad: 12 }, 409);
       await api(g, '/mesas/1', 'DELETE', undefined, 409); // Ahora el bloqueo es el pedido.
       const [orden] = await api(m, '/cocina/comandas');
       assert.equal(orden.id_pedido, id_pedido);
@@ -139,6 +140,17 @@ test('jornada de un negocio nuevo: gerencia → salón → cocina → caja → a
     assert.equal((await api(b, '/reportes/ventas-diarias')).data.total.ingresos_brutos, 0);
     assert.deepEqual((await api(b, '/turnos/arqueos')).data, []);
 
+    await t.test('libro y cierre de turno quedan en la sede correcta, con los operadores reales', async () => {
+      const libro = (await api(g, '/turnos/movimientos')).data;
+      assert.deepEqual(libro.map(f => [f.id_turno, f.metodo, Number(f.ingresos), Number(f.saldo)]),
+        [[id_turno,'TARJETA',11900,85700],[id_turno,'EFECTIVO',23800,73800]]);
+      assert.deepEqual((await api(b, '/turnos/movimientos')).data, []);
+      const eventos = (await api(g, '/historial')).data;
+      for (const [entidad, id] of [['Turno',gerente.id_usuario],['Movimiento de caja',cajero.user.id_usuario],['Pago',cajero.user.id_usuario],['Inventario',mesero.user.id_usuario],['Detalle de pedido',mesero.user.id_usuario]]) {
+        assert.ok(eventos.some(e => e.entidad === entidad && e.id_actor === id && e.id_restaurante === gerente.id_restaurante), entidad);
+      }
+      assert.ok(eventos.some(e => e.entidad === 'Turno' && e.despues?.includes('CERRADA') && e.id_actor === gerente.id_usuario));
+    });
     await t.test('eliminar y abrir una misma mesa simultáneamente nunca deja una cuenta sin mesa', async () => {
       await post(g, '/mesas', mesa);
       const [borrar, abrir] = await Promise.all([llamar(g, '/mesas/1', 'DELETE'), llamar(m, '/salon/pedidos', 'POST', comanda(1))]);

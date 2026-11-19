@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import { relacionDeSede } from '../utils/restaurante.js';
 import prisma from '../config/prisma.js';
 
@@ -51,14 +52,14 @@ export async function crear(req, res, next) {
     if (!await prisma.pedido.count({ where: { ...req.sede, id_pedido: Number(id_pedido) } }) || !await repartidorValido(id_repartidor, req.sede)) {
       return res.status(422).json({ message: 'El pedido o el repartidor no pertenece al establecimiento.' });
     }
-    await prisma.domicilio.create({
+    await escritura(req.user, tx => tx.domicilio.create({
       data: {
         id_pedido: Number(id_pedido),
         direccion,
         estado: estado || 'ASIGNADO',
         id_repartidor: id_repartidor ? Number(id_repartidor) : null,
       },
-    });
+    }));
 
     res.status(201).json({ message: 'Domicilio creado' });
   } catch (err) {
@@ -90,14 +91,14 @@ export async function actualizar(req, res, next) {
     if (!await repartidorValido(id_repartidor, req.sede)) {
       return res.status(422).json({ message: 'El repartidor no pertenece al establecimiento.' });
     }
-    await prisma.domicilio.update({
+    await escritura(req.user, tx => tx.domicilio.update({
       where: { id_domicilio: Number(id), pedido: req.sede },
       data: {
         direccion,
         estado: estado ?? null,
         id_repartidor: id_repartidor ? Number(id_repartidor) : null,
       },
-    });
+    }));
 
     res.json({ message: 'Domicilio actualizado' });
   } catch (err) {
@@ -114,10 +115,10 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-    await prisma.domicilio.update({
+    await escritura(req.user, tx => tx.domicilio.update({
       where: { id_domicilio: Number(id), pedido: req.sede },
       data: { estado: 'CANCELADO' },
-    });
+    }));
     res.json({ message: 'Domicilio cancelado' });
   } catch (err) {
     if (err.code === 'P2025') {

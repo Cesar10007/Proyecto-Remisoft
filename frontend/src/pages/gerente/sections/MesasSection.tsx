@@ -9,6 +9,7 @@ import { etiquetaMesa } from '../data'
 import type { MesaGerente } from '../types'
 
 export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente[]; actualizar: () => Promise<void> }) {
+  const [editor, setEditor] = useState<MesaGerente | null>(null)
   const [seleccion, setSeleccion] = useState<MesaGerente | null>(null)
   const [eliminando, setEliminando] = useState(false)
   const [error, setError] = useState('')
@@ -29,7 +30,7 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
   return (
     <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6">
       <h3 className="font-['Syne'] text-lg font-bold">Administrar mesas</h3>
-      <p className="mb-5 text-sm text-[var(--texto-muted)]">Agrega mesas al salón. Solo puedes eliminar las que estén disponibles.</p>
+      <p className="mb-5 text-sm text-[var(--texto-muted)]">El estado se actualiza con el salón. Solo puedes editar o eliminar mesas disponibles.</p>
       <AltaMesa alCrear={async numero => { setError(''); setAviso(`Mesa ${numero} agregada.`); await actualizar() }} />
       {error && <p role="alert" className="mb-3 text-[var(--rojo-dark)]">{error}</p>}
       {aviso && <p role="status" className="mb-3 text-sm">{aviso}</p>}
@@ -37,9 +38,14 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
         { header: 'Mesa', render: m => <strong>{etiquetaMesa(m.numero)}</strong> },
         { header: 'Capacidad', render: m => m.capacidad == null ? 'Sin especificar' : `${m.capacidad} personas` },
         { header: 'Estado', render: m => m.ocupada ? 'Ocupada' : 'Disponible' },
-        { header: 'Acciones', render: m => <Button variant="ghost" size="small" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
-          onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</Button> },
+        { header: 'Acciones', render: m => <div className="flex gap-2"><Button variant="outline" size="small" disabled={m.ocupada} aria-label={`Editar mesa ${m.numero}`}
+          onClick={() => { setAviso(''); setError(''); setEditor(m) }}>Editar</Button><Button variant="ghost" size="small" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
+          onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</Button></div> },
       ]} />
+      {editor && <Modal title={`Editar mesa ${editor.numero}`} onClose={() => setEditor(null)}>
+        <AltaMesa mesa={editor} bloqueada={!mesas.some(m => m.numero === editor.numero && m.id_mesa === editor.id_mesa && !m.ocupada)} alConflicto={actualizar}
+          alCrear={async n => { setEditor(null); setAviso(`Mesa ${n} actualizada.`); await actualizar() }} />
+      </Modal>}
       {seleccion && <Modal title={`¿Eliminar la mesa ${seleccion.numero}?`} onClose={() => setSeleccion(null)} busy={eliminando}>
         <p className="mb-5 text-sm">Se retirará del plano de tu establecimiento. Se conservarán sus pedidos y facturas anteriores.</p>
         <div className="flex justify-end gap-3">

@@ -88,7 +88,7 @@ export async function guardarConsumo(tx, pedido, ajustes, estado, anterior = nul
 export function generarFactura(user, body) {
   campos(body, ['id_pedido', ...editables]);
   const id = entero(body.id_pedido, 'El pedido');
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     await bloquearPedido(tx, id, user.id_restaurante);
     const p = await tx.pedido.findFirst({
       where: { id_pedido: id, ...alcanceFacturacion(user) },
@@ -108,7 +108,7 @@ export function generarFactura(user, body) {
 // Crear, editar y cobrar serializan sobre la misma fila de pedido. Se relee el estado
 // DESPUÉS de obtener el bloqueo para que un formulario abierto no pueda modificar un pago concurrente.
 export function editarFactura(user, id, body) {
-  return transaccionSalon(async (tx) => {
+  return transaccionSalon(user, async (tx) => {
     const where = { id_factura: id, pedido: alcanceFacturacion(user) };
     const origen = await tx.factura.findFirst({ where, select: { id_pedido: true } });
     if (!origen) throw new ErrorSalon(404, 'Factura no encontrada.');

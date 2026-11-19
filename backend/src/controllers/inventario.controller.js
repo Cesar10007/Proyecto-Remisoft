@@ -1,5 +1,5 @@
-import { cantidadInventarioValida } from '../utils/validation.js';
-import { referenciasDeUnidad, unidadEnUso, verificarUnidadEsperada } from '../utils/unidadesInventario.js';
+import { escritura } from '../services/actividad.service.js';
+import { referenciasDeUnidad, unidadEnUso, verificarPresentacion, medidaTrabajo, cantidadVisible, cantidadBase, costoVisible } from '../utils/unidadesInventario.js';
 import prisma from '../config/prisma.js';
 import { bloquearIngredientes, calcularStockActual, crearAjusteManual, verificarStockIngredientes } from '../services/inventario.service.js';
 import { auditarAjusteInventario } from '../utils/auditoria.js';
@@ -13,17 +13,21 @@ function parseIngredientId(value) {
 function serializarIngrediente(ingrediente) {
   const stockActual = calcularStockActual(ingrediente.inventario_mov);
 
+  const enUso = ingrediente.unidad_presentacion != null || unidadEnUso(ingrediente._count);
   return {
     id_ingrediente: ingrediente.id_ingrediente,
     nombre: ingrediente.nombre,
     descripcion: ingrediente.descripcion,
-    unidad_medida: ingrediente.unidad_medida,
-    costo_unitario_ref: ingrediente.costo_unitario_ref,
-    stock_minimo: ingrediente.stock_minimo,
-    stock_actual: stockActual,
+    unidad_medida: medidaTrabajo(ingrediente),
+    unidad_base: ingrediente.unidad_medida,
+    factor_unidad: Number(ingrediente.factor_unidad), cantidad_base: Number(ingrediente.cantidad_base),
+    costo_unitario_ref: costoVisible(ingrediente),
+    stock_minimo: cantidadVisible(ingrediente.stock_minimo, ingrediente),
+    stock_actual: cantidadVisible(stockActual, ingrediente),
     stock_bajo: stockActual <= Number(ingrediente.stock_minimo ?? 0),
     movimientos: ingrediente.inventario_mov.length,
-    unidad_bloqueada: unidadEnUso(ingrediente._count),
+    requiere_equivalencia: enUso,
+    unidad_bloqueada: enUso, // compatibilidad: un cliente antiguo no sabe convertir la base histórica
   };
 }
 
@@ -130,7 +134,7 @@ export async function show(req, res, next) {
 
 /**
  * GET /api/inventario/alertas/stock-bajo
- * Lotes de la sede + ajustes/consumos sin lote. No vuelve a sumar los movimientos ya aplicados a un lote.
+ * El mismo libro de movimientos del editor, con y sin lote.
  */
 export async function stockBajo(req, res, next) {
   try {
@@ -139,7 +143,7 @@ export async function stockBajo(req, res, next) {
       SELECT id_ingrediente, ingrediente, unidad_medida, stock_minimo,
              stock_total_actual, alerta
       FROM vista_inventario_bajo_minimo
-      WHERE (${idSede} IS NULL OR id_restaurante = ${idSede})
+      WHERE (${idSede} IS NULL OR id_restaurante = ${idSede}) ORDER BY stock_total_actual, id_ingrediente
     `;
 
     const data = filas.map((fila) => ({
@@ -180,7 +184,6 @@ export async function ajuste(req, res, next) {
         : '';
     const motivo =
       typeof req.body?.motivo === 'string' ? req.body.motivo.trim() : '';
-    const cantidad = Number(req.body?.cantidad);
     const idUsuario = req.user?.id_usuario ?? null;
 
     if (!idIngrediente) {
@@ -196,14 +199,6 @@ export async function ajuste(req, res, next) {
         success: false,
         message: 'El tipo de ajuste debe ser ENTRADA o SALIDA.',
         code: 'INVALID_TIPO',
-      });
-    }
-
-    if (!cantidadInventarioValida(req.body?.cantidad)) {
-      return res.status(422).json({
-        success: false,
-        message: 'La cantidad debe estar entre 0.001 y 9999999.999, con hasta tres decimales.',
-        code: 'INVALID_CANTIDAD',
       });
     }
 
@@ -228,9 +223,10 @@ export async function ajuste(req, res, next) {
       });
     }
 
-    const movimiento = await prisma.$transaction(async (tx) => {
+    const movimiento = await escritura(req.user, async (tx) => {
       const [actual] = await bloquearIngredientes(tx, [idIngrediente], req.sede.id_restaurante);
-      verificarUnidadEsperada(actual.unidad_medida, req.body.unidad_esperada);
+      verificarPresentacion(actual, req.body);
+      const cantidad = cantidadBase(req.body.cantidad, actual);
       if (tipo === 'SALIDA') {
         await verificarStockIngredientes(tx, [
           { id_ingrediente: idIngrediente, requerido: cantidad },

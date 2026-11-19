@@ -1,7 +1,7 @@
 import { unidadDeCantidad } from '../../utils/unidadesInventario'
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
-import api from '../../api/axios'
+import { useConsulta } from '../../hook/useConsulta'
 
 interface AlertaStock {
   id_ingrediente: number
@@ -14,31 +14,9 @@ interface AlertaStock {
 
 export default function NotificacionesStock() {
   const [abierta, setAbierta] = useState(false)
-  const [alertas, setAlertas] = useState<AlertaStock[] | null>(null)
-  const [errorAlertas, setErrorAlertas] = useState<string | null>(null)
+  const consulta = useConsulta<{ data: AlertaStock[] }>(abierta ? '/inventario/alertas/stock-bajo' : null, 10000)
+  const alertas = consulta.data?.data ?? null, errorAlertas = consulta.error
   const contenedorRef = useRef<HTMLDivElement>(null)
-
-  // Carga las alertas cada vez que se abre la campana.
-  useEffect(() => {
-    if (!abierta) return
-    setErrorAlertas(null)
-    setAlertas(null)
-    const ctl = new AbortController()
-    api
-      .get('/inventario/alertas/stock-bajo', { signal: ctl.signal, timeout: 20000 })
-      .then(({ data }) => {
-        if (!ctl.signal.aborted) setAlertas(data.data)
-      })
-      .catch((error: { response?: { status?: number } }) => {
-        if (ctl.signal.aborted) return
-        setErrorAlertas(
-          error?.response?.status === 403
-            ? 'Las alertas de inventario no están disponibles para tu rol.'
-            : 'No se pudieron cargar las alertas. Cierra y vuelve a abrir para reintentar.',
-        )
-      })
-    return () => ctl.abort()
-  }, [abierta])
 
   // Cierra el panel al hacer clic fuera o con Escape.
   useEffect(() => {

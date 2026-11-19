@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
@@ -81,7 +82,7 @@ export async function store(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.proveedor.create({ data: { ...data, ...req.sede } });
+    await escritura(req.user, tx => tx.proveedor.create({ data: { ...data, ...req.sede } }));
 
     res.status(201).json({ message: 'Proveedor creado' });
   } catch (err) {
@@ -106,10 +107,10 @@ export async function update(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.proveedor.update({
+    await escritura(req.user, tx => tx.proveedor.update({
       where: { id_proveedor: id, ...req.sede },
       data,
-    });
+    }));
 
     res.json({ message: 'Proveedor actualizado' });
   } catch (err) {
@@ -148,10 +149,10 @@ export async function destroy(req, res, next) {
 
     const nuevoEstado = proveedor.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
-    await prisma.proveedor.update({
+    await escritura(req.user, tx => tx.proveedor.update({
       where: { id_proveedor: id, ...req.sede },
       data: { estado: nuevoEstado },
-    });
+    }));
 
     res.json({
       message: nuevoEstado === 'ACTIVO' ? 'Proveedor activado' : 'Proveedor desactivado',

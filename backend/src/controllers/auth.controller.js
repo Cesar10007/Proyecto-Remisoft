@@ -1,3 +1,4 @@
+import { actividadSesion } from '../services/actividad.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
@@ -122,6 +123,7 @@ export async function login(req, res, next) {
     }
 
     const token = signJwt(usuario);
+    await actividadSesion(usuario, 'Inicio de sesión');
 
     // RNF-001.8 — LOGIN_SUCCESS con id_usuario e IP.
     registrarAuditoria({
@@ -153,7 +155,8 @@ export async function me(req, res) {
 
 // POST /api/auth/logout
 // JWT no guarda sesión de servidor; el cliente debe eliminar token y datos locales.
-export async function logout(_req, res) {
+export async function logout(req, res, next) {
+  try { await actividadSesion(req.user, 'Cierre de sesión'); } catch (err) { return next(err); }
   return res.json({
     message: 'Sesión cerrada. Elimina el token JWT del cliente.',
   });

@@ -23,16 +23,17 @@ CREATE PROCEDURE sp_cerrar_turno_caja(
 BEGIN
     DECLARE v_efectivo_esperado DECIMAL(10,2);
     DECLARE v_diferencia        DECIMAL(10,2);
+    DECLARE transaccion_propia BOOLEAN DEFAULT NOT @@in_transaction;
     DECLARE v_estado_turno      VARCHAR(20);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
+        IF transaccion_propia THEN ROLLBACK; END IF;
         RESIGNAL;
     END;
 
     -- Serializar el cierre con los cobros del cajero y con un segundo cierre.
-    START TRANSACTION;
+    IF transaccion_propia THEN START TRANSACTION; END IF;
     SELECT estado INTO v_estado_turno FROM turno_caja
     WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante FOR UPDATE;
 
@@ -62,7 +63,7 @@ BEGIN
         notas              = p_notas,
         estado             = 'CERRADA'
     WHERE id_turno = p_id_turno AND id_restaurante = p_id_restaurante;
-    COMMIT;
+    IF transaccion_propia THEN COMMIT; END IF;
 END //
 
 DELIMITER ;

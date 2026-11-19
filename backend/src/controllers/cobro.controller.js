@@ -99,7 +99,7 @@ export async function cerrarCuenta(req, res, next) {
     const referencia = req.body?.referencia ? String(req.body.referencia).trim().slice(0, 80) || null : null;
 
     const idUsuario = req.user.id_usuario;
-    const resultado = await transaccionSalon(async (tx) => {
+    const resultado = await transaccionSalon(req.user, async (tx) => {
       // Serializa pagos de un mismo turno para no perder saldo ni cobrar en una caja cerrada.
       const [turno] = await tx.$queryRaw`SELECT id_turno, efectivo_inicial FROM turno_caja
         WHERE id_usuario_cajero = ${idUsuario} AND id_restaurante = ${req.sede.id_restaurante} AND estado = 'ABIERTA' ORDER BY id_turno DESC LIMIT 1 FOR UPDATE`;
@@ -216,11 +216,10 @@ export async function cerrarCuenta(req, res, next) {
         },
       });
 
-      const ultimoMovimiento = await tx.flujo_caja.findFirst({
-        where: { id_turno: turno.id_turno },
-        orderBy: { id_flujo: 'desc' },
-      });
-      const saldoAnterior = Number(ultimoMovimiento?.saldo ?? turno.efectivo_inicial ?? 0);
+      // El turno está bloqueado. Un movimiento histórico puede no haber guardado saldo;
+      // no perder su ingreso/egreso ni sumar dos veces una apertura antigua.
+      const [libro] = await tx.$queryRaw`SELECT ingresos, egresos FROM vista_arqueo_turno WHERE id_turno=${turno.id_turno} AND id_restaurante=${req.sede.id_restaurante}`;
+      const saldoAnterior = Number(turno.efectivo_inicial ?? 0) + Number(libro.ingresos) - Number(libro.egresos);
 
       await tx.flujo_caja.create({
         data: {

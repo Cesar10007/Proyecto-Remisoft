@@ -40,10 +40,15 @@ export function useConsulta<T>(url: string | null, intervalo?: number) {
       if (!document.hidden && !actual.current) void cargar()
     }
     const timer = intervalo ? window.setInterval(visible, intervalo) : undefined
-    if (intervalo) document.addEventListener('visibilitychange', visible)
+    const notificar = () => { if (!document.hidden) void cargar() }
+    if (intervalo) {
+      document.addEventListener('visibilitychange', visible)
+      window.addEventListener('remisoft:actividad', notificar)
+    }
     return () => {
       window.clearInterval(timer)
       document.removeEventListener('visibilitychange', visible)
+      window.removeEventListener('remisoft:actividad', notificar)
       actual.current?.abort()
     }
   }, [url, cargar, intervalo])

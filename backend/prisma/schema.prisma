@@ -149,7 +149,10 @@ model Ingrediente {
   id_ingrediente        Int                     @id @default(autoincrement())
   nombre                String?                 @db.VarChar(50)
   descripcion           String?                 @db.VarChar(500)
-  unidad_medida         String?                 @db.VarChar(20)
+  unidad_medida         String?                 @db.VarChar(20) // base del libro de movimientos
+  unidad_presentacion   String?                 @db.VarChar(20)
+  cantidad_base         Decimal                 @default(1) @db.Decimal(16, 6)
+  factor_unidad         Decimal                 @default(1) @db.Decimal(16, 6)
   costo_unitario_ref    Decimal?                @db.Decimal(10, 2)
   stock_minimo          Decimal?                @default(0.00) @db.Decimal(10, 2)
   IA_INGREDIENTE        IA_INGREDIENTE[]
@@ -573,6 +576,8 @@ model users {
 }
 
 model usuario {
+  oculto_para personal_oculto[] @relation("oculto_usuario")
+  ocultados personal_oculto[] @relation("oculto_actor")
   id_usuario      Int     @id @default(autoincrement())
   id_rol          Int
   identificacion  String? @db.VarChar(20)
@@ -626,4 +631,36 @@ model solicitud_registro {
   @@index([id_restaurante], map: "id_restaurante")
   @@index([revisado_por], map: "revisado_por")
   @@index([estado], map: "estado")
+}
+
+// Instantáneas de auditoría: no dependen de que siga existiendo el objeto o el empleado.
+model actividad_sede {
+  id_evento      Int      @id @default(autoincrement())
+  id_restaurante Int
+  fecha          DateTime @default(now()) @db.DateTime(3)
+  id_actor       Int?
+  actor          String   @db.VarChar(150)
+  entidad        String   @db.VarChar(40)
+  registro       Int
+  accion         String   @db.VarChar(40)
+  campos         String?  @db.VarChar(500)
+  antes          String?  @db.VarChar(500)
+  despues        String?  @db.VarChar(500)
+  @@index([id_restaurante, id_evento], map: "actividad_sede_cursor")
+}
+
+// La fila solo vive dentro de la transacción de escritura, nunca en una sesión reutilizada del pool.
+model contexto_actividad {
+  conexion BigInt @id @db.UnsignedBigInt
+  id_actor Int
+  actor    String @db.VarChar(150)
+}
+
+model personal_oculto {
+  id_actor Int
+  id_usuario Int
+  actor usuario @relation("oculto_actor", fields:[id_actor], references:[id_usuario], onDelete:Cascade, onUpdate:Restrict, map:"personal_oculto_actor")
+  usuario usuario @relation("oculto_usuario", fields:[id_usuario], references:[id_usuario], onDelete:Cascade, onUpdate:Restrict, map:"personal_oculto_usuario")
+  @@id([id_actor,id_usuario])
+  @@index([id_usuario],map:"oculto_usuario")
 }

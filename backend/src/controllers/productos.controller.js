@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import mariadb from 'mariadb';
 import prisma, { dbConfig } from '../config/prisma.js';
 import { parseId, validateString } from '../utils/validation.js';
@@ -295,7 +296,7 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.producto.create({ data: { ...data, ...req.sede } });
+    await escritura(req.user, tx => tx.producto.create({ data: { ...data, ...req.sede } }));
 
     res.status(201).json({ message: 'Producto creado' });
   } catch (err) {
@@ -320,10 +321,10 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: error });
     }
 
-    await prisma.producto.update({
+    await escritura(req.user, tx => tx.producto.update({
       where: { id_producto: id, ...req.sede },
       data,
-    });
+    }));
 
     res.json({ message: 'Producto actualizado' });
   } catch (err) {
@@ -357,10 +358,10 @@ export async function eliminar(req, res, next) {
 
     const nuevoEstado = producto.Estado ? 0 : 1;
 
-    await prisma.producto.update({
+    await escritura(req.user, tx => tx.producto.update({
       where: { id_producto: id, ...req.sede },
       data: { Estado: nuevoEstado },
-    });
+    }));
 
     res.json({
       message: nuevoEstado ? 'Producto activado' : 'Producto desactivado',

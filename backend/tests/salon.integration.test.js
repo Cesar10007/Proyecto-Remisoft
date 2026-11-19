@@ -61,6 +61,7 @@ test(
       await db.usuario.deleteMany({ where: sitio });
       await db.mesa.deleteMany({ where: { id_mesa: { in: [mesa.id_mesa, segundaMesa.id_mesa] } } });
       await db.restaurante.delete({ where: sitio });
+      await db.actividad_sede.deleteMany({ where: sitio });
       await db.$disconnect();
     });
     const pedir = async (u, method, path, body) => {
@@ -202,6 +203,7 @@ test(
       await db.usuario.update({ where: { id_usuario: colega.id_usuario }, data: sitio });
       await db.mesa.deleteMany({ where: { id_restaurante: otraSede.id_restaurante } });
       await db.restaurante.delete({ where: { id_restaurante: otraSede.id_restaurante } });
+      await db.actividad_sede.deleteMany({ where: { id_restaurante: otraSede.id_restaurante } });
     }
     await espera(403, mesero, 'POST', '/cobro/cerrar-cuenta', { id_pedido: id, metodo: 'TARJETA' });
     assert.equal(
@@ -378,6 +380,7 @@ test(
         } finally {
           await db.usuario.update({ where: { id_usuario: gerente.id_usuario }, data: sitio });
           await db.restaurante.delete({ where: { id_restaurante: otra.id_restaurante } });
+          await db.actividad_sede.deleteMany({ where: { id_restaurante: otra.id_restaurante } });
         }
         await espera(422, mesero, 'PUT', url, { ...cambios, estado: 'PAGADA' });
         await espera(422, mesero, 'PUT', url, { ...cambios, propina: -20 });

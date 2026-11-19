@@ -35,12 +35,12 @@ const TOTALES_VACIOS: TotalesVentas = {
 }
 
 function ReportesCaja({ onBack }: ReportesCajaProps) {
-  const { data, error, cargar, cargando } = useConsulta<{ data: ReporteVentas }>('/reportes/ventas-diarias')
+  const { data, error, cargar, cargando } = useConsulta<{ data: ReporteVentas }>('/reportes/ventas-diarias', 15000)
   const reporte = data?.data
 
 
   const total = reporte?.total ?? TOTALES_VACIOS
-  const ticketPromedio = total.total_pedidos > 0 ? total.ingresos_brutos / total.total_pedidos : 0
+  const ticketPromedio = total.total_pedidos > 0 ? total.ingresos_netos / total.total_pedidos : 0
   const productos = reporte?.productos_top ?? []
 
   if (!data) return <CargaCaja error={error} cargar={cargar} volver={onBack} />
@@ -84,13 +84,13 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
             <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ventas del día</span>
             <Wallet size={22} aria-hidden="true" />
           </div>
-          <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_brutos)}</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Ingresos brutos del día</p>
+          <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_netos)}</p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Pagos aprobados · Bogotá</p>
         </div>
 
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pedidos realizados</span>
+            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Pedidos cobrados</span>
             <ReceiptText size={22} aria-hidden="true" />
           </div>
           <p className="text-[1.5rem] font-bold">{total.total_pedidos}</p>
@@ -108,11 +108,11 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
 
         <div className="rounded-[14px] border border-[var(--wa-border)] bg-white p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ingresos netos</span>
+            <span className="text-[0.82rem] font-semibold text-[var(--wa-text-muted)]">Ingresos brutos</span>
             <Landmark size={22} aria-hidden="true" />
           </div>
-          <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_netos)}</p>
-          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Después de descuentos</p>
+          <p className="text-[1.5rem] font-bold">{formatCOP(total.ingresos_brutos)}</p>
+          <p className="mt-1 text-[0.78rem] text-[var(--wa-text-muted)]">Antes de descuentos</p>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
           ]}
           data={productos}
           isLoading={cargando}
-          emptyMessage="No hay ventas facturadas hoy."
+          emptyMessage="Sin productos desglosados con primer cobro hoy."
           keyExtractor={(p) => p.id_producto}
         />
       </div>

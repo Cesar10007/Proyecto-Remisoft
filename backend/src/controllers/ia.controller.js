@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 import { validateString } from '../utils/validation.js';
 
@@ -19,10 +20,10 @@ export async function crear(req, res, next) {
       || validateString(Resultado_generado, 'Resultado_generado', 500, true)
       || validateString(Recomendaciones_generales, 'Recomendaciones_generales', 500);
     if (error) return res.status(422).json({ message: error });
-    const data = await prisma.iA.create({ data: {
+    const data = await escritura(req.user, tx => tx.iA.create({ data: {
       ...req.sede, Tipo_prediccion: Tipo_prediccion.trim(), Resultado_generado: Resultado_generado.trim(),
       Recomendaciones_generales: Recomendaciones_generales?.trim() || null,
-    } });
+    } }));
     res.status(201).json({ success: true, data });
   } catch (err) { next(err); }
 }

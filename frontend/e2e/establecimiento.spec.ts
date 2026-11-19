@@ -37,7 +37,7 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   for (const [seccion, mensaje] of [
     ['Inventario', 'No hay ingredientes disponibles'], ['Pedidos', 'No hay pedidos en curso.'],
     ['Finanzas', 'No hay transacciones recientes'], ['Mesas', 'No hay mesas registradas para este establecimiento.'],
-    ['IA Insights', 'No hay análisis de IA registrados para este establecimiento.'], ['Historial', 'No hay actividad registrada.'],
+    ['IA Insights', 'No hay análisis de IA registrados para este establecimiento.'], ['Historial', 'Historial de actividad'],
     ['Flujo de Caja', 'No hay cajas disponibles'], ['Turnos', 'No hay turnos registrados.'],
     ['Proveedores', 'No hay proveedores disponibles'], ['Personal', 'No hay personal registrado'],
   ]) {
@@ -77,6 +77,31 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await expect(campana).not.toContainText('Pechuga de Pollo')
   await page.keyboard.press('Escape')
 
+  await fila.getByRole('button', { name: 'Editar' }).click()
+  const editor = page.getByRole('dialog', { name: 'Editar Ingrediente' })
+  await editor.getByLabel('Unidad de medida').selectOption('pza')
+  await editor.getByLabel('Equivale a (pza)').fill('30')
+  await editor.getByRole('button', { name: 'Actualizar' }).click()
+  await expect(fila.getByRole('cell', { name: '30 pza', exact: true })).toBeVisible()
+  await fila.getByRole('button', { name: 'Movimientos' }).click()
+  await expect(movimientos.getByRole('listitem')).toContainText('Entrada: 1 bandeja')
+  const tablero = await page.context().newPage()
+  await tablero.goto('/gerente')
+  await tablero.getByRole('button', { name: 'Notificaciones', exact: true }).click()
+  const avisoStock = tablero.getByRole('dialog', { name: 'Alertas de inventario' })
+  await expect(avisoStock).toContainText(`Ingrediente ${id}`)
+  await movimientos.getByLabel('Cantidad (pza)').fill('60')
+  await movimientos.getByLabel('Motivo').fill('Reposición del proveedor')
+  await movimientos.getByRole('button', { name: 'Registrar movimiento' }).click()
+  await expect(movimientos).toContainText('Stock actual: 90 pza')
+  await expect(avisoStock).toContainText('No hay ingredientes', { timeout: 4500 })
+  await expect(tablero.getByText(/Sin alertas de stock/)).toBeVisible()
+  await tablero.close()
+  await movimientos.getByRole('button', { name: 'Cerrar ventana' }).click()
+  await boton('Notificaciones').click()
+  await expect(campana).toContainText('No hay ingredientes')
+  await page.keyboard.press('Escape')
+
   // Una lectura fallida no equivale a una sede sin registros.
   await page.route('**/api/ia', route => route.fulfill({ status: 503, json: { message: 'No disponible' } }))
   await boton('IA Insights').click()
@@ -96,5 +121,15 @@ test('altas de gerente y personal: se puede corregir el correo y la sede empieza
   await comprobarYCorregirCorreo(form)
   await boton('Crear Personal').click()
   await expect(page.getByRole('row').filter({ hasText: email })).toContainText('Juan Rojas')
+  const persona = page.getByRole('row').filter({ hasText: email })
+  page.on('dialog', d => d.accept())
+  await persona.getByRole('button', { name: 'Desactivar' }).click()
+  await expect(persona).toContainText('INACTIVO')
+  await persona.getByRole('button', { name: 'Reactivar' }).click()
+  await expect(persona.getByRole('button', { name: 'Desactivar' })).toBeVisible()
+  await persona.getByRole('button', { name: /Eliminar/ }).click()
+  await expect(persona).toHaveCount(0)
+  await boton('Historial').click()
+  await expect(page.getByRole('listitem').filter({ hasText: 'Retiro de mi lista' })).toContainText('Gerente de prueba')
   expect(errores).toEqual([])
 })

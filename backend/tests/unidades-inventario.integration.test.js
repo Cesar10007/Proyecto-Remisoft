@@ -25,7 +25,7 @@ test('unidad base del ingrediente: catálogo, edición y cantidades históricas'
       assert.equal((await api(token, '/inventario')).count, 13);
     });
 
-    await t.test('una ficha sin uso permite corregir la unidad; saldo cero con historial no', async () => {
+    await t.test('una ficha sin uso permite corregir la unidad; con historial no se reclasifica sin equivalencia', async () => {
       const { id_ingrediente: id } = await crear('KG');
       assert.equal((await leer(id)).unidad_medida, 'kg');
       await editar(id, { unidad_medida: 'sin catálogo' }, 422);
@@ -42,7 +42,7 @@ test('unidad base del ingrediente: catálogo, edición y cantidades históricas'
       assert.deepEqual(await leer(id), antes);
     });
 
-    await t.test('una receta sin movimientos ya fija la unidad; no se guarda una cantidad en otra medida', async () => {
+    await t.test('una receta sin movimientos ya requiere equivalencia; no se guarda una cantidad en otra medida', async () => {
       const { id_ingrediente: id } = await crear('ud');
       await api(token, '/productos', 'POST', { Nombre: 'Tortilla', precio_venta: 5000 }, 201);
       const [{ id_producto }] = await api(token, '/productos');
@@ -57,6 +57,29 @@ test('unidad base del ingrediente: catálogo, edición y cantidades históricas'
       await editar(id, { unidad_medida: 'bandeja' }, 409);
       const renglon = (await api(token, receta)).data.find(r => r.id_ingrediente === id);
       assert.deepEqual([renglon.unidad_medida, renglon.cantidad], ['pza', 2]);
+    });
+
+    await t.test('60 piezas = 2 bandejas: cambiar unidad, editar receta, descontar, volver y conservar el historial', async () => {
+      const { id_ingrediente: id } = await api(token, '/ingredientes', 'POST', { nombre:'Huevos', unidad_medida:'pza', stock_actual:60, stock_minimo:30, costo_unitario_ref:500 },201);
+      const [{ id_producto }] = await api(token,'/productos');
+      const ruta = `/productos/${id_producto}/receta`;
+      await api(token,ruta,'PUT',{ ingredientes:[{ id_ingrediente:id,cantidad:2,unidad_esperada:'pza' }] });
+      const antes = await leer(id);
+      await editar(id,{ unidad_esperada:'pza',unidad_medida:'bandeja',cantidad_base:30,factor_unidad:1 });
+      const ficha = await leer(id), esperada = { unidad_esperada:'bandeja',factor_esperado:1,base_esperada:30 };
+      assert.deepEqual([ficha.unidad_base,ficha.unidad_medida,ficha.stock_actual,ficha.stock_minimo,Number(ficha.costo_unitario_ref)],['pza','bandeja',2,1,15000]);
+      assert.deepEqual(ficha.historial_movimientos,antes.historial_movimientos);
+      assert.equal((await api(token,ruta)).data.find(x=>x.id_ingrediente===id).cantidad,0.066666667);
+      await api(token,ruta,'PUT',{ ingredientes:[{ id_ingrediente:id,cantidad:0.1,...esperada }] });
+      const receta = await db.receta.findFirstOrThrow({where:{id_producto,id_ingrediente:id}});
+      assert.deepEqual([Number(receta.Cantidad_necesaria),receta.Unidad],[3,'pza']);
+      await mover(id,'pza','SALIDA',409); // Formulario abierto antes de la conversión.
+      await api(token,'/inventario/ajuste','POST',{ id_ingrediente:id, tipo:'SALIDA',cantidad:1,motivo:'Una bandeja',...esperada },201);
+      const alerta = (await api(token,'/inventario/alertas/stock-bajo')).data.find(x=>x.id_ingrediente===id);
+      assert.deepEqual([alerta.stock_actual, alerta.stock_minimo, alerta.unidad_medida],[1,1,'bandeja']);
+      await editar(id,{ ...esperada, unidad_medida:'pza',cantidad_base:1,factor_unidad:1 });
+      assert.deepEqual((await leer(id)).historial_movimientos.map(m=>[m.tipo_movimiento,Number(m.cantidad)]),[['SALIDA',30],['ENTRADA',60]]);
+      assert.equal((await leer(id)).stock_actual,30);
     });
 
     await t.test('editar otra propiedad conserva literalmente las unidades anteriores, incluso NULL', async () => {

@@ -640,3 +640,8 @@
   color: var(--texto);
   border-bottom: 1px solid var(--borde);
 }
+/* Mantener tinta y fondo como pareja también al pulsar, no invertir el botón al abrir el formulario. */
+.ge-abrir-turno:is(:hover, :focus-visible, :active):not(:disabled) {
+  background-color: var(--accion-primaria-hover);
+  color: var(--sobre-accion);
+}

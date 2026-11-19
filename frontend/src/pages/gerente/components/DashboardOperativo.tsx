@@ -1,6 +1,6 @@
 import { cantidadConUnidad } from '../../../utils/unidadesInventario'
 import { useConsulta } from '../../../hook/useConsulta'
-import { formatoCOP } from '../useDatosGerente'
+import { formatoCOP, type VentasDia } from '../useDatosGerente'
 
 interface AlertaStock {
   id_ingrediente: number
@@ -11,34 +11,8 @@ interface AlertaStock {
   alerta: 'SIN STOCK' | 'BAJO MÍNIMO'
 }
 
-interface ResumenDia {
-  fecha: string
-  total_pedidos: number
-  ingresos_brutos: number
-  total_iva: number
-  total_descuentos: number
-  total_propinas: number
-  ingresos_netos: number
-}
-
-interface ProductoTop {
-  id_producto: number
-  producto: string
-  unidades: number
-  ingresos: number
-}
-
-interface VentasDiarias {
-  desde: string
-  hasta: string
-  dias: ResumenDia[]
-  total: Omit<ResumenDia, 'fecha'>
-  productos_top: ProductoTop[]
-}
-
-function DashboardOperativo() {
-  const stock = useConsulta<{ data: AlertaStock[] }>('/inventario/alertas/stock-bajo')
-  const reporte = useConsulta<{ data: VentasDiarias }>('/reportes/ventas-diarias')
+function DashboardOperativo({ reporte }: { reporte: ReturnType<typeof useConsulta<{ data: VentasDia }>> }) {
+  const stock = useConsulta<{ data: AlertaStock[] }>('/inventario/alertas/stock-bajo', 15000)
   const alertas = stock.error ? null : stock.data?.data ?? null
   const ventas = reporte.error ? null : reporte.data?.data ?? null
 
@@ -84,7 +58,7 @@ function DashboardOperativo() {
       <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-6 shadow-[var(--sombra)]">
         <div className="mb-4">
           <h3 className="font-['Syne'] text-[1.1rem] font-bold text-[var(--texto)]">Ventas de hoy</h3>
-          <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Facturas pagadas del día</p>
+          <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Pagos aprobados de esta sede · {ventas?.desde} · Bogotá</p>
         </div>
 
         {reporte.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas. <button onClick={reporte.cargar}>Reintentar</button></p>}
@@ -93,11 +67,11 @@ function DashboardOperativo() {
           <>
             <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
-                <p className="text-[0.75rem] text-[var(--texto-muted)]">Ingresos brutos</p>
-                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_brutos)}</p>
+                <p className="text-[0.75rem] text-[var(--texto-muted)]">Total cobrado</p>
+                <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{formatoCOP.format(ventas.total.ingresos_netos)}</p>
               </div>
               <div>
-                <p className="text-[0.75rem] text-[var(--texto-muted)]">Pedidos pagados</p>
+                <p className="text-[0.75rem] text-[var(--texto-muted)]">Facturas con pago</p>
                 <p className="font-['Syne'] text-[1.3rem] font-bold text-[var(--texto)]">{ventas.total.total_pedidos}</p>
               </div>
               <div>
@@ -108,7 +82,7 @@ function DashboardOperativo() {
 
             <p className="mb-2 text-[0.78rem] font-semibold text-[var(--texto-muted)]">Productos más vendidos</p>
             {ventas.productos_top.length === 0 ? (
-              <p className="text-[0.85rem] text-[var(--texto-muted)]">{ventas.total.total_pedidos === 0 ? 'Sin ventas registradas hoy en este establecimiento.' : 'Sin productos desglosados en las facturas de hoy.'}</p>
+              <p className="text-[0.85rem] text-[var(--texto-muted)]">{ventas.total.total_pedidos === 0 ? 'Sin ventas registradas hoy en este establecimiento.' : 'Sin productos desglosados con primer cobro hoy.'}</p>
             ) : (
               <ol className="flex flex-col gap-1.5">
                 {ventas.productos_top.map((p, i) => (

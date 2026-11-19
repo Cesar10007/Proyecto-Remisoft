@@ -11,9 +11,10 @@ const lecturas: Record<string, unknown> = {
   usuarios: [{ id_usuario: 8, id_rol: 2, activo: 1, nombre: 'Lina', email: 'lina@example.test' }],
   inventario: { data: [{ id_ingrediente: 1, nombre: 'Maíz', unidad_medida: 'KG', unidad_bloqueada: true, costo_unitario_ref: '18000.25', stock_minimo: 20, stock_actual: 19.6 }] },
   proveedores: [{ id_proveedor: 1, nombre: 'Molino', nombre_contacto: 'Ana', telefono: '', email: '', direccion: '', nit: '', tipo_proveedor: '', estado: 'ACTIVO' }],
+  historial: { data: [], siguiente: null }, 'turnos/movimientos': { data: [], siguiente: null }, 'turnos/arqueos': { data: [] },
   cajas: [], 'productos/vista': [], mesas: { data: [] }, facturas: { data: [] },
   solicitudes: { data: [] }, 'inventario/alertas/stock-bajo': { data: [] },
-  'reportes/ventas-diarias': { data: { dias: [], productos_top: [], total: { ingresos_brutos: 0, total_pedidos: 0, total_propinas: 0 } } },
+  'reportes/ventas-diarias': { data: { dias: [], productos_top: [], total: { ingresos_netos: 0, ingresos_brutos: 0, total_pedidos: 0, total_propinas: 0 } } },
   'reportes/pedidos-activos': { data: { pedidos_activos: 0 } },
   'cobro/pendientes': [cuenta],
   turnos: { data: [{ id_turno: 1, id_caja: 1, estado: 'ABIERTA', fecha_apertura: cuenta.fecha_hora, caja: { nombre: 'Central' } }] },
@@ -149,7 +150,10 @@ for (const [tema, gris] of [['claro', 'rgba(240, 237, 237, 0.5)'], ['oscuro', 'r
     await boton(page, 'Cancelar').click()
     await ir(page, 'Turnos')
     await comprobarAccion(boton(page, 'Abrir turno'))
-    await boton(page, 'Abrir turno').click()
+    await boton(page, 'Abrir turno').hover(); await page.mouse.down()
+    expect(await contraste(boton(page, 'Abrir turno')), 'botón de turno presionado').toBeGreaterThanOrEqual(4.5)
+    await page.mouse.up()
+    await expect(boton(page, 'Cancelar')).toHaveAttribute('aria-expanded', 'true')
     await comprobarAccion(boton(page, 'Cancelar'))
     await comprobarAccion(boton(page, 'Confirmar apertura'))
     await boton(page, 'Cancelar').click()
@@ -349,8 +353,7 @@ test('editar conserva el texto anterior y una unidad no definida sin sustituirlo
     const selector = d.getByLabel('Unidad de medida')
     await expect(selector).toHaveValue(original ?? '')
     await expect(selector.locator('option:checked')).toHaveText(original ? 'Botella (unidad anterior)' : 'Sin unidad (registro anterior)')
-    if (original) await expect(selector).toBeDisabled()
-    else await expect(selector).toBeEnabled()
+    await expect(selector).toBeEnabled()
     await d.getByLabel('Descripción').fill('Otra descripción')
     await page.route(`**/api/ingredientes/${id}`, route => route.fulfill({ json: { message: 'Actualizado' } }))
     const peticion = page.waitForRequest(req => req.method() === 'PUT' && req.url().endsWith(`/api/ingredientes/${id}`))

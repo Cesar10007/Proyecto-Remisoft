@@ -1,7 +1,7 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
-import { cantidadInventarioValida } from '../utils/validation.js';
 import { leerIngredientesConBloqueo } from '../services/inventario.service.js';
-import { verificarUnidadEsperada } from '../utils/unidadesInventario.js';
+import { verificarPresentacion, medidaTrabajo, cantidadVisible, cantidadBase } from '../utils/unidadesInventario.js';
 import { entero, ErrorSalon } from '../utils/salon.js';
 
 // El editor trabaja sobre la misma Receta que usa salón para descontar ingredientes.
@@ -26,11 +26,11 @@ export async function consultarReceta(req, res, next) {
       await verificarEnlaces(tx, id_producto, producto.id_restaurante);
       const ingredientes = await tx.ingrediente.findMany({
         where: { id_restaurante: producto.id_restaurante }, orderBy: [{ nombre: 'asc' }, { id_ingrediente: 'asc' }],
-        select: { id_ingrediente: true, nombre: true, unidad_medida: true,
+        select: { id_ingrediente: true, nombre: true, unidad_medida: true, unidad_presentacion: true, factor_unidad: true, cantidad_base: true,
           Receta: { where: { id_producto }, select: { Cantidad_necesaria: true } } },
       });
-      return ingredientes.map(({ Receta, ...i }) => ({ ...i,
-        cantidad: Receta.reduce((n, r) => n + Math.round(Number(r.Cantidad_necesaria) * 1000), 0) / 1000,
+      return ingredientes.map(({ Receta, ...i }) => ({ id_ingrediente: i.id_ingrediente, nombre: i.nombre, unidad_medida: medidaTrabajo(i), factor_unidad: Number(i.factor_unidad), cantidad_base: Number(i.cantidad_base),
+        cantidad: cantidadVisible(Receta.reduce((n, r) => n + Math.round(Number(r.Cantidad_necesaria) * 1000), 0) / 1000, i),
       }));
     }, { isolationLevel: 'RepeatableRead' });
     res.json({ data });
@@ -46,25 +46,24 @@ export async function guardarReceta(req, res, next) {
     }
     for (const linea of lineas) {
       entero(linea?.id_ingrediente, 'El ingrediente');
-      if (!cantidadInventarioValida(linea.cantidad)) {
-        throw new ErrorSalon(422, 'La cantidad por porción debe estar entre 0.001 y 9999999.999, con hasta tres decimales.');
-      }
     }
     const ids = lineas.map(l => l.id_ingrediente);
     if (new Set(ids).size !== ids.length) throw new ErrorSalon(422, 'No repitas ingredientes en la receta.');
     const { id_restaurante } = req.sede;
-    await prisma.$transaction(async (tx) => {
+    await escritura(req.user, async (tx) => {
       const [producto] = await tx.$queryRaw`SELECT id_producto FROM Producto WHERE id_producto = ${id_producto} AND id_restaurante = ${id_restaurante} FOR UPDATE`;
       if (!producto) throw new ErrorSalon(404, 'Producto no encontrado.');
       await verificarEnlaces(tx, id_producto, id_restaurante);
       const propios = await leerIngredientesConBloqueo(tx, ids, id_restaurante);
       if (propios.length !== ids.length) throw new ErrorSalon(422, 'Selecciona solo ingredientes de este establecimiento.');
-      const unidades = new Map(propios.map(i => [i.id_ingrediente, i.unidad_medida]));
-      for (const linea of lineas) verificarUnidadEsperada(unidades.get(linea.id_ingrediente), linea.unidad_esperada);
+      const porId = new Map(propios.map(i => [i.id_ingrediente, i]));
+      const receta = lineas.map(l => {
+        const i = porId.get(l.id_ingrediente);
+        verificarPresentacion(i, l);
+        return { id_producto, id_ingrediente: i.id_ingrediente, Cantidad_necesaria: cantidadBase(l.cantidad, i), Unidad: i.unidad_medida };
+      });
       await tx.receta.deleteMany({ where: { id_producto } });
-      if (lineas.length) await tx.receta.createMany({ data: lineas.map(l => ({
-        id_producto, id_ingrediente: l.id_ingrediente, Cantidad_necesaria: Number(l.cantidad), Unidad: unidades.get(l.id_ingrediente),
-      })) });
+      if (receta.length) await tx.receta.createMany({ data: receta });
     });
     res.json({ message: 'Receta guardada.' });
   } catch (err) { next(err); }

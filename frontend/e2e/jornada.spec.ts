@@ -27,6 +27,11 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
   await retirar.click(); await confirmar.getByRole('button', { name: 'Cancelar' }).click()
   await expect(page.getByRole('row').filter({ hasText: 'T-01' })).toContainText('4 personas')
 
+  const editarMesa = boton(page, 'Editar mesa 1'), dialogoMesa = page.getByRole('dialog', { name: 'Editar mesa 1' })
+  await editarMesa.click(); await dialogoMesa.getByLabel('Capacidad').fill('5')
+  await dialogoMesa.getByRole('button', { name: 'Guardar mesa' }).click()
+  await expect(page.getByRole('row').filter({ hasText: 'T-01' })).toContainText('5 personas')
+
   await ir('Inventario'); await ir('+ Nuevo Ingrediente')
   await page.getByLabel('Nombre', { exact: true }).fill('Masa')
   await page.getByRole('combobox', { name: 'Unidad de medida' }).selectOption('kg')
@@ -48,7 +53,7 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
   await ir('Cerrar ventana')
   await filaMasa.getByRole('button', { name: 'Editar' }).click()
   const editor = page.getByRole('dialog', { name: 'Editar Ingrediente' })
-  await expect(editor.getByLabel('Unidad de medida')).toBeDisabled()
+  await expect(editor.getByLabel('Unidad de medida')).toBeEnabled()
   await expect(editor.getByLabel('Unidad de medida')).toHaveValue('kg')
   await expect(editor.getByLabel('Stock mínimo (kg)')).toHaveValue('9.5')
   await expect(editor.getByLabel('Stock actual')).toHaveValue('9.6')
@@ -79,7 +84,7 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
   await page.getByLabel('Cajero', { exact: true }).selectOption({ label: 'Eva Rojas' })
   await page.getByPlaceholder('Efectivo inicial').fill('50000')
   await ir('Confirmar apertura'); await expect(boton(page, 'Cerrar turno')).toBeVisible()
-  await ir('Mesas'); await retirar.click() // Confirmación abierta mientras otro usuario ocupa la mesa.
+  await ir('Mesas'); await editarMesa.click() // Formulario abierto mientras el mesero ocupa la mesa.
 
   const salon = await browser.newPage(), caja = await browser.newPage()
   try {
@@ -91,8 +96,10 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
     await boton(salon, 'Agregar Arepa').click(); await boton(salon, 'Sumar Arepa').click()
     await boton(salon, 'Enviar a cocina').click()
     await expect(ficha.getByText('2 × Arepa')).toBeVisible()
-    await confirmar.getByRole('button', { name: 'Eliminar mesa' }).click()
-    await expect(page.getByRole('alert')).toContainText('cuenta abierta')
+    await expect(dialogoMesa.getByRole('button', { name: 'Guardar mesa' })).toBeDisabled({ timeout: 4500 })
+    await expect(dialogoMesa.getByRole('alert')).toContainText('no está disponible')
+    await dialogoMesa.getByRole('button', { name: 'Cerrar ventana' }).click()
+    await expect(editarMesa).toBeDisabled()
     await expect(retirar).toBeDisabled()
     await ir('Inventario'); await ir('Movimientos')
     await expect(inv).toContainText('Stock actual: 9.5 kg')
@@ -120,6 +127,11 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
     await expect(comprobante.locator('.cajero__total-final')).toContainText('23.800')
     await expect(comprobante).toContainText('TRANSFERENCIA')
 
+    await ir('Flujo de Caja')
+    await expect(page.getByRole('row').filter({ hasText: 'Cobro ' })).toContainText(/Transferencia.*23\.800.*73\.800/)
+    await ir('Historial')
+    await expect(page.getByRole('listitem').filter({ hasText: /^Pago #/ }).first()).toContainText('Eva Rojas')
+    await expect(page.getByRole('listitem').filter({ hasText: /^Detalle de pedido #/ }).first()).toContainText(/Luis Rojas|Eva Rojas/)
     await ir('Finanzas')
     await expect(page.getByRole('row').filter({ hasText: 'Pago Transferencia' })).toContainText('23.800')
     await ir('Turnos'); await ir('Cerrar turno')
@@ -134,6 +146,7 @@ test('la primera venta desde los paneles del gerente, su mesero y su cajera', as
     await expect(page.getByText('No hay mesas registradas para este establecimiento.')).toBeVisible()
     await ir('Menú')
     await expect(page.getByRole('article').filter({ hasText: 'Ingresos del día' })).toContainText('23.800')
+    await expect(page.getByText('Total cobrado', { exact: true }).locator('..')).toContainText('23.800')
     await expect(page.getByText('Mesa 01 - Pago recibido')).toBeVisible()
     await expect(page.getByText('Stock 9.5 kg · mínimo 9.5 kg')).toBeVisible()
     await ir('Ver finanzas')

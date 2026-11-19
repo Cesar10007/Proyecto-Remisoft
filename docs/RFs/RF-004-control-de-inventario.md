@@ -43,7 +43,7 @@ Finalmente, el sistema deberá emitir alertas o notificaciones cuando los nivele
 | RN-004 | El sistema debe alertar cuando el stock de un producto sea igual o menor a su umbral mínimo. |
 | RN-005 | No se puede confirmar un pedido si no hay stock suficiente de un ingrediente requerido. |
 | RN-006 | El historial de movimientos debe ser exportable para auditorías internas. |
-| RN-007 | Cada ingrediente nuevo tiene una unidad base elegida del catálogo (peso, volumen, conteo o empaque). El costo, los saldos, los movimientos y las recetas usan esa unidad, sin conversiones implícitas. No se cambia mientras existan registros que dependan de ella. |
+| RN-007 | Cada ingrediente nuevo tiene una unidad base elegida del catálogo (peso, volumen, conteo o empaque). El costo, los saldos, los movimientos y las recetas usan esa unidad, sin conversiones implícitas. Si hay registros, se conserva la base histórica y puede cambiarse la unidad de trabajo con una equivalencia explícita por ingrediente. Las alertas y los conteos usan el mismo saldo de movimientos. |
 
 ---
 

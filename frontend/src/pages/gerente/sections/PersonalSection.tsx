@@ -30,6 +30,7 @@ interface PersonalSectionProps {
   onFormSubmit: (event: FormEvent<HTMLFormElement>) => void
   onFormChange: (field: keyof FormData, value: string | number) => void
   onEdit: (usuario: Personal) => void
+  onEstado: (usuario: Personal) => void
   onDelete: (id: number) => void
   onCancelEdit: () => void
   onTogglePassword: () => void
@@ -38,7 +39,7 @@ interface PersonalSectionProps {
 function PersonalSection({
   personal, formData, usuarioEditando, errorPersonal, guardandoPersonal,
   cargandoPersonal, mostrarContrasena, onFormSubmit, onFormChange, onEdit,
-  onDelete, onCancelEdit, onTogglePassword,
+  onEstado, onDelete, onCancelEdit, onTogglePassword,
 }: PersonalSectionProps) {
   const errorFormulario = errorPersonal?.origen === 'formulario' ? errorPersonal.mensaje : null
   const columns: Column<Personal>[] = [
@@ -76,10 +77,11 @@ function PersonalSection({
             <span className="material-symbols-outlined text-[16px]">edit</span>
             Editar
           </button>
+          <Button size="small" variant="outline" onClick={() => onEstado(usuario)}>{usuario.activo ? 'Desactivar' : 'Reactivar'}</Button>
           <button
             type="button"
             onClick={() => onDelete(usuario.id_usuario)}
-            title="Eliminar usuario"
+            title="Desactivar el acceso y retirar de mi lista"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--t-brd-efc4c0,#efc4c0)] bg-[var(--t-bg-fff8f7,#fff8f7)] px-3 py-1.5 text-[0.78rem] font-semibold text-[var(--rojo-dark)] transition-colors hover:border-[var(--rojo)] hover:bg-[var(--rojo-light)] focus:outline-none focus:ring-2 focus:ring-[var(--rojo-light)]"
           >
             <span className="material-symbols-outlined text-[16px]">delete</span>

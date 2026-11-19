@@ -183,7 +183,7 @@ function GestionGerentes() {
       setCambiandoEstado(usuario.id_usuario)
       setError(null)
 
-      await api.patch(`/usuarios/${usuario.id_usuario}/estado`)
+      await api.patch(`/usuarios/${usuario.id_usuario}/estado`, { activo: !activo })
       await cargarGerentes()
     } catch (requestError) {
       setError(obtenerMensajeError(requestError))
@@ -197,7 +197,7 @@ function GestionGerentes() {
       !window.confirm(
         `¿Deseas eliminar al gerente ${usuario.nombre} ${
           usuario.apellido || ''
-        }? Esta acción lo ocultará del listado.`,
+        }? Se desactivará el acceso y la ficha se ocultará solo de tu lista. Se conserva su historial.`,
       )
     ) {
       return

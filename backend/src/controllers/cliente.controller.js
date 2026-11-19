@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 import { parseId, validateString, validateEmail } from '../utils/validation.js';
 
@@ -117,9 +118,9 @@ export async function crear(req, res, next) {
       });
     }
 
-    await prisma.cliente.create({
+    await escritura(req.user, tx => tx.cliente.create({
       data: { ...data, ...req.sede },
-    });
+    }));
 
     res.status(201).json({
       message: 'Cliente creado',
@@ -148,13 +149,13 @@ export async function actualizar(req, res, next) {
       });
     }
 
-    await prisma.cliente.update({
+    await escritura(req.user, tx => tx.cliente.update({
       where: {
         ...req.sede,
         id_cliente: id,
       },
       data,
-    });
+    }));
 
     res.json({
       message: 'Cliente actualizado',
@@ -181,12 +182,12 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await prisma.cliente.delete({
+    await escritura(req.user, tx => tx.cliente.delete({
       where: {
         ...req.sede,
         id_cliente: id,
       },
-    });
+    }));
 
     res.json({
       message: 'Cliente eliminado',

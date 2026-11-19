@@ -102,7 +102,7 @@ export async function avanzarItem(req, res, next) {
       select: { id_pedido: true },
     });
     if (!item) throw new ErrorSalon(404, 'Ítem no encontrado.');
-    const resultado = await transaccionSalon(async (tx) => {
+    const resultado = await transaccionSalon(req.user, async (tx) => {
       await bloquearPedido(tx, item.id_pedido, req.sede.id_restaurante);
       const p = await tx.pedido.findFirst({
         where: { id_pedido: item.id_pedido, ...alcance(req.user) },

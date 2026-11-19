@@ -190,7 +190,7 @@ export async function crear(req, res, next) {
     // Doble seguro: aunque validarPedido ya fuerza ABIERTO, se vuelve a
     // fijar aquí para que el cliente nunca pueda elegir el estado inicial.
     if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
-    const creado = await transaccionSalon(async (tx) => {
+    const creado = await transaccionSalon(req.user, async (tx) => {
       await validarReferencias(tx, req.sede, data);
       data.id_restaurante = req.sede.id_restaurante;
       if (data.Mesa_num != null) {
@@ -253,7 +253,7 @@ export async function actualizar(req, res, next) {
     }
 
     if (req.user.rol === 'MESERO') data.id_mesero = req.user.id_usuario;
-    await transaccionSalon(async (tx) => {
+    await transaccionSalon(req.user, async (tx) => {
       await bloquearPedido(tx, id, req.sede.id_restaurante);
       const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
       const actual = await tx.pedido.findFirstOrThrow({ where, include: { Factura: indicadorPago } });
@@ -321,7 +321,7 @@ export async function eliminar(req, res, next) {
       });
     }
 
-    await transaccionSalon(async (tx) => {
+    await transaccionSalon(req.user, async (tx) => {
       await bloquearPedido(tx, id, req.sede.id_restaurante);
       const where = { id_pedido: id, version_salon: null, estado: 'ABIERTO', ...alcanceMesero(req.user) };
       const p = await tx.pedido.findFirstOrThrow({ where, select: { Factura: indicadorPago } });

@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import { crearEstablecimiento } from '../utils/restaurante.js';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma.js';
@@ -135,13 +136,14 @@ export async function crearSolicitud(req, res, next) {
     const cuenta = await prisma.usuario.findUnique({ where: { email: emailNormalizado }, select: { id_usuario: true } });
     if (cuenta) return solicitudInvalida(res, { email: [CORREO_INVALIDO] });
 
-    const solicitud = await prisma.solicitud_registro.create({
+    const hash = await bcrypt.hash(contrasena, 12);
+    const solicitud = await escritura(req.user, tx => tx.solicitud_registro.create({
       data: {
         nombre: texto(nombre),
         apellido: texto(apellido),
         email: emailNormalizado,
         telefono: texto(telefono) || null,
-        contrasena_hash: await bcrypt.hash(contrasena, 12),
+        contrasena_hash: hash,
         nombre_establecimiento: idRol === 2 ? nombreEstablecimiento || null : null,
         id_rol_solicitado: idRol,
         id_restaurante: idRestaurante,
@@ -154,7 +156,7 @@ export async function crearSolicitud(req, res, next) {
         estado: true,
         fecha_solicitud: true,
       },
-    });
+    }));
 
     return res.status(201).json({
       success: true,
@@ -308,7 +310,7 @@ export async function aprobarSolicitud(req, res, next) {
       });
     }
 
-    const resultado = await prisma.$transaction(async (tx) => {
+    const resultado = await escritura(req.user, async (tx) => {
       const solicitud = await tx.solicitud_registro.findUnique({
         where: { id_solicitud: idSolicitud },
       });
@@ -449,7 +451,7 @@ export async function rechazarSolicitud(req, res, next) {
       });
     }
 
-    const actualizada = await prisma.solicitud_registro.update({
+    const actualizada = await escritura(req.user, tx => tx.solicitud_registro.update({
       where: { id_solicitud: idSolicitud },
       data: {
         estado: 'RECHAZADA',
@@ -463,7 +465,7 @@ export async function rechazarSolicitud(req, res, next) {
         motivo_rechazo: true,
         fecha_revision: true,
       },
-    });
+    }));
 
     return res.json({
       success: true,

@@ -1,3 +1,4 @@
+import { escritura } from '../services/actividad.service.js';
 import prisma from '../config/prisma.js';
 
 export async function index(req, res, next) {
@@ -20,9 +21,9 @@ export async function crear(req, res, next) {
       return res.status(422).json({ message: 'El campo estado no puede superar 20 caracteres' });
     }
 
-    await prisma.caja.create({
+    await escritura(req.user, tx => tx.caja.create({
       data: { ...req.sede, nombre, estado: estado || 'ACTIVA' },
-    });
+    }));
 
     res.status(201).json({ message: 'Caja creada' });
   } catch (err) {
@@ -42,10 +43,10 @@ export async function actualizar(req, res, next) {
       return res.status(422).json({ message: 'El campo estado no puede superar 20 caracteres' });
     }
 
-    await prisma.caja.update({
+    await escritura(req.user, tx => tx.caja.update({
       where: { id_caja: Number(id), ...req.sede },
       data: { nombre, estado: estado || 'ACTIVA' },
-    });
+    }));
 
     res.json({ message: 'Caja actualizada' });
   } catch (err) {
@@ -59,10 +60,10 @@ export async function actualizar(req, res, next) {
 export async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
-    await prisma.caja.update({
+    await escritura(req.user, tx => tx.caja.update({
       where: { id_caja: Number(id), ...req.sede },
       data: { estado: 'INACTIVA' },
-    });
+    }));
     res.json({ message: 'Caja desactivada' });
   } catch (err) {
     if (err.code === 'P2025') {

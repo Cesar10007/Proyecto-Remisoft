@@ -10,12 +10,13 @@ import Modal from '../../../components/common/Modal'
 import type { Ingrediente } from '../types'
 
 interface Movimiento { id_movimiento: number; fecha_hora: string | null; tipo_movimiento: string; cantidad: string; origen_tipo: string | null; observaciones: string | null }
-interface Ficha { unidad_medida: string | null; stock_actual: number; historial_movimientos: Movimiento[] }
+interface Ficha { unidad_base?: string | null; factor_unidad?: number; cantidad_base?: number; unidad_medida: string | null; stock_actual: number; historial_movimientos: Movimiento[] }
 
 export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar }: { ingrediente: Ingrediente; actualizar: () => Promise<void>; cerrar: () => void }) {
   const id = ingrediente.id_ingrediente
   const ficha = useConsulta<{ data: Ficha }>(`/inventario/${id}`)
   const unidad = ficha.data?.data.unidad_medida
+  const base = ficha.data?.data.unidad_base === undefined ? unidad : ficha.data.data.unidad_base
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
@@ -25,7 +26,7 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
     const form = e.currentTarget, campos = new FormData(form)
     setGuardando(true); setError(''); setAviso('')
     try {
-      await api.post('/inventario/ajuste', { id_ingrediente: id, unidad_esperada: unidad, tipo: campos.get('tipo'), cantidad: Number(campos.get('cantidad')), motivo: String(campos.get('motivo')).trim() })
+      await api.post('/inventario/ajuste', { id_ingrediente: id, unidad_esperada: unidad, factor_esperado: ficha.data?.data.factor_unidad, base_esperada: ficha.data?.data.cantidad_base, tipo: campos.get('tipo'), cantidad: Number(campos.get('cantidad')), motivo: String(campos.get('motivo')).trim() })
       form.reset(); setAviso('Movimiento registrado.')
       await Promise.all([actualizar(), ficha.cargar()])
     } catch (e) { setError(mensajeError(e)) }
@@ -36,7 +37,7 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
       <p className="mb-4 font-semibold">Stock actual: {cantidadConUnidad(ficha.data.data.stock_actual, unidad)}</p>
       <form onSubmit={ajustar} className="grid gap-3">
         <SelectField label="Tipo de movimiento" name="tipo"><option value="ENTRADA">Entrada</option><option value="SALIDA">Salida</option></SelectField>
-        <InputField label={`Cantidad (${unidadDeCantidad(unidad) || 'sin unidad'})`} name="cantidad" type="number" min="0.001" max="9999999.999" step="0.001" required />
+        <InputField label={`Cantidad (${unidadDeCantidad(unidad) || 'sin unidad'})`} name="cantidad" type="number" min="0.000000001" step="any" required />
         <InputField label="Motivo" name="motivo" minLength={5} maxLength={1000} placeholder="Ej.: conteo inicial" required />
         {error && <p role="alert" className="text-[var(--rojo-dark)]">{error}</p>}
         {aviso && <p role="status">{aviso}</p>}
@@ -46,7 +47,7 @@ export default function MovimientosIngrediente({ ingrediente, actualizar, cerrar
       {!ficha.data.data.historial_movimientos.length && <p className="mt-2 text-sm">Sin movimientos registrados.</p>}
       <ul className="divide-y divide-[var(--borde)] text-sm">
         {ficha.data.data.historial_movimientos.map(m => <li key={m.id_movimiento} className="py-2">
-          <strong>{m.tipo_movimiento === 'ENTRADA' ? 'Entrada' : m.tipo_movimiento === 'SALIDA' ? 'Salida' : m.tipo_movimiento}: {cantidadConUnidad(Number(m.cantidad), unidad)}</strong>
+          <strong>{m.tipo_movimiento === 'ENTRADA' ? 'Entrada' : m.tipo_movimiento === 'SALIDA' ? 'Salida' : m.tipo_movimiento}: {cantidadConUnidad(Number(m.cantidad), base)}</strong>
           <span className="ml-2">{m.origen_tipo}</span>
           {m.fecha_hora && <time dateTime={m.fecha_hora} className="ml-2 text-xs text-[var(--texto-muted)]">{new Date(m.fecha_hora).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}</time>}
           <p className="text-[var(--texto-muted)]">{m.observaciones}</p>
