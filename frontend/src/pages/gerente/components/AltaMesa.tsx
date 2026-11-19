@@ -29,10 +29,10 @@ export default function AltaMesa({ alCrear, mesa, bloqueada = false, alConflicto
     finally { setGuardando(false) }
   }
   return (
-    <form onSubmit={crear}><fieldset disabled={bloqueada || guardando} className="mb-6 flex flex-wrap items-end gap-3">
-      <InputField label="Número de mesa" name="numero" defaultValue={mesa?.numero} type="number" min="1" max="2147483647" step="1" required />
-      <InputField label="Capacidad" name="capacidad" defaultValue={mesa?.capacidad ?? undefined} type="number" min="1" max="2147483647" step="1" required />
-      <Button type="submit" disabled={bloqueada || guardando}>{mesa ? 'Guardar mesa' : 'Agregar mesa'}</Button>
+    <form aria-description={mesa ? 'Modifica el número o la capacidad de la mesa.' : 'Define el número y la capacidad de la nueva mesa.'} onSubmit={crear}><fieldset disabled={bloqueada || guardando} className="mb-6 flex flex-wrap items-end gap-3">
+      <InputField aria-description="Indica el número con el que se identificará la mesa." label="Número de mesa" name="numero" defaultValue={mesa?.numero} type="number" min="1" max="2147483647" step="1" required />
+      <InputField aria-description="Indica cuántas personas pueden sentarse en la mesa." label="Capacidad" name="capacidad" defaultValue={mesa?.capacidad ?? undefined} type="number" min="1" max="2147483647" step="1" required />
+      <Button aria-description={mesa ? 'Guarda los cambios de esta mesa.' : 'Agrega la mesa al plano de la sede.'} type="submit" disabled={bloqueada || guardando}>{mesa ? 'Guardar mesa' : 'Agregar mesa'}</Button>
       </fieldset>
       {bloqueada && <p role="alert">Esta mesa ya no está disponible. No se pueden guardar cambios.</p>}
       {error && <p role="alert" className="text-[var(--rojo-dark)]">{error}</p>}

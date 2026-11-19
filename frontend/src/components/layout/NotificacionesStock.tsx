@@ -38,6 +38,7 @@ export default function NotificacionesStock() {
   return (
     <div ref={contenedorRef} className="relative">
       <button
+        aria-description={abierta ? 'Oculta las alertas de inventario.' : 'Consulta los ingredientes agotados o bajo el mínimo.'}
         type="button"
         aria-label="Notificaciones"
         aria-expanded={abierta}

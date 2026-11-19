@@ -31,7 +31,7 @@ function DashboardOperativo({ reporte }: { reporte: ReturnType<typeof useConsult
           )}
         </div>
 
-        {stock.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas. <button onClick={stock.cargar}>Reintentar</button></p>}
+        {stock.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudieron cargar las alertas. <button aria-description="Vuelve a consultar los ingredientes con poco stock." onClick={stock.cargar}>Reintentar</button></p>}
         {!stock.error && alertas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {alertas && alertas.length === 0 && (
           <p className="text-[0.85rem] text-[var(--texto-muted)]">Sin alertas de stock para este establecimiento.</p>
@@ -61,7 +61,7 @@ function DashboardOperativo({ reporte }: { reporte: ReturnType<typeof useConsult
           <p className="mt-0.5 text-[0.8rem] text-[var(--texto-muted)]">Pagos aprobados de esta sede · {ventas?.desde} · Bogotá</p>
         </div>
 
-        {reporte.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas. <button onClick={reporte.cargar}>Reintentar</button></p>}
+        {reporte.error && <p role="alert" className="text-[0.85rem] text-[var(--rojo)]">No se pudo cargar el resumen de ventas. <button aria-description="Vuelve a consultar las ventas de hoy." onClick={reporte.cargar}>Reintentar</button></p>}
         {!reporte.error && ventas === null && <p className="text-[0.85rem] text-[var(--texto-muted)]">Cargando...</p>}
         {ventas && (
           <>

@@ -27,14 +27,14 @@ export default function RecetaProducto({ producto, cerrar }: { producto: Product
   }
   return (
     <Modal title={`Receta de ${producto.Nombre}`} onClose={cerrar} busy={guardando}>
-      {error ? <p role="alert">{error} <button onClick={cargar}>Reintentar</button></p> : !data ? <p role="status">Cargando receta…</p> : !data.data.length ?
+      {error ? <p role="alert">{error} <button aria-description="Vuelve a cargar los ingredientes de la receta." onClick={cargar}>Reintentar</button></p> : !data ? <p role="status">Cargando receta…</p> : !data.data.length ?
         <p>Primero crea un ingrediente en Inventario.</p> :
-        <form onSubmit={guardar} className="grid gap-4">
+        <form aria-description="Define cuánto se descuenta de cada ingrediente por porción." onSubmit={guardar} className="grid gap-4">
           <p className="text-sm text-[var(--texto-muted)]">Cantidad que se descuenta al pedir una unidad del producto. Deja en blanco los ingredientes que no se usan.</p>
-          {data.data.map(i => <InputField key={i.id_ingrediente} label={`${i.nombre} (${unidadDeCantidad(i.unidad_medida) || 'sin unidad'})`} name={String(i.id_ingrediente)}
+          {data.data.map(i => <InputField aria-description={`Indica cuánto se usa de ${i.nombre} por porción.`} key={i.id_ingrediente} label={`${i.nombre} (${unidadDeCantidad(i.unidad_medida) || 'sin unidad'})`} name={String(i.id_ingrediente)}
             type="number" min="0" step="any" placeholder="0" defaultValue={i.cantidad || ''} />)}
           {fallo && <p role="alert" className="text-[var(--rojo-dark)]">{fallo}</p>}
-          <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar receta'}</Button>
+          <Button aria-description="Guarda las cantidades de ingredientes de este producto." type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar receta'}</Button>
         </form>}
     </Modal>
   )

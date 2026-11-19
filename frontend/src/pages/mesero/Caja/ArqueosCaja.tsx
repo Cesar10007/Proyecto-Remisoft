@@ -80,10 +80,11 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -160,6 +161,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta las opciones de estado del arqueo.' : 'Filtra los arqueos por su resultado o estado.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -172,6 +174,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-44 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {['', 'En curso', 'Cuadrado', 'Sobrante', 'Faltante'].map((op) => (
                   <button
+                    aria-description={op ? `Muestra los arqueos con estado «${op}».` : 'Muestra todos los arqueos de turnos cerrados.'}
                     key={op || 'todos'}
                     type="button"
                     onClick={() => {
@@ -221,6 +224,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
               render: (a) => (
                 <div className="flex justify-end">
                   <button
+                    aria-description="Consulta el efectivo esperado y contado en este arqueo."
                     type="button"
                     onClick={() =>
                       setDetalle({
@@ -241,7 +245,7 @@ function ArqueosCaja({ onBack }: ArqueosCajaProps) {
                       })
                     }
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                    aria-label="Ver arqueo" title="Ver arqueo"
+                    aria-label="Ver arqueo"
                   >
                     <Eye size={18} aria-hidden="true" />
                   </button>

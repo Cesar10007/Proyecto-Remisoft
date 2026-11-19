@@ -73,9 +73,10 @@ function Login({ onClose }: LoginProps) {
         Ingresa tus credenciales para continuar
       </p>
 
-      <form onSubmit={handleSubmit}>
+      <form aria-description="Accede con el correo y la contraseña de tu cuenta." onSubmit={handleSubmit}>
         <div className="mb-3.5">
           <InputField
+            aria-description="Escribe el correo registrado en tu cuenta."
             label="Correo electrónico"
             id="login-email"
             className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] px-3.5 py-2.5 font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
@@ -90,6 +91,7 @@ function Login({ onClose }: LoginProps) {
         <div className="mb-3.5">
           <div className="relative">
             <InputField
+              aria-description="Escribe la contraseña de tu cuenta."
               label="Contraseña"
               id="login-password"
               className="w-full rounded-[10px] border-[1.5px] border-[var(--borde)] bg-[var(--t-bg-fdfaf7,#fdfaf7)] py-2.5 pl-3.5 pr-[46px] font-['DM_Sans'] text-[0.9rem] text-[var(--texto)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#b0a9a2] focus:border-[var(--rojo)] focus:shadow-[0_0_0_3px_rgba(216,90,48,0.12)]"
@@ -101,6 +103,7 @@ function Login({ onClose }: LoginProps) {
             />
 
             <button
+              aria-description={showPassword ? 'Oculta los caracteres de la contraseña.' : 'Muestra la contraseña para que puedas revisarla.'}
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-8 inline-flex h-10 items-center justify-center border-none bg-transparent px-2 leading-none text-[var(--texto-muted)]"
@@ -123,11 +126,12 @@ function Login({ onClose }: LoginProps) {
           </p>
         )}
 
-        <Button type="submit" fullWidth disabled={loading} className="mt-1">
+        <Button aria-description="Envía tus datos para iniciar sesión." type="submit" fullWidth disabled={loading} className="mt-1">
           {loading ? 'Ingresando...' : 'Ingresar'}
         </Button>
 
         <button
+          aria-description="Abre el formulario de recuperación de contraseña."
           type="button"
           className="w-full cursor-pointer border-none bg-transparent px-0 py-1 text-center text-[0.82rem] text-[var(--rojo)] underline underline-offset-[3px]"
           onClick={() => {

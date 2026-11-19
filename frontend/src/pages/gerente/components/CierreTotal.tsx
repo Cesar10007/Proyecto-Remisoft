@@ -32,7 +32,7 @@ export default function CierreTotal({ cerrar }: { cerrar: () => void }) {
       </> : <p>No hay pendientes. Puedes confirmar el cierre total.</p>}
       {error && <p role="alert">{error}</p>}
     </div>
-    <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={enviando} onClick={revision.cargar}>Volver a revisar</Button>
-      <Button disabled={enviando || revision.cargando || !!revision.error || !datos?.sistema_abierto || !!datos.pendientes.length} onClick={confirmar}>{enviando ? 'Cerrando…' : 'Confirmar cierre total'}</Button></div>
+    <div className="flex flex-wrap gap-2"><Button aria-description="Comprueba de nuevo si quedan operaciones pendientes." variant="outline" disabled={enviando} onClick={revision.cargar}>Volver a revisar</Button>
+      <Button aria-description={datos?.pendientes.length ? 'Completa los pendientes antes de cerrar la sede.' : 'Suspende la operación del personal de esta sede.'} disabled={enviando || revision.cargando || !!revision.error || !datos?.sistema_abierto || !!datos.pendientes.length} onClick={confirmar}>{enviando ? 'Cerrando…' : 'Confirmar cierre total'}</Button></div>
   </Modal>
 }

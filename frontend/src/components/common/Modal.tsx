@@ -21,7 +21,7 @@ export default function Modal({ isOpen = true, title, size = 'normal', busy = fa
     >
       <header className="app-modal__header">
         <h2 id={titleId}>{title}</h2>
-        <button type="button" className="app-modal__close" aria-label="Cerrar ventana" disabled={busy} onClick={onClose}>×</button>
+        <button aria-description="Cierra esta ventana y vuelve al panel anterior." type="button" className="app-modal__close" aria-label="Cerrar ventana" disabled={busy} onClick={onClose}>×</button>
       </header>
       <div className="app-modal__body">{children}</div>
     </DialogSurface>

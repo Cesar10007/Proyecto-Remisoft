@@ -80,10 +80,11 @@ function CierresCaja({ onBack }: CierresCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -153,6 +154,7 @@ function CierresCaja({ onBack }: CierresCajaProps) {
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta la lista de responsables.' : 'Filtra los cierres por la persona responsable.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -165,6 +167,7 @@ function CierresCaja({ onBack }: CierresCajaProps) {
               <div className="absolute right-0 top-[calc(100%+4px)] z-10 w-56 rounded-[10px] border border-[var(--wa-border)] bg-white p-2 shadow-lg">
                 {['', ...responsables].map((nombre) => (
                   <button
+                    aria-description={nombre ? `Muestra los cierres de ${nombre}.` : 'Muestra los cierres de todos los responsables.'}
                     key={nombre || 'todos'}
                     type="button"
                     onClick={() => {
@@ -203,6 +206,7 @@ function CierresCaja({ onBack }: CierresCajaProps) {
               header: 'Acción',
               render: (c) => (
                 <button
+                  aria-description="Consulta los datos del cierre de este turno."
                   type="button"
                   onClick={() =>
                     setDetalle({
@@ -222,7 +226,7 @@ function CierresCaja({ onBack }: CierresCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  aria-label="Ver cierre" title="Ver cierre"
+                  aria-label="Ver cierre"
                 >
                   <Eye size={18} aria-hidden="true" />
                 </button>

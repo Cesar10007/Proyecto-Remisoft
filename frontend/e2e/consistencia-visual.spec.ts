@@ -283,6 +283,11 @@ test('editar un ingrediente en móvil con letra grande no recorta la cabecera y 
   await expect(guardar).toBeInViewport({ ratio: 1 })
   await expect(encabezado).toBeInViewport({ ratio: 1 })
   expect(await encabezado.boundingBox()).toEqual(antes)
+  // En este formulario más alto que la pantalla la ayuda no debe aparecer
+  // por debajo del botón de guardar, fuera del área visible.
+  await d.getByText(/Saldo al abrir:/).hover()
+  const ayudaFormulario = d.getByRole('tooltip', { name: 'Revisa los datos de la ficha antes de guardar los cambios.' })
+  await expect(ayudaFormulario).toBeInViewport({ ratio: 1 })
   // Comprobar las líneas del texto, no solo que exista el h2 en el DOM.
   expect(await encabezado.evaluate(el => {
     const r = document.createRange()
@@ -302,19 +307,41 @@ test('editar un ingrediente en móvil con letra grande no recorta la cabecera y 
   await expect(editar).toBeFocused()
 })
 
-test('la g de Nuevo Ingrediente y Editar Ingrediente conserva el trazo inferior', async ({ page }) => {
+test('los títulos de inventario recuperan Syne y las cifras de un título mixto siguen en DM Sans', async ({ page }) => {
+  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, route => route.abort())
+  await page.route('**/api/inventario', route => route.fulfill({ json: { data: [
+    { id_ingrediente: 1, nombre: 'Maíz 12', unidad_medida: 'kg', stock_actual: 0 },
+  ] } }))
   await page.setViewportSize({ width: 1440, height: 900 })
   await abrirPanel(page, 'GERENTE')
   await boton(page, 'Modo oscuro').click()
   await ir(page, 'Inventario')
-  await expect(page.getByRole('heading', { name: 'Gestión de Ingredientes' })).toHaveCSS('font-family', /DM Sans Local/)
+  await expect(page.getByRole('heading', { name: 'Gestión de Ingredientes' })).toHaveCSS('font-family', /Syne/)
   for (const [accion, titulo] of [['+ Nuevo Ingrediente', 'Nuevo Ingrediente'], ['Editar', 'Editar Ingrediente']]) {
     await boton(page, accion).click()
     const d = page.getByRole('dialog', { name: titulo })
-    // Comparar la tinta real: la caja del h2 también cabía con la g de cola plana.
+    await expect(d.getByRole('heading')).toHaveCSS('font-family', /Syne/)
     await expect(d.getByRole('heading')).toHaveScreenshot(`titulo-${titulo.split(' ')[0].toLowerCase()}-ingrediente.png`, { scale: 'css' })
     await d.getByRole('button', { name: 'Cancelar' }).click()
   }
+  await boton(page, 'Movimientos').click()
+  const titulo = page.getByRole('heading', { name: 'Movimientos de Maíz 12' })
+  await expect(titulo).toBeVisible()
+  await expect(titulo).toHaveCSS('font-variant-numeric', 'tabular-nums')
+  await page.evaluate(() => document.fonts.ready.then(() => undefined))
+  // getComputedStyle por sí solo no distingue una fuente real de su fallback
+  // ni detecta que una cara de dígitos haya sustituido también a las letras.
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    await cdp.send('DOM.enable'); await cdp.send('CSS.enable')
+    const { root } = await cdp.send('DOM.getDocument')
+    const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: 'dialog[open] h2' })
+    const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId })
+    expect(fonts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ familyName: 'Syne', isCustomFont: true }),
+      expect.objectContaining({ familyName: expect.stringMatching(/^DM Sans\b/), isCustomFont: true, glyphCount: 2 }),
+    ]))
+  } finally { await cdp.detach() }
 })
 
 test('el alta requiere elegir una unidad y muestra en qué se costea y cuenta el ingrediente', async ({ page }) => {
@@ -527,6 +554,7 @@ test('en móvil se recorren 51 registros sin desbordar la página; Atrás y Adel
   await page.goBack(); await expect(page.getByRole('heading',{name:'Ventas de hoy'})).toBeVisible()
   const cifra = page.getByText('Total cobrado',{exact:true}).locator('..').locator('p').last()
   await expect(cifra).toHaveCSS('font-family', /DM Sans Local/)
+  await expect(cifra).toHaveCSS('font-variant-numeric', 'tabular-nums')
   await page.goForward(); await page.reload(); await expect(tabla).toBeVisible()
   await page.route('**/api/usuarios',r=>r.fulfill({json:filas.map(i=>({ id_usuario:i.id_ingrediente, id_rol:2, activo:1, nombre:i.nombre, email:`${i.id_ingrediente}@example.test` }))}))
   await abrirPanel(page,'SUPERADMIN'); await expect(page.locator('.sa-table tbody tr')).toHaveCount(25)
@@ -550,4 +578,60 @@ test('caja pagina la cuenta y el comprobante, pero imprime todas las líneas', a
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint'))); await expect(tabla.locator('tbody tr')).toHaveCount(26)
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint'))); await expect(tabla.locator('tbody tr')).toHaveCount(1)
+})
+
+test('las ayudas explican cada acción con puntero y teclado sin enviar ni cerrar antes de tiempo', async ({ page }) => {
+  await abrirPanel(page, 'GERENTE'); await ir(page, 'Inventario')
+  const ayuda = page.getByRole('tooltip')
+  const movimientos = boton(page, 'Movimientos') // Botón nativo de la fila, no Button.
+  await movimientos.hover()
+  await expect(ayuda).toHaveText('Consulta el saldo o registra una entrada o salida de Maíz.')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await boton(page, '+ Nuevo Ingrediente').click()
+  const d = page.getByRole('dialog', { name: 'Nuevo Ingrediente' }), crear = d.getByRole('button', { name: 'Crear' })
+  let envios = 0
+  await page.route('**/api/ingredientes', r => { envios++; return r.fulfill({ status: 201, json: { stock_actual: 0 } }) })
+  await d.getByLabel('Nombre', { exact: true }).fill('Arroz')
+  await d.getByLabel('Unidad de medida').selectOption('kg')
+  const stock = d.getByLabel('Stock actual (kg)', { exact: true })
+  const descripcion = await stock.getAttribute('aria-describedby')
+  await stock.hover()
+  await expect(d.getByRole('tooltip')).toHaveText('Indica las existencias iniciales; si no hay, deja cero.')
+  await expect(stock).toHaveAttribute('aria-describedby', descripcion!) // La instrucción de stock sigue accesible.
+  await expect(stock).toHaveAccessibleDescription(/Stock inicial/)
+  const centro = await ayuda.evaluate(el => {
+    const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2
+    return { x, y, intercepta: el.contains(document.elementFromPoint(x, y)) }
+  })
+  expect(centro.intercepta).toBe(false)
+  await page.mouse.move(centro.x, centro.y); await expect(ayuda).toBeVisible()
+  const cancelar = d.getByRole('button', { name: 'Cancelar' })
+  await cancelar.hover(); await expect(ayuda).toHaveText('Cierra el formulario sin guardar los cambios.')
+  await cancelar.focus(); await page.keyboard.press('Tab')
+  await expect(crear).toBeFocused()
+  await expect(ayuda).toHaveText('Registra el ingrediente con los datos del formulario.')
+  await page.keyboard.press('Escape'); await expect(ayuda).toHaveCount(0)
+  await expect(crear).toBeFocused(); expect(envios).toBe(0)
+  await page.keyboard.press('Enter'); await expect(d).toHaveCount(0); expect(envios).toBe(1)
+  await boton(page, 'Editar').click()
+  await boton(page, 'Actualizar').hover(); await expect(ayuda).toHaveText('Guarda los cambios en el ingrediente.')
+  await boton(page, 'Cancelar').click(); await expect(ayuda).toHaveCount(0)
+})
+
+test('el acceso distingue el formulario, el campo, el icono de contraseña y el envío en una ventana pequeña', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 }); await page.goto('/')
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).first().click()
+  const d = page.getByRole('dialog', { name: 'Bienvenido' }), ayuda = d.getByRole('tooltip')
+  await expect(d.locator('form')).toHaveAccessibleDescription('Accede con el correo y la contraseña de tu cuenta.')
+  await d.getByLabel('Contraseña', { exact: true }).hover()
+  await expect(ayuda).toHaveText('Escribe la contraseña de tu cuenta.')
+  const mostrar = d.getByRole('button', { name: 'Mostrar contraseña' })
+  await mostrar.hover(); await expect(ayuda).toHaveText('Muestra la contraseña para que puedas revisarla.')
+  await expect(ayuda).toBeInViewport({ ratio: 1 }); await mostrar.click()
+  await expect(d.getByLabel('Contraseña', { exact: true })).toHaveAttribute('type', 'text')
+  await page.keyboard.press('Tab'); await expect(d.getByRole('button', { name: 'Ingresar' })).toBeFocused()
+  await expect(ayuda).toHaveText('Envía tus datos para iniciar sesión.')
+  await expect(ayuda).toBeInViewport({ ratio: 1 })
+  await page.keyboard.press('Escape'); await expect(ayuda).toHaveCount(0); await expect(d).toBeVisible()
+  await page.keyboard.press('Escape'); await expect(d).toHaveCount(0)
 })

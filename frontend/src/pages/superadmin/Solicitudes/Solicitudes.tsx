@@ -179,6 +179,7 @@ function Solicitudes() {
 
           <div className="sa-request-tabs" role="tablist">
             <button
+              aria-description="Muestra las solicitudes que esperan revisión."
               type="button"
               role="tab"
               aria-selected={pestana === 'pendientes'}
@@ -193,6 +194,7 @@ function Solicitudes() {
             </button>
 
             <button
+              aria-description="Consulta las solicitudes que ya se revisaron."
               type="button"
               role="tab"
               aria-selected={pestana === 'historial'}
@@ -220,6 +222,7 @@ function Solicitudes() {
       {pestana === 'historial' && (
         <div className="sa-request-filter">
           <SelectField
+            aria-description="Filtra el historial según el resultado de la revisión."
             label="Filtrar por estado:"
             id="filtro-estado"
             value={filtroEstado}
@@ -356,6 +359,7 @@ function Solicitudes() {
                 {pestana === 'pendientes' && (
                   <div className="sa-request-actions">
                     <button
+                      aria-description="Aprueba la solicitud y crea la cuenta de usuario."
                       type="button"
                       className="sa-request-btn sa-request-btn--approve"
                       onClick={() =>
@@ -369,6 +373,7 @@ function Solicitudes() {
                     </button>
 
                     <button
+                      aria-description="Indica el motivo para rechazar la solicitud."
                       type="button"
                       className="sa-request-btn sa-request-btn--reject"
                       onClick={() =>

@@ -78,6 +78,7 @@ function Sidebar({
           Remi<span className="text-[var(--amarillo)]">Soft</span>
         </span>
         <button
+          aria-description="Muestra las secciones del panel."
           type="button"
           aria-label="Abrir menú"
           aria-expanded={abierto}
@@ -119,9 +120,10 @@ function Sidebar({
       >
         {colapsable && (
           <button
+            aria-description={colapsado ? 'Muestra los nombres de las secciones.' : 'Deja solo los iconos de las secciones.'}
             type="button"
             onClick={() => setColapsado((v) => !v)}
-            title={colapsado ? 'Desplegar menú' : 'Plegar menú'}
+            aria-label={colapsado ? 'Desplegar menú' : 'Plegar menú'}
             className="absolute -right-3 top-[88px] z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-[var(--borde)] bg-[var(--bg-card)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] md:flex"
           >
             <ChevronLeft
@@ -135,6 +137,7 @@ function Sidebar({
         <div className="mb-4 flex items-center justify-between px-2">
           <ThemeToggle compacto={compacto} />
           <button
+            aria-description="Cierra el menú y vuelve al panel."
             type="button"
             aria-label="Cerrar menú"
             ref={cerrarMovil}
@@ -164,11 +167,11 @@ function Sidebar({
             const activo = vistaActual === item.label.toLowerCase()
             return (
               <button
+                aria-description={`Abre la sección «${item.label}».`}
                 key={item.label}
                 type="button"
                 aria-label={item.label}
                 aria-current={activo ? 'page' : undefined}
-                title={compacto ? item.label : undefined}
                 onClick={() => navegar(item.label.toLowerCase())}
                 className={`flex items-center gap-3 rounded-[10px] border-r-[3px] px-3 py-2.5 text-left font-['DM_Sans'] text-[0.875rem] font-medium transition-all duration-150 ease-in-out ${
                   compacto ? 'md:justify-center md:px-0' : ''
@@ -202,9 +205,10 @@ function Sidebar({
             {footer}
           </div>
           <button
+            aria-description="Sal de tu cuenta y vuelve al inicio."
             type="button"
             onClick={onLogout}
-            title={compacto ? 'Cerrar sesión' : undefined}
+            aria-label="Cerrar sesión"
             className={`flex items-center gap-2 rounded-[10px] bg-transparent px-3 py-2 font-['DM_Sans'] text-[0.875rem] text-[var(--texto-muted)] ${
               compacto ? 'md:justify-center md:px-0' : ''
             }`}

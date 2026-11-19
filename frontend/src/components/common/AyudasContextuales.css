@@ -1,0 +1,17 @@
+.ayuda-contextual {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  inset: 0 auto auto 0;
+  width: max-content;
+  max-width: min(18rem, calc(var(--ancho-capa, 100vw) - 12px));
+  padding: .35rem .65rem;
+  border: 1px solid var(--bg-card);
+  border-radius: .45rem;
+  background: var(--texto);
+  color: var(--bg-card);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+  font: 500 .8rem/1.4 var(--fuente-lectura);
+  overflow-wrap: anywhere;
+}
+@media print { .ayuda-contextual { display: none !important; } }

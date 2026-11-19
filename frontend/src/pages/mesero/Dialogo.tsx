@@ -31,7 +31,7 @@ export function Dialogo({
           <p className="sl-eyebrow">{kicker}</p>
           <h2 id={id}>{titulo}</h2>
         </div>
-        <button type="button" className="sl-iconbtn" aria-label="Cerrar ventana" onClick={onClose}>
+        <button aria-description="Cierra esta ventana para volver al salón." type="button" className="sl-iconbtn" aria-label="Cerrar ventana" onClick={onClose}>
           <span aria-hidden="true">×</span>
         </button>
       </div>

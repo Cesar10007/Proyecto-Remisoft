@@ -69,19 +69,19 @@ function PersonalSection({
       render: (usuario) => (
         <div className="flex flex-wrap gap-2">
           <button
+            aria-description="Abre los datos de esta persona para modificarlos."
             type="button"
             onClick={() => onEdit(usuario)}
-            title="Editar usuario"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-1.5 text-[0.78rem] font-semibold text-[var(--rojo-dark)] transition-colors hover:border-[var(--rojo)] hover:bg-[var(--rojo-light)] focus:outline-none focus:ring-2 focus:ring-[var(--rojo-light)]"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
             Editar
           </button>
-          <Button size="small" variant="outline" onClick={() => onEstado(usuario)}>{usuario.activo ? 'Desactivar' : 'Reactivar'}</Button>
+          <Button aria-description={usuario.activo ? 'Suspende el acceso sin quitar la ficha de la lista.' : 'Restablece el acceso de esta persona.'} size="small" variant="outline" onClick={() => onEstado(usuario)}>{usuario.activo ? 'Desactivar' : 'Reactivar'}</Button>
           <button
+            aria-description="Desactiva el acceso y retira la ficha solo de tu lista."
             type="button"
             onClick={() => onDelete(usuario.id_usuario)}
-            title="Desactivar el acceso y retirar de mi lista"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--t-brd-efc4c0,#efc4c0)] bg-[var(--t-bg-fff8f7,#fff8f7)] px-3 py-1.5 text-[0.78rem] font-semibold text-[var(--rojo-dark)] transition-colors hover:border-[var(--rojo)] hover:bg-[var(--rojo-light)] focus:outline-none focus:ring-2 focus:ring-[var(--rojo-light)]"
           >
             <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -113,8 +113,9 @@ function PersonalSection({
         <h3 className="mb-5 font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">
           {usuarioEditando ? 'Editar Personal' : 'Crear Nuevo Personal'}
         </h3>
-        <form onSubmit={onFormSubmit} className="grid gap-3 md:grid-cols-2">
+        <form aria-description={usuarioEditando ? 'Modifica la ficha de la persona seleccionada.' : 'Registra a una persona del equipo de esta sede.'} onSubmit={onFormSubmit} className="grid gap-3 md:grid-cols-2">
           <InputField
+            aria-description="Escribe el nombre de la persona que usará la cuenta."
             label="Nombre"
             type="text"
             placeholder="Nombre"
@@ -123,6 +124,7 @@ function PersonalSection({
             required
           />
           <InputField
+            aria-description="Escribe el apellido de la persona que usará la cuenta."
             label="Apellido"
             type="text"
             placeholder="Apellido"
@@ -139,6 +141,7 @@ function PersonalSection({
             disabled={guardandoPersonal}
           />
           <SelectField
+            aria-description="Elige qué funciones podrá usar la persona en la sede."
             label="Rol"
             value={formData.id_rol}
             onChange={(event) => onFormChange('id_rol', Number(event.target.value))}
@@ -152,6 +155,7 @@ function PersonalSection({
           {!usuarioEditando && (
             <div className="relative">
               <InputField
+                aria-description="Crea una contraseña de al menos ocho caracteres."
                 label="Contraseña"
                 type={mostrarContrasena ? 'text' : 'password'}
                 placeholder="Contraseña"
@@ -162,10 +166,10 @@ function PersonalSection({
                 className="pr-11"
               />
               <button
+                aria-description={mostrarContrasena ? 'Oculta los caracteres de la contraseña.' : 'Muestra la contraseña para que puedas revisarla.'}
                 type="button"
                 onClick={onTogglePassword}
                 aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                title={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 className="absolute right-3 top-8 text-[var(--texto-muted)]"
               >
                 <span className="material-symbols-outlined text-[20px]">
@@ -179,9 +183,9 @@ function PersonalSection({
           )}
           <div className="flex gap-2 md:col-span-2 mt-2">
             {usuarioEditando && (
-              <Button variant="outline" onClick={onCancelEdit}>Cancelar</Button>
+              <Button aria-description="Sal de la edición sin guardar los cambios." variant="outline" onClick={onCancelEdit}>Cancelar</Button>
             )}
-            <Button type="submit" disabled={guardandoPersonal}>
+            <Button aria-description={usuarioEditando ? 'Guarda los cambios en la ficha del personal.' : 'Crea la cuenta con el rol seleccionado.'} type="submit" disabled={guardandoPersonal}>
               {guardandoPersonal ? 'Guardando...' : usuarioEditando ? 'Actualizar' : 'Crear Personal'}
             </Button>
           </div>

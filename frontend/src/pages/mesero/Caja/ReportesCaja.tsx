@@ -52,10 +52,11 @@ function ReportesCaja({ onBack }: ReportesCajaProps) {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
+            aria-description="Vuelve al resumen de caja."
             type="button"
             onClick={onBack}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-            aria-label="Volver" title="Volver"
+            aria-label="Volver"
           >
             <ArrowLeft size={18} aria-hidden="true" />
           </button>

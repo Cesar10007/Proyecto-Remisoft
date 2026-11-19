@@ -45,8 +45,8 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
       header: 'Acciones',
       render: (p) => (
         <div className="flex gap-2">
-          <Button size="small" variant="outline" onClick={() => onEdit(p)}>Editar</Button>
-          <Button size="small" variant="ghost" onClick={() => onToggle(p.id_proveedor, p.estado)}>{p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</Button>
+          <Button aria-description={`Abre la ficha de ${p.nombre} para modificarla.`} size="small" variant="outline" onClick={() => onEdit(p)}>Editar</Button>
+          <Button aria-description={p.estado === 'ACTIVO' ? 'Marca al proveedor como inactivo.' : 'Vuelve a activar al proveedor.'} size="small" variant="ghost" onClick={() => onToggle(p.id_proveedor, p.estado)}>{p.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</Button>
         </div>
       ),
     },
@@ -60,7 +60,7 @@ function ProveedoresSection({ proveedores, onCreate, onEdit, onToggle }: Proveed
         data={proveedores}
         emptyMessage="No hay proveedores disponibles"
         keyExtractor={(p) => p.id_proveedor}
-        actionButton={<Button onClick={onCreate}>+ Nuevo Proveedor</Button>}
+        actionButton={<Button aria-description="Abre el formulario para registrar un proveedor." onClick={onCreate}>+ Nuevo Proveedor</Button>}
       />
     </div>
   )

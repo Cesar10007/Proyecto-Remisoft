@@ -38,7 +38,7 @@ export function CampoCorreoAlta({ rechazado, value, onChange, ...props }: Props)
 
   return (
     <div ref={bloque} className="campo-correo-alta">
-      <InputField {...props} ref={input} value={value} type="email" required
+      <InputField aria-description="Indica el correo que se usará para entrar en la cuenta." {...props} ref={input} value={value} type="email" required
         aria-invalid={invalido} aria-describedby={invalido ? idAviso : undefined}
         onInvalid={event => {
           if (event.currentTarget.validity.typeMismatch) {

@@ -88,26 +88,26 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
   }
 
   return (
-    <FormularioCatalogo title={ingrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'} edit={ingrediente !== null}
+    <FormularioCatalogo entidad="Ingrediente" edit={ingrediente !== null}
       saving={guardando} error={error} submit={guardar} close={() => cerrar()}>
-      <InputField label="Nombre" placeholder="Nombre *" required maxLength={50}
+      <InputField aria-description="Escribe el nombre con el que identificarás el ingrediente." label="Nombre" placeholder="Nombre *" required maxLength={50}
         value={ficha.nombre} onChange={e => campo('nombre', e.target.value)} />
-      <TextAreaField label="Descripción" placeholder="Descripción" rows={2} maxLength={500}
+      <TextAreaField aria-description="Añade detalles que ayuden a reconocer este ingrediente." label="Descripción" placeholder="Descripción" rows={2} maxLength={500}
         value={ficha.descripcion} onChange={e => campo('descripcion', e.target.value)} />
       <SelectorUnidadIngrediente ingrediente={ingrediente} valor={ficha.unidad_medida} cambiar={seleccionarUnidad} />
       {convertir && <fieldset className="grid gap-2 rounded-lg border border-[var(--borde)] p-3">
         <legend className="px-1 text-sm font-bold">Equivalencia para este ingrediente</legend>
-        <InputField label={`Cantidad histórica (${unidadBase})`} value={cantidadBase} onChange={e => setCantidadBase(e.target.value)} type="number" min="0.000001" step="0.000001" max="1000000" required />
-        <InputField label={`Equivale a (${ficha.unidad_medida})`} value={equivalente} onChange={e => setEquivalente(e.target.value)} type="number" min="0.000001" step="0.000001" max="1000000" required />
+        <InputField aria-description="Indica cuántas unidades históricas vas a convertir." label={`Cantidad histórica (${unidadBase})`} value={cantidadBase} onChange={e => setCantidadBase(e.target.value)} type="number" min="0.000001" step="0.000001" max="1000000" required />
+        <InputField aria-description="Indica a cuántas unidades nuevas equivale esa cantidad." label={`Equivale a (${ficha.unidad_medida})`} value={equivalente} onChange={e => setEquivalente(e.target.value)} type="number" min="0.000001" step="0.000001" max="1000000" required />
         <p className="text-xs">Por ejemplo: 1 kg equivale a 1000 g. Para empaques usa su contenido real. El costo, el mínimo y el conteo de abajo están en la unidad que abriste; se convertirán al guardar.</p>
         {Number(cantidadBase) > 0 && Number(equivalente) > 0 && <p className="text-sm font-semibold">Saldo tras el cambio: {((Number(stock) * (ingrediente.cantidad_base ?? 1) / (ingrediente.factor_unidad ?? 1)) * Number(equivalente) / Number(cantidadBase)).toLocaleString('es-CO', { maximumFractionDigits: 9 })} {unidadDeCantidad(ficha.unidad_medida)}</p>}
       </fieldset>}
-      <InputField label={`Costo de referencia (COP${unidadCampos ? ` por ${unidadCampos}` : ''})`} type="number" step={ingrediente?.factor_unidad ? "any" : "0.01"} placeholder="0"
+      <InputField aria-description="Indica el costo de una unidad del ingrediente en pesos." label={`Costo de referencia (COP${unidadCampos ? ` por ${unidadCampos}` : ''})`} type="number" step={ingrediente?.factor_unidad ? "any" : "0.01"} placeholder="0"
         value={ficha.costo_unitario_ref} onChange={e => campo('costo_unitario_ref', e.target.value)} />
-      <InputField label={`Stock mínimo${sufijoStock}`} type="number" min="0" step={ingrediente?.factor_unidad ? "any" : "0.01"} placeholder="0"
+      <InputField aria-description="Define a partir de qué saldo quieres recibir alertas de inventario." label={`Stock mínimo${sufijoStock}`} type="number" min="0" step={ingrediente?.factor_unidad ? "any" : "0.01"} placeholder="0"
         value={ficha.stock_minimo} onChange={e => campo('stock_minimo', e.target.value)} />
       <div>
-        <InputField label={`Stock actual${sufijoStock}`} type="number" inputMode="decimal" min="0" max={ingrediente?.factor_unidad ? undefined : 9999999.999} step={ingrediente?.factor_unidad ? "any" : "0.001"} required
+        <InputField aria-description={ingrediente ? 'Escribe el total contado, no la diferencia.' : 'Indica las existencias iniciales; si no hay, deja cero.'} label={`Stock actual${sufijoStock}`} type="number" inputMode="decimal" min="0" max={ingrediente?.factor_unidad ? undefined : 9999999.999} step={ingrediente?.factor_unidad ? "any" : "0.001"} required
           aria-describedby={ayudaStock} value={stock} onChange={e => setStock(e.target.value)} />
         <p id={ayudaStock} className="mt-1 text-xs leading-relaxed text-[var(--texto-muted)]">
           {ingrediente ? <>Saldo al abrir: {ingrediente.stock_actual.toLocaleString('es-CO', { maximumFractionDigits: 3 })} {unidadDeCantidad(ingrediente.unidad_medida, ingrediente.stock_actual)}.
@@ -115,7 +115,7 @@ export default function EditorIngrediente({ ingrediente, actualizar, cerrar }: P
             'Si ya tienes existencias, indica la cantidad. Quedará una entrada «Stock inicial» en Movimientos. Si no tienes, deja 0.'}
         </p>
       </div>
-      {cambiaStock && <InputField label="Motivo del ajuste" required minLength={5} maxLength={1000} placeholder="Ej.: conteo físico de bodega"
+      {cambiaStock && <InputField aria-description="Explica por qué cambió el conteo del ingrediente." label="Motivo del ajuste" required minLength={5} maxLength={1000} placeholder="Ej.: conteo físico de bodega"
         value={motivo} onChange={e => setMotivo(e.target.value)} />}
     </FormularioCatalogo>
   )

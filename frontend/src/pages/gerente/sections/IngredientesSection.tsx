@@ -42,9 +42,10 @@ function IngredientesSection({ ingredientes, actualizar, onDelete }: Ingrediente
       header: 'Acciones',
       render: (i) => (
         <div className="flex gap-2">
-          <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
-          <Button size="small" variant="outline" onClick={() => setEditor(i)}>Editar</Button>
+          <button aria-description={`Consulta el saldo o registra una entrada o salida de ${i.nombre}.`} className="font-semibold text-[var(--rojo-dark)]" onClick={() => setSeleccion(i)}>Movimientos</button>
+          <Button aria-description={`Abre la ficha de ${i.nombre} para modificarla.`} size="small" variant="outline" onClick={() => setEditor(i)}>Editar</Button>
           <button
+            aria-description={`Solicita eliminar ${i.nombre} del inventario.`}
             className="rounded-[10px] bg-transparent px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--rojo-dark)] hover:bg-[var(--rojo-light)]"
             onClick={() => onDelete(i.id_ingrediente)}
           >
@@ -59,13 +60,12 @@ function IngredientesSection({ ingredientes, actualizar, onDelete }: Ingrediente
     <div className="mt-6">
       {aviso && <p role="alert" className="mb-3 text-sm text-[var(--rojo-dark)]">{aviso}</p>}
       <DataTable
-        className="ge-catalogo-ingredientes"
         title="Gestión de Ingredientes"
         columns={columns}
         data={ingredientes}
         emptyMessage="No hay ingredientes disponibles"
         keyExtractor={(i) => i.id_ingrediente}
-        actionButton={<Button onClick={() => setEditor('nuevo')}>+ Nuevo Ingrediente</Button>}
+        actionButton={<Button aria-description="Abre el formulario para registrar un ingrediente." onClick={() => setEditor('nuevo')}>+ Nuevo Ingrediente</Button>}
       />
       {editor && <EditorIngrediente ingrediente={editor === 'nuevo' ? null : editor} actualizar={actualizar}
         cerrar={mensaje => { setEditor(null); setAviso(mensaje ?? '') }} />}

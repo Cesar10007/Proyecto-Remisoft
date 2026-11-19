@@ -24,7 +24,7 @@ export default function SelectorUnidadIngrediente({ ingrediente, valor, cambiar 
   }
 
   return <div>
-    <SelectField label="Unidad de medida" name="unidad_medida" value={valor}
+    <SelectField aria-description="Elige cómo se cuenta el ingrediente en el inventario y las recetas." label="Unidad de medida" name="unidad_medida" value={valor}
       required={!sinUnidadAnterior} aria-describedby={ayudaId} onChange={e => cambiar(e.target.value)}>
       <option value="" disabled={!sinUnidadAnterior}>{sinUnidadAnterior ? 'Sin unidad (registro anterior)' : 'Selecciona una unidad'}</option>
       {anterior && !unidadConocida(anterior) && <option value={anterior}>{anterior} (unidad anterior)</option>}

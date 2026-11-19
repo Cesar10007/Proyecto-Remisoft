@@ -62,10 +62,11 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
       {/* ENCABEZADO */}
       <div className="mb-6 flex items-center gap-3">
         <button
+          aria-description="Vuelve al resumen de caja."
           type="button"
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--wa-border)] bg-white transition hover:bg-[var(--wa-surface-low)]"
-          aria-label="Volver" title="Volver"
+          aria-label="Volver"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
@@ -145,6 +146,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
 
           <div className="relative">
             <button
+              aria-description={openFiltro ? 'Oculta las opciones de estado del turno.' : 'Elige entre aperturas de turnos activos o cerrados.'}
               type="button"
               onClick={() => setOpenFiltro(!openFiltro)}
               className="flex items-center justify-center gap-2 rounded-[9px] border border-[var(--wa-border)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--wa-surface-low)]"
@@ -160,6 +162,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
                   { valor: 'CERRADA', texto: 'Turnos cerrados' },
                 ].map((op) => (
                   <button
+                    aria-description={op.valor === 'ABIERTA' ? 'Muestra las aperturas con turno activo.' : 'Muestra las aperturas de turnos ya cerrados.'}
                     key={op.texto}
                     type="button"
                     onClick={() => {
@@ -195,6 +198,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
               header: 'Acción',
               render: (a) => (
                 <button
+                  aria-description="Consulta el fondo inicial y el responsable de esta apertura."
                   type="button"
                   onClick={() =>
                     setDetalle({
@@ -212,7 +216,7 @@ function AperturasCaja({ onBack }: AperturasCajaProps) {
                     })
                   }
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--wa-surface-low)]"
-                  aria-label="Ver apertura" title="Ver apertura"
+                  aria-label="Ver apertura"
                 >
                   <Eye size={18} aria-hidden="true" />
                 </button>

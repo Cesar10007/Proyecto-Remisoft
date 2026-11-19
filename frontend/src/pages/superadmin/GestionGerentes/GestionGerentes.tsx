@@ -271,11 +271,11 @@ function GestionGerentes() {
         return (
           <div className="sa-user-actions">
             <button
+              aria-description={activo ? 'Suspende el acceso del gerente sin retirar su ficha.' : 'Vuelve a habilitar el acceso del gerente.'}
               type="button"
               className="sa-action-button sa-action-button--state"
               onClick={() => void cambiarEstado(usuario)}
               disabled={procesandoEstado || procesandoEliminacion}
-              title={activo ? 'Desactivar gerente' : 'Activar gerente'}
             >
               <span className="material-symbols-outlined">
                 {activo ? 'person_off' : 'person_check'}
@@ -288,11 +288,11 @@ function GestionGerentes() {
             </button>
 
             <button
+              aria-description="Desactiva el acceso y retira al gerente solo de tu lista."
               type="button"
               className="sa-action-button sa-action-button--delete"
               onClick={() => void eliminarUsuario(usuario)}
               disabled={procesandoEstado || procesandoEliminacion}
-              title="Eliminar gerente"
             >
               <span className="material-symbols-outlined">
                 delete
@@ -318,6 +318,7 @@ function GestionGerentes() {
         </div>
 
         <button
+          aria-description="Abre el formulario de alta de gerente y establecimiento."
           type="button"
           className="sa-btn-add-member"
           onClick={() => {
@@ -338,9 +339,10 @@ function GestionGerentes() {
 
       <Modal title="Agregar gerente" size="wide" isOpen={mostrarFormulario} onClose={cerrarFormulario} busy={guardando}>
         <p className="mb-4 text-sm text-[var(--texto-muted)]">Completa la información del nuevo gerente.</p>
-        <form className="sa-manager-form" onSubmit={crearGerente}>
+        <form aria-description="Registra el establecimiento y la persona que lo administrará." className="sa-manager-form" onSubmit={crearGerente}>
           <div className="sa-manager-form__grid">
             <InputField
+              aria-description="Indica el número de identificación del gerente."
               label="Identificación"
               type="text"
               value={formulario.identificacion}
@@ -350,6 +352,7 @@ function GestionGerentes() {
             />
 
             <InputField
+              aria-description="Escribe el nombre de quien administrará el establecimiento."
               label="Nombre *"
               type="text"
               value={formulario.nombre}
@@ -360,6 +363,7 @@ function GestionGerentes() {
             />
 
             <InputField
+              aria-description="Escribe el apellido del gerente."
               label="Apellido"
               type="text"
               value={formulario.apellido}
@@ -369,6 +373,7 @@ function GestionGerentes() {
             />
 
             <InputField
+              aria-description="Anota el número de contacto del gerente."
               label="Teléfono"
               type="tel"
               value={formulario.telefono}
@@ -390,6 +395,7 @@ function GestionGerentes() {
             </div>
 
             <InputField
+              aria-description="Escribe el nombre del establecimiento que administrará."
               label="Nombre Establecimiento *"
               type="text"
               placeholder="Ej. Restaurante Central"
@@ -405,6 +411,7 @@ function GestionGerentes() {
 
             <div className="sa-password-field">
               <InputField
+                aria-description="Define la contraseña inicial de la cuenta del gerente."
                 label="Contraseña *"
                 type={mostrarContrasena ? 'text' : 'password'}
                 value={formulario.contrasena}
@@ -417,6 +424,7 @@ function GestionGerentes() {
               />
 
               <button
+                aria-description={mostrarContrasena ? 'Oculta los caracteres de la contraseña.' : 'Muestra la contraseña para que puedas revisarla.'}
                 type="button"
                 className="sa-password-toggle !top-8 !h-10"
                 onClick={() =>
@@ -446,6 +454,7 @@ function GestionGerentes() {
           {error && error !== CORREO_INVALIDO && <p role="alert" className="mt-3 text-sm text-[var(--rojo-dark)]">{error}</p>}
           <div className="sa-manager-form__actions">
             <button
+              aria-description="Cierra el formulario sin crear el gerente."
               type="button"
               className="sa-manager-btn sa-manager-btn--secondary"
               onClick={cerrarFormulario}
@@ -455,6 +464,7 @@ function GestionGerentes() {
             </button>
 
             <button
+              aria-description="Crea la cuenta de gerente y su establecimiento."
               type="submit"
               className="sa-manager-btn sa-manager-btn--primary"
               disabled={guardando}

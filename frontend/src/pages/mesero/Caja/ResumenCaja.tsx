@@ -40,7 +40,7 @@ export default function ResumenCaja({ onNavigate }: { onNavigate: (v: string) =>
           <>
             <label className="sl-field">
               Turno abierto
-              <select value={turno.id_turno} onChange={(e) => setId(+e.target.value)}>
+              <select aria-description="Elige un turno para consultar sus ingresos y su efectivo esperado." value={turno.id_turno} onChange={(e) => setId(+e.target.value)}>
                 {abiertos.map((t) => (
                   <option key={t.id_turno} value={t.id_turno}>
                     {t.caja?.nombre ?? 'Caja'} · {t.usuario?.nombre} {t.usuario?.apellido} · #{t.id_turno}
@@ -73,7 +73,7 @@ export default function ResumenCaja({ onNavigate }: { onNavigate: (v: string) =>
       </div>
       <div className="sl-cash-links">
         {consultas.map((c) => (
-          <button key={c.id} onClick={() => onNavigate(c.id)}>
+          <button aria-description={`Abre la consulta «${c.titulo}».`} key={c.id} onClick={() => onNavigate(c.id)}>
             <c.icon size={17} />
             {c.titulo}
             <ArrowRight size={14} />

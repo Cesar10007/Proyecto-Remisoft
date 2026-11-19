@@ -20,12 +20,12 @@ function ThemeToggle({ flotante = false, compacto = false }: ThemeToggleProps) {
 
   return (
     <button
+      aria-description={oscuro ? 'Cambia al tema claro.' : 'Cambia al tema oscuro.'}
       type="button"
       className={`tema-toggle${flotante ? ' tema-toggle--flotante' : ''}${compacto ? ' tema-toggle--compacto' : ''}`}
       onClick={() => cambiarTema(oscuro ? 'light' : 'dark')}
       aria-pressed={oscuro}
       aria-label={etiqueta}
-      title={etiqueta}
     >
       {oscuro ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
       <span className="tema-toggle__texto">{etiqueta}</span>

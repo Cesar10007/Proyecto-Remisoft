@@ -32,7 +32,7 @@ import MesasSection from './sections/MesasSection'
 import RecetaProducto from './components/RecetaProducto'
 
 function EstadoLectura({ consulta, vacio }: { consulta: Lectura; vacio?: string }) {
-  if (consulta.error) return <p role="alert" className="text-sm text-[var(--rojo-dark)]">{consulta.error} <button onClick={consulta.cargar}>Reintentar</button></p>
+  if (consulta.error) return <p role="alert" className="text-sm text-[var(--rojo-dark)]">{consulta.error} <button aria-description="Vuelve a cargar los datos de esta sección." onClick={consulta.cargar}>Reintentar</button></p>
   const mensaje = consulta.data === null ? 'Cargando…' : vacio
   return mensaje ? <p className="col-span-full text-sm text-[var(--texto-muted)]">{mensaje}</p> : null
 }
@@ -291,7 +291,7 @@ function Gerente() {
         vistaActual={vistaActual}
         onNavigate={setVistaActual}
         onLogout={() => { logout(); navigate('/') }}
-        footer={<Button className="mb-2" onClick={() => setRevisionAbierta(true)}>Hacer cierre total</Button>}
+        footer={<Button aria-description="Revisa los pendientes de la sede antes de confirmar el cierre." className="mb-2" onClick={() => setRevisionAbierta(true)}>Hacer cierre total</Button>}
       />
       <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 pt-20 md:p-8">
         <Header
@@ -346,11 +346,11 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <h4 className="mb-3 font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Acciones rápidas</h4>
                   <div className="flex flex-col gap-2">
-                    <button className="flex items-center justify-between rounded-[10px] bg-[var(--accion-primaria)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--sobre-accion)]">
+                    <button aria-description="Los pedidos se registran desde el salón, no desde este acceso." className="flex items-center justify-between rounded-[10px] bg-[var(--accion-primaria)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--sobre-accion)]">
                       Nuevo Pedido
                       <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </button>
-                    <button className="flex items-center justify-between rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]">
+                    <button aria-description="Para cambiar el menú, usa el listado de productos de esta sección." className="flex items-center justify-between rounded-[10px] border border-[var(--borde)] bg-[var(--t-bg-f9f5f0,#f9f5f0)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold text-[var(--texto-muted)]">
                       Control de Menú
                       <span className="material-symbols-outlined text-[18px]">edit_note</span>
                     </button>
@@ -359,7 +359,7 @@ function Gerente() {
                 <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-5 shadow-[var(--sombra)]">
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-['Syne'] text-[0.95rem] font-bold text-[var(--texto)]">Estado inventario</h4>
-                    <button type="button" onClick={() => setSeccionActiva('Inventario')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver inventario</button>
+                    <button aria-description="Abre el catálogo de ingredientes y sus existencias." type="button" onClick={() => setSeccionActiva('Inventario')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver inventario</button>
                   </div>
                   <div className="flex flex-col gap-3.5">
                     <EstadoLectura consulta={datos.inventario} vacio={!estadoInventario.length ? 'No hay ingredientes registrados.' : undefined} />
@@ -392,6 +392,7 @@ function Gerente() {
                 <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Listado de Productos</h3>
                 <div className="flex flex-wrap items-center gap-3">
                   <button
+                    aria-description="Consulta el catálogo mediante la vista de productos."
                     className={`rounded-[10px] border border-[var(--borde)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold ${
                       fuenteProductos === 'vista' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f9f5f0,#f9f5f0)] text-[var(--texto-muted)]'
                     }`}
@@ -400,6 +401,7 @@ function Gerente() {
                     Vista SQL
                   </button>
                   <button
+                    aria-description="Consulta el catálogo mediante el procedimiento almacenado."
                     className={`rounded-[10px] border border-[var(--borde)] px-4 py-3 font-['DM_Sans'] text-[0.875rem] font-semibold ${
                       fuenteProductos === 'sp' ? 'bg-[var(--rojo-light)] text-[var(--rojo-dark)]' : 'bg-[var(--t-bg-f9f5f0,#f9f5f0)] text-[var(--texto-muted)]'
                     }`}
@@ -407,7 +409,7 @@ function Gerente() {
                   >
                     Procedimiento
                   </button>
-                  <Button onClick={abrirCrearProducto}>+ Nuevo Producto</Button>
+                  <Button aria-description="Abre el formulario para agregar un producto al menú." onClick={abrirCrearProducto}>+ Nuevo Producto</Button>
                 </div>
               </div>
               {datos.catalogo.data === null || datos.catalogo.error ? (
@@ -430,9 +432,9 @@ function Gerente() {
                       header: 'Acciones',
                       render: (p) => (
                         <div className="flex gap-2">
-                          <button className="font-semibold text-[var(--rojo-dark)]" onClick={() => setReceta(p)}>Receta</button>
-                          <Button size="small" variant="outline" onClick={() => abrirEditarProducto(p)}>Editar</Button>
-                          <Button size="small" variant={p.Estado ? 'ghost' : 'primary'} onClick={() => toggleProducto(p.id_producto, p.Estado)}>
+                          <button aria-description={`Consulta o cambia los ingredientes de ${p.Nombre}.`} className="font-semibold text-[var(--rojo-dark)]" onClick={() => setReceta(p)}>Receta</button>
+                          <Button aria-description={`Abre la ficha de ${p.Nombre} para modificarla.`} size="small" variant="outline" onClick={() => abrirEditarProducto(p)}>Editar</Button>
+                          <Button aria-description={p.Estado ? 'Retira el producto del menú activo.' : 'Vuelve a ofrecer el producto en el menú.'} size="small" variant={p.Estado ? 'ghost' : 'primary'} onClick={() => toggleProducto(p.id_producto, p.Estado)}>
                             {p.Estado ? 'Desactivar' : 'Activar'}
                           </Button>
                         </div>
@@ -449,7 +451,7 @@ function Gerente() {
               <div className="min-w-0 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
                   <div><h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Estado de mesas</h3>
-                    <button type="button" onClick={() => setSeccionActiva('Mesas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Administrar mesas</button>
+                    <button aria-description="Abre la gestión de números y capacidades de las mesas." type="button" onClick={() => setSeccionActiva('Mesas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Administrar mesas</button>
                   </div>
                   <div className="flex gap-3">
                     <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-[var(--texto-muted)]">
@@ -482,7 +484,7 @@ function Gerente() {
               <div className="rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] p-7 shadow-[var(--sombra)]">
                 <div className="mb-5 flex items-center justify-between">
                   <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Movimientos recientes</h3>
-                  <button type="button" onClick={() => setSeccionActiva('Finanzas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver finanzas</button>
+                  <button aria-description="Consulta las ventas y los cobros de la sede." type="button" onClick={() => setSeccionActiva('Finanzas')} className="text-sm font-semibold text-[var(--rojo-dark)]">Ver finanzas</button>
                 </div>
                 <div className="flex flex-col gap-4">
                   <EstadoLectura consulta={datos.facturas} vacio={!movimientosRecientes.length ? 'No hay pagos registrados.' : undefined} />
@@ -631,13 +633,13 @@ function Gerente() {
           <section className="mt-6 rounded-2xl border border-[var(--borde)] bg-[var(--bg-card)] px-7 py-6 shadow-[var(--sombra)]">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="font-['Syne'] text-[1rem] font-bold text-[var(--texto)]">Turnos de caja</h3>
-              <Button variant="primary" aria-expanded={mostrarAbrirTurno} className="ge-abrir-turno" onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
+              <Button aria-description={mostrarAbrirTurno ? 'Oculta el formulario sin abrir un turno.' : 'Elige caja, cajero y fondo inicial para un nuevo turno.'} variant="primary" aria-expanded={mostrarAbrirTurno} className="ge-abrir-turno" onClick={() => { setMostrarAbrirTurno(v => !v); setErrorTurno('') }}>
                 {mostrarAbrirTurno ? 'Cancelar' : 'Abrir turno'}
               </Button>
             </div>
             {mostrarAbrirTurno && (
               <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl border border-[var(--borde)] p-4 md:grid-cols-4">
-                <select aria-label="Caja"
+                <select aria-description="Elige la caja donde se abrirá el turno." aria-label="Caja"
                   value={formAbrir.id_caja}
                   onChange={e => setFormAbrir({ ...formAbrir, id_caja: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
@@ -647,7 +649,7 @@ function Gerente() {
                     <option key={c.id_caja} value={c.id_caja}>{c.nombre}</option>
                   ))}
                 </select>
-                <select aria-label="Cajero"
+                <select aria-description="Elige quién estará a cargo del turno." aria-label="Cajero"
                   value={formAbrir.id_usuario_cajero}
                   onChange={e => setFormAbrir({ ...formAbrir, id_usuario_cajero: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
@@ -658,6 +660,7 @@ function Gerente() {
                   ))}
                 </select>
                 <input
+                  aria-label="Efectivo inicial" aria-description="Indica el dinero en efectivo con el que empieza la caja."
                   type="number"
                   min="0"
                   placeholder="Efectivo inicial"
@@ -665,14 +668,14 @@ function Gerente() {
                   onChange={e => setFormAbrir({ ...formAbrir, efectivo_inicial: e.target.value })}
                   className="rounded-lg border border-[var(--borde)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] text-[var(--texto)]"
                 />
-                <Button variant="success" onClick={abrirTurno}>Confirmar apertura</Button>
+                <Button aria-description="Abre el turno con la caja, el cajero y el fondo indicados." variant="success" onClick={abrirTurno}>Confirmar apertura</Button>
               </div>
             )}
             {errorTurno && turnoCerrando === null && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
             <DataTable title="Turnos activos" data={turnos.filter(t => t.estado === 'ABIERTA')} keyExtractor={t => t.id_turno} emptyMessage="No hay turnos activos." columns={[
               { header: 'Cajero', render: t => nombreEmpleado(t) }, { header: 'Caja', render: t => t.caja?.nombre ?? '—' },
               { header: 'Apertura', render: t => horaTurno(t.fecha_apertura) }, { header: 'Estado', render: () => 'Activo' },
-              { header: 'Acciones', render: t => <Button size="small" variant="outline" onClick={() => {
+              { header: 'Acciones', render: t => <Button aria-description="Abre el formulario de arqueo para este turno." size="small" variant="outline" onClick={() => {
                 setTurnoCerrando(t.id_turno); setEfectivoContado(''); setNotasCierre(''); setErrorTurno('')
               }}>Cerrar turno</Button> },
             ]} />
@@ -692,6 +695,7 @@ function Gerente() {
                     {errorTurno && <p className="mb-4 text-[0.85rem] text-[var(--rojo-dark)]">{errorTurno}</p>}
                     <div className="flex flex-col gap-3">
                       <InputField
+                        aria-description="Indica el efectivo que contaste al terminar el turno."
                         label="Efectivo contado"
                         type="number"
                         min="0"
@@ -699,12 +703,13 @@ function Gerente() {
                         onChange={e => setEfectivoContado(e.target.value)}
                       />
                       <InputField
+                        aria-description="Anota las observaciones del arqueo de cierre."
                         label="Notas"
                         maxLength={500}
                         value={notasCierre}
                         onChange={e => setNotasCierre(e.target.value)}
                       />
-                      <Button className="mt-2" onClick={() => cerrarTurno(turnoParaCerrar)}>Confirmar cierre</Button>
+                      <Button aria-description="Guarda el arqueo y cierra este turno de caja." className="mt-2" onClick={() => cerrarTurno(turnoParaCerrar)}>Confirmar cierre</Button>
                     </div>
                   </>
                 )}

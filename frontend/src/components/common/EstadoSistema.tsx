@@ -32,9 +32,9 @@ export default function EstadoSistema({ children }: { children: ReactNode }) {
       <h1 className="text-2xl font-bold">Sistema cerrado</h1>
       {rol === 'GERENTE' && <p role="status">cierre de sistema exitoso</p>}
       <p>Las operaciones de este establecimiento están suspendidas hasta que el gerente abra el sistema.</p>
-      {rol === 'GERENTE' && <Button disabled={abriendo} onClick={abrir}>{abriendo ? 'Abriendo…' : 'Abrir sistema'}</Button>}
+      {rol === 'GERENTE' && <Button aria-description="Reanuda la operación del personal de esta sede." disabled={abriendo} onClick={abrir}>{abriendo ? 'Abriendo…' : 'Abrir sistema'}</Button>}
     </>}
     {aviso && <p role="alert">{aviso}</p>}
-    <div className="flex flex-wrap gap-3"><Button variant="outline" onClick={cargar}>Actualizar estado</Button><Button variant="ghost" onClick={logout}>Cerrar sesión</Button></div>
+    <div className="flex flex-wrap gap-3"><Button aria-description="Comprueba si la sede ya puede operar." variant="outline" onClick={cargar}>Actualizar estado</Button><Button aria-description="Sal de tu cuenta y vuelve al inicio." variant="ghost" onClick={logout}>Cerrar sesión</Button></div>
   </main>
 }

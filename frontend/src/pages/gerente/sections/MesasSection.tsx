@@ -38,8 +38,8 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
         { header: 'Mesa', render: m => <strong>{etiquetaMesa(m.numero)}</strong> },
         { header: 'Capacidad', render: m => m.capacidad == null ? 'Sin especificar' : `${m.capacidad} personas` },
         { header: 'Estado', render: m => m.ocupada ? 'Ocupada' : 'Disponible' },
-        { header: 'Acciones', render: m => <div className="flex gap-2"><Button variant="outline" size="small" disabled={m.ocupada} aria-label={`Editar mesa ${m.numero}`}
-          onClick={() => { setAviso(''); setError(''); setEditor(m) }}>Editar</Button><Button variant="ghost" size="small" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
+        { header: 'Acciones', render: m => <div className="flex gap-2"><Button aria-description={m.ocupada ? 'La mesa debe estar libre para editarla.' : 'Cambia el número o la capacidad de esta mesa.'} variant="outline" size="small" disabled={m.ocupada} aria-label={`Editar mesa ${m.numero}`}
+          onClick={() => { setAviso(''); setError(''); setEditor(m) }}>Editar</Button><Button aria-description={m.ocupada ? 'La mesa debe estar libre para retirarla.' : 'Revisa la eliminación de esta mesa del plano.'} variant="ghost" size="small" disabled={m.ocupada} aria-label={`Eliminar mesa ${m.numero}`}
           onClick={() => { setError(''); setAviso(''); setSeleccion(m) }}>Eliminar</Button></div> },
       ]} />
       {editor && <Modal title={`Editar mesa ${editor.numero}`} onClose={() => setEditor(null)}>
@@ -49,8 +49,8 @@ export default function MesasSection({ mesas, actualizar }: { mesas: MesaGerente
       {seleccion && <Modal title={`¿Eliminar la mesa ${seleccion.numero}?`} onClose={() => setSeleccion(null)} busy={eliminando}>
         <p className="mb-5 text-sm">Se retirará del plano de tu establecimiento. Se conservarán sus pedidos y facturas anteriores.</p>
         <div className="flex justify-end gap-3">
-          <Button variant="outline" disabled={eliminando} onClick={() => setSeleccion(null)}>Cancelar</Button>
-          <Button disabled={eliminando} onClick={eliminar}>{eliminando ? 'Eliminando…' : 'Eliminar mesa'}</Button>
+          <Button aria-description="Conserva la mesa y cierra la confirmación." variant="outline" disabled={eliminando} onClick={() => setSeleccion(null)}>Cancelar</Button>
+          <Button aria-description="Retira la mesa del plano sin borrar su historial." disabled={eliminando} onClick={eliminar}>{eliminando ? 'Eliminando…' : 'Eliminar mesa'}</Button>
         </div>
       </Modal>}
     </section>

@@ -202,7 +202,7 @@ export default function Cajero() {
         }}
         footer={
           rol === 'GERENTE' || rol === 'SUPERADMIN' ? (
-            <Link className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
+            <Link aria-description="Regresa a tu panel de administración." className="cajero__btn cajero__btn--ghost mb-2 w-full justify-center" to={rol === 'SUPERADMIN' ? '/superadmin' : '/gerente'}>
               Volver al panel
             </Link>
           ) : undefined
@@ -217,7 +217,7 @@ export default function Cajero() {
             subtitulo={`${rol ?? ''} · ${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} abierta${cuentas.length === 1 ? '' : 's'}`}
             acciones={
               vista === 'cobro' ? (
-                <button type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
+                <button aria-description="Vuelve a consultar las cuentas pendientes de cobro." type="button" className="cajero__btn cajero__btn--ghost" onClick={cargarCuentas}>
                   <span className="material-symbols-outlined">refresh</span> Actualizar
                 </button>
               ) : undefined
@@ -241,6 +241,7 @@ export default function Cajero() {
 
           {cuentas.map((c) => (
             <button
+              aria-description={`Consulta el consumo del pedido #${c.id_pedido}.`}
               key={c.id_pedido}
               type="button"
               className={`cajero__cuenta ${c.id_pedido === seleccionada ? 'cajero__cuenta--activa' : ''}`}
@@ -289,10 +290,10 @@ export default function Cajero() {
                 )}
               </dl>
               <div className="cajero__acciones no-print">
-                <button type="button" className="cajero__btn cajero__btn--ghost" onClick={() => window.print()}>
+                <button aria-description="Abre la vista de impresión del comprobante." type="button" className="cajero__btn cajero__btn--ghost" onClick={() => window.print()}>
                   <span className="material-symbols-outlined">print</span> Imprimir
                 </button>
-                <Button onClick={nuevaCuenta}>Siguiente cuenta</Button>
+                <Button aria-description="Vuelve a las cuentas pendientes de cobro." onClick={nuevaCuenta}>Siguiente cuenta</Button>
               </div>
             </div>
           ) : !cuenta ? (
@@ -326,6 +327,7 @@ export default function Cajero() {
                 <div className="cajero__metodos">
                   {METODOS.map((m) => (
                     <button
+                      aria-description={`Selecciona ${m.label.toLowerCase()} como medio de pago.`}
                       key={m.id}
                       type="button"
                       aria-pressed={metodo === m.id}
@@ -341,6 +343,7 @@ export default function Cajero() {
                 {metodo === 'EFECTIVO' && (
                   <>
                   <InputField
+                    aria-description="Indica cuánto efectivo entregó el cliente para calcular el cambio."
                     id="monto-recibido"
                     label="Monto recibido"
                     type="number"
@@ -358,6 +361,7 @@ export default function Cajero() {
 
                 {metodo && metodo !== 'EFECTIVO' && (
                   <InputField
+                    aria-description="Anota el número que identifica la transacción."
                     id="referencia"
                     label="Referencia (opcional)"
                     type="text"
@@ -372,6 +376,7 @@ export default function Cajero() {
               {errorCobro && <div className="cajero__alerta cajero__alerta--error">{errorCobro}</div>}
 
               <Button
+                aria-description="Registra el pago y cierra la cuenta con su factura."
                 className="cajero__btn--grande"
                 disabled={!puedeCobrar}
                 onClick={cerrarCuenta}
