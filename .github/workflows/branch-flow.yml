@@ -1,0 +1,64 @@
+name: Branch flow
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-flow:
+    name: Validate branch flow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate source branch
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "No pull request to validate."
+            exit 0
+          fi
+
+          if [[ "$BASE_REF" != "main" ]]; then
+            echo "Work branches may target develop."
+            exit 0
+          fi
+
+          if [[ "$HEAD_REPO" != "$BASE_REPO" ]]; then
+            echo "::error::External contributions must target develop."
+            exit 1
+          fi
+
+          case "$HEAD_REF" in
+            develop)
+              echo "Allowed: develop -> main."
+              ;;
+            hotfix/?*)
+              if ! git merge-base --is-ancestor origin/main "$HEAD_SHA"; then
+                echo "::error::The hotfix must include current main."
+                exit 1
+              fi
+              echo "Allowed hotfix. Review its scope before merging."
+              ;;
+            *)
+              echo "::error::main accepts only develop or hotfix/*. Target develop instead."
+              exit 1
+              ;;
+          esac
