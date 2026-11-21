@@ -9,6 +9,7 @@ const router = Router();
 const verComandas = requireRole('SUPERADMIN', 'GERENTE', 'MESERO');
 
 router.get('/comandas', verComandas, cocinaController.comandas);
+router.get('/historial', verComandas, cocinaController.historial);
 router.patch('/items/:id/avanzar', verComandas, cocinaController.avanzarItem);
 
 export default router;
