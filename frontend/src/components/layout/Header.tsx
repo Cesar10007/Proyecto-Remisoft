@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
 import { useNotificaciones, type Aviso, type TipoAviso } from '../../hook/useNotificaciones'
+import SelectorSede from './SelectorSede'
 
 interface HeaderProps {
   seccionActiva: string
@@ -124,6 +125,7 @@ function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones 
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {acciones}
+        <SelectorSede />
         <div ref={contenedorRef} className="relative">
           <button
             type="button"
