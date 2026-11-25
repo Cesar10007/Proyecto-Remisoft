@@ -117,6 +117,11 @@ históricamente globales. Una fila `NULL` es invisible para gerentes. Plan:
    cambia la sede, y retirar la sede activa lo devuelve a una válida.
 3. `bash backend/scripts/prueba-aislamiento.sh` → demo manual con `curl`.
 
+## Plan de pruebas
+
+Pasos concretos, con resultados esperados y consultas SQL de verificación:
+[plan-pruebas-multisede.md](plan-pruebas-multisede.md).
+
 ## Para módulos nuevos (Finanzas, Flujo de Caja…)
 
 Seguir `docs/plantilla-modulo-sede.md`. El flujo de caja real ya vive en
