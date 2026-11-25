@@ -6,7 +6,7 @@ import HistorialSection from './sections/HistorialSection'
 import { mensajeError } from '../../utils/mensajeError'
 import { CORREO_INVALIDO, mensajeErrorAlta } from '../../utils/correoAlta'
 import { useEffect, useState } from 'react'
-import { Banknote, Boxes, ChefHat, Clock3, History, Landmark, ShoppingCart, Sparkles, Table2, Truck, Users, Utensils } from 'lucide-react'
+import { Banknote, Boxes, Clock3, History, Landmark, ShoppingCart, Sparkles, Table2, Truck, Users, Utensils } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/hooks'
 import api from '../../api/axios'
@@ -395,7 +395,7 @@ function Gerente() {
     <div className="flex min-h-screen bg-[var(--bg)] font-['DM_Sans']">
       <Sidebar
         subtitulo="Gerente"
-        menuItems={[...menuItems, { icon: <ChefHat />, label: 'Cocina' }]}
+        menuItems={menuItems}
         vistaActual={vistaActual}
         onNavigate={(v) => { if (v === 'cocina') { navigate('/cocina'); return } setVistaActual(v) }}
         onLogout={() => { logout(); navigate('/') }}

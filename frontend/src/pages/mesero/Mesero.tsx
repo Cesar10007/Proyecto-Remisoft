@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CheckCircle2, ChefHat, Plus, RefreshCw, X, Table2, ReceiptText, Wallet, FileText } from 'lucide-react'
+import { CheckCircle2, Plus, RefreshCw, X, Table2, ReceiptText, Wallet, FileText } from 'lucide-react'
 import { useAuth } from '../../store/hooks'
 import Sidebar from '../../components/layout/Sidebar'
 import Header from '../../components/layout/Header'
@@ -88,7 +88,7 @@ export default function Mesero() {
       <Sidebar
         subtitulo="Mesero"
         colapsable
-        menuItems={[...navItems, { icon: <ChefHat size={20} />, label: 'Cocina' }]}
+        menuItems={navItems}
         vistaActual={vista}
         onNavigate={(v) => {
           if (v === 'cocina') { navigate('/cocina'); return }
