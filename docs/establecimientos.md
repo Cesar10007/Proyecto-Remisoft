@@ -1,5 +1,14 @@
 # Establecimientos: operación y despliegue
 
+> Metodología de aislamiento, auditoría automática y plantilla para módulos
+> nuevos: ver [aislamiento-sedes.md](aislamiento-sedes.md) y
+> [plantilla-modulo-sede.md](plantilla-modulo-sede.md).
+
+Un gerente puede tener **varias sedes permitidas** (`usuario_restaurante`) pero
+opera en **una a la vez** (`usuario.id_restaurante`). El superadmin las asigna en
+**Gestión de Gerentes → Sedes**; el gerente cambia de sede con el selector del
+encabezado. Ver [aislamiento-sedes.md](aislamiento-sedes.md#gerente-multisede-una-sede-a-la-vez-varias-permitidas).
+
 La clave del negocio es **`restaurante.id_restaurante`**. En **Superadmin → Gestión de Gerentes → Agregar gerente**, el nombre del establecimiento crea una sede nueva, no una copia de una sede existente. Gerente y sede se guardan en la misma transacción. Aprobar una solicitud de gerente también crea una sede propia; aprobar personal operativo lo incorpora a la sede del gerente que revisa la solicitud.
 
 ## Qué ve el gerente

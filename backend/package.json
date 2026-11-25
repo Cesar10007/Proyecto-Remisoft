@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "auditar:rutas": "node scripts/auditar-rutas.js"
   },
   "engines": {
     "node": ">=20.0.0"
