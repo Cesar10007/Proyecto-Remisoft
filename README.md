@@ -32,10 +32,11 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 8. [Correo y recuperación de contraseña](#correo-y-recuperación-de-contraseña)
 9. [Autenticación y roles](#autenticación-y-roles)
 10. [Modelo multi-restaurante](#modelo-multi-restaurante)
-11. [Endpoints del backend](#endpoints-del-backend)
-12. [Flujo de trabajo Git](#flujo-de-trabajo-git)
-13. [Diseño y UI](#diseño-y-ui)
-14. [Notas técnicas y pendientes](#notas-técnicas-y-pendientes)
+11. [Documentación del proyecto](#documentación-del-proyecto)
+12. [Endpoints del backend](#endpoints-del-backend)
+13. [Flujo de trabajo Git](#flujo-de-trabajo-git)
+14. [Diseño y UI](#diseño-y-ui)
+15. [Notas técnicas y pendientes](#notas-técnicas-y-pendientes)
 
 ---
 
@@ -463,9 +464,23 @@ En Docker, estos comandos se ejecutan desde `database/init.sh` durante el arranq
 
 ---
 
+## Documentación del proyecto
+
+Documentación técnica elaborada a partir del código real del sistema:
+
+| Documento | Contenido |
+|-----------|-----------|
+| [Modelo de datos](docs/modelo-de-datos.md) | MER (diagramas Entidad-Relación por dominios) y Modelo Relacional (MR) completo del esquema MariaDB |
+| [Diagrama de clases](docs/diagrama-clases.md) | UML de clases: capas del backend (routers, middlewares, controllers, services, errores de dominio) y componentes del frontend |
+| [Diagrama de arquitectura](docs/diagrama-arquitectura.md) | Arquitectura de despliegue (Docker Compose + nginx), capas lógicas y flujo de una petición autenticada |
+| [API por endpoint](docs/api.md) | Los 122 endpoints de la API con peticiones, respuestas y errores |
+
+---
+
 ## Endpoints del backend
 
 Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
+Referencia **completa por endpoint** (peticiones, respuestas y errores): [docs/api.md](docs/api.md).
 
 ### Autenticación
 
