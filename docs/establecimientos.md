@@ -109,7 +109,7 @@ printf '%s' "$CLAVE" | docker compose exec -T -e ADMIN_EMAIL="$ADMIN_EMAIL" back
 unset CLAVE
 ```
 
-Sin Compose, ejecuta `printf '%s' "$CLAVE" | (cd backend && ADMIN_EMAIL="$ADMIN_EMAIL" node scripts/crear-superadmin.js)` con las variables de conexión ya configuradas. Este comando local no reemplaza cuentas existentes. Con la demo habilitada (`CARGAR_DEMO=1`, predeterminado de desarrollo) solo se importa `datos.sql` en una base **sin tablas antes de migrar**. La actividad de prueba está asignada a «Restaurante Principal». Nunca se vuelve a sembrar como parte del alta de un gerente.
+Sin Compose, ejecuta `printf '%s' "$CLAVE" | (cd backend && ADMIN_EMAIL="$ADMIN_EMAIL" node scripts/crear-superadmin.js)` con las variables de conexión ya configuradas. Este comando local no reemplaza cuentas existentes. Con la demo habilitada (`CARGAR_DEMO=1`, predeterminado de desarrollo) se importan `datos.sql` y los datos de «Restaurante Norte» solo si la base estaba **sin tablas antes de migrar**. En una base de demo ya inicializada, el [script idempotente de Norte](../README.md#modelo-multi-restaurante) se puede ejecutar por separado sin reiniciar ni borrar datos. Nunca se vuelve a sembrar como parte del alta de un gerente.
 
 ## Reproducir la comprobación
 

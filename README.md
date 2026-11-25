@@ -250,7 +250,7 @@ docker compose up --build
 
 > `-v` elimina el volumen `db_data` y borra los datos persistentes de MariaDB. Úsalo solo cuando quieras probar una instalación limpia.
 
-Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, solo importa la demo si la base no tenía tablas antes de migrar y `CARGAR_DEMO=1`, y reinstala vistas y procedimientos. En una instalación real usa `CARGAR_DEMO=0` y [crea el primer superadmin sin ejemplos](docs/establecimientos.md#primera-instalación-sin-ejemplos).
+Durante el arranque del backend, `database/init.sh` ejecuta migraciones, genera el cliente Prisma, solo importa `datos.sql` y los datos de Norte si la base no tenía tablas antes de migrar y `CARGAR_DEMO=1`, y reinstala vistas y procedimientos. En una instalación real usa `CARGAR_DEMO=0` y [crea el primer superadmin sin ejemplos](docs/establecimientos.md#primera-instalación-sin-ejemplos).
 
 ### Validaciones rápidas
 
@@ -436,6 +436,12 @@ En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y su
 La clave existente es **`id_restaurante`**. Crear un gerente desde Superadmin (o aprobar su solicitud) crea un establecimiento propio y vacío. El personal opera en la sede que la API obtiene del usuario en la BD. Productos, existencias, mesas, IA, ventas y demás actividad del panel no se comparten entre negocios. Un gerente sin ventas o sin análisis ve ese estado, no datos de ejemplo.
 
 La carga de demostración incluye dos sedes con actividad distinta: Laura opera `Restaurante Principal` (`id_restaurante=1`) y Sebastián opera `Restaurante Norte` (`id_restaurante=2`). Sus mesas, menú, inventario, clientes, caja y pedidos son independientes; esta carga no se aplica a restaurantes creados posteriormente ni a instalaciones reales configuradas con `CARGAR_DEMO=0`.
+
+Si la base de desarrollo de Codespaces ya estaba inicializada, carga solo el ejemplo faltante de Norte desde la raíz del repositorio. El script es idempotente y no borra los datos actuales:
+
+```bash
+docker compose exec -T db sh -c 'mariadb -u "$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"' < database/demo/seed_restaurante_norte.sql
+```
 
 [Cierre total, revisión de pendientes y reapertura por sede](docs/establecimientos.md#cierre-total-y-reapertura-de-una-sede).
 
