@@ -7,7 +7,7 @@ import { parseId, validateString, validateEmail } from '../utils/validation.js';
 const ROL_SUPERADMIN = 1;
 const ROL_GERENTE = 2;
 
-const ROLES_OPERATIVOS = [3, 4, 5];
+const ROLES_OPERATIVOS = [3, 4, 5, 6];
 
 const ROLES_GESTIONABLES_POR_GERENTE = [
   ROL_GERENTE,
