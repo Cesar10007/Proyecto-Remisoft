@@ -18,6 +18,7 @@ model restaurante {
   activo           Boolean               @default(true)
   fecha_creacion   DateTime              @default(now())
   usuario          usuario[]
+  membresias       usuario_restaurante[]
   caja             caja[]
   turno_caja       turno_caja[]
   pedido           pedido[]
@@ -644,6 +645,9 @@ model usuario {
   atenciones_mesa       mesa_atencion[]
   solicitudes_revisadas solicitud_registro[] @relation("solicitudes_revisadas")
   turno_caja            turno_caja[]
+  // Sedes a las que el usuario puede entrar. id_restaurante es la sede ACTIVA;
+  // esta tabla es el conjunto de sedes permitidas (gerente multisede).
+  sedes                 usuario_restaurante[]
 
   rol         rol          @relation(fields: [id_rol], references: [id_rol], onUpdate: Restrict, map: "usuario_ibfk_1")
   restaurante restaurante? @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Restrict, onUpdate: Restrict, map: "usuario_ibfk_restaurante")
@@ -714,4 +718,18 @@ model personal_oculto {
 
   @@id([id_actor, id_usuario])
   @@index([id_usuario], map: "oculto_usuario")
+}
+
+// Membresía usuario <-> sede. Un gerente puede pertenecer a varias sedes;
+// usuario.id_restaurante indica cuál está ACTIVA en la sesión. Solo el
+// SUPERADMIN asigna o retira sedes; el gerente solo cambia entre las suyas.
+model usuario_restaurante {
+  id_usuario     Int
+  id_restaurante Int
+  fecha_asignacion DateTime? @default(now()) @db.DateTime(0)
+  usuario        usuario     @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: Restrict, map: "usuario_restaurante_usuario")
+  restaurante    restaurante @relation(fields: [id_restaurante], references: [id_restaurante], onDelete: Cascade, onUpdate: Restrict, map: "usuario_restaurante_sede")
+
+  @@id([id_usuario, id_restaurante])
+  @@index([id_restaurante], map: "usuario_restaurante_sede_idx")
 }

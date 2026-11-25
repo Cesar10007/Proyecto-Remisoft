@@ -1,5 +1,14 @@
 # Establecimientos: operación y despliegue
 
+> Metodología de aislamiento, auditoría automática y plantilla para módulos
+> nuevos: ver [aislamiento-sedes.md](aislamiento-sedes.md) y
+> [plantilla-modulo-sede.md](plantilla-modulo-sede.md).
+
+Un gerente puede tener **varias sedes permitidas** (`usuario_restaurante`) pero
+opera en **una a la vez** (`usuario.id_restaurante`). El superadmin las asigna en
+**Gestión de Gerentes → Sedes**; el gerente cambia de sede con el selector del
+encabezado. Ver [aislamiento-sedes.md](aislamiento-sedes.md#gerente-multisede-una-sede-a-la-vez-varias-permitidas).
+
 La clave del negocio es **`restaurante.id_restaurante`**. En **Superadmin → Gestión de Gerentes → Agregar gerente**, el nombre del establecimiento crea una sede nueva, no una copia de una sede existente. Gerente y sede se guardan en la misma transacción. Aprobar una solicitud de gerente también crea una sede propia; aprobar personal operativo lo incorpora a la sede del gerente que revisa la solicitud.
 
 ## Qué ve el gerente
@@ -100,7 +109,7 @@ printf '%s' "$CLAVE" | docker compose exec -T -e ADMIN_EMAIL="$ADMIN_EMAIL" back
 unset CLAVE
 ```
 
-Sin Compose, ejecuta `printf '%s' "$CLAVE" | (cd backend && ADMIN_EMAIL="$ADMIN_EMAIL" node scripts/crear-superadmin.js)` con las variables de conexión ya configuradas. Este comando local no reemplaza cuentas existentes. Con la demo habilitada (`CARGAR_DEMO=1`, predeterminado de desarrollo) solo se importa `datos.sql` en una base **sin tablas antes de migrar**. La actividad de prueba está asignada a «Restaurante Principal». Nunca se vuelve a sembrar como parte del alta de un gerente.
+Sin Compose, ejecuta `printf '%s' "$CLAVE" | (cd backend && ADMIN_EMAIL="$ADMIN_EMAIL" node scripts/crear-superadmin.js)` con las variables de conexión ya configuradas. Este comando local no reemplaza cuentas existentes. Con la demo habilitada (`CARGAR_DEMO=1`, predeterminado de desarrollo) se importan `datos.sql` y los datos de «Restaurante Norte» solo si la base estaba **sin tablas antes de migrar**. En una base de demo ya inicializada, el [script idempotente de Norte](../README.md#modelo-multi-restaurante) se puede ejecutar por separado sin reiniciar ni borrar datos. Nunca se vuelve a sembrar como parte del alta de un gerente.
 
 ## Reproducir la comprobación
 

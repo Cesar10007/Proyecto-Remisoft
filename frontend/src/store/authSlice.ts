@@ -36,6 +36,20 @@ const authSlice = createSlice({
       localStorage.setItem('rol', action.payload.rol)
       localStorage.setItem('user', JSON.stringify(action.payload.user))
     },
+    // Cambio de sede activa (gerente multisede). El backend ya lo persistió;
+    // aquí solo se refleja para que la interfaz y el estado local coincidan.
+    actualizarSede(
+      state,
+      action: PayloadAction<{ id_restaurante: number; nombre_establecimiento: string | null }>,
+    ) {
+      if (!state.user) return
+      state.user = {
+        ...state.user,
+        id_restaurante: action.payload.id_restaurante,
+        nombre_establecimiento: action.payload.nombre_establecimiento,
+      }
+      localStorage.setItem('user', JSON.stringify(state.user))
+    },
     clearCredentials(state) {
       state.token = null
       state.rol = null
@@ -47,5 +61,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { setCredentials, clearCredentials } = authSlice.actions
+export const { setCredentials, clearCredentials, actualizarSede } = authSlice.actions
 export default authSlice.reducer

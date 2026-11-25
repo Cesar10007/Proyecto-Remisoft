@@ -21,7 +21,10 @@ interface Usuario {
   id_rol?: number
   id_restaurante?: number | null
   restaurante?: string | null
+  sedes?: { id_restaurante: number; nombre: string }[]
 }
+
+type Sede = { id_restaurante: number; nombre: string }
 
 interface FormularioGerente {
   identificacion: string
@@ -55,6 +58,12 @@ function GestionGerentes() {
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
   const [cambiandoEstado, setCambiandoEstado] = useState<number | null>(null)
   const [eliminando, setEliminando] = useState<number | null>(null)
+  // Gerente multisede: qué establecimientos puede abrir cada gerente.
+  const [gerenteSedes, setGerenteSedes] = useState<Usuario | null>(null)
+  const [catalogoSedes, setCatalogoSedes] = useState<Sede[]>([])
+  const [sedesAsignadas, setSedesAsignadas] = useState<number[]>([])
+  const [guardandoSedes, setGuardandoSedes] = useState(false)
+  const [errorSedes, setErrorSedes] = useState<string | null>(null)
 
   const [formulario, setFormulario] = useState<FormularioGerente>({
     identificacion: '',
@@ -216,6 +225,59 @@ function GestionGerentes() {
     }
   }
 
+  async function abrirSedes(usuario: Usuario) {
+    setGerenteSedes(usuario)
+    setErrorSedes(null)
+    setSedesAsignadas([])
+    try {
+      const [catalogo, asignadas] = await Promise.all([
+        api.get('/usuarios/mis-sedes'),
+        api.get(`/usuarios/${usuario.id_usuario}/sedes`),
+      ])
+      setCatalogoSedes(Array.isArray(catalogo.data?.data) ? catalogo.data.data : [])
+      setSedesAsignadas(
+        Array.isArray(asignadas.data?.data)
+          ? asignadas.data.data.map((sede: Sede) => sede.id_restaurante)
+          : [],
+      )
+    } catch (err) {
+      setErrorSedes(obtenerMensajeError(err))
+    }
+  }
+
+  function cerrarSedes() {
+    if (guardandoSedes) return
+    setGerenteSedes(null)
+    setErrorSedes(null)
+  }
+
+  function alternarSede(idRestaurante: number) {
+    setSedesAsignadas((actuales) =>
+      actuales.includes(idRestaurante)
+        ? actuales.filter((id) => id !== idRestaurante)
+        : [...actuales, idRestaurante],
+    )
+  }
+
+  async function guardarSedes() {
+    if (!gerenteSedes) return
+    if (sedesAsignadas.length === 0) {
+      setErrorSedes('Asigna al menos un establecimiento.')
+      return
+    }
+    setGuardandoSedes(true)
+    setErrorSedes(null)
+    try {
+      await api.put(`/usuarios/${gerenteSedes.id_usuario}/sedes`, { sedes: sedesAsignadas })
+      setGerenteSedes(null)
+      await cargarGerentes()
+    } catch (err) {
+      setErrorSedes(obtenerMensajeError(err))
+    } finally {
+      setGuardandoSedes(false)
+    }
+  }
+
   const columns: Column<Usuario>[] = [
     {
       header: 'Usuario',
@@ -285,6 +347,17 @@ function GestionGerentes() {
                 : activo
                   ? 'Desactivar'
                   : 'Activar'}
+            </button>
+
+            <button
+              aria-description="Elige en cuántos establecimientos puede entrar este gerente."
+              type="button"
+              className="sa-action-button sa-action-button--sede"
+              onClick={() => void abrirSedes(usuario)}
+              disabled={procesandoEstado || procesandoEliminacion}
+            >
+              <span className="material-symbols-outlined">storefront</span>
+              Sedes
             </button>
 
             <button
@@ -483,6 +556,59 @@ function GestionGerentes() {
         emptyMessage="No hay gerentes registrados."
         keyExtractor={(usuario) => usuario.id_usuario}
       />
+      <Modal
+        title={`Establecimientos de ${gerenteSedes?.nombre ?? 'gerente'}`}
+        isOpen={gerenteSedes !== null}
+        busy={guardandoSedes}
+        onClose={cerrarSedes}
+      >
+        <p className="mb-4 text-sm text-[var(--texto-muted)]">
+          El gerente puede entrar a cada establecimiento marcado, pero trabaja en uno a la vez:
+          su sede activa define todo lo que ve y registra. Solo tú puedes asignar sedes.
+        </p>
+        <form
+          aria-description="Marca los establecimientos que puede abrir este gerente."
+          className="sa-manager-form"
+          onSubmit={(evento) => {
+            evento.preventDefault()
+            void guardarSedes()
+          }}
+        >
+          <fieldset className="sa-sede-list">
+            <legend className="sr-only">Establecimientos disponibles</legend>
+            {catalogoSedes.map((sede) => (
+              <label key={sede.id_restaurante} className="sa-sede-option">
+                <input
+                  type="checkbox"
+                  checked={sedesAsignadas.includes(sede.id_restaurante)}
+                  onChange={() => alternarSede(sede.id_restaurante)}
+                  disabled={guardandoSedes}
+                />
+                <span>{sede.nombre}</span>
+                {sede.id_restaurante === gerenteSedes?.id_restaurante && (
+                  <span className="sa-sede-option__badge">Sede activa</span>
+                )}
+              </label>
+            ))}
+          </fieldset>
+
+          {errorSedes && (
+            <p role="alert" className="sa-table-message sa-table-message--error">
+              {errorSedes}
+            </p>
+          )}
+
+          <div className="sa-manager-form__actions">
+            <button type="button" className="sa-manager-btn sa-manager-btn--secondary" onClick={cerrarSedes} disabled={guardandoSedes}>
+              Cancelar
+            </button>
+            <button type="submit" className="sa-manager-btn sa-manager-btn--primary" disabled={guardandoSedes}>
+              {guardandoSedes ? 'Guardando…' : 'Guardar establecimientos'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
     </section>
   )
 }
