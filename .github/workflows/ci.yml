@@ -18,6 +18,35 @@ jobs:
     name: Quality, audit and Docker build
     runs-on: ubuntu-latest
 
+    services:
+      mariadb:
+        image: mariadb:11.4.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci_root
+          MARIADB_DATABASE: remisoft_test
+          MARIADB_USER: ci_user
+          MARIADB_PASSWORD: ci_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USERNAME: ci_user
+      DB_PASSWORD: ci_password
+      DB_ROOT_PASSWORD: ci_root
+      DB_DATABASE: remisoft_test
+      DATABASE_URL: mysql://ci_user:ci_password@127.0.0.1:3306/remisoft_test
+      JWT_SECRET: ci_secret_para_pruebas_con_longitud_suficiente
+      CARGAR_DEMO: '0'
+      ESTABLECIMIENTO_DB_TEST: '1'
+      SALON_DB_TEST: '1'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,12 +87,12 @@ jobs:
         working-directory: backend
         run: pnpm run lint
 
-      - name: Tests backend
+      - name: Migrate test database
         working-directory: backend
-        env:
-          DB_USERNAME: ci_user
-          DB_PASSWORD: ci_password
-          DB_DATABASE: ci_db
+        run: pnpm exec prisma migrate deploy
+
+      - name: Tests backend (unitarios + integracion)
+        working-directory: backend
         run: pnpm run test
 
       - name: Lint frontend
