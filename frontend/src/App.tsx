@@ -63,7 +63,7 @@ function App() {
         <Route
           path="/cocina"
           element={
-            <PrivateRoute rolesPermitidos={['MESERO', 'GERENTE', 'SUPERADMIN']}>
+            <PrivateRoute rolesPermitidos={['COCINERO', 'SUPERADMIN']}>
               <Cocina />
             </PrivateRoute>
           }

@@ -20,6 +20,9 @@ export async function escenarioEstablecimiento(t) {
     const pedido = { pedido: sede };
     await db.flujo_caja.deleteMany({ where: { turno_caja: sede } });
     await db.pago.deleteMany({ where: { Factura: pedido } });
+    await db.detalle_parte_cuenta.deleteMany({ where: { parte: { division: { pedido: sede } } } });
+    await db.parte_cuenta.deleteMany({ where: { division: { pedido: sede } } });
+    await db.division_cuenta.deleteMany({ where: { pedido: sede } });
     await db.factura_item.deleteMany({ where: { Factura: pedido } });
     await db.factura.deleteMany({ where: pedido });
     await db.detalle_pedido.deleteMany({ where: pedido });

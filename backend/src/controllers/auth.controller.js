@@ -30,6 +30,8 @@ function publicUser(usuario) {
     activo: usuario.activo,
     fecha_registro: usuario.fecha_registro,
     rol: usuario.rol,
+    // Sedes a las que puede entrar. Si solo hay una, el cliente no muestra selector.
+    sedes: (usuario.sedes ?? []).map((s) => s.id_restaurante),
   };
 }
 
@@ -75,7 +77,11 @@ export async function login(req, res, next) {
 
     const usuario = await prisma.usuario.findUnique({
       where: { email: emailNormalizado },
-      include: { rol: true, restaurante: { select: { nombre: true } } },
+      include: {
+        rol: true,
+        restaurante: { select: { nombre: true } },
+        sedes: { select: { id_restaurante: true } },
+      },
     });
 
     if (!usuario || !usuario.contrasena_hash) {

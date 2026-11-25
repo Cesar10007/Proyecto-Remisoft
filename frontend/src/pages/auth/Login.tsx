@@ -46,6 +46,8 @@ function Login({ onClose }: LoginProps) {
         navigate('/cajero', { replace: true })
       } else if (rolNormalizado === 'MESERO') {
         navigate('/mesero', { replace: true })
+      } else if (rolNormalizado === 'COCINERO') {
+        navigate('/cocina', { replace: true })
       } else if (rolNormalizado === 'REPARTIDOR') {
         navigate('/repartidor', { replace: true })
       } else {

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import type { RootState } from '../../store/store'
 import { useNotificaciones, type Aviso, type TipoAviso } from '../../hook/useNotificaciones'
+import SelectorSede from './SelectorSede'
 
 interface HeaderProps {
   seccionActiva: string
@@ -29,7 +31,7 @@ const GRUPOS: { tipo: TipoAviso; titulo: string; icono: string; clase: string }[
 ]
 
 // Un grupo de avisos dentro del panel (Por preparar / Listos para servir).
-function GrupoAvisos({ tipo, titulo, icono, clase, avisos }: (typeof GRUPOS)[number] & { avisos: Aviso[] }) {
+function GrupoAvisos({ tipo, titulo, icono, clase, avisos, alElegir }: (typeof GRUPOS)[number] & { avisos: Aviso[]; alElegir: (aviso: Aviso) => void }) {
   const propios = avisos.filter((aviso) => aviso.tipo === tipo)
   if (propios.length === 0) return null
 
@@ -38,12 +40,18 @@ function GrupoAvisos({ tipo, titulo, icono, clase, avisos }: (typeof GRUPOS)[num
       <p className="mb-1.5 px-1 text-[0.64rem] font-bold uppercase tracking-wider text-[var(--texto-muted)]">{titulo}</p>
       <ul className="space-y-1.5">
         {propios.map((aviso) => (
-          <li key={aviso.id} className="rounded-xl border border-[var(--borde)] px-2.5 py-2">
-            <div className="flex items-center gap-1.5">
-              <span className={`material-symbols-outlined text-[16px] ${clase}`}>{icono}</span>
-              <span className="text-[0.78rem] font-semibold text-[var(--texto)]">{aviso.titulo}</span>
-            </div>
-            <p className="pl-[22px] text-[0.72rem] text-[var(--texto-muted)]">{aviso.detalle}</p>
+          <li key={aviso.id}>
+            <button
+              type="button"
+              onClick={() => alElegir(aviso)}
+              className="w-full rounded-xl border border-[var(--borde)] px-2.5 py-2 text-left transition-colors hover:border-[var(--rojo-mid)] hover:bg-[var(--rojo-light)]"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className={`material-symbols-outlined text-[16px] ${clase}`}>{icono}</span>
+                <span className="text-[0.78rem] font-semibold text-[var(--texto)]">{aviso.titulo}</span>
+              </div>
+              <p className="pl-[22px] text-[0.72rem] text-[var(--texto-muted)]">{aviso.detalle}</p>
+            </button>
           </li>
         ))}
       </ul>
@@ -57,6 +65,7 @@ function GrupoAvisos({ tipo, titulo, icono, clase, avisos }: (typeof GRUPOS)[num
 //   resto de los roles -> alertas de stock bajo (GET /inventario/alertas/stock-bajo)
 function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones }: HeaderProps) {
   const inicial = nombreUsuario.trim()[0]?.toUpperCase() ?? '?'
+  const navigate = useNavigate()
   const rol = useSelector((state: RootState) => state.auth.rol)
   const idUsuario = useSelector((state: RootState) => state.auth.user?.id_usuario)
   const esMesero = rol === 'MESERO'
@@ -102,6 +111,11 @@ function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones 
     }
   }, [abierta])
 
+  const irAlPedido = (aviso: Aviso) => {
+    setAbierta(false)
+    navigate('/cocina', { state: { pedido: aviso.idPedido, tipo: aviso.tipo } })
+  }
+
   const alternar = () => {
     const siguiente = !abierta
     setAbierta(siguiente)
@@ -124,6 +138,7 @@ function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones 
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {acciones}
+        <SelectorSede />
         <div ref={contenedorRef} className="relative">
           <button
             type="button"
@@ -161,7 +176,7 @@ function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones 
                 ) : (
                   <div className="max-h-80 space-y-3 overflow-y-auto">
                     {GRUPOS.map((grupo) => (
-                      <GrupoAvisos key={grupo.tipo} {...grupo} avisos={avisos} />
+                      <GrupoAvisos key={grupo.tipo} {...grupo} avisos={avisos} alElegir={irAlPedido} />
                     ))}
                   </div>
                 )

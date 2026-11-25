@@ -411,3 +411,54 @@
 .sa-action-button--delete:hover:not(:disabled) {
   background: var(--t-bg-fbd0d0, #fbd0d0);
 }
+
+/* Gerente multisede: el botón abre la lista de establecimientos permitidos. */
+.sa-action-button--sede {
+  color: var(--t-txt-1f6f5c, #1f6f5c);
+  background: var(--t-bg-e0f4ee, #e0f4ee);
+}
+
+.sa-action-button--sede:hover:not(:disabled) {
+  background: var(--t-bg-c8ebe2, #c8ebe2);
+}
+
+.sa-sede-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: none;
+}
+
+.sa-sede-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--t-borde-e6e2dc, #e6e2dc);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sa-sede-option:hover {
+  background: var(--t-bg-faf7f3, #faf7f3);
+}
+
+.sa-sede-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--t-txt-1f6f5c, #1f6f5c);
+}
+
+.sa-sede-option__badge {
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--t-txt-8a5a00, #8a5a00);
+  background: var(--t-bg-fdf1d6, #fdf1d6);
+}

@@ -151,6 +151,7 @@ function PersonalSection({
             <option value="3">CAJERO</option>
             <option value="4">MESERO</option>
             <option value="5">REPARTIDOR</option>
+            <option value="6">COCINERO</option>
           </SelectField>
           {!usuarioEditando && (
             <div className="relative">
