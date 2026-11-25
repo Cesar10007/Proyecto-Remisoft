@@ -25,7 +25,7 @@ function Landing({ onLogin }: LandingProps) {
 
           <p>
             RemiSoft centraliza pedidos, inventario, facturación y domicilios
-            en una sola plataforma. Diseñado para el restaurante Familia Remi.
+            en una sola plataforma. Diseñado para cadenas de restaurantes.
           </p>
 
           <div className="hero-actions">
