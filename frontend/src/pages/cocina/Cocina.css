@@ -1,188 +1,325 @@
-.cocina {
+.ck-app {
+  --ck-bg: #f6f3f2;
+  --ck-card: #fff;
+  --ck-ink: #282e29;
+  --ck-muted: #666e66;
+  --ck-line: #e1e4da;
+  --ck-soft: #f4f5f0;
+  --ck-accent: #ae4728;
+  --ck-tint: #f9ece4;
+  --ck-green: #39664f;
+  --ck-mint: #e8f2e9;
+  --ck-gold: #87651e;
+  --ck-cream: #faf1d7;
   display: flex;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--texto);
-  font-family: 'DM Sans', system-ui, sans-serif;
+  min-height: 100dvh;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font: 14px/1.45 var(--fuente-lectura);
+}
+html[data-theme='dark'] .ck-app {
+  --ck-bg: #191d1a;
+  --ck-card: #232823;
+  --ck-ink: #f2f3eb;
+  --ck-muted: #b7beb3;
+  --ck-line: #3b443c;
+  --ck-soft: #2c332c;
+  --ck-accent: #f5a886;
+  --ck-tint: #422d24;
+  --ck-green: #a5d5af;
+  --ck-mint: #293e30;
+  --ck-gold: #e7c477;
+  --ck-cream: #3d3725;
+}
+.ck-app :is(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+.ck-app button {
+  cursor: pointer;
 }
 
-/* Contenido a la derecha del menú compartido. En celular deja espacio para la barra superior fija. */
-.cocina__main {
+.ck-main {
   flex: 1;
   min-width: 0;
-  padding: 24px;
 }
-
+.ck-head {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+}
+.ck-content {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
 @media (max-width: 767px) {
-  .cocina__main {
-    padding-top: 72px;
+  .ck-head,
+  .ck-content {
+    padding-top: 16px;
+  }
+  .ck-app .ck-main {
+    padding-top: 56px;
   }
 }
 
-.cocina__header {
+/* Botones y enlaces con la misma forma que el panel del mesero. */
+.ck-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 10px 14px;
+  border: 1px solid var(--ck-line);
+  border-radius: 8px;
+  background: var(--ck-card);
+  color: var(--ck-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.ck-btn:hover {
+  background: var(--ck-soft);
+}
+
+.ck-error {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--ck-tint);
+  border-radius: 11px;
+  background: var(--ck-tint);
+  color: var(--ck-accent);
+  font-size: 13px;
 }
 
-.cocina__header h1 {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 800;
+.ck-fine {
+  color: var(--ck-muted);
+  font-size: 11px;
 }
 
-.cocina__header p {
-  margin: 4px 0 0;
-  color: var(--texto-muted);
-  font-size: 0.9rem;
-}
-
-.cocina__header-acciones {
-  display: flex;
-  gap: 8px;
-}
-
-.cocina__columnas {
+/* Tablero: tres columnas por estado. */
+.ck-cols {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: start;
 }
-
-.cocina__columna {
-  background: var(--t-bg-f9f5f0, #f9f5f0);
-  border: 1px solid var(--borde);
-  border-radius: 16px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 300px;
+@media (max-width: 900px) {
+  .ck-cols {
+    grid-template-columns: 1fr;
+  }
 }
 
-.cocina__columna h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
+.ck-col {
+  border: 1px solid var(--ck-line);
+  border-radius: 13px;
+  background: var(--ck-card);
+  overflow: hidden;
+}
+.ck-col-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.cocina__contador {
-  background: var(--bg-card);
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 0.8rem;
-  border: 1px solid var(--borde);
-}
-
-.cocina__tarjeta {
-  background: var(--bg-card);
-  border: 1px solid var(--borde);
-  border-left: 5px solid var(--texto-muted);
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: var(--sombra);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.cocina__tarjeta--pendiente {
-  border-left-color: var(--amarillo);
-}
-
-.cocina__tarjeta--preparando {
-  border-left-color: var(--rojo);
-}
-
-.cocina__tarjeta--listo {
-  border-left-color: var(--verde);
-}
-
-.cocina__tarjeta-top {
-  display: flex;
   justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--ck-line);
+}
+.ck-col-head h2 {
+  display: flex;
   align-items: center;
-}
-
-.cocina__tiempo {
-  font-size: 0.78rem;
-  color: var(--texto-muted);
-}
-
-.cocina__item {
-  font-size: 1.05rem;
+  gap: 9px;
+  margin: 0;
+  font-family: 'Syne', var(--fuente-lectura);
+  font-size: 15px;
   font-weight: 700;
 }
-
-.cocina__cantidad {
-  color: var(--texto-acento);
+.ck-col-head h2 svg {
+  color: var(--ck-accent);
 }
-
-.cocina__meta {
-  font-size: 0.8rem;
-  color: var(--texto-muted);
-}
-
-.cocina__notas {
-  font-size: 0.85rem;
-  background: var(--amarillo-light);
-  border-radius: 8px;
-  padding: 6px 8px;
-}
-
-.cocina__vacio {
-  color: var(--texto-muted);
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.cocina__vacio--grande {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  gap: 8px;
-}
-
-.cocina__vacio .material-symbols-outlined {
-  font-size: 44px;
-  color: var(--verde);
-}
-
-.cocina__alerta {
-  padding: 10px 14px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-  background: var(--rojo-light);
-  color: var(--texto-acento);
-  font-size: 0.9rem;
-}
-
-.cocina__btn {
+.ck-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 9px 14px;
-  border-radius: 10px;
-  font: inherit;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid var(--borde);
-  background: var(--t-bg-ffffff, #fff);
-  color: var(--texto);
+  min-width: 25px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 20px;
+  background: var(--ck-soft);
+  color: var(--ck-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.ck-col-body {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
 }
 
-@media (max-width: 860px) {
-  .cocina__columnas {
-    grid-template-columns: 1fr;
+/* Tarjeta de un plato. El borde izquierdo dice en qué estado está. */
+.ck-tarjeta {
+  display: grid;
+  gap: 7px;
+  padding: 13px 14px;
+  border: 1px solid var(--ck-line);
+  border-left: 4px solid var(--ck-line);
+  border-radius: 11px;
+  background: var(--ck-card);
+}
+.ck-tarjeta--pendiente {
+  border-left-color: var(--ck-gold);
+  background: var(--ck-cream);
+}
+.ck-tarjeta--preparando {
+  border-left-color: var(--ck-accent);
+  background: var(--ck-tint);
+}
+.ck-tarjeta--listo {
+  border-left-color: var(--ck-green);
+  background: var(--ck-mint);
+}
+
+.ck-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ck-top strong {
+  font-family: 'Syne', var(--fuente-lectura);
+  font-size: 14px;
+  font-weight: 700;
+}
+.ck-tiempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ck-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.ck-plato {
+  font-size: 14px;
+  line-height: 1.35;
+}
+.ck-cant {
+  display: inline-block;
+  margin-right: 3px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--ck-card);
+  color: var(--ck-accent);
+  font-weight: 700;
+  font-size: 13px;
+}
+.ck-meta {
+  color: var(--ck-muted);
+  font-size: 11.5px;
+}
+.ck-nota {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: var(--ck-card);
+  color: var(--ck-ink);
+  font-size: 12px;
+  border: 1px dashed var(--ck-line);
+}
+
+/* Estados vacíos. */
+.ck-vacio {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--ck-muted);
+  font-size: 12.5px;
+}
+.ck-vacio svg {
+  opacity: 0.65;
+}
+.ck-vacio strong {
+  color: var(--ck-ink);
+  font-size: 14px;
+}
+
+/* Historial. */
+.ck-panel {
+  border: 1px solid var(--ck-line);
+  border-radius: 13px;
+  background: var(--ck-card);
+  overflow: hidden;
+}
+.ck-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--ck-line);
+}
+.ck-panel-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-family: 'Syne', var(--fuente-lectura);
+  font-size: 15px;
+  font-weight: 700;
+}
+.ck-hist {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.ck-hist-grupo {
+  border: 1px solid var(--ck-line);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.ck-hist-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 13px;
+  background: var(--ck-soft);
+  font-size: 12.5px;
+}
+.ck-hist-top strong {
+  font-family: 'Syne', var(--fuente-lectura);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.ck-hist-items {
+  display: grid;
+  gap: 6px;
+  padding: 10px 13px;
+}
+.ck-hist-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+.ck-hist-item svg {
+  color: var(--ck-green);
+  flex: none;
+}
+
+/* Pedido señalado desde la campana. */
+.ck-tarjeta--senalada {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 2px;
+  animation: ck-latido 1.1s ease-in-out 3;
+}
+@keyframes ck-latido {
+  50% {
+    outline-color: transparent;
   }
 }

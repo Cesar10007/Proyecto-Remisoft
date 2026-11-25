@@ -91,6 +91,7 @@ export default function Mesero() {
         menuItems={navItems}
         vistaActual={vista}
         onNavigate={(v) => {
+          if (v === 'cocina') { navigate('/cocina'); return }
           if (v in secciones) cambiar(v as Vista)
         }}
         onLogout={() => {

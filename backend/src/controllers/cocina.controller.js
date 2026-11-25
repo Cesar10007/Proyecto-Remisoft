@@ -136,3 +136,48 @@ export async function avanzarItem(req, res, next) {
     next(err);
   }
 }
+
+// GET /api/cocina/historial?limite=60
+// Platos ya entregados, los mas recientes primero. Usa el mismo alcance que el
+// tablero: la sede del usuario y, si es mesero, unicamente sus pedidos.
+export async function historial(req, res, next) {
+  try {
+    const limite = Math.min(Math.max(parseId(req.query.limite) ?? 60, 1), 200);
+
+    const pedidos = await prisma.pedido.findMany({
+      where: {
+        AND: [alcance(req.user), { Detalle_pedido: { some: { estado_item: 'ENTREGADO' } } }],
+      },
+      include: {
+        Detalle_pedido: {
+          where: { estado_item: 'ENTREGADO' },
+          include: { Producto: true },
+          orderBy: { id_detalle: 'asc' },
+        },
+        usuario: { where: req.sede, select: { nombre: true, apellido: true } },
+      },
+      orderBy: { Fecha_hora: 'desc' },
+      take: limite,
+    });
+
+    res.json(
+      pedidos.map((p) => ({
+        id_pedido: p.id_pedido,
+        mesa: p.Mesa_num,
+        tipo_pedido: p.Tipo_pedido ?? '',
+        notas: p.notas ?? '',
+        fecha_hora: p.Fecha_hora,
+        nombre_mesero: p.usuario ? `${p.usuario.nombre ?? ''} ${p.usuario.apellido ?? ''}`.trim() : null,
+        items: p.Detalle_pedido.map((d) => ({
+          id_detalle: d.id_detalle,
+          nombre: relacionDeSede(d.Producto, p.id_restaurante)?.Nombre ?? `Producto ${d.id_producto}`,
+          cantidad: Number(d.Cantidad ?? 0),
+          estado: d.estado_item ?? 'PENDIENTE',
+          nota: d.nota ?? '',
+        })),
+      })),
+    );
+  } catch (err) {
+    next(err);
+  }
+}

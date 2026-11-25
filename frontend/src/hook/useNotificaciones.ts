@@ -10,6 +10,7 @@ export type TipoAviso = 'preparar' | 'servir'
 export interface Aviso {
   id: string
   tipo: TipoAviso
+  idPedido: number
   titulo: string
   detalle: string
   fecha: string
@@ -76,6 +77,7 @@ function construirAvisos(comandas: Comanda[]): Aviso[] {
       avisos.push({
         id: `preparar-${comanda.id_pedido}-${platos}`,
         tipo: 'preparar',
+        idPedido: comanda.id_pedido,
         titulo: `${nombrePedido(comanda)} · Pedido #${comanda.id_pedido}`,
         detalle: resumir(porPreparar),
         fecha: comanda.fecha_hora,
@@ -87,6 +89,7 @@ function construirAvisos(comandas: Comanda[]): Aviso[] {
       avisos.push({
         id: `servir-${comanda.id_pedido}-${platos}`,
         tipo: 'servir',
+        idPedido: comanda.id_pedido,
         titulo: `${nombrePedido(comanda)} · Pedido #${comanda.id_pedido}`,
         detalle: resumir(listos),
         fecha: comanda.fecha_hora,

@@ -397,7 +397,7 @@ function Gerente() {
         subtitulo="Gerente"
         menuItems={menuItems}
         vistaActual={vistaActual}
-        onNavigate={setVistaActual}
+        onNavigate={(v) => { if (v === 'cocina') { navigate('/cocina'); return } setVistaActual(v) }}
         onLogout={() => { logout(); navigate('/') }}
         footer={<Button aria-description="Revisa los pendientes de la sede antes de confirmar el cierre." className="mb-2" onClick={() => setRevisionAbierta(true)}>Hacer cierre total</Button>}
       />
