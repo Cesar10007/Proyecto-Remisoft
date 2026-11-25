@@ -4,7 +4,8 @@
 -- ============================================================
 
 -- Solo para una base de demostración recién migrada. No borra tablas ni se ejecuta
--- al dar de alta un gerente. La operación de ejemplo pertenece únicamente a Principal.
+-- al dar de alta un gerente. Los datos de demo pertenecen a Principal o Norte según
+-- su id_restaurante; las altas posteriores de gerentes nacen vacías.
 SET @sede_demo = 1;
 
 -- Los roles del sistema provienen de las migraciones, aun sin demo.
@@ -342,6 +343,96 @@ INSERT INTO IA_PRODUCTO (id_IA, id_producto, demanda_predicho_producto, nivel_co
 (2, 4, 250.00, 0.830, 0, 'Alta rotación, revisar stock limones'),
 (9, 6, 90.00, 0.720, 0, 'Ofrecer en menú del día para clientes frecuentes'),
 (3, 6, 40.00, 0.910, 1, 'Solicitar pedido urgente al proveedor 9');
+
+-- 27. OPERACIÓN DEMO DE RESTAURANTE NORTE (gerente Sebastián, id_restaurante=2)
+-- Usa registros propios para mostrar que mesas, catálogo, existencias y ventas
+-- de un gerente no se mezclan con los de Restaurante Principal (Laura, sede 1).
+SET @sede_norte = (SELECT id_restaurante FROM restaurante WHERE nombre = 'Restaurante Norte');
+SET @gerente_norte = (SELECT id_usuario FROM usuario WHERE id_restaurante = @sede_norte AND email = 'sebastian.diaz@resto.com');
+SET @mesero_norte = (SELECT id_usuario FROM usuario WHERE id_restaurante = @sede_norte AND id_rol = 4 ORDER BY id_usuario LIMIT 1);
+SET @cajero_norte = (SELECT id_usuario FROM usuario WHERE id_restaurante = @sede_norte AND id_rol = 3 ORDER BY id_usuario LIMIT 1);
+
+INSERT INTO mesa (numero, capacidad, id_restaurante) VALUES
+(1, 2, @sede_norte), (2, 4, @sede_norte), (3, 6, @sede_norte);
+
+INSERT INTO Cliente (id_restaurante, Nombre, Apellido, Email, Telefono, Direccion, tipo_documento, Num_documento) VALUES
+(@sede_norte, 'Daniel', 'Rojas', 'daniel.rojas@norte.example.com', '3115550101', 'Calle 80 # 12-40', 'CC', '1020304050');
+SET @cliente_norte = LAST_INSERT_ID();
+
+INSERT INTO caja (id_restaurante, nombre, estado) VALUES
+(@sede_norte, 'Caja Norte', 'ACTIVA');
+SET @caja_norte = LAST_INSERT_ID();
+
+INSERT INTO turno_caja (id_restaurante, id_caja, id_usuario_cajero, fecha_apertura, fecha_cierre,
+    efectivo_inicial, efectivo_esperado, efectivo_real, diferencia, notas, estado) VALUES
+(@sede_norte, @caja_norte, @cajero_norte, NOW() - INTERVAL 1 HOUR, NOW(),
+    50000.00, 118000.00, 118000.00, 0.00, 'Cierre demo de Restaurante Norte', 'CERRADA');
+SET @turno_norte = LAST_INSERT_ID();
+
+INSERT INTO proveedor (id_restaurante, nombre, nombre_contacto, telefono, email, direccion, tipo_proveedor, estado) VALUES
+(@sede_norte, 'Pesquera del Norte', 'Mariana Gil', '3105550202', 'ventas@pesqueranorte.example.com', 'Zona de Abastos, local 12', 'MARISCOS', 'ACTIVO');
+SET @proveedor_norte = LAST_INSERT_ID();
+
+INSERT INTO Producto (id_restaurante, Nombre, Descripcion, precio_venta, Categoria, Tiempo_preparacion, Estado) VALUES
+(@sede_norte, 'Cazuela Norteña', 'Camarón, pescado y leche de coco', 34000.00, 'PLATOS DE MAR', '00:20:00', 1);
+SET @producto_norte = LAST_INSERT_ID();
+
+INSERT INTO Ingrediente (id_restaurante, nombre, descripcion, unidad_medida, costo_unitario_ref, stock_minimo) VALUES
+(@sede_norte, 'Camarón', 'Camarón limpio para platos de mar', 'KG', 25000.00, 3.00);
+SET @ingrediente_norte = LAST_INSERT_ID();
+
+INSERT INTO lote_ingrediente (id_restaurante, id_ingrediente, numero_lote, fecha_ingreso, fecha_vencimiento,
+    stock_inicial, stock_actual, costo_promedio, observaciones) VALUES
+(@sede_norte, @ingrediente_norte, 'NORTE-CAM-001', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 3 DAY),
+    12.000, 11.500, 25000.00, 'Lote demo recibido en Restaurante Norte');
+SET @lote_norte = LAST_INSERT_ID();
+
+INSERT INTO Receta (id_producto, id_ingrediente, Cantidad_necesaria, Unidad) VALUES
+(@producto_norte, @ingrediente_norte, 0.250, 'KG');
+
+INSERT INTO proveedor_ingrediente (id_proveedor, id_ingrediente, precio_acordado, tiempo_entrega_dias,
+    calidad_rating, es_proveedor_principal, fecha_ultima_compra) VALUES
+(@proveedor_norte, @ingrediente_norte, 25000.00, 1, 4.8, 1, NOW());
+
+INSERT INTO inventario_mov (id_restaurante, id_ingrediente, id_usuario, tipo_movimiento, cantidad,
+    costo_unitario, observaciones, origen_tipo, id_lote) VALUES
+(@sede_norte, @ingrediente_norte, @gerente_norte, 'ENTRADA', 12.000, 25000.00,
+    'Recepción de lote inicial', 'AJUSTE', @lote_norte);
+
+INSERT INTO pedido (id_restaurante, id_cliente, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
+(@sede_norte, @cliente_norte, @mesero_norte, 'CERRADO', 'MESA', 1, 'Pedido de demostración de Restaurante Norte');
+SET @pedido_cerrado_norte = LAST_INSERT_ID();
+
+INSERT INTO Detalle_pedido (id_pedido, id_producto, Cantidad, Precio_unitario, estado_item) VALUES
+(@pedido_cerrado_norte, @producto_norte, 2, 34000.00, 'ENTREGADO');
+SET @detalle_norte = LAST_INSERT_ID();
+
+INSERT INTO Factura (id_pedido, consecutivo, IVA, Descuento, Propina, total, estado) VALUES
+(@pedido_cerrado_norte, 'FAC-NORTE-DEMO-0001', 10857.14, 0.00, 0.00, 68000.00, 'PAGADA');
+SET @factura_norte = LAST_INSERT_ID();
+
+INSERT INTO Factura_item (id_factura, id_detalle_pedido, cantidad_facturada, nombre_producto, precio_unitario) VALUES
+(@factura_norte, @detalle_norte, 2, 'Cazuela Norteña', 34000.00);
+
+INSERT INTO pago (id_factura, id_usuario_cajero, metodo, monto, estado, id_turno) VALUES
+(@factura_norte, @cajero_norte, 'EFECTIVO', 68000.00, 'APROBADO', @turno_norte);
+SET @pago_norte = LAST_INSERT_ID();
+
+INSERT INTO flujo_caja (id_turno, concepto, ingresos, egresos, saldo, metodo, id_pago) VALUES
+(@turno_norte, 'Apertura de caja', 50000.00, 0.00, 50000.00, 'EFECTIVO', NULL),
+(@turno_norte, 'Pago factura FAC-NORTE-DEMO-0001', 68000.00, 0.00, 118000.00, 'EFECTIVO', @pago_norte);
+
+INSERT INTO inventario_mov (id_restaurante, id_ingrediente, id_usuario, tipo_movimiento, cantidad,
+    costo_unitario, observaciones, origen_tipo, origen_id, id_lote) VALUES
+(@sede_norte, @ingrediente_norte, @mesero_norte, 'SALIDA', 0.500, 25000.00,
+    'Consumo de Cazuela Norteña en pedido demo', 'PEDIDO', @pedido_cerrado_norte, @lote_norte);
+
+INSERT INTO pedido (id_restaurante, id_mesero, estado, Tipo_pedido, Mesa_num, notas) VALUES
+(@sede_norte, @mesero_norte, 'ABIERTO', 'MESA', 2, 'Pedido activo de demostración de Restaurante Norte');
+SET @pedido_abierto_norte = LAST_INSERT_ID();
+
+INSERT INTO Detalle_pedido (id_pedido, id_producto, Cantidad, Precio_unitario, estado_item) VALUES
+(@pedido_abierto_norte, @producto_norte, 1, 34000.00, 'PENDIENTE');
 
 COMMIT;
 

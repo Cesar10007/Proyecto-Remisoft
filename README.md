@@ -435,6 +435,8 @@ En `/mesero`, cada tarjeta numerada abre la ficha de esa mesa con su estado y su
 
 La clave existente es **`id_restaurante`**. Crear un gerente desde Superadmin (o aprobar su solicitud) crea un establecimiento propio y vacío. El personal opera en la sede que la API obtiene del usuario en la BD. Productos, existencias, mesas, IA, ventas y demás actividad del panel no se comparten entre negocios. Un gerente sin ventas o sin análisis ve ese estado, no datos de ejemplo.
 
+La carga de demostración incluye dos sedes con actividad distinta: Laura opera `Restaurante Principal` (`id_restaurante=1`) y Sebastián opera `Restaurante Norte` (`id_restaurante=2`). Sus mesas, menú, inventario, clientes, caja y pedidos son independientes; esta carga no se aplica a restaurantes creados posteriormente ni a instalaciones reales configuradas con `CARGAR_DEMO=0`.
+
 [Cierre total, revisión de pendientes y reapertura por sede](docs/establecimientos.md#cierre-total-y-reapertura-de-una-sede).
 
 [Historial del gerente, baja de personal, ventas por fecha de pago y libro de caja](docs/establecimientos.md#historial-personal-y-caja).
