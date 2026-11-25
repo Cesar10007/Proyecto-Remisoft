@@ -21,6 +21,9 @@ function buildUserPayload(usuario) {
     rol: usuario.rol?.nombre ?? null,
     id_restaurante: usuario.id_restaurante ?? null,
     nombre_establecimiento: usuario.restaurante?.nombre ?? null,
+    // Sedes a las que puede entrar (gerente multisede). La activa manda; esto
+    // solo habilita el cambio de sede en PATCH /api/usuarios/me/sede.
+    sedes: (usuario.sedes ?? []).map((s) => s.id_restaurante),
   };
 }
 
@@ -64,7 +67,11 @@ async function authenticateWithJwt(token) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario: idUsuario },
-    include: { rol: true, restaurante: { select: { nombre: true } } },
+    include: {
+      rol: true,
+      restaurante: { select: { nombre: true } },
+      sedes: { select: { id_restaurante: true } },
+    },
   });
 
 
@@ -121,7 +128,11 @@ async function authenticateWithSanctum(token) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario: Number(tokenRow.tokenable_id) },
-    include: { rol: true, restaurante: { select: { nombre: true } } },
+    include: {
+      rol: true,
+      restaurante: { select: { nombre: true } },
+      sedes: { select: { id_restaurante: true } },
+    },
   });
 
 

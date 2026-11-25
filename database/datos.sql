@@ -4,7 +4,8 @@
 -- ============================================================
 
 -- Solo para una base de demostración recién migrada. No borra tablas ni se ejecuta
--- al dar de alta un gerente. La operación de ejemplo pertenece únicamente a Principal.
+-- al dar de alta un gerente. Los datos iniciales pertenecen a Principal; el ejemplo
+-- aislado de Norte se carga desde database/demo/seed_restaurante_norte.sql.
 SET @sede_demo = 1;
 
 -- Los roles del sistema provienen de las migraciones, aun sin demo.

@@ -250,6 +250,94 @@
   max-width: 260px;
 }
 
+.cajero__campo select,
+.cajero__asignacion-linea select {
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--t-bg-ffffff, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.cajero__pago-linea {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cajero__pago-linea .cajero__campo {
+  margin-top: 0;
+}
+
+.cajero__division {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--borde);
+}
+
+.cajero__division h3 {
+  margin: 0 0 12px;
+}
+
+.cajero__division-acciones,
+.cajero__division-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cajero__division-config {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.cajero__asignacion,
+.cajero__parte {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.cajero__asignacion-linea {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.cajero__asignacion-linea label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cajero__partes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.cajero__parte > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cajero__parte ul {
+  padding-left: 20px;
+  color: var(--texto-muted);
+}
+
 .cajero__cambio {
   font-weight: 700;
   color: var(--verde);
@@ -312,6 +400,17 @@
 @media (max-width: 860px) {
   .cajero__layout {
     grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 520px) {
+    .cajero__metodos {
+      grid-template-columns: 1fr;
+    }
+
+    .cajero__asignacion-linea {
+      align-items: stretch;
+      flex-direction: column;
+    }
   }
 
   .cajero__lista {

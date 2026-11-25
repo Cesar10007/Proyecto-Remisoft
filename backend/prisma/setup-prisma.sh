@@ -17,6 +17,7 @@ pnpm exec prisma generate
 if [[ "$TABLAS_PREVIAS" == 0 && "${CARGAR_DEMO:-1}" == 1 ]]; then
   echo 'Cargando la demostración en la base recién inicializada.'
   "${SQL[@]}" < "$DATABASE_DIR/datos.sql"
+  "${SQL[@]}" < "$DATABASE_DIR/demo/seed_restaurante_norte.sql"
 fi
 for f in "$DATABASE_DIR"/vistas/*.sql "$DATABASE_DIR"/procedimientos/*.sql; do
   "${SQL[@]}" < "$f"
