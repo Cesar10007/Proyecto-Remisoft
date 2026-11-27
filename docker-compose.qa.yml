@@ -1,0 +1,166 @@
+
+# Ambiente independiente de pruebas QA de RemiSoft.
+# No modifica ni reemplaza el ambiente de desarrollo.
+
+name: remisoft-qa
+
+x-qa-environment: &qa-environment
+  NODE_ENV: test
+  PORT: "3000"
+  HOST: "0.0.0.0"
+  DB_HOST: db
+  DB_PORT: "3306"
+  DB_USERNAME: qa_user
+  DB_PASSWORD: ${QA_DB_PASSWORD:?Define QA_DB_PASSWORD}
+  DB_DATABASE: remisoft_test
+  DATABASE_URL: "mysql://qa_user:${QA_DB_PASSWORD:?Define QA_DB_PASSWORD}@db:3306/remisoft_test"
+  CARGAR_DEMO: "0"
+  JWT_SECRET: ${QA_JWT_SECRET:?Define QA_JWT_SECRET}
+  JWT_EXPIRES_IN: 1h
+  FRONTEND_URL: ${QA_FRONTEND_URL:-http://localhost:8080}
+  MAILTRAP_HOST: mailpit
+  MAILTRAP_PORT: "1025"
+  MAILTRAP_USER: qa_user
+  MAILTRAP_PASS: qa_mail_password
+  MAIL_FROM: noreply@remisoft.test
+
+services:
+  db:
+    image: mariadb:11.4.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${QA_DB_ROOT_PASSWORD:?Define QA_DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: remisoft_test
+      MARIADB_USER: qa_user
+      MARIADB_PASSWORD: ${QA_DB_PASSWORD:?Define QA_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - qa_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - qa_network
+
+  db-init:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *qa-environment
+      REMISOFT_SQL_DIR: /app/database
+    volumes:
+      - ./database:/app/database:ro
+    command:
+      - bash
+      - prisma/setup-prisma.sh
+    restart: "no"
+    networks:
+      - qa_network
+
+  mailpit:
+    image: axllent/mailpit:v1.26.2
+    profiles: ["app", "tests"]
+    ports:
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    networks:
+      - qa_network
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    environment:
+      <<: *qa-environment
+    command: ["node", "src/server.js"]
+    ports:
+      - "127.0.0.1:3100:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - qa_network
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runtime
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - qa_network
+
+  tests:
+    profiles: ["tests"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    environment:
+      <<: *qa-environment
+      ESTABLECIMIENTO_DB_TEST: "1"
+      SALON_DB_TEST: "1"
+    volumes:
+      - ./database:/app/database:ro
+      - ./qa-artifacts:/artifacts
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+
+        if [ "$$DB_DATABASE" != "remisoft_test" ] || [ "$$DB_HOST" != "db" ]; then
+          echo "ERROR: base de datos de pruebas no autorizada."
+          exit 1
+        fi
+
+        RUN_ID=$$(date -u +%Y%m%dT%H%M%SZ)-$$$$
+        mkdir -p "/artifacts/$$RUN_ID"
+
+        node --test \
+          --test-reporter=spec \
+          --test-reporter-destination=stdout \
+          --test-reporter=junit \
+          --test-reporter-destination="/artifacts/$$RUN_ID/backend-tests-junit.xml" \
+          2>&1 | tee "/artifacts/$$RUN_ID/backend-tests.log"
+    restart: "no"
+    networks:
+      - qa_network
+
+volumes:
+  qa_db_data:
+
+networks:
+  qa_network:
+    driver: bridge
