@@ -67,8 +67,8 @@ Los resultados de integración continua corresponden a las ejecuciones específi
 | EJ-UNIT-001 | docs/testing-qa | f248e66 | Primera ejecución unitaria |
 | EJ-UNIT-002 | docs/testing-qa | 7bba9a3 | Segunda ejecución unitaria |
 | EJ-ENV-001 | chore/qa-environment | f26013b | Preparación y validación estructural del ambiente QA |
-| EJ-CI-001 | PR #286 | 3d7476c | Integración continua |
-| EJ-CI-002 | PR #290 | c0a468e | Integración continua con ejecución secuencial |
+| EJ-CI-001 | PR #286 | a8663a5 | Integración continua sobre merge temporal |
+| EJ-CI-002 | PR #290 | 7a5f716 | Integración continua sobre merge temporal con ejecución secuencial |
 | REV-001 | develop | 29e54d8 | Revisión documental y técnica de cambios recientes |
 
 Fecha local de consolidación: 26 de noviembre de 2026.

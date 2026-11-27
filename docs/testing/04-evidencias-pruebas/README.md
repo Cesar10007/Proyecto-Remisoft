@@ -20,7 +20,7 @@ Su finalidad es respaldar los resultados registrados en los informes de pruebas 
 | ID | Descripción | Estado |
 |---|---|---|
 | EV-UNIT-001 | Primera ejecución de los 23 casos unitarios | Resultados documentados en el informe |
-| EV-UNIT-002 | Captura de pantalla del registro de la segunda ejecución | Pendiente de incorporar |
+| EV-UNIT-002 | Captura de pantalla del registro de la segunda ejecución | Disponible |
 | EV-UNIT-003 | Registro textual completo de la segunda ejecución | Disponible |
 
 ### 3.1. Primera ejecución
