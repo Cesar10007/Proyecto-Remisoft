@@ -2,12 +2,14 @@ services:
   db:
     image: mariadb:11.4.4
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-remisoft_root}
+      # Sin valor por defecto: si falta, docker compose se detiene con el mensaje.
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?Define DB_ROOT_PASSWORD en .env (ver .env.example)}"
       MARIADB_DATABASE: remisoft
       MARIADB_USER: remisoft
-      MARIADB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
+      MARIADB_PASSWORD: "${DB_PASSWORD:?Define DB_PASSWORD en .env (ver .env.example)}"
+    # Publicado solo en loopback: la base no queda expuesta a la red local.
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -20,8 +22,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    # Publicado solo en loopback: la entrada pública es nginx (puerto 80).
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -30,12 +33,14 @@ services:
       DB_HOST: db
       DB_PORT: 3306
       DB_USERNAME: remisoft
-      DB_PASSWORD: ${DB_PASSWORD:-remisoft_pass}
+      DB_PASSWORD: "${DB_PASSWORD:?Define DB_PASSWORD en .env (ver .env.example)}"
       DB_DATABASE: remisoft
-      DATABASE_URL: "mysql://remisoft:${DB_PASSWORD:-remisoft_pass}@db:3306/remisoft"
-      CARGAR_DEMO: ${CARGAR_DEMO:-1}
-      JWT_SECRET: ${JWT_SECRET:-remisoft_jwt_secret}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      DATABASE_URL: "mysql://remisoft:${DB_PASSWORD:?Define DB_PASSWORD en .env (ver .env.example)}@db:3306/remisoft"
+      # Los datos demo con contraseñas públicas ya no se cargan por defecto.
+      CARGAR_DEMO: ${CARGAR_DEMO:-0}
+      # Sin valor por defecto: un secreto publicado permite forjar tokens válidos.
+      JWT_SECRET: "${JWT_SECRET:?Define JWT_SECRET en .env con al menos 32 caracteres (ver .env.example)}"
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
       MAILTRAP_HOST: ${MAILTRAP_HOST:-smtp.mailtrap.io}
       MAILTRAP_PORT: ${MAILTRAP_PORT:-2525}
       MAILTRAP_USERNAME: ${MAILTRAP_USERNAME:-}

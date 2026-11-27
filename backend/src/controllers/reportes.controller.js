@@ -66,19 +66,11 @@ export async function ventasDiarias(req, res, next) {
       FROM Factura_item fi
       JOIN Factura f ON f.id_factura = fi.id_factura
       JOIN Detalle_pedido dp ON dp.id_detalle = fi.id_detalle_pedido AND dp.id_pedido = f.id_pedido
-fix/modulo-gerente
-      JOIN Producto p ON p.id_producto = dp.id_producto
-      ${esMesero ? unirSede : Prisma.empty}
-      WHERE f.estado = 'PAGADA' ${esMesero ? sede : Prisma.empty}
-        AND ${diaLocal} BETWEEN ${desde} AND ${hasta}
-      GROUP BY p.id_producto, p.Nombre
-
       JOIN pedido pe ON pe.id_pedido = f.id_pedido
       LEFT JOIN Producto p ON p.id_producto = dp.id_producto AND p.id_restaurante = pe.id_restaurante
       JOIN vista_primer_cobro_factura c ON c.id_factura=f.id_factura
       WHERE c.fecha BETWEEN ${desde} AND ${hasta} ${sede}
       GROUP BY dp.id_producto, p.Nombre
-develop
       ORDER BY unidades DESC, ingresos DESC
       LIMIT 5
     `, prisma.$queryRaw`
