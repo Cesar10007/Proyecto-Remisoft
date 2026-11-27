@@ -22,7 +22,7 @@ jobs:
       mariadb:
         image: mariadb:11.4.4
         env:
-          MARIADB_ROOT_PASSWORD: ci_root
+          MARIADB_ROOT_PASSWORD: ci_root_password
           MARIADB_DATABASE: remisoft_test
           MARIADB_USER: ci_user
           MARIADB_PASSWORD: ci_password
@@ -36,15 +36,15 @@ jobs:
 
     env:
       DB_HOST: 127.0.0.1
-      DB_PORT: '3306'
+      DB_PORT: "3306"
       DB_USERNAME: ci_user
       DB_PASSWORD: ci_password
       DB_DATABASE: remisoft_test
       DATABASE_URL: mysql://ci_user:ci_password@127.0.0.1:3306/remisoft_test
       JWT_SECRET: ci_secret_para_pruebas
-      CARGAR_DEMO: '0'
-      ESTABLECIMIENTO_DB_TEST: '1'
-      SALON_DB_TEST: '1'
+      CARGAR_DEMO: "0"
+      ESTABLECIMIENTO_DB_TEST: "1"
+      SALON_DB_TEST: "1"
 
     steps:
       - name: Checkout
@@ -59,6 +59,11 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.0
+
+      - name: Install MariaDB client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes mariadb-client
 
       - name: Install backend dependencies
         working-directory: backend
@@ -78,19 +83,29 @@ jobs:
         continue-on-error: true
         run: pnpm audit --audit-level=high
 
-      - name: Generate Prisma Client
+      - name: Prepare test database
         working-directory: backend
-        run: pnpm run prisma:generate
+        run: |
+          set -euo pipefail
+
+          pnpm exec prisma migrate deploy
+          pnpm exec prisma generate
+
+          for f in ../database/vistas/*.sql ../database/procedimientos/*.sql; do
+            mariadb \
+              --default-character-set=utf8mb4 \
+              -h "$DB_HOST" \
+              -P "$DB_PORT" \
+              -u "$DB_USERNAME" \
+              --password="$DB_PASSWORD" \
+              "$DB_DATABASE" < "$f"
+          done
 
       - name: Lint backend
         working-directory: backend
         run: pnpm run lint
 
-      - name: Migrate test database
-        working-directory: backend
-        run: pnpm exec prisma migrate deploy
-
-      - name: Tests backend (unitarios + integracion)
+      - name: Tests backend (unitarios + integración)
         working-directory: backend
         run: pnpm run test
 
