@@ -54,10 +54,10 @@ Sistema web para automatizar pedidos, inventario, facturación y domicilios del 
 
 | Capa | Tecnología | Puerto publicado | Puerto interno |
 |------|------------|------------------|----------------|
-| Frontend producción | React 19.1.1 + Vite 7.0.6 + TypeScript 5.8.3 + nginx | 80 | 80 |
+| Frontend producción | React 19.2.4 + Vite 8.0.16 + TypeScript 6.0.3 + nginx | 80 | 80 |
 | Frontend desarrollo | Vite dev server | 5173 | 5173 |
-| Backend | Node.js v20.19.4 + Express 5.1.0 | 3000 | 3000 |
-| Base de datos | MariaDB 11.4.4 | No publicado por defecto | 3306 |
+| Backend | Node.js v20.19.4 + Express 4.22.2 | 3000 | 3000 |
+| Base de datos | MariaDB 11.4.4 | Solo 127.0.0.1 (loopback) | 3306 |
 | ORM y migraciones | Prisma 7.9.1 | — | — |
 | Orquestación | Docker Compose | — | — |
 | Entorno recomendado | GitHub Codespaces | — | — |
@@ -74,9 +74,9 @@ React no se comunica directamente con MariaDB. Todas las operaciones pasan por l
 
 | Librería | Versión | Uso |
 |----------|---------|-----|
-| React | 19.1.1 | Framework principal de UI |
-| Vite | 7.0.6 | Servidor de desarrollo y build |
-| TypeScript | 5.8.3 | Tipado estático |
+| React | 19.2.4 | Framework principal de UI |
+| Vite | 8.0.16 | Servidor de desarrollo y build |
+| TypeScript | 6.0.3 | Tipado estático |
 | react-router-dom | 7.x | Rutas y navegación por rol |
 | Axios | 1.x | Cliente HTTP para consumir la API |
 | Redux Toolkit | 2.x | Estado global |
@@ -87,12 +87,12 @@ React no se comunica directamente con MariaDB. Todas las operaciones pasan por l
 | Librería | Versión | Uso |
 |----------|---------|-----|
 | Node.js | v20.19.4 | Runtime del backend |
-| Express | 5.1.0 | Framework backend y API REST |
+| Express | 4.22.2 | Framework backend y API REST |
 | Prisma | 7.9.1 | ORM, cliente tipado y migraciones |
-| mysql2 | 3.x | Conexión auxiliar con MariaDB |
+| @prisma/adapter-mariadb | 7.9.1 | Controlador de MariaDB que usa Prisma |
 | jsonwebtoken | 9.x | Emisión y validación de JWT |
 | bcryptjs | 2.x | Hash y verificación de contraseñas |
-| Nodemailer | 7.x | Recuperación de contraseña por correo |
+| Nodemailer | 9.0.5 | Recuperación de contraseña por correo |
 
 ### Base de datos
 
@@ -173,11 +173,27 @@ Proyecto-Remisoft/
 
 ### Arranque normal
 
-Desde la raíz del repositorio:
+El repositorio **no trae secretos por defecto**: el compose se detiene si falta alguno. Primero crea el archivo de entorno:
+
+```bash
+cp .env.example .env
+```
+
+Genera el secreto del JWT (PowerShell, 64 caracteres hexadecimales):
+
+```powershell
+$secreto = -join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Max 256) })
+$contenido = Get-Content .env -Raw
+$contenido -replace '^JWT_SECRET=.*', "JWT_SECRET=$secreto" | Set-Content .env -NoNewline
+```
+
+Edita `.env` y completa también `DB_ROOT_PASSWORD` y `DB_PASSWORD`. Después, desde la raíz del repositorio:
 
 ```bash
 docker compose up -d --build
 ```
+
+Si falta una de las tres variables, `docker compose` no arranca y muestra el mensaje `Define JWT_SECRET en .env...`. Es intencional: un secreto publicado en el repositorio permite forjar tokens con cualquier rol. El backend repite la comprobación al iniciar y se detiene si el secreto tiene menos de 32 caracteres o sigue siendo un valor de ejemplo.
 
 Comprobar servicios:
 
@@ -301,18 +317,22 @@ Los archivos `.env` reales no deben subirse al repositorio. Usa los archivos `.e
 
 ### Backend
 
-| Variable | Descripción |
-|----------|-------------|
-| `DB_HOST` | Host de MariaDB; en Compose es `db` |
-| `DB_PORT` | Puerto interno de MariaDB, normalmente `3306` |
-| `DB_DATABASE` | Base de datos `remisoft` |
-| `DB_USERNAME` | Usuario de MariaDB |
-| `DB_PASSWORD` | Contraseña de MariaDB |
-| `DATABASE_URL` | URL usada por Prisma CLI |
-| `JWT_SECRET` | Secreto para firmar tokens JWT |
-| `JWT_EXPIRES_IN` | Tiempo de expiración del JWT |
-| `FRONTEND_URL` | Origen permitido por CORS |
-| Variables SMTP | Configuración de correo |
+Todas viven en el `.env` de la raíz y están documentadas en `.env.example`.
+
+| Variable | Obligatoria | Descripción |
+|----------|-------------|-------------|
+| `DB_ROOT_PASSWORD` | Sí | Contraseña de root del contenedor de MariaDB. El compose no la inventa. |
+| `DB_PASSWORD` | Sí | Contraseña del usuario `remisoft` de MariaDB. |
+| `DB_HOST` | Sí | Host de MariaDB; en Compose es `db`. |
+| `DB_PORT` | No | Puerto de MariaDB, por defecto `3306`. |
+| `DB_DATABASE` | No | Base de datos `remisoft`. |
+| `DB_USERNAME` | No | Usuario de MariaDB, `remisoft`. |
+| `DATABASE_URL` | Sí | URL que usa Prisma (incluye la contraseña). |
+| `JWT_SECRET` | Sí | Firma de los JWT. **Mínimo 32 caracteres**: el backend no arranca sin él. |
+| `JWT_EXPIRES_IN` | No | Vida del token; por defecto `8h`. |
+| `CARGAR_DEMO` | No | `1` carga los usuarios demo (clave `123456`). Por defecto `0`. |
+| `FRONTEND_URL` | No | Origen permitido por CORS. |
+| `MAILTRAP_HOST`, `MAILTRAP_PORT`, `MAILTRAP_USERNAME`, `MAILTRAP_PASSWORD`, `MAILTRAP_FROM` | No | Correo saliente. Los nombres coinciden con el compose y con el backend. |
 
 ### Frontend
 
@@ -341,7 +361,8 @@ Las validaciones ejecutadas son:
 - Instalación reproducible de dependencias con `pnpm install --frozen-lockfile`.
 - Auditoría de dependencias backend y frontend, reportada sin bloquear temporalmente el resto del pipeline.
 - Lint del backend.
-- Tests automatizados del backend.
+- Tests automatizados del backend con `node --test`.
+- Migraciones `prisma migrate deploy` contra una MariaDB 11.4.4 levantada como `services` del job, con `ESTABLECIMIENTO_DB_TEST=1` y `SALON_DB_TEST=1` para que las pruebas de integración no se salten.
 - Lint del frontend.
 - Build de producción del frontend.
 - Validación de la configuración de Docker Compose.
@@ -371,6 +392,17 @@ El test actual verifica que `GET /health` responda con:
 
 ### Estado de cobertura
 
+El backend tiene **21 archivos de prueba con 61 casos** (49 de ellos con subcasos), ejecutados con el runner nativo `node --test`:
+
+| Nivel | Archivos | Casos | Necesita base de datos |
+|-------|----------|-------|------------------------|
+| Unitarias | 7 | 28 | No |
+| Integración | 10 | 11 (49 subcasos) | Sí |
+| End-to-end (Playwright) | 4 specs | 22 | Sí, con frontend servido |
+
+Las pruebas de integración se saltan solas salvo que se cumplan dos condiciones: `ESTABLECIMIENTO_DB_TEST=1` (o `SALON_DB_TEST=1` en salón) y que `DB_DATABASE` termine en `_test`. Así el mismo comando funciona en una máquina sin base y en el pipeline, donde el job levanta MariaDB como servicio y aplica las migraciones. Los módulos cubiertos son aislamiento por sede (14 subcasos), panel de gerente (6), conteo y unidades de inventario (5 + 5), salón (4), cierre total (4), correo (3) y jornada (3).
+
+Detalle completo del plan, del inventario de casos y de los resultados por nivel: [informe de pruebas](docs/informe-pruebas.md) y [reporte de ejecución](docs/04-reporte-ejecucion-pruebas.md).
 El proyecto dispone de pruebas unitarias, pruebas de integración, auditorías estáticas de rutas, pruebas de humo y pruebas de extremo a extremo mediante Playwright.
 
 Los resultados verificados al 26 de noviembre de 2026 son:
@@ -678,6 +710,8 @@ Reglas:
 - `DATABASE_URL` está disponible para Prisma CLI dentro de Compose.
 - Una instalación limpia puede crear la base, ejecutar migraciones y cargar datos, vistas y procedimientos.
 - El endpoint `/health` tiene una prueba automatizada ejecutada por Node Test Runner.
+- El backend valida el entorno al arrancar y se niega a iniciar con un `JWT_SECRET` ausente, corto o de ejemplo.
+- El compose no publica MariaDB ni la API fuera de `127.0.0.1` y exige las tres variables sensibles.
 - El lint de backend y frontend pasa correctamente.
 - El build de producción del frontend pasa correctamente.
 - La configuración de Docker Compose es válida.
@@ -685,26 +719,24 @@ Reglas:
 
 ### Pendientes reales
 
-- Formalizar la matriz rol → permiso.
-- Aplicar y probar `requireRole` en todos los routers que lo necesitan.
+- Formalizar la matriz rol → permiso en un documento (hoy está aplicada en código con `requireRole`).
 - Consumir `vista_pedidos_activos` mediante `/api/pedidos/activos`.
-- Revisar los procedimientos y vistas SQL todavía no utilizados.
-- Fijar CVEs y dependencias con rangos abiertos.
-- Añadir pruebas automatizadas de integración para Docker, autenticación y autorización.
+- Revisar los procedimientos y vistas SQL todavía no utilizados (22 consultas crudas, 6 vistas y 5 procedimientos).
+- Fijar CVEs y dependencias con rangos abiertos: el audit de severidad alta está en `continue-on-error`, así que hoy informa pero no bloquea.
+- Revocación de sesión: el JWT sigue siendo válido hasta que expira (columna `token_version` pendiente).
+- Cabeceras de seguridad en la SPA (`frontend/nginx.conf`) y `sha256` del token de recuperación.
+- Mover los 18 routers sin montar a `src/legacy/` o eliminarlos en un commit etiquetado.
 - Separar configuración Docker de desarrollo y producción si el despliegue real lo requiere.
-- Eliminar valores por defecto inseguros antes de cualquier despliegue público.
 
 ### Limitaciones de producción
 
 La configuración actual es adecuada para reproducibilidad académica y validación del stack. Para producción real todavía faltaría, como mínimo:
 
 - TLS/HTTPS delante de nginx.
-- Secretos gestionados fuera de `docker-compose.yml`.
 - Backups y política de persistencia de MariaDB.
 - Observabilidad y logs centralizados.
-- Healthchecks explícitos para backend/frontend.
-- No publicar el puerto 3000 del backend si nginx es la única entrada pública.
-- Revisión de aislamiento por restaurante y autorización por endpoint.
+- Healthchecks explícitos para backend y frontend (hoy solo la base tiene healthcheck).
+- Rotación de secretos y gestor de secretos (hoy viven en el `.env` del host).
 
 ---
 
