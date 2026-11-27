@@ -55,7 +55,7 @@ export async function escenarioEstablecimiento(t) {
   }
   const { token: adminToken } = await api(null, '/auth/login', 'POST', { email: emailAdmin, contrasena });
   async function altaGerente(nombre) {
-    const email = `${nombre}-${tag}@example.test`;
+    const email = `gerente-${sedes.length + 1}-${tag}@example.test`;
     const alta = await api(adminToken, '/usuarios', 'POST', { nombre, email, contrasena, id_rol: 2, nombre_establecimiento: nombre }, 201);
     const { id_restaurante } = alta.data.restaurante;
     sedes.push(id_restaurante);
