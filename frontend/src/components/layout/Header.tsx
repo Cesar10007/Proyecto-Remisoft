@@ -68,7 +68,7 @@ function Header({ seccionActiva, nombreUsuario = 'Usuario', subtitulo, acciones 
   const navigate = useNavigate()
   const rol = useSelector((state: RootState) => state.auth.rol)
   const idUsuario = useSelector((state: RootState) => state.auth.user?.id_usuario)
-  const esMesero = rol === 'MESERO'
+  const esMesero = rol === 'MESERO' || rol === 'COCINERO' || rol === 'COCINERO'
 
   const [abierta, setAbierta] = useState(false)
   const [alertas, setAlertas] = useState<AlertaStock[] | null>(null)

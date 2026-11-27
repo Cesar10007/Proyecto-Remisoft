@@ -28,7 +28,7 @@ INSERT INTO solicitud_registro (
 ('Prueba','Repartidor','solicitud.repartidor.prueba@example.com','3002001004','$2a$12$mlrAoHVaVpBZHNEagDhuB.fnYyqR3JpWmFpYhb/WRG7tqw9a04pZO',5,2,'PENDIENTE');
 
 -- 4. USUARIO
--- Todos los usuarios de prueba usan la contraseña: 123456.
+-- Todos los usuarios de prueba usan la contraseña: 123456 (excepto cocina.demo@resto.com).
 INSERT INTO usuario (
     id_usuario,id_rol,id_restaurante,identificacion,nombre,apellido,email,telefono,contrasena_hash,activo
 ) VALUES
@@ -41,7 +41,8 @@ INSERT INTO usuario (
 (7, 3, 2, '1007', 'Miguel', 'Castro', 'miguel.castro@resto.com', '3109998887', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (8, 5, 2, '1008', 'Isabella', 'Vargas', 'isabella.vargas@resto.com', '3156667778', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
 (9, 2, 2, '1009', 'Sebastián', 'Díaz', 'sebastian.diaz@resto.com', '3203334445', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
-(10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1);
+(10, 4, 2, '1010', 'Camila', 'Moreno', 'camila.moreno@resto.com', '3001115556', '$2y$12$NbBh9iRrnzVgmwp8oqHCz.1YuDlCnWqSmlqYEGTh/u8pnVkkZzbKe', 1),
+(11, 6, 1, '1011', 'Cocina', 'Demo', 'cocina.demo@resto.com', '3005550000', '$2a$12$/81KqXr3Uo.9OHGWZG7ZCumGL2IsalOtZzQD6xago7H/lamym/JZ.', 1);
 
 -- Plano de la sede de demo, no de los restaurantes que se creen posteriormente.
 INSERT INTO mesa (numero, capacidad, id_restaurante) VALUES
@@ -353,8 +354,7 @@ ORDER BY id_rol;
 
 SELECT COUNT(*) AS usuarios_con_rol_cliente
 FROM usuario
-WHERE id_rol = 6
-   OR id_rol IN (
+WHERE id_rol IN (
        SELECT id_rol
        FROM rol
        WHERE nombre = 'CLIENTE'
