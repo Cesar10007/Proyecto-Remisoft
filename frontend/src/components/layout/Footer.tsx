@@ -5,10 +5,7 @@ function Footer() {
         Remi<span className="text-[var(--amarillo)]">Soft</span>
       </div>
       <p className="mb-1.5">
-        Sistema Web Inteligente para la Gestión Integral del Restaurante Familia Remi
-      </p>
-      <p className="mb-1.5">
-        📍 Cl. 67c Bis Sur, Localidad Ciudad Bolívar, Barrio Juan Pablo II, Bogotá
+        Sistema Web Inteligente para la Gestión Integral de Cadenas de Restaurantes
       </p>
       <p>Desarrollado por el equipo RemiSoft · 2025</p>
     </footer>
