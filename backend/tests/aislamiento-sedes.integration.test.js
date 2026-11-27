@@ -49,11 +49,11 @@ test('aislamiento: gerente B no ve ni modifica los datos de la sede A',
     const b = await altaGerente('SedeB');
 
     await t.test('listas de B vacías aunque A tenga datos', async () => {
-      for (const url of ['/productos', '/clientes', '/proveedores', '/cajas', '/pedidos',
+      for (const url of ['/productos', '/clientes', '/proveedores', '/cajas', '/pedidos', '/ingredientes',
         '/domicilios', '/cocina/comandas', '/cobro/pendientes']) {
         assert.deepEqual(await api(b.token, url), [], url);
       }
-      for (const url of ['/mesas', '/ingredientes', '/inventario', '/turnos', '/facturas',
+      for (const url of ['/mesas', '/inventario', '/turnos', '/facturas',
         '/detalle-pedido', '/categorias', '/ia']) {
         assert.deepEqual((await api(b.token, url)).data, [], url);
       }
