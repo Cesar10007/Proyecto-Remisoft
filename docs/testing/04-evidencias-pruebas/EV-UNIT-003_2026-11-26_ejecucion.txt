@@ -1,0 +1,35 @@
+Fecha: 2026-11-27T03:42:27+00:00
+Rama: docs/testing-qa
+Commit: 7bba9a3d05b6bbb40d85d8f8630759eb2c71c9d0
+Node.js: v26.13.1
+✔ la ausencia de sede no convierte a un empleado en lector global (2.022293ms)
+✔ el filtro de mesero restringe sus cuentas sin quitar la sede a los demás roles (0.277237ms)
+✔ factura: centavos, descuento antes del IVA y propina no gravada (2.683536ms)
+✔ una factura no admite importes negativos, ambiguos, fuera de rango ni sin artículos (0.913644ms)
+✔ la lectura usa renglones del propio pedido y conserva los valores facturados, incluido precio cero (0.29998ms)
+✔ el pago efectivo bloquea incluso una cabecera histórica; un intento rechazado no es un pago (0.205463ms)
+✔ sedesPermitidas: superadmin no está limitado a una sede (1.797012ms)
+✔ sedesPermitidas: un gerente de una sola sede conserva el comportamiento anterior (3.302692ms)
+✔ sedesPermitidas: gerente multisede puede entrar a cada una de sus sedes (0.28403ms)
+✔ sedesPermitidas: la sede activa siempre cuenta, aunque falte la membresía (0.27338ms)
+✔ sedesPermitidas: descarta ids inválidos que lleguen del cliente o de la BD (0.275934ms)
+✔ puedeEntrarSede: un usuario sin sede ni membresías no entra a ninguna (0.288038ms)
+✔ aislamiento: el filtro de consulta usa la sede ACTIVA, no la lista de sedes (0.465538ms)
+✔ aislamiento: un multisede sin sede activa recibe 403 en vez de un comodín (0.821573ms)
+✔ una comanda requiere platos, cantidades enteras y renglones distintos (1.902108ms)
+✔ el pedido solo queda entregado al servir el último plato (0.247071ms)
+✔ la precuenta no factura renglones cancelados y coincide con caja (0.324485ms)
+✔ validateEmail exige un valor cuando el campo es obligatorio (1.584967ms)
+✔ validateEmail valida usando el máximo de caracteres del campo (0.240319ms)
+✔ validateEmail normaliza espacios externos al validar (4.206408ms)
+✔ solo una clave única de correo se trata como correo inválido (0.38062ms)
+✔ receta y ajustes aceptan únicamente cantidades positivas representables en DECIMAL(10,3) (0.400357ms)
+✔ el conteo absoluto acepta cero sin permitir movimientos nulos ni redondear cantidades inválidas (0.248554ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 173.409375

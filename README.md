@@ -368,9 +368,93 @@ El test actual verifica que `GET /health` responda con:
 }
 ```
 
+
 ### Estado de cobertura
 
-Actualmente existe una prueba de humo para el endpoint `/health`. Las pruebas de integración para Docker, autenticación, autorización y persistencia siguen pendientes.
+El proyecto dispone de pruebas unitarias, pruebas de integración, auditorías estáticas de rutas, pruebas de humo y pruebas de extremo a extremo mediante Playwright.
+
+Los resultados verificados al 26 de noviembre de 2026 son:
+
+| Actividad | Resultado | Estado |
+|-----------|-----------|--------|
+| Pruebas unitarias independientes | 23/23 aprobadas en dos ejecuciones | Verificado |
+| Pruebas automatizadas del backend en CI | 88/88 aprobadas en las dos ejecuciones consultadas | Verificado |
+| Configuración independiente de QA | Validación estructural satisfactoria | Verificado |
+| Ejecución operativa de Docker QA | Sin evidencia operativa consolidada | Pendiente |
+| Cobertura de código | Sin medición actualizada | Pendiente |
+| Rendimiento y accesibilidad | Sin mediciones completas | Pendiente |
+
+El porcentaje de aprobación de las pruebas no equivale al porcentaje de cobertura de código ni garantiza la ausencia de defectos.
+
+### Ejecución de pruebas unitarias independientes
+
+Desde la raíz del repositorio:
+
+```bash
+(
+  cd backend &&
+  node --test --test-reporter=spec \
+    tests/validation.test.js \
+    tests/facturacion.test.js \
+    tests/multisede.test.js \
+    tests/salon.test.js \
+    tests/establecimiento.test.js
+)
+```
+
+Este conjunto contiene 23 casos unitarios y no requiere una base de datos activa ni iniciar contenedores Docker.
+
+### Ambiente independiente de pruebas (QA)
+
+La configuración independiente fue incorporada a `develop` mediante el [Pull Request #286](https://github.com/Cesar10007/Proyecto-Remisoft/pull/286).
+
+| Componente | Configuración QA |
+|------------|------------------|
+| Archivo de configuración | `docker-compose.qa.yml` |
+| Plantilla de variables | `.env.qa.example` |
+| Proyecto Docker | `remisoft-qa` |
+| Base de datos | `remisoft_test` |
+| Motor de base de datos | MariaDB 11.4.4 |
+| Puerto de MariaDB | 3307 |
+| Puerto del backend | 3100 |
+| Puerto del frontend | 8080 |
+| Interfaz de correo Mailpit | 8025 |
+| Reportes de ejecución | `qa-artifacts/` |
+
+Los servicios QA utilizan una red y un volumen independientes del ambiente principal.
+
+En una rama que incluya la configuración QA, y después de preparar las variables privadas según la documentación correspondiente, se puede validar su estructura desde la raíz del repositorio:
+
+```bash
+docker compose -p remisoft-qa --env-file .env.qa -f docker-compose.qa.yml --profile app --profile tests config --quiet
+```
+
+Este comando valida la configuración sin iniciar los servicios.
+
+No se deben utilizar credenciales ni bases de datos de producción para ejecutar las pruebas.
+
+La ejecución operativa completa deberá realizarse siguiendo el procedimiento documentado en el ambiente independiente de pruebas.
+
+### Documentación de aseguramiento de calidad
+
+| Documento | Contenido |
+|-----------|-----------|
+| [01. Plan general de pruebas](docs/testing/01-plan-general-pruebas.md) | Estrategia, alcance, criterios de aceptación y gestión de pruebas. |
+| [02. Ambiente independiente de pruebas](docs/testing/02-ambiente-pruebas.md) | Configuración, aislamiento y procedimientos de ejecución. |
+| [03. Informe de pruebas unitarias](docs/testing/03-informe-pruebas-unitarias.md) | Descripción y resultados de los 23 casos unitarios. |
+| [04. Evidencias de pruebas](docs/testing/04-evidencias-pruebas/README.md) | Capturas, registros y referencias de ejecución. |
+| [05. Reporte de ejecución](docs/testing/05-reporte-ejecucion.md) | Resultados consolidados, hallazgos y limitaciones. |
+| [06. Matriz de defectos](docs/testing/06-matriz-defectos.md) | Severidad, prioridad, estado y seguimiento de hallazgos. |
+
+### Evidencias de integración continua
+
+- [CI del PR #286 — 88 pruebas aprobadas](https://github.com/Cesar10007/Proyecto-Remisoft/actions/runs/45930257166).
+- [CI del PR #290 — 88 pruebas aprobadas con ejecución secuencial](https://github.com/Cesar10007/Proyecto-Remisoft/actions/runs/45935608011).
+
+La ejecución general del backend utiliza `node --test --test-concurrency=1` en la configuración actual de `develop`.
+
+Los resultados corresponden a versiones específicas del proyecto. Las pruebas de confirmación y regresión deberán actualizarse conforme se incorporen nuevas funcionalidades y correcciones.
+
 
 ---
 
